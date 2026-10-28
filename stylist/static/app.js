@@ -336,7 +336,13 @@ function showPlanApproval(request) {
 $('chat-form').onsubmit = event => { event.preventDefault(); sendMessage(); };
 $('message').onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendMessage(); } };
 for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { $('message').value = button.dataset.prompt; $('message').focus(); };
-function resetChat() { if (busy) return; $('history-dialog').close(); document.querySelectorAll('#history [aria-current], #mobile-history-list [aria-current]').forEach(item => item.removeAttribute('aria-current')); conversation = null; version = 0; $('feed').replaceChildren(); $('message').value = ''; $('notice').textContent = ''; $('source').value = ''; $('weather').value = ''; bubble('assistant', '我在呀。说说今天的安排，或你想穿的一件衣服，一起搭出喜欢的样子。'); if (selectedCity && session) loadForecast(); }
+function resetChat() {
+  if (busy) return;
+  // A new chat uses the same welcome page and initialization as a fresh visit.
+  // Do not resume a previous request that was waiting for confirmation.
+  savePending(null);
+  window.location.reload();
+}
 $('new-chat').onclick = resetChat; $('mobile-new').onclick = resetChat;
 $('mobile-history').onclick = async () => {
   if (busy || !requireLogin()) return;
