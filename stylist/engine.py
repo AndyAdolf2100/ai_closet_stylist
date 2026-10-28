@@ -336,6 +336,7 @@ class Stylist:
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
+                        "follow_ups": reply.follow_ups,
                         "looks": [{"title": x.title, "pieces": x.pieces, "how": x.how,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},
                 ])[-16:]

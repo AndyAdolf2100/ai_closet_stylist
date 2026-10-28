@@ -18,6 +18,60 @@ class FakeModel:
 
 
 @pytest.mark.asyncio
+async def test_weather_advice_followup_can_select_real_wardrobe_without_previous_products(tmp_path):
+    rows = [
+        {"user_product_id": 1, "class_name": "上衣", "title": "长袖T恤"},
+        {"user_product_id": 2, "class_name": "裤子", "title": "休闲长裤"},
+        {"user_product_id": 3, "class_name": "鞋子", "title": "平底运动鞋"},
+    ]
+    calls = []
+
+    class MCP:
+        async def call(self, name, args):
+            calls.append(name)
+            if name == "outfit.search-saved":
+                return {"matches": []}
+            assert name == "product.resolve"
+            return {"items": [{**row, "source": "user", "product_id": str(row["user_product_id"])}
+                              for row in rows]}
+
+    class Upstream:
+        async def identity(self):
+            return "1"
+
+        async def get(self, path, params):
+            calls.append(path)
+            assert path == "/api/user_product/quick_edit_list"
+            return {"list": rows, "pagination": {"total": 3}}
+
+        @asynccontextmanager
+        async def mcp(self):
+            yield MCP()
+
+    store = Store(str(tmp_path / "state.db"))
+    original = ChatRequest(message="看看上海的天气", request_id="weather-advice-first")
+    cid, claim, state, _ = store.reserve("1", original)
+    state.mode = "consult"
+    state.task = Task(city="上海", weather_policy="ignored")
+    state.looks = [Look(title="文字参考", pieces=["长袖T恤", "长裤"],
+                        why=["方便活动"], how=["按体感加减外层"])]
+    store.finish("1", original, claim, state, Reply(conversation_id=cid, version=1, mode="consult",
+                 delivery="advice", message="天气穿法参考", task=state.task, looks=state.looks))
+    model = FakeModel(Plan(mode="recommend", use_inventory=True), Draft(
+        message="从衣橱中选这套。", looks=[LookDraft(title="方便走路的一套",
+        selected_keys=["user:1", "user:2", "user:3"], why=["鞋型适合日常活动"],
+        how=["长袖T恤配长裤和运动鞋"])]))
+    result = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
+        message="鞋子和层次再调得舒服一点", request_id="weather-outfit-followup",
+        conversation_id=cid, expected_version=1))
+    assert model.inputs[0][1]["current_mode"] == "consult"
+    assert "/api/user_product/quick_edit_list" in calls and "product.resolve" in calls
+    assert result.delivery == "outfit"
+    assert [p.key for p in result.looks[0].items] == ["user:1", "user:2", "user:3"]
+    assert all(p.source == "user" for p in result.looks[0].items)
+
+
+@pytest.mark.asyncio
 async def test_consultation_followup_never_enters_closet_and_keeps_scene(tmp_path):
     class Upstream:
         async def identity(self):
