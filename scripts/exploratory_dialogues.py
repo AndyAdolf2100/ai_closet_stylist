@@ -20,7 +20,19 @@ CASES = {
     "city_negation": [("不是北京，我在上海，今天上班怎么穿？用我的衣橱。", {"inventory": True, "city_contains": "上海", "weather_city": "上海市"})],
     "city_correct": [
         ("今天上海通勤，用衣橱搭一套。", {"weather_city": "上海市", "inventory": True}),
-        ("地点说错了，是杭州，其他要求不变。", {"city_contains": "杭州", "weather_city": "杭州市", "inventory": True}),
+        ("地点说错了，是杭州，其他要求不变。", {"city_contains": "杭州", "weather_city": "杭州市", "inventory": True, "delivery": "outfit", "forbid_text": ["你想调整哪一部分", "你想换哪件"]}),
+    ],
+    "city_correct_text": [
+        ("今天上海通勤，只讲白衬衫灰裤平底鞋的穿法，不查衣橱。", {"weather_city": "上海市", "inventory": False}),
+        ("地点说错了，是杭州，其他要求不变。", {"city_contains": "杭州", "weather_city": "杭州市", "inventory": False, "delivery": "advice", "forbid_text": ["你想调整哪一部分", "你想换哪件"]}),
+    ],
+    "city_correct_weather": [
+        ("只查今天上海天气，不搭衣服。", {"weather_city": "上海市", "weather_only": True, "inventory": False, "no_looks": True}),
+        ("地点说错了，是杭州，其他要求不变。", {"city_contains": "杭州", "weather_city": "杭州市", "weather_only": True, "inventory": False, "no_looks": True, "forbid_text": ["你想调整哪一部分", "你想换哪件"]}),
+    ],
+    "city_correct_shoes": [
+        ("今天上海通勤，用衣橱搭一套，鞋子用白色平底运动鞋。", {"weather_city": "上海市", "inventory": True}),
+        ("地点改成杭州，只换鞋为黑色平底乐福鞋，其他衣服保持不动。", {"weather_city": "杭州市", "inventory": True, "delivery": "outfit", "freeze_except": ["shoes"], "forbid_text": ["你想调整哪一部分", "你想换哪件"]}),
     ],
     "unknown_recovery": [
         ("今天新西兰奥克兰天气怎样？", {"no_weather": True, "no_looks": True, "allow_empty_looks": True, "manual": "只说暂时查不到，不改成别的城市"}),

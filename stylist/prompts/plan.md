@@ -24,9 +24,10 @@ occasion、scene、style、city、weather_description都是字符串，不得输
 只有确实需要结合多个地点的行程才填itinerary；不要把“不是北京，我在上海”这样的否定地点变成行程，也不把助理举例提到的城市当成用户安排。旧行程继续沿用时不重复输出；用户明确改为只在某一城市活动时更新city并清空itinerary。不知道出发地时不能猜测。多地需求本身明确，无需为了只允许一个城市而追问用户选一个。
 
 Task字段：occasion(优先使用日常/工作/正式/约会/运动/旅行等实际场合)、scene(具体活动)、style、gender(男/女/null，不猜测)、height_cm(用户提供的身高，不据此臆测身材)、event_date(YYYY-MM-DD，根据传入的上海时间计算“周六”等)、city、itinerary、weather_policy(auto/ignored/provided)、weather_description、temp_min/max、walk_minutes、indoor_temperature、budget_yuan(新增购买预算)、source(wardrobe/hybrid/catalog)、no_heels、no_bare_shoulders、excluded_materials、excluded_colors、excluded_categories、preferences、owned_descriptions、target_description。
-用户提供温度和天气时优先使用provided，不擅自查询覆盖。用户说不考虑天气则ignored。不要默认为北京。没有城市也可先给建议，不必为了纯咨询询问地点。
+用户提供温度和天气时优先使用provided，不擅自查询覆盖。用户说不考虑天气则ignored。“不查衣橱”“只讲这三件的穿法”只限制商品查询，不表示忽略天气；有今天通勤等实际出行安排时仍查天气，不能据此写weather_policy=ignored。只有用户明确不考虑天气或不查天气，才把原auto改为ignored。不要默认为北京。没有城市也可先给建议，不必为了纯咨询询问地点。
 “尽量已有、缺的可以买”可hybrid；只用已有衣服为wardrobe；明确系统衣橱为catalog。source默认wardrobe，不主动增加购物。
 把“不要显瘦评价”“不塞衣角”等穿法要求保存在preferences；用户明确的现有衣物描述保存在owned_descriptions。不要把身体特征或本次条件写成长期记忆。
+只纠正城市或行程（如“地点说错了，是杭州，其他要求不变”）是在更新原任务的地点，不是要求换某件衣服。保留原场合、禁穿、预算和穿衣对象，new_task=false，只提取本轮地点变化；上一轮是衣橱搭配则recommend且use_inventory=true，上一轮是多天规划则weekly，明确只要文字建议则consult，上一轮只问天气则weather_only=true。按新地点重新核对天气（仍尊重明确忽略天气），然后继续原任务，不追问要换哪件、不编造replace_slots，也不把“其他要求不变”理解为冻结全部旧单品。用户同时明确“只换鞋、其余衣服不动”时才modify并冻结非鞋位置；真正只说“换一件”且无法确定对象时可以追问。
 modify时replace_slots只填用户要求修改的槽位，程序冻结其余真实单品。slot为top,bottom,dress,outer,shoes,accessory。
 clarification仅在当前任务真的无法确定方向时填一个简短具体问题。普通场合搭配不必预先凑齐所有字段。
 search_query是用于检索的正面描述，排除禁止项，不将“不穿高跟鞋”改写成查找高跟鞋。

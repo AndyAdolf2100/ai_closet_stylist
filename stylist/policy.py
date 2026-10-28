@@ -57,6 +57,15 @@ async def interpret_task(llm, payload, state, message):
                     "replace_slots": [], "weather_scope": previous.weather_scope if previous.weather_scope != "none" else "day"})
         try:
             task = merge_task(state, previous, message)
+            # A verified location correction changes the task, not an unspecified garment.
+            # Explicit slot replacements and genuine clarification requests keep their path.
+            if (previous.mode == "modify" and not previous.replace_slots and not previous.clarification
+                    and previous.changes and set(previous.changes) <= {"city", "itinerary"}):
+                has_products = any(look.items for look in state.looks)
+                mode = "weekly" if state.mode == "weekly" else ("recommend" if has_products else "consult")
+                previous = previous.model_copy(update={"mode": mode, "use_inventory": has_products,
+                    "weather_scope": previous.weather_scope if previous.weather_scope != "none" else (
+                        "week" if mode == "weekly" else "day")})
             if previous.weather_only:
                 supplied = previous.changes.get("weather_policy")
                 task.weather_policy = "provided" if supplied and supplied.value == "provided" else "auto"
