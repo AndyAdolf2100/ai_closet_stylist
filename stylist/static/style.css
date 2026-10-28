@@ -284,3 +284,17 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
   header .subtle{padding-inline:8px;font-size:12px;white-space:nowrap}
   #history-dialog{width:100%;max-width:none;max-height:85dvh;padding:20px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));margin:0;inset:auto 0 0;border:0;border-radius:22px 22px 0 0}
 }
+
+/* Dedicated close-up atlases: 4 columns x 3 rows. Each frame contains a large face. */
+:root .mascot.companion-sprite{background-image:url('/static/assets/yiyi-female-companion-v1.webp');background-size:400% 300%;background-position:0 50%;background-color:#fff7f3;border-radius:22px;animation:companion-think 1.8s steps(1,end) infinite;transform:none}
+:root[data-stylist-gender=male] .mascot.companion-sprite{background-image:url('/static/assets/yiyi-male-companion-v1.webp');background-color:#f0f4f6}
+:root .mascot.companion-sprite.avatar-mini{width:48px;height:48px;border-radius:50%;background-position:0 0;animation:companion-blink 4.8s steps(1,end) infinite}
+:root .mascot.companion-sprite.weather-mascot{width:68px;height:68px;border-radius:18px;background-position:0 100%;animation:companion-weather 3.2s steps(1,end) infinite}
+/* Keep streaming avatars thinking across all real progress stages. */
+:root .companion-wait .mascot.companion-sprite{background-position-y:50%;animation:companion-think 1.8s steps(1,end) infinite}
+@keyframes companion-blink{0%,88%,100%{background-position-x:0}90%{background-position-x:33.333333%}92%,94%{background-position-x:66.666667%}96%{background-position-x:100%}}
+@keyframes companion-think{0%,100%{background-position-x:0}25%{background-position-x:33.333333%}50%{background-position-x:66.666667%}75%{background-position-x:100%}}
+@keyframes companion-weather{0%,100%{background-position-x:0}35%{background-position-x:33.333333%}45%{background-position-x:66.666667%}55%,85%{background-position-x:100%}}
+@media(prefers-reduced-motion:reduce){:root .mascot.companion-sprite{animation:none!important;background-position-x:0}}
+/* The atlas has a few prop pixels near the next row; keep them outside the thinking viewport. */
+:root .companion-wait .mascot.companion-sprite{clip-path:inset(0 0 5% 0 round 18px)}
