@@ -1,6 +1,6 @@
 'use strict';
 
-// A presentation preference only. Never use the stylist's gender as Task.gender.
+// Appearance selects expression for new requests. Never use it as Task.gender.
 (() => {
   const key = 'ai-closet-stylist-appearance-v1';
   const root = document.documentElement;
@@ -50,7 +50,7 @@
     if (input) input.placeholder = current.placeholder;
     document.querySelectorAll('.hero-mascot').forEach(node => node.setAttribute('aria-label', current.hero));
     const status = document.getElementById('appearance-status');
-    if (announce && status) status.textContent = `已切换为${gender === 'male' ? '男' : '女'}版衣衣`;
+    if (announce && status) status.textContent = `已切换为${gender === 'male' ? '男' : '女'}版衣衣，后续新请求使用对应回复风格`;
   }
 
   document.addEventListener('DOMContentLoaded', () => {

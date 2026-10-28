@@ -5,6 +5,7 @@ import httpx
 from pydantic import ValidationError
 
 from .errors import StylistError
+from .personas import persona_instructions
 
 
 class LanguageModel:
@@ -16,6 +17,8 @@ class LanguageModel:
         if not (settings.llm_key and settings.llm_model and settings.llm_url):
             raise StylistError("llm_not_configured", "搭配模型尚未配置。")
         instructions = Path(__file__).with_name("prompts").joinpath(prompt_name + ".md").read_text()
+        if prompt_name in {"plan", "style"} and payload.get("assistant_persona"):
+            instructions += "\n\n" + persona_instructions(payload["assistant_persona"])
         if prompt_name == "plan":
             from .models import Task
             instructions += "\nchanges每项value必须符合对应Task字段的类型与范围：\n" + json.dumps(Task.model_json_schema(), ensure_ascii=False)
@@ -40,9 +43,12 @@ class LanguageModel:
                     if not isinstance(value, str):
                         raise ValueError("content_missing")
                     return result_type.model_validate_json(value)
-                except (ValidationError, ValueError, KeyError, IndexError, TypeError):
+                except (ValidationError, ValueError, KeyError, IndexError, TypeError) as exc:
                     if attempt == 0:
-                        messages.append({"role": "user", "content": "上一次返回未通过结构校验。请重新输出完整JSON；不执行任何操作。"})
+                        details = [{"field": ".".join(map(str, error["loc"])), "type": error["type"]}
+                                   for error in exc.errors(include_input=False, include_url=False)] if isinstance(exc, ValidationError) else []
+                        messages.append({"role": "user", "content": "上一次返回未通过结构校验。请重新输出完整JSON；不执行任何操作。"
+                                         "不要添加结构以外的字段。具体需修正的字段：" + json.dumps(details, ensure_ascii=False)})
                         continue
                     raise StylistError("model_output_invalid", "这次没能把建议整理完整，可以再发一次。刚才的需求不用改，衣衣会重新帮你看看。") from None
                 except httpx.TimeoutException:

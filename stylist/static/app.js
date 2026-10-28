@@ -122,13 +122,15 @@ async function loadForecast(location = selectedCity) {
     return false;
   } finally { if (sequence === forecastSequence) { forecastBusy = false; $('forecast-refresh').disabled = false; } }
 }
-function pendingBubble() {
+function pendingBubble(persona) {
   const node = bubble('assistant', ''); node.classList.add('pending');
   const body = el('div', 'companion-wait'); const avatar = mascot('thinking'); const copy = el('div');
-  const status = el('strong', '', '衣衣收到啦，正在连接你的衣橱。'); const extra = el('p', '', '可以稍等一下，我会保留你的每个要求。');
+  const male = persona === 'male_calm_v1';
+  const status = el('strong', '', male ? '收到，正在连接服务。' : '收到啦，正在连接服务。');
+  const extra = el('p', '', male ? '我会按你这次的要求处理。' : '我会照顾你这次提到的要求。');
   copy.append(status, extra); body.append(avatar, copy); node.append(body);
   const expressions = { connecting: ['greeting', '连接中'], understanding: ['thinking', '整理需求'], weather: ['weather', '核对天气'], wardrobe: ['wardrobe', '挑选衣物'], styling: ['thinking', '构思搭配'], checking: ['happy', '核对方案'] };
-  const timer = setInterval(() => { extra.textContent = ['还在认真整理，没有忘记你呀。', '正在等待服务返回，已有要求都会保留。'][Math.floor(Date.now() / 12000) % 2]; }, 12000);
+  const timer = setInterval(() => { extra.textContent = male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'; }, 15000);
   return { node, update(data) { const state = expressions[data.stage] || expressions.styling; avatar.dataset.mood = state[0]; avatar.setAttribute('aria-label', '衣衣正在' + state[1]); status.textContent = data.message; }, stop() { clearInterval(timer); node.remove(); } };
 }
 function bubble(role, text) {
@@ -146,7 +148,7 @@ function showReply(reply) {
   conversation = reply.conversation_id; version = reply.version;
   const node = bubble('assistant', reply.message);
   const label = { advice: '穿法建议', outfit: '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
-  node.prepend(el('div', 'badge', label[reply.delivery] || '穿搭建议'));
+  if (!reply.conversation_only) node.prepend(el('div', 'badge', label[reply.delivery] || '穿搭建议'));
   if (reply.weather?.days?.length) node.append(forecastCard(reply.weather));
   for (const [lookIndex, look] of (reply.looks || []).entries()) {
     const card = el('article', 'look'); card.append(el('h3', '', look.title));
@@ -230,11 +232,12 @@ async function sendMessage(resuming = false) {
   const text = saved?.request.message || $('message').value.trim();
   if (!text || busy || !requireLogin()) return;
   const request = saved?.request || { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: $('confirm-plan').checked };
+  if (!saved) request.assistant_persona = document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1';
   if (!saved && $('source').value) request.source = $('source').value;
   if (!saved && $('weather').value) request.weather_policy = $('weather').value;
   if (!saved && selectedCity) request.location = selectedCity;
   savePending({owner: session.user.id, request});
-  bubble('user', text); const pending = pendingBubble();
+  bubble('user', text); const pending = pendingBubble(request.assistant_persona);
   setBusy(true); $('notice').textContent = '';
   try {
     let received = false;

@@ -31,6 +31,10 @@ async def interpret_task(llm, payload, state, message):
                         task_validation_errors=validation_errors,
                         repair_instruction="修复抽取结果，不向用户追问内部格式问题。证据必须逐字来自本条message，禁止省略号拼接。多段原话请用字符串数组；无法精确摘录时直接引用完整原message。修正task_validation_errors指出的字段值，例如event_date只能是YYYY-MM-DD的单日日期，不能填日期范围或本周等文字。保留所有正确要求。")
         previous = await llm.generate("plan", data, Plan)
+        if previous.conversation_only:
+            previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
+                "weather_scope": "none", "changes": {}, "new_task": False,
+                "replace_slots": [], "clarification": None})
         try:
             return previous, merge_task(state, previous, message)
         except (StylistError, ValidationError) as exc:

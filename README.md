@@ -84,3 +84,9 @@ uv run python scripts/evaluate_semantics.py
 ## LangGraph 与部署
 
 入门和节点对应关系见 [LangGraph 入门](docs/LANGGRAPH_QUICKSTART.md)；滚动发布、排空、断线恢复、PostgreSQL 配置和当前限制见 [K8s 部署说明](docs/KUBERNETES_DEPLOYMENT.md)。部署前先运行 `uv run python -m stylist.migrate` 创建业务及检查点表。
+
+## 助理回复人格
+
+顶部选择男版或女版后，下一次发送会采用对应表达：男版沉稳细致、克制温暖；女版细腻体贴、温柔可爱且从容。支持日常闲聊、倾诉、亲近表达与有分寸的互怼；纯闲聊保留已有穿搭任务。形象仍由浏览器记住，尚无账号性别自动匹配或长期偏好设置。规则、参考与边界见[需求文档第13章](docs/PRD_AI_CLOSET_STYLIST.md#13-双助理人格与日常对话)。
+
+显式真实文字模型评测：`python -m scripts.evaluate_personas --live`，需要已配置模型，产生模型调用费用。使用合成用户与临时数据库，不读取真实衣橱、不执行图像生成；输出默认保存至被忽略的 `var/persona-review/live.json`。

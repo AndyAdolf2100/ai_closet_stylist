@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .personas import PersonaId
+
 
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -58,6 +60,7 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
 
 class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
+    conversation_only: bool = False
     weather_scope: Literal["none", "day", "week", "next7"] = "none"
     use_inventory: bool = True
     new_task: bool = False
@@ -128,6 +131,7 @@ class Look(Model):
 
 
 class Reply(Model):
+    conversation_only: bool = False
     conversation_id: str
     version: int
     mode: Literal["consult", "recommend", "modify", "weekly"]
@@ -158,6 +162,7 @@ class ChatRequest(Model):
     source: Literal["wardrobe", "hybrid", "catalog"] | None = None
     location: "CitySelection | None" = None
     confirm_plan: bool = False
+    assistant_persona: PersonaId | None = None
 
     @model_validator(mode="after")
     def validate_message(self):

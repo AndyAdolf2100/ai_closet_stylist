@@ -18,6 +18,7 @@ from .export import export_wardrobe
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
 from .models import ChatRequest, ForecastRequest, LocateRequest, Model
+from .personas import progress_message
 from .progress import events as progress_events
 from .runtime import RunManager
 from .store import Store
@@ -163,7 +164,8 @@ def create_app(settings=None):
             task = asyncio.create_task(runs.run(engine, Upstream(settings, token), request))
             progress_events.reset(context_token)
             try:
-                yield event("progress", {"stage": "connecting", "message": "衣衣收到啦，正在连接你的衣橱。"})
+                yield event("progress", {"stage": "connecting",
+                                         "message": progress_message(request.assistant_persona, "connecting")})
                 while not task.done():
                     update = asyncio.create_task(queue.get())
                     try:

@@ -59,7 +59,9 @@ class Store:
             conn.close()
 
     def reserve(self, owner, request):
-        digest = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
+        # Omitted persona preserves the digest of requests created before this field existed.
+        excluded = {"assistant_persona"} if request.assistant_persona is None else set()
+        digest = hashlib.sha256(request.model_dump_json(exclude=excluded).encode()).hexdigest()
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             old = conn.execute("SELECT * FROM stylist_requests WHERE owner_id=? AND request_id=?",
