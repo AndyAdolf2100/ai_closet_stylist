@@ -1,0 +1,16 @@
+# Run this versioned Job to completion before rolling out application Pods.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stylist-migrate-REPLACE_VERSION
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: registry.example.com/ai-closet-stylist:REPLACE_WITH_IMMUTABLE_VERSION
+          command: [/app/.venv/bin/python, -m, stylist.migrate]
+          envFrom:
+            - secretRef: {name: stylist-runtime}

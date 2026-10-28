@@ -217,39 +217,83 @@ async function refreshHistory() {
     }
   } catch (err) { $('notice').textContent = err.message; }
 }
-async function sendMessage() {
-  const text = $('message').value.trim();
+const PENDING_KEY = 'stylist-pending-run-v1';
+let pendingRun = null;
+try { pendingRun = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); } catch { pendingRun = null; }
+function savePending(value) {
+  pendingRun = value;
+  if (value) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
+  else sessionStorage.removeItem(PENDING_KEY);
+}
+async function sendMessage(resuming = false) {
+  const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
+  const text = saved?.request.message || $('message').value.trim();
   if (!text || busy || !requireLogin()) return;
-  const request = { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID() };
-  if ($('source').value) request.source = $('source').value;
-  if ($('weather').value) request.weather_policy = $('weather').value;
-  if (selectedCity) request.location = selectedCity;
+  const request = saved?.request || { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: $('confirm-plan').checked };
+  if (!saved && $('source').value) request.source = $('source').value;
+  if (!saved && $('weather').value) request.weather_policy = $('weather').value;
+  if (!saved && selectedCity) request.location = selectedCity;
+  savePending({owner: session.user.id, request});
   bubble('user', text); const pending = pendingBubble();
   setBusy(true); $('notice').textContent = '';
   try {
-    const response = await fetch('/api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
-    if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
-    const reader = response.body.getReader(), decoder = new TextDecoder(); let buffer = '', received = false;
-    while (true) {
-      const { value, done } = await reader.read(); buffer += decoder.decode(value, { stream: !done });
-      let cut;
-      while ((cut = buffer.indexOf('\n\n')) >= 0) {
-        const block = buffer.slice(0, cut); buffer = buffer.slice(cut + 2);
-        const kind = block.split('\n').find(x => x.startsWith('event: '))?.slice(7);
-        const raw = block.split('\n').filter(x => x.startsWith('data: ')).map(x => x.slice(6)).join('\n');
-        if (kind === 'error') { const data = JSON.parse(raw); throw error(data.code, data.message); }
-        if (kind === 'progress') pending.update(JSON.parse(raw));
-        if (kind === 'result') { pending.stop(); showReply(JSON.parse(raw)); received = true; }
+    let received = false;
+    while (!received) {
+      try {
+        const response = await fetch('/api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
+        if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
+        const reader = response.body.getReader(), decoder = new TextDecoder(); let buffer = '';
+        try {
+          while (!received) {
+            const { value, done } = await reader.read(); buffer += decoder.decode(value, { stream: !done });
+            let cut;
+            while ((cut = buffer.indexOf('\n\n')) >= 0) {
+              const block = buffer.slice(0, cut); buffer = buffer.slice(cut + 2);
+              const kind = block.split('\n').find(x => x.startsWith('event: '))?.slice(7);
+              const raw = block.split('\n').filter(x => x.startsWith('data: ')).map(x => x.slice(6)).join('\n');
+              if (kind === 'error') { const data = JSON.parse(raw); throw error(data.code, data.message); }
+              if (kind === 'progress') pending.update(JSON.parse(raw));
+              if (kind === 'result') {
+                const reply = JSON.parse(raw); pending.stop(); showReply(reply); received = true;
+                if (reply.pending_confirmation) showPlanApproval(request);
+                else savePending(null);
+              }
+            }
+            if (done) break;
+          }
+        } finally { await reader.cancel().catch(() => {}); }
+        if (!received) throw new TypeError('stream_disconnected');
+      } catch (err) {
+        if (!(err instanceof TypeError) && !['request_in_progress', 'server_draining'].includes(err.code)) throw err;
+        if (!session || session.user.id !== pendingRun?.owner) throw error('authentication_expired', '请重新登录后继续原任务。');
+        pending.update({stage: 'connecting', message: '连接正在恢复，已完成的步骤会保留…'});
+        await new Promise(resolve => setTimeout(resolve, 2500));
       }
-      if (done) break;
     }
-    if (!received) throw error('stream_incomplete', '连接中断，尚未收到完整结果。可在历史中查看当前对话。');
     $('message').value = ''; await refreshHistory();
   } catch (err) {
+    if (err.code !== 'authentication_expired') savePending(null);
     pending.stop(); bubble('error', err.message || '请求未完成，请稍后重试。');
     $('notice').textContent = err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : '输入还在，可以调整后再发给衣衣。';
     if (err.code === 'authentication_expired') expireSession(err.message);
   } finally { pending.stop(); setBusy(false); }
+}
+function showPlanApproval(request) {
+  const actions = el('div', 'followups');
+  for (const [approved, text] of [[true, '确认需求，继续搭配'], [false, '取消这次生成']]) {
+    const button = el('button', '', text);
+    button.onclick = async () => {
+      if (busy || !requireLogin()) return;
+      setBusy(true);
+      try {
+        const reply = await api('/api/chat/approval', {method:'POST', body:JSON.stringify({request, approved})});
+        savePending(null); actions.remove(); showReply(reply); await refreshHistory();
+      } catch (err) { $('notice').textContent = err.message; }
+      finally { setBusy(false); }
+    };
+    actions.append(button);
+  }
+  $('feed').append(actions); scrollBottom();
 }
 $('chat-form').onsubmit = event => { event.preventDefault(); sendMessage(); };
 $('message').onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendMessage(); } };
@@ -257,7 +301,7 @@ for (const button of document.querySelectorAll('[data-prompt]')) button.onclick 
 function resetChat() { if (busy) return; conversation = null; version = 0; $('feed').replaceChildren(); $('message').value = ''; $('notice').textContent = ''; $('source').value = ''; $('weather').value = ''; bubble('assistant', '我在呀。说说今天的安排，或你想穿的一件衣服，一起搭出喜欢的样子。'); if (selectedCity && session) loadForecast(); }
 $('new-chat').onclick = resetChat; $('mobile-new').onclick = resetChat;
 $('login-open').onclick = () => $('login-dialog').showModal(); $('login-cancel').onclick = () => $('login-dialog').close();
-$('logout').onclick = () => { sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; lastSessionOwner = null; conversation = null; version = 0; $('history').replaceChildren(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
+$('logout').onclick = () => { savePending(null); sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; lastSessionOwner = null; conversation = null; version = 0; $('history').replaceChildren(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
 $('login-form').onsubmit = async event => {
   event.preventDefault(); $('login-submit').disabled = true; $('login-error').textContent = '';
   try {
@@ -333,3 +377,5 @@ $('forecast-refresh').onclick = () => { if (!forecastBusy) loadForecast(); };
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
 setInterval(() => { if (!document.hidden && session && selectedCity && !forecastBusy) loadWarnings(); }, 120000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && session && selectedCity) loadWarnings(); });
+
+if (pendingRun && session && pendingRun.owner === session.user.id) sendMessage(true);

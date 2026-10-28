@@ -17,7 +17,10 @@ def test_health_does_not_claim_upstream_ready_and_assets_load(tmp_path):
         assert client.post("/api/integrations/check").status_code == 401
 
 
-def test_stream_delivers_structured_result_and_no_internal_details(tmp_path):
+def test_stream_delivers_structured_result_and_no_internal_details(tmp_path, monkeypatch):
+    async def identity(self):
+        return "1"
+    monkeypatch.setattr("stylist.main.Upstream.identity", identity)
     app = create_app(Settings(database=str(tmp_path / "state.db")))
     async def fake_chat(upstream, request):
         assert upstream.authorization == "Bearer test"

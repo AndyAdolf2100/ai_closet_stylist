@@ -2,7 +2,7 @@
 
 基于现有 AI Closet 表结构和 Go 服务接口的新穿搭 Agent。项目位置为 `backend/ai_closet_stylist`，与旧 Agent、`aicloset-server` 并列，可独立运行。
 
-核心目标：听懂当前需求、尊重禁忌与舒适、给能照着穿的方案，支持连续修改。采用一个主 Agent 的两阶段模型调用：需求整理、造型交付；程序负责商品身份、硬性限制、局部冻结和费用确认。
+核心目标：听懂当前需求、尊重禁忌与舒适、给能照着穿的方案，支持连续修改。采用一个主 Agent 的两阶段模型调用：需求整理、造型交付；LangGraph 负责分步编排、持久化检查点和需求确认恢复，程序负责商品身份、硬性限制、局部冻结和费用确认。
 
 产品目标、用户流程、免费与付费边界及迭代验收见 [产品需求文档 PRD](docs/PRD_AI_CLOSET_STYLIST.md)。文档明确区分当前实现、待验收能力与规划功能。
 
@@ -32,7 +32,7 @@ export STYLIST_LOGIN_PUBLIC_KEY=/absolute/path/to/public-key.pem
 sh run-local.sh
 ```
 
-以上密钥是占位符，不是可用配置。生产环境设置 `STYLIST_ENV=production` 关闭本地手机号登录代理，通过现有 App 提供的 Bearer 登录态访问。当前存储是独立 SQLite，生产多实例部署前需适配共享数据库与执行恢复机制，不能直接把这个本地启动方式当成生产验收完成。
+以上密钥是占位符，不是可用配置。生产环境设置 `STYLIST_ENV=production` 关闭本地手机号登录代理，通过现有 App 提供的 Bearer 登录态访问。本地默认独立 SQLite；多副本部署已增加共享 PostgreSQL 与持久化图检查点支持，仍须真实数据库和 K8s 演练，不能把本地测试当成生产验收完成。
 
 ## 已实现
 
@@ -80,3 +80,7 @@ uv run python scripts/evaluate_semantics.py
 `scripts/live_check.py` 支持通过标准输入接收登录凭证并进行真实只读接口检查、完整对话回放。凭证仅留在进程内存，不保存、不打印；不要把凭证写到脚本或提交到 Git。真实生成验收应由用户在页面确认本次费用后单独完成。
 
 本轮机器可读检查产物保存在被忽略的 `var/` 下。测试人物条件为合成场景，不代表账号持有人的真实身体条件或长期偏好。
+
+## LangGraph 与部署
+
+入门和节点对应关系见 [LangGraph 入门](docs/LANGGRAPH_QUICKSTART.md)；滚动发布、排空、断线恢复、PostgreSQL 配置和当前限制见 [K8s 部署说明](docs/KUBERNETES_DEPLOYMENT.md)。部署前先运行 `uv run python -m stylist.migrate` 创建业务及检查点表。

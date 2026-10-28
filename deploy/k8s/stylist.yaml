@@ -1,0 +1,85 @@
+# Template: replace the image digest before apply. Create stylist-runtime Secret
+# separately; never put credentials into this file. Run migrate Job first.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stylist
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels: {app: stylist}
+  template:
+    metadata:
+      labels: {app: stylist}
+    spec:
+      terminationGracePeriodSeconds: 330
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: stylist
+          image: registry.example.com/ai-closet-stylist:REPLACE_WITH_IMMUTABLE_VERSION
+          ports: [{name: http, containerPort: 8000}]
+          envFrom:
+            - secretRef: {name: stylist-runtime}
+          env:
+            - {name: STYLIST_ENV, value: production}
+            - {name: LANGSMITH_TRACING, value: 'false'}
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: '2', memory: 2Gi}
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: {path: /health/ready, port: http}
+            periodSeconds: 2
+            failureThreshold: 1
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 15
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /app/.venv/bin/python
+                  - -c
+                  - "import urllib.request,time; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/internal/drain',method='POST'),timeout=3).close(); time.sleep(10)"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ['ALL']}
+          volumeMounts:
+            - {name: temporary, mountPath: /tmp}
+            - {name: runtime, mountPath: /app/var}
+      volumes:
+        - {name: temporary, emptyDir: {}}
+        - {name: runtime, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stylist
+spec:
+  selector: {app: stylist}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: stylist
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: stylist}

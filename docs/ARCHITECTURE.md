@@ -1,5 +1,9 @@
 # 架构与执行边界
 
+## 持久化执行
+
+当前由 LangGraph 编排单个主 Agent，节点、检查点、暂停确认与恢复见 [入门说明](LANGGRAPH_QUICKSTART.md)。本地默认 SQLite，多副本需要共享 PostgreSQL；SSE 订阅断开不取消后台生成，异常死亡后由同一请求的重连恢复已完成步骤。没有独立后台调度器，收费写操作不纳入自动重试。部署参数与限制见 [K8s 部署说明](KUBERNETES_DEPLOYMENT.md)。
+
 ## 正常对话
 
 ```text

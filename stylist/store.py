@@ -10,15 +10,42 @@ from .errors import StylistError
 from .models import Reply, SessionState
 
 
+class PostgresConnection:
+    """Keep existing bound SQL statements portable; never interpolate values."""
+    def __init__(self, conn):
+        self.conn = conn
+
+    def execute(self, sql, args=()):
+        if sql == "BEGIN IMMEDIATE":
+            return self.conn.execute("SELECT 1")
+        return self.conn.execute(sql.replace("?", "%s"), args)
+
+    def executescript(self, sql):
+        for statement in sql.split(";"):
+            if statement.strip() and not statement.strip().startswith("PRAGMA"):
+                self.conn.execute(statement.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "BIGSERIAL PRIMARY KEY")
+                                  .replace(" REAL", " DOUBLE PRECISION"))
+
+
 class Store:
     def __init__(self, path):
         self.path = path
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        self.postgres = path.startswith(("postgres://", "postgresql://"))
+        if not self.postgres:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
         with self.connection() as conn:
             conn.executescript(Path(__file__).with_name("schema.sql").read_text())
 
     @contextmanager
     def connection(self):
+        if self.postgres:
+            import psycopg
+            from psycopg.rows import dict_row
+            with psycopg.connect(self.path, row_factory=dict_row) as conn:
+                # Short DB-only transactions. Shared across Pods, including image claims.
+                conn.execute("SELECT pg_advisory_xact_lock(81294731)")
+                yield PostgresConnection(conn)
+            return
         conn = sqlite3.connect(self.path, timeout=5)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys=ON")
@@ -56,7 +83,7 @@ class Store:
                 raise StylistError("request_in_progress", "正在处理这条对话，请等待当前结果。", 409)
             claim = uuid.uuid4().hex
             conn.execute("UPDATE stylist_sessions SET active_claim=?, lease_until=? WHERE id=?",
-                         (claim, time.time() + 600, cid))
+                         (claim, time.time() + 45, cid))
             conn.execute("INSERT INTO stylist_requests VALUES(?,?,?,?,?,NULL) "
                          "ON CONFLICT(owner_id,request_id) DO UPDATE SET status='processing',response_json=NULL",
                          (owner, request.request_id, cid, digest, "processing"))
@@ -79,6 +106,13 @@ class Store:
         with self.connection() as conn:
             conn.execute("UPDATE stylist_sessions SET active_claim=NULL,lease_until=0 WHERE id=? AND owner_id=? AND active_claim=?",
                          (cid, owner, claim))
+
+    def renew(self, owner, cid, claim):
+        with self.connection() as conn:
+            changed = conn.execute("UPDATE stylist_sessions SET lease_until=? WHERE id=? AND owner_id=? AND active_claim=?",
+                                   (time.time() + 45, cid, owner, claim))
+            if changed.rowcount != 1:
+                raise StylistError("request_superseded", "本次任务执行权已变化。", 409)
 
     def history(self, owner, cid):
         with self.connection() as conn:

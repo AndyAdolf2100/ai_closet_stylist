@@ -138,6 +138,8 @@ class Reply(Model):
     looks: list[Look] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     follow_ups: list[str] = Field(default_factory=list)
+    pending_confirmation: bool = False
+    request_id: str | None = None
 
 
 class SessionState(Model):
@@ -155,6 +157,7 @@ class ChatRequest(Model):
     weather_policy: Literal["auto", "ignored", "provided"] | None = None
     source: Literal["wardrobe", "hybrid", "catalog"] | None = None
     location: "CitySelection | None" = None
+    confirm_plan: bool = False
 
     @model_validator(mode="after")
     def validate_message(self):

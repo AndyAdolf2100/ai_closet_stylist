@@ -14,6 +14,7 @@ class Settings:
     llm_model: str = ""
     llm_key: str = field(default="", repr=False)
     database: str = "var/stylist.sqlite3"
+    checkpoint_database: str = field(default="", repr=False)
     request_timeout: float = 20
     llm_timeout: float = 90
     image_timeout: float = 240
@@ -47,6 +48,7 @@ class Settings:
             llm_model=os.getenv("STYLIST_LLM_MODEL", llm.get("model") or ""),
             llm_key=os.getenv("STYLIST_LLM_KEY", llm.get("api_key") or ""),
             database=os.getenv("STYLIST_DATABASE", cls.database),
+            checkpoint_database=os.getenv("STYLIST_CHECKPOINT_DATABASE", ""),
             login_public_key=os.getenv("STYLIST_LOGIN_PUBLIC_KEY", (raw.get("upstream_auth") or {}).get("public_key_path") or ""),
             login_app_version=os.getenv("STYLIST_LOGIN_APP_VERSION", (raw.get("upstream_auth") or {}).get("app_version") or "1.2.0"),
             alerts_url=os.getenv("STYLIST_ALERTS_URL", ""),
