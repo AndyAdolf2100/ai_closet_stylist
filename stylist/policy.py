@@ -141,6 +141,20 @@ def suitability(product: Product, task: Task):
     return reasons, warnings
 
 
+def top_layer_kind(product: Product):
+    """Use catalog garment types, never fabric alone, to distinguish compatible top layers."""
+    text = " ".join([product.title, product.secondary_class_name, product.class_name])
+    if re.search(r"打底|保暖内衣|秋衣", text):
+        return "base"
+    if "衬衫" in text:
+        return "shirt"
+    if re.search(r"针织|毛衣|羊毛衫|羊绒衫|卫衣|抓绒|马甲", text):
+        return "mid"
+    if re.search(r"T恤|t恤|T-shirt|tee", text, re.I):
+        return "base"
+    return None
+
+
 def validate_look(keys, candidates: dict[str, Product], task: Task, frozen: set[str]):
     if len(keys) != len(set(keys)) or any(key not in candidates for key in keys):
         return ["引用了不存在或重复的候选单品"]
@@ -149,7 +163,12 @@ def validate_look(keys, candidates: dict[str, Product], task: Task, frozen: set[
     items = [candidates[key] for key in keys]
     slots = [p.slot for p in items]
     problems = []
-    for slot in [Slot.TOP, Slot.BOTTOM, Slot.DRESS, Slot.OUTER, Slot.SHOES]:
+    tops = [p for p in items if p.slot == Slot.TOP]
+    if len(tops) > 1:
+        layers = [top_layer_kind(p) for p in tops]
+        if len(tops) > 3 or None in layers or len(layers) != len(set(layers)):
+            problems.append("多件上衣需能区分打底、衬衫和中间层，同一层不能重复选择；品类不明时先选一件")
+    for slot in [Slot.BOTTOM, Slot.DRESS, Slot.OUTER, Slot.SHOES]:
         if slots.count(slot) > 1:
             problems.append(f"{slot}位置重复")
     separates = Slot.TOP in slots and Slot.BOTTOM in slots

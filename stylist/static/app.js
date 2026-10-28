@@ -153,6 +153,25 @@ function bulletSection(card, title, items) {
   card.append(el('h4', '', title)); const list = el('ul');
   for (const item of items) list.append(el('li', '', item)); card.append(list);
 }
+function productGrid(items) {
+  const grid = el('div', 'products');
+  for (const item of items) {
+    const product = el('div', 'product');
+    const url = (item.cutout_image || item.original_image || '').replace(/^http:/i, 'https:');
+    if (url && /^https:\/\//i.test(url)) {
+      const img = el('img'); img.src = url; img.alt = (item.color || '') + (item.secondary_class_name || item.class_name || '单品');
+      img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+      const imageButton = el('button', 'product-image'); imageButton.type = 'button';
+      const original = (item.original_image || '').replace(/^http:/i, 'https:');
+      imageButton.dataset.previewSrc = /^https:\/\//i.test(original) ? original : url;
+      imageButton.setAttribute('aria-label', '放大查看' + img.alt);
+      imageButton.append(img); product.append(imageButton);
+    }
+    product.append(el('div', '', (item.color || '') + (item.secondary_class_name || item.class_name || item.title || '单品')));
+    product.append(el('span', '', item.source === 'user' ? '个人衣橱' : '系统衣橱')); grid.append(product);
+  }
+  return grid;
+}
 function showReply(reply) {
   conversation = reply.conversation_id; version = reply.version;
   const node = bubble('assistant', reply.message);
@@ -167,26 +186,16 @@ function showReply(reply) {
     }
     node.append(route);
   } else if (reply.weather?.days?.length) node.append(forecastCard(reply.weather));
+  if (reply.retained_items?.length) {
+    const retained = el('article', 'look retained-look');
+    retained.append(el('h3', '', '保留的衣物 · 本次未完成替换'),
+      el('p', '', '这些衣物仍按你的要求保留，还没有组成新的完整搭配。'), productGrid(reply.retained_items));
+    node.append(retained);
+  }
   for (const [lookIndex, look] of (reply.looks || []).entries()) {
     const card = el('article', 'look'); card.append(el('h3', '', look.title));
     if (look.items?.length) {
-      const grid = el('div', 'products');
-      for (const item of look.items) {
-        const product = el('div', 'product');
-        const url = (item.cutout_image || item.original_image || '').replace(/^http:/i, 'https:');
-        if (url && /^https:\/\//i.test(url)) {
-          const img = el('img'); img.src = url; img.alt = (item.color || '') + (item.secondary_class_name || item.class_name || '单品');
-          img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
-          const imageButton = el('button', 'product-image'); imageButton.type = 'button';
-          const original = (item.original_image || '').replace(/^http:/i, 'https:');
-          imageButton.dataset.previewSrc = /^https:\/\//i.test(original) ? original : url;
-          imageButton.setAttribute('aria-label', '放大查看' + img.alt);
-          imageButton.append(img); product.append(imageButton);
-        }
-        product.append(el('div', '', (item.color || '') + (item.secondary_class_name || item.class_name || item.title || '单品')));
-        product.append(el('span', '', item.source === 'user' ? '个人衣橱' : '系统衣橱')); grid.append(product);
-      }
-      card.append(grid);
+      card.append(productGrid(look.items));
     } else { bulletSection(card, '穿什么', look.pieces); }
     bulletSection(card, '为什么这样搭', look.why);
     bulletSection(card, '照着这样穿', look.how);

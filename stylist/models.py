@@ -152,6 +152,7 @@ class Reply(Model):
     task: Task
     weather: dict | None = None
     looks: list[Look] = Field(default_factory=list)
+    retained_items: list[Product] = Field(default_factory=list, max_length=10)
     warnings: list[str] = Field(default_factory=list)
     follow_ups: list[str] = Field(default_factory=list)
     pending_confirmation: bool = False

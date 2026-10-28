@@ -304,6 +304,8 @@ class Stylist:
                           delivery=delivery, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,
                           message=draft.message, task=task, looks=looks, weather=weather,
+                          retained_items=([Product.model_validate(p) for p in data["frozen"]]
+                                          if plan.mode == "modify" and not selected else []),
                           warnings=list(dict.fromkeys(warnings)), follow_ups=draft.follow_ups)
             return {"reply": reply.model_dump(mode="json")}
 

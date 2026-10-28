@@ -14,6 +14,7 @@
 | `weather_failure` | 上海天气服务失败 | 区别于不支持城市；不编造 15/20 度或多云等天气结论 |
 | `ignore_weather` | 搭配但明确忽略天气 | 仍读取衣橱，不调用城市/天气工具 |
 | `provided_weather` | 用户提供天气和温度 | 使用用户描述，不查询覆盖，仍从衣橱选款 |
+| `explore_cold_snow` / `explore_cold_layers` / `explore_layered_shoe_change` | 哈尔滨雪天、明确衬衫加针织叠穿、叠穿后只换鞋 | 正常返回真实叠穿；检查指定单品；保留全部未修改层次；禁穿和总预算仍逐件校验 |
 | `explore_city_correct` 及 text/weather/shoes 变体 | 上海任务 → 只改杭州；文字建议、只查天气、同时明确只换鞋 | 不追问换哪件；保留原约束；核对新城市；文字与天气不读衣橱；明确换鞋仍冻结其他单品 |
 | `persona_switch` | 女生穿搭 → 切换助理 | 改变表达，穿衣对象仍为女生，不额外读衣橱或天气 |
 

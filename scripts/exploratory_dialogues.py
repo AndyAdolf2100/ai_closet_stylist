@@ -13,6 +13,11 @@ CASES = {
         ("别的保留，只换双更适合下雨走路的鞋。", {"inventory": True, "freeze_except": ["shoes"], "manual": "保留未修改衣物，不编造鞋的防雨能力"}),
     ],
     "cold_snow": [("今天哈尔滨零下十几度、下雪，我要坐公交再走二十分钟，用衣橱搭一套，保暖第一。", {"inventory": True, "manual": "足够保暖，不用单件薄衬衫应付严寒；无证据不保证防滑"})],
+    "cold_layers": [("今天哈尔滨零下十几度、下雪，坐公交再走二十分钟。用衣橱里的白色长袖衬衫、米色羊毛针织衫叠穿，外面加黑色羽绒长外套，配长裤和黑色包脚短靴，给一套并说明从里到外怎么穿。", {"inventory": True, "delivery": "outfit", "item_keys": ["user:101", "user:107", "user:108", "user:102", "user:109"], "manual": "衬衫+针织+羽绒正常返回，说明层次和数据边界；不编造保暖等级或防滑性能"})],
+    "layered_shoe_change": [
+        ("不考虑天气，用衣橱白色长袖衬衫加米色羊毛针织衫叠穿，外加米白色薄外套，配灰色长裤和白色平底运动鞋，给一套。", {"inventory": True, "delivery": "outfit", "no_weather_tools": True, "item_keys": ["user:101", "user:107", "user:105", "user:102", "user:103"]}),
+        ("只把鞋换成黑色平底乐福鞋，衬衫、针织和外套以及裤子全部保留。", {"inventory": True, "delivery": "outfit", "no_weather_tools": True, "freeze_except": ["shoes"], "item_keys": ["user:101", "user:107", "user:105", "user:102", "user:104"]}),
+    ],
     "heat_aircon": [("广州今天外面33度，办公室空调18度，地铁通勤，帮我从衣橱搭一套。", {"inventory": True, "manual": "区分室外和办公室，给便携可穿脱层次，不只按一个温度选"})],
     "wind_skirt": [("北京今天风很大，我想穿裙子拍照，也得走半小时，衣橱里怎么搭稳妥？", {"inventory": True, "manual": "回应风和裙摆，不承诺实际风力，不为拍照忽视安全"})],
     "fog_cycling": [("成都今天有雾，骑车二十分钟上班，不穿高跟鞋，帮我搭一套。", {"inventory": True, "manual": "可见性、裤脚、长围巾与骑行安全；缺少能见度时不保证适宜骑行"})],
@@ -144,6 +149,8 @@ class ExploratoryUpstream(DialogueUpstream):
 
     def check(self, reply, expected):
         errors = []
+        if not set(expected.get("item_keys", [])) <= {p.key for look in reply.looks for p in look.items}:
+            errors.append("missing_requested_items")
         if "weather_only" in expected and reply.weather_only != expected["weather_only"]:
             errors.append("weather_only")
         if "weather_days" in expected and len((reply.weather or {}).get("days", [])) != expected["weather_days"]:

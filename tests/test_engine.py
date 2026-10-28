@@ -182,6 +182,8 @@ async def test_failed_shoe_replacement_preserves_real_outfit(tmp_path):
     result = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
         message="不穿高跟鞋，只换鞋。", request_id="outfit-replace", conversation_id=cid, expected_version=1))
     assert result.delivery == "concept" and not result.looks[0].items
+    assert {p.key for p in result.retained_items} == {top.key, bottom.key}
+    assert shoe.key not in {p.key for p in result.retained_items}
     with store.connection() as conn:
         from stylist.models import SessionState
         saved = SessionState.model_validate_json(conn.execute("SELECT state_json FROM stylist_sessions WHERE id=?", (cid,)).fetchone()[0])
