@@ -44,6 +44,8 @@ async function api(path, options = {}) {
 function scrollBottom() { $('feed').scrollTop = $('feed').scrollHeight; }
 function mascot(mood = 'greeting', size = '') {
   const node = el('div', 'mascot companion-sprite ' + size); node.dataset.mood = mood;
+  // Offset each portrait so a conversation does not blink in unison.
+  node.style.setProperty('--blink-delay', `-${(Math.random() * 15).toFixed(2)}s`);
   node.setAttribute('role', 'img'); node.setAttribute('aria-label', { greeting: '衣衣向你打招呼', weather: '衣衣查看天气', wardrobe: '衣衣挑选衣服', thinking: '衣衣认真思考', happy: '衣衣展示搭配', rain: '衣衣撑伞提醒' }[mood] || '衣衣');
   return node;
 }
