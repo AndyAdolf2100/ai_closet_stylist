@@ -17,6 +17,54 @@ class FakeModel:
         return self.plan if name == "plan" else self.draft
 
 
+@pytest.mark.parametrize("persona,expected", [
+    ("male_calm_v1", "奥克兰的天气，我暂时还查不到。"),
+    ("female_warm_v1", "奥克兰的天气，我这边暂时还查不到呢。"),
+    (None, "奥克兰的天气，我这边暂时还查不到呢。"),
+])
+@pytest.mark.parametrize("mode", ["consult", "recommend"])
+@pytest.mark.asyncio
+async def test_unsupported_city_replies_in_persona_without_reusing_old_city_weather(tmp_path, persona, expected, mode):
+    from stylist.models import CitySelection
+
+    calls = []
+    class Upstream:
+        async def identity(self):
+            return "1"
+        @asynccontextmanager
+        async def mcp(self):
+            class MCP:
+                async def call(self, name, args):
+                    calls.append(name)
+                    assert name == "city.resolve"
+                    assert args == {"name": "奥克兰"}
+                    return {"status": "not_found", "matches": [], "truncated": False}
+            yield MCP()
+        async def get(self, *args):
+            pytest.fail("Unsupported cities must not proceed to wardrobe retrieval")
+
+    store = Store(str(tmp_path / "state.db"))
+    original = ChatRequest(message="去三亚旅行", request_id="sanya-weather-first")
+    cid, claim, state, _ = store.reserve("1", original)
+    state.task = Task(city="三亚", temp_min=25, temp_max=31, weather_description="多云")
+    state.looks = [Look(title="三亚旅行", pieces=["短袖"], why=["适合旅行"], how=["按体感穿脱"])]
+    state.messages = [{"role": "assistant", "content": "三亚今天多云，25—31度，推荐两套旅行装。"}]
+    store.finish("1", original, claim, state, Reply(conversation_id=cid, version=1,
+        mode="recommend", delivery="advice", message="三亚天气", task=state.task, looks=state.looks))
+    model = FakeModel(Plan(mode=mode, use_inventory=mode == "recommend", weather_scope="day",
+        changes={"city": Change(value="奥克兰", evidence="奥克兰")}),
+        Draft(message="三亚今天多云，25—31度。"))
+    reply = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
+        message="今天奥克兰天气如何", conversation_id=cid, expected_version=1, request_id="auckland-weather",
+        assistant_persona=persona, location=CitySelection(city_name="三亚", province_name="海南省")))
+    assert reply.message == expected and reply.delivery == "clarification"
+    assert reply.weather is None and reply.looks == [] and reply.follow_ups == []
+    assert reply.task.city == "奥克兰" and reply.task.temp_min is None and reply.task.temp_max is None
+    assert reply.task.weather_description == ""
+    assert calls == ["city.resolve"]
+    assert [name for name, _ in model.inputs] == ["plan"]
+
+
 @pytest.mark.asyncio
 async def test_weather_advice_followup_can_select_real_wardrobe_without_previous_products(tmp_path):
     rows = [

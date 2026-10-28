@@ -135,6 +135,8 @@ class WeatherService:
             if province_name:
                 args["province_name"] = province_name
             data = await mcp.call("city.resolve", args)
+        if data.get("status") == "not_found" and not data.get("matches") and not data.get("truncated"):
+            raise StylistError("weather_city_unsupported", f"暂时还查不到{city_name}的天气。", 422)
         if data.get("status") != "resolved" or data.get("truncated") or len(data.get("matches", [])) != 1:
             raise StylistError("city_needs_selection", "这个地点还需要确认，请填写更完整的省市名称。", 422)
         return data["matches"][0]

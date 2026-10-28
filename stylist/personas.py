@@ -19,6 +19,12 @@ def persona_instructions(persona_id=None):
     return Path(__file__).with_name("prompts").joinpath(_FILES[key]).read_text()
 
 
+def unsupported_city_message(persona_id, city):
+    if persona_id == "male_calm_v1":
+        return f"{city}的天气，我暂时还查不到。"
+    return f"{city}的天气，我这边暂时还查不到呢。"
+
+
 def progress_message(persona_id, stage):
     male = persona_id == "male_calm_v1"
     messages = {

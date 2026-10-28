@@ -204,3 +204,83 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
   .preview-navigation{gap:12px;flex-wrap:wrap}
   .preview-navigation span{order:1;width:100%;font-size:11px}
 }
+
+/* Searchable city picker; each column scrolls without moving the confirmation. */
+#location-dialog{position:fixed;width:min(600px,calc(100% - 32px));padding:0;max-height:calc(var(--city-viewport,100dvh) - 24px);overflow:hidden}
+#location-form{display:flex;flex-direction:column;height:min(750px,calc(var(--city-viewport,100dvh) - 32px));min-height:0}
+.location-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 22px 0;flex-shrink:0}
+#location-title{margin:8px 0 0;font-size:25px}
+#location-cancel{min-width:60px;min-height:44px}
+#location-dialog .location-intro{margin:10px 22px;font-size:12px;flex-shrink:0}
+#location-dialog .location-action{width:auto;margin:0 22px;min-height:44px;flex-shrink:0}
+#location-status{margin:8px 22px;font-size:12px;line-height:1.5;flex-shrink:0}
+#location-status:empty{display:none}
+#city-picker{display:flex;flex:1;flex-direction:column;min-height:0;margin-top:12px}
+#location-dialog .city-picker-label{margin:0 22px;font-size:12px;flex-shrink:0}
+#location-dialog .city-picker-input{margin-top:6px;min-height:46px;font-size:16px;background:var(--paper);color:var(--ink)}
+.city-picker-summary{font-size:12px;line-height:1.5;color:var(--accent);margin:10px 22px;flex-shrink:0}
+.city-picker-browse{display:grid;grid-template-columns:minmax(100px,36%) minmax(0,1fr);flex:1;min-height:0;border-block:1px solid var(--line)}
+.city-picker-provinces,.city-picker-cities,.city-picker-results{overflow:auto;overscroll-behavior:contain;min-height:0;scroll-padding:8px}
+.city-picker-provinces{background:var(--soft);padding:6px;border-right:1px solid var(--line)}
+.city-picker-cities{padding:6px 10px;color:var(--muted);font-size:13px}
+.city-picker-results{flex:1;padding:0 16px;color:var(--muted);font-size:13px}
+#city-picker [hidden]{display:none}
+#city-picker button{display:block;width:100%;min-height:46px;margin:2px 0;padding:11px 10px;text-align:left;border:1px solid transparent;background:transparent;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+#city-picker button[aria-pressed=true]{background:var(--paper);border-color:var(--accent);color:var(--accent);font-weight:600}
+#city-picker button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#city-picker button small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.location-footer{flex-shrink:0;padding:14px 22px;background:var(--paper);border-top:1px solid var(--line)}
+#location-save{width:100%;min-height:48px}
+#location-dialog .geo-credit{margin:8px 0 0;font-size:10px;line-height:1.5}
+@media(max-width:600px){
+  #location-dialog{width:100%;max-width:none;max-height:calc(var(--city-viewport,100dvh) - 12px);border:0;border-radius:22px 22px 0 0;margin:0;inset:var(--city-top,12px) 0 auto}
+  #location-form{height:min(780px,calc(var(--city-viewport,100dvh) - 12px))}
+  .location-heading{padding:18px 16px 0}
+  #location-dialog .location-intro{margin-inline:16px}
+  #location-dialog .location-action{margin-inline:16px}
+  #location-status{margin-inline:16px}
+  #location-dialog .city-picker-label{margin-inline:16px}
+  .city-picker-summary{margin-inline:16px}
+  .city-picker-browse{grid-template-columns:minmax(100px,37%) minmax(0,1fr)}
+  #city-picker button{font-size:13px}
+  .location-footer{padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+}
+@media(max-height:550px){
+  #location-dialog .eyebrow,#location-dialog .location-intro,#location-dialog .geo-credit{display:none}
+  .location-heading{padding-top:6px}
+  #location-title{font-size:20px;margin-top:0}
+  #location-dialog .location-action{min-height:36px;padding-block:6px}
+  #city-picker{margin-top:8px}
+  #location-dialog .city-picker-label{font-size:0}
+  .city-picker-summary{margin-block:6px}
+  .location-footer{padding-block:8px}
+}
+#location-dialog.location-compact :is(.eyebrow,.location-intro,.geo-credit){display:none}
+#location-dialog.location-compact .location-heading{padding-top:6px}
+#location-dialog.location-compact #location-title{font-size:20px;margin-top:0}
+#location-dialog.location-compact .location-action{min-height:36px;padding-block:6px}
+#location-dialog.location-compact #city-picker{margin-top:8px}
+#location-dialog.location-compact .city-picker-label{font-size:0}
+#location-dialog.location-compact .city-picker-summary{margin-block:6px}
+#location-dialog.location-compact .location-footer{padding-block:8px}
+
+/* The desktop sidebar is hidden on phones, so history has its own entry. */
+#mobile-history{display:none;min-height:44px;white-space:nowrap}
+#history-dialog{width:min(480px,calc(100% - 32px));max-height:85dvh;padding:22px;overflow:hidden}
+#history-dialog[open]{display:flex;flex-direction:column;gap:12px}
+.history-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+#history-title{margin:0;font-size:24px}
+#history-close,#history-refresh{min-height:44px}
+#history-dialog #mobile-new{display:block;min-height:48px;flex-shrink:0}
+#history-status{font-size:12px;line-height:1.6;color:var(--muted);flex-shrink:0}
+#history-status:empty{display:none}
+#mobile-history-list{overflow:auto;overscroll-behavior:contain;min-height:0;flex:1}
+#mobile-history-list button{display:block;width:100%;min-height:52px;margin-bottom:8px;text-align:left;font-size:13px;background:var(--paper)}
+#mobile-history-list button[aria-current=true]{border-color:var(--accent);color:var(--accent);background:var(--soft)}
+@media(max-width:760px){
+  #mobile-history{display:block}
+  header{gap:6px}
+  header .header-brand{flex-shrink:0}
+  header .subtle{padding-inline:8px;font-size:12px;white-space:nowrap}
+  #history-dialog{width:100%;max-width:none;max-height:85dvh;padding:20px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));margin:0;inset:auto 0 0;border:0;border-radius:22px 22px 0 0}
+}

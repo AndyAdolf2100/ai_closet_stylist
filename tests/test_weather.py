@@ -57,6 +57,26 @@ class FakeUpstream:
         return {"list": self.rows}
 
 
+@pytest.mark.parametrize("resolution,code", [
+    ({"status": "not_found", "matches": [], "truncated": False}, "weather_city_unsupported"),
+    ({"status": "ambiguous", "matches": [{}, {}], "truncated": False}, "city_needs_selection"),
+    ({"status": "not_found", "matches": [], "truncated": True}, "city_needs_selection"),
+])
+@pytest.mark.asyncio
+async def test_city_not_supported_is_distinct_from_ambiguous_or_truncated_results(resolution, code):
+    class Upstream:
+        @asynccontextmanager
+        async def mcp(self):
+            class MCP:
+                async def call(self, name, args):
+                    assert name == "city.resolve"
+                    return resolution
+            yield MCP()
+    with pytest.raises(StylistError) as error:
+        await WeatherService().resolve(Upstream(), "奥克兰")
+    assert error.value.code == code
+
+
 @pytest.mark.asyncio
 async def test_dates_are_matched_not_assumed_by_row_position_and_cache_retains_fetch_time(monkeypatch):
     monkeypatch.setattr("stylist.weather.today", lambda: date(2026, 10, 27))

@@ -16,7 +16,7 @@ from langgraph.types import Command, RetryPolicy, interrupt
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .models import Draft, Look, Plan, Reply, SessionState, Task
-from .personas import progress_message
+from .personas import progress_message, unsupported_city_message
 from .policy import frozen_products, interpret_task, suitability, validate_look
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
@@ -143,6 +143,15 @@ class Stylist:
                     except AuthenticationExpired:
                         raise
                     except StylistError as exc:
+                        if exc.code == "weather_city_unsupported":
+                            plan.clarification = unsupported_city_message(request.assistant_persona, task.city)
+                            task.temp_min = task.temp_max = None
+                            task.weather_description = ""
+                            effective_task.temp_min = effective_task.temp_max = None
+                            effective_task.weather_description = ""
+                            return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
+                                    "effective_task": effective_task.model_dump(mode="json"),
+                                    "weather": None, "warnings": [], "service_gap": False}
                         warnings.append(f"完整预报暂时没取到（{exc.code}），不能保证早晚或整周天气。")
                         if scope == "day":
                             try:
@@ -279,7 +288,7 @@ class Stylist:
         builder.add_edge(START, "understand")
         builder.add_conditional_edges("understand", lambda d: "deliver" if d["plan"]["clarification"] else "approval")
         builder.add_conditional_edges("approval", lambda d: "deliver" if d["cancelled"] else "weather")
-        builder.add_edge("weather", "retrieve")
+        builder.add_conditional_edges("weather", lambda d: "deliver" if d["plan"]["clarification"] else "retrieve")
         builder.add_edge("retrieve", "style")
         builder.add_edge("style", "validate")
         builder.add_conditional_edges("validate", lambda d: "repair" if d["problems"] else "deliver")

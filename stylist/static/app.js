@@ -7,20 +7,27 @@ const CITY_KEY = 'ai-closet-stylist-city-v1';
 try { selectedCity = JSON.parse(sessionStorage.getItem(CITY_KEY) || 'null'); } catch { selectedCity = null; }
 try { session = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch { session = null; }
 let lastSessionOwner = session?.user?.id || null;
-let cityCatalog = null, warningSequence = 0;
+let cityCatalog = null, warningSequence = 0, historySequence = 0;
 const citiesReady = fetch('/static/china-cities.json').then(r => { if (!r.ok) throw new Error('城市列表加载失败，请刷新后重试。'); return r.json(); }).then(data => {
-  cityCatalog = data; for (const province of Object.keys(data)) { const option = document.createElement('option'); option.value = option.textContent = province; $('province-name').append(option); } return data;
+  cityCatalog = data; cityPicker.setCatalog(data); return data;
 }).catch(err => { $('location-status').textContent = err.message; return null; });
 const el = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text != null) node.textContent = text; return node; };
+let locationSequence = 0, locationSaving = false;
+const cityPicker = new CityPicker($('city-picker'), { onChange: () => {
+  locationSequence++; $('locate-me').disabled = locationSaving;
+  $('location-status').textContent = ''; updateLocationSave();
+} });
+function updateLocationSave() { $('location-save').disabled = locationSaving || !cityPicker.getValue(); }
 const error = (code, message) => Object.assign(new Error(message), { code });
 function loginStatus() { $('login-open').textContent = session ? '衣橱已连接' : '登录衣橱'; }
 function expireSession(message) {
   lastSessionOwner = session?.user?.id || lastSessionOwner;
   session = null; sessionStorage.removeItem(KEY); loginStatus();
+  clearHistory();
   warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true;
   $('login-error').textContent = message || '登录状态已失效，请重新登录。原输入和当前对话会保留。';
   $('notice').textContent = $('login-error').textContent;
-  for (const id of ['service-dialog', 'location-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['service-dialog', 'location-dialog', 'history-dialog']) if ($(id).open) $(id).close();
   if (!$('login-dialog').open) $('login-dialog').showModal();
 }
 function headers() { return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session?.access_token || '') }; }
@@ -202,27 +209,48 @@ function showReply(reply) {
 function setBusy(value) {
   busy = value; $('send').disabled = value; $('source').disabled = value; $('weather').disabled = value;
   $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
+  $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
   $('location-open').disabled = value;
 }
 async function refreshHistory() {
   if (!session) return;
+  const owner = session.user.id, sequence = ++historySequence;
   try {
-    const rows = await api('/api/conversations'); $('history').replaceChildren();
-    for (const row of rows) {
-      const button = el('button', '', row.updated_at + ' · ' + row.version + ' 轮');
-      button.onclick = async () => {
-        if (busy) return;
-        try {
-          const record = await api('/api/conversations/' + row.id); $('feed').replaceChildren();
-          for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
-          conversation = record.conversation_id; version = record.version;
-          $('source').value = ''; $('weather').value = '';
-        } catch (err) { $('notice').textContent = err.message; }
-      };
-      $('history').append(button);
+    const rows = await api('/api/conversations');
+    if (session?.user.id !== owner || sequence !== historySequence) return;
+    $('history-status').textContent = rows.length ? '' : '还没有历史对话，开始聊聊吧。';
+    for (const container of [$('history'), $('mobile-history-list')]) {
+      container.replaceChildren();
+      for (const row of rows) {
+        const button = el('button', '', row.updated_at + ' · ' + row.version + ' 轮'); button.type = 'button';
+        if (row.id === conversation) button.setAttribute('aria-current', 'true');
+        button.onclick = async () => {
+          if (busy || session?.user.id !== owner) return;
+          setBusy(true); $('history-status').textContent = '正在打开对话…';
+          try {
+            const record = await api('/api/conversations/' + row.id);
+            if (session?.user.id !== owner) return;
+            $('feed').replaceChildren();
+            for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
+            conversation = record.conversation_id; version = record.version;
+            $('source').value = ''; $('weather').value = '';
+            for (const list of [$('history'), $('mobile-history-list')]) {
+              list.querySelectorAll('[aria-current]').forEach(item => item.removeAttribute('aria-current'));
+              list.children[rows.indexOf(row)]?.setAttribute('aria-current', 'true');
+            }
+            $('history-status').textContent = ''; $('history-dialog').close();
+          } catch (err) { $('notice').textContent = err.message; $('history-status').textContent = err.message; }
+          finally { setBusy(false); }
+        };
+        container.append(button);
+      }
     }
-  } catch (err) { $('notice').textContent = err.message; }
+  } catch (err) { if (session?.user.id === owner && sequence === historySequence) { $('notice').textContent = err.message; $('history-status').textContent = err.message; } }
+}
+function clearHistory() {
+  historySequence++; $('history').replaceChildren(); $('mobile-history-list').replaceChildren();
+  $('history-status').textContent = '';
 }
 const PENDING_KEY = 'stylist-pending-run-v1';
 let pendingRun = null;
@@ -306,10 +334,20 @@ function showPlanApproval(request) {
 $('chat-form').onsubmit = event => { event.preventDefault(); sendMessage(); };
 $('message').onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendMessage(); } };
 for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { $('message').value = button.dataset.prompt; $('message').focus(); };
-function resetChat() { if (busy) return; conversation = null; version = 0; $('feed').replaceChildren(); $('message').value = ''; $('notice').textContent = ''; $('source').value = ''; $('weather').value = ''; bubble('assistant', '我在呀。说说今天的安排，或你想穿的一件衣服，一起搭出喜欢的样子。'); if (selectedCity && session) loadForecast(); }
+function resetChat() { if (busy) return; $('history-dialog').close(); document.querySelectorAll('#history [aria-current], #mobile-history-list [aria-current]').forEach(item => item.removeAttribute('aria-current')); conversation = null; version = 0; $('feed').replaceChildren(); $('message').value = ''; $('notice').textContent = ''; $('source').value = ''; $('weather').value = ''; bubble('assistant', '我在呀。说说今天的安排，或你想穿的一件衣服，一起搭出喜欢的样子。'); if (selectedCity && session) loadForecast(); }
 $('new-chat').onclick = resetChat; $('mobile-new').onclick = resetChat;
+$('mobile-history').onclick = async () => {
+  if (busy || !requireLogin()) return;
+  $('history-dialog').showModal(); $('history-status').textContent = '正在加载历史对话…';
+  await refreshHistory();
+};
+$('history-close').onclick = () => $('history-dialog').close();
+$('history-refresh').onclick = async () => {
+  $('history-refresh').disabled = true; $('history-status').textContent = '正在刷新…';
+  try { await refreshHistory(); } finally { $('history-refresh').disabled = busy; }
+};
 $('login-open').onclick = () => $('login-dialog').showModal(); $('login-cancel').onclick = () => $('login-dialog').close();
-$('logout').onclick = () => { savePending(null); sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; lastSessionOwner = null; conversation = null; version = 0; $('history').replaceChildren(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
+$('logout').onclick = () => { savePending(null); sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; lastSessionOwner = null; conversation = null; version = 0; clearHistory(); $('history-dialog').close(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
 $('login-form').onsubmit = async event => {
   event.preventDefault(); $('login-submit').disabled = true; $('login-error').textContent = '';
   try {
@@ -317,7 +355,7 @@ $('login-form').onsubmit = async event => {
     if (!device) { device = 'stylist-' + crypto.randomUUID(); sessionStorage.setItem('stylist-device-id', device); }
     const response = await fetch('/auth/mobile-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mobile: $('mobile').value, code: $('code').value, device_id: device }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.message || '登录未成功');
-    if (lastSessionOwner && lastSessionOwner !== data.user.id) { conversation = null; version = 0; $('feed').replaceChildren(); $('history').replaceChildren(); }
+    if (lastSessionOwner && lastSessionOwner !== data.user.id) { conversation = null; version = 0; $('feed').replaceChildren(); clearHistory(); }
     session = data; lastSessionOwner = data.user.id; sessionStorage.setItem(KEY, JSON.stringify(data)); $('code').value = ''; $('notice').textContent = ''; $('login-dialog').close(); loginStatus(); await refreshHistory(); if (selectedCity) loadForecast();
   } catch (err) { $('login-error').textContent = err.message; } finally { $('login-submit').disabled = false; }
 };
@@ -348,38 +386,61 @@ $('image-confirm').onclick = async () => {
   } catch (err) { $('image-status').textContent = err.message; }
   finally { $('image-cancel').disabled = false; $('image-cancel').textContent = '关闭'; }
 };
-function fillCities(province, chosen = '') {
-  const select = $('city-name'); select.replaceChildren(el('option', '', province ? '请选择城市' : '请先选择省份')); select.firstChild.value = '';
-  const rows = cityCatalog?.[province] || [];
-  for (const city of rows) { const option = el('option', '', city); option.value = city; select.append(option); }
-  select.disabled = !rows.length; select.value = rows.includes(chosen) ? chosen : rows.length === 1 ? rows[0] : '';
+$('location-open').onclick = async () => {
+  if (!requireLogin()) return;
+  const owner = session.user.id;
+  await citiesReady;
+  if (!session || session.user.id !== owner) return;
+  if (!cityCatalog) { $('notice').textContent = '城市列表加载失败，请刷新后重试。'; return; }
+  $('location-status').textContent = ''; updateLocationViewport(); $('location-dialog').showModal();
+  cityPicker.setValue(selectedCity); updateLocationSave();
+  // Keep the software keyboard closed until the user chooses to search.
+  $('location-cancel').focus({ preventScroll: true });
+};
+function updateLocationViewport() {
+  const viewport = window.visualViewport;
+  const height = viewport?.height || window.innerHeight;
+  $('location-dialog').style.setProperty('--city-viewport', `${height}px`);
+  $('location-dialog').style.setProperty('--city-top', `${(viewport?.offsetTop || 0) + Math.max(12, height - 780)}px`);
+  $('location-dialog').classList.toggle('location-compact', height < 550);
 }
-function selectCatalogCity(city) {
-  const province = Object.keys(cityCatalog || {}).find(p => p === city.province_name || p.replace(/省$|市$|自治区$|特别行政区$/, '') === city.province_name);
-  $('province-name').value = province || ''; fillCities(province || '', city.city_name);
-  return Boolean(province && $('city-name').value);
-}
-$('province-name').onchange = () => { fillCities($('province-name').value); $('location-status').textContent = ''; };
-$('location-open').onclick = async () => { if (!requireLogin()) return; await citiesReady; if (!cityCatalog) { $('notice').textContent = '城市列表加载失败，请刷新后重试。'; return; } selectCatalogCity(selectedCity || {}); $('location-status').textContent = ''; $('location-dialog').showModal(); };
+window.visualViewport?.addEventListener('resize', updateLocationViewport);
+window.visualViewport?.addEventListener('scroll', updateLocationViewport);
+window.addEventListener('resize', updateLocationViewport);
 $('location-cancel').onclick = () => $('location-dialog').close();
+$('location-dialog').addEventListener('close', () => {
+  locationSequence++; $('locate-me').disabled = locationSaving; updateLocationSave();
+});
 $('locate-me').onclick = async () => {
   if (!requireLogin()) return;
-  if (!window.isSecureContext || !navigator.geolocation) { $('location-status').textContent = '当前浏览器环境不支持定位，可以手动填写城市。'; return; }
-  $('locate-me').disabled = true; $('location-save').disabled = true; $('city-name').value = ''; $('province-name').value = ''; $('location-status').textContent = '请允许浏览器访问位置，衣衣只需要知道城市。';
+  if (!window.isSecureContext || !navigator.geolocation) { $('location-status').textContent = '当前浏览器环境不支持定位，可以搜索或点选城市。'; return; }
+  const sequence = ++locationSequence, owner = session.user.id;
+  const current = () => sequence === locationSequence && session?.user.id === owner && $('location-dialog').open;
+  $('locate-me').disabled = true; $('location-status').textContent = '请允许浏览器访问位置，也可以直接搜索或点选城市。';
   try {
     const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }));
+    if (!current()) return;
     const city = await api('/api/location/resolve', { method: 'POST', body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude, coordinate_system: 'wgs84' }) });
     await citiesReady;
-    if (!selectCatalogCity(city)) { $('location-status').textContent = '已识别到 ' + city.city_name + '，请从省市列表确认对应城市。'; return; }
+    if (!current()) return;
+    if (!cityPicker.setValue(city)) { $('location-status').textContent = '已识别到 ' + city.city_name + '，请搜索或点选对应城市。'; return; }
     $('location-status').textContent = '找到 ' + city.city_name + (city.district_name ? ' · ' + city.district_name : '') + ' 啦，请确认后使用。' + (position.coords.accuracy > 5000 ? '浏览器定位精度较低，如果不是你所在的城市，请手动修改。' : '');
-  } catch (err) { $('location-status').textContent = err.code === 1 ? '定位权限未开启，没关系，手动填写城市也可以。' : err.code === 3 ? '定位超时啦，可以再试一次或手动填写。' : err.message || '暂时没有定位成功，可以手动填写城市。'; }
-  finally { $('locate-me').disabled = false; $('location-save').disabled = false; }
+  } catch (err) { if (current()) $('location-status').textContent = err.code === 1 ? '定位权限未开启，搜索或点选城市也可以。' : err.code === 3 ? '定位超时啦，可以再试一次或搜索城市。' : err.message || '暂时没有定位成功，可以搜索或点选城市。'; }
+  finally { if (current()) { $('locate-me').disabled = false; updateLocationSave(); } }
 };
 $('location-form').onsubmit = async event => {
-  event.preventDefault(); if (forecastBusy) return;
-  $('location-save').disabled = true;
-  try { if (await loadForecast({ city_name: $('city-name').value.trim(), province_name: $('province-name').value.trim() })) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
-  finally { $('location-save').disabled = false; }
+  event.preventDefault();
+  if (locationSaving) return;
+  if (forecastBusy) { $('location-status').textContent = '天气正在更新，请稍后再确认。'; return; }
+  const city = cityPicker.getValue();
+  if (!city) { $('location-status').textContent = '请先从列表中选择一座城市。'; cityPicker.input.focus(); return; }
+  locationSequence++; locationSaving = true; $('city-picker').inert = true;
+  $('locate-me').disabled = true; updateLocationSave(); $('location-save').textContent = '正在查询天气…';
+  try { if (await loadForecast(city)) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
+  finally {
+    locationSaving = false; $('city-picker').inert = false; $('locate-me').disabled = false;
+    $('location-save').textContent = '确认城市，看看天气'; updateLocationSave();
+  }
 };
 $('forecast-refresh').onclick = () => { if (!forecastBusy) loadForecast(); };
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
