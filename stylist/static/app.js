@@ -159,7 +159,12 @@ function showReply(reply) {
         const url = (item.cutout_image || item.original_image || '').replace(/^http:/i, 'https:');
         if (url && /^https:\/\//i.test(url)) {
           const img = el('img'); img.src = url; img.alt = (item.color || '') + (item.secondary_class_name || item.class_name || '单品');
-          img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; product.append(img);
+          img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+          const imageButton = el('button', 'product-image'); imageButton.type = 'button';
+          const original = (item.original_image || '').replace(/^http:/i, 'https:');
+          imageButton.dataset.previewSrc = /^https:\/\//i.test(original) ? original : url;
+          imageButton.setAttribute('aria-label', '放大查看' + img.alt);
+          imageButton.append(img); product.append(imageButton);
         }
         product.append(el('div', '', (item.color || '') + (item.secondary_class_name || item.class_name || item.title || '单品')));
         product.append(el('span', '', item.source === 'user' ? '个人衣橱' : '系统衣橱')); grid.append(product);

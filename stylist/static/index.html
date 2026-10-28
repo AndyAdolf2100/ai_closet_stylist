@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN" data-stylist-gender="female">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><script src="/static/appearance.js?v=persona-v1-20261028"></script><link rel="stylesheet" href="/static/style.css?v=unified-window-blink-v3-20261028"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><script src="/static/appearance.js?v=persona-v1-20261028"></script><link rel="stylesheet" href="/static/style.css?v=product-preview-20261028"></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/">衣间<span>YOUR EVERYDAY STYLIST</span></a>
@@ -42,5 +42,5 @@
 <dialog id="service-dialog"><h2>服务连接检查</h2><p>实际查询当前账号可用的接口，不执行扣费生图。</p><pre id="service-results"></pre><button id="service-close" class="primary">关闭</button></dialog>
 <dialog id="location-dialog"><form id="location-form"><div class="eyebrow">A LITTLE WEATHER CARE</div><h2>你在哪座城市呀？</h2><p>选择省份和城市就好，不需要具体地址。也可以点击定位，经确认后使用；坐标会降低精度交给OpenStreetMap转换城市，不写入对话。</p><button type="button" id="locate-me" class="location-action">⌖ 使用当前位置</button><div id="location-status" role="status"></div><label>省份 / 直辖市 / 自治区<select id="province-name" required aria-label="选择省份"><option value="">请选择省份</option></select></label><label>城市<select id="city-name" required disabled aria-label="选择城市"><option value="">请先选择省份</option></select></label><div class="dialog-actions"><button type="button" id="location-cancel" class="subtle">稍后再说</button><button type="submit" id="location-save" class="primary">确认城市，看看天气</button></div><p class="geo-credit">省市列表保存在本项目；天气可用范围以服务端城市目录为准。定位数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a></p></form></dialog>
 <dialog id="image-dialog"><h2>试穿这套搭配</h2><div id="image-details"></div><div id="image-status" role="status"></div><div class="dialog-actions"><button id="image-cancel" class="subtle">暂不生成</button><button id="image-confirm" class="primary">确认费用并生成</button></div></dialog>
-<script src="/static/weather-visuals.js?v=stylist-gender-20261028" defer></script><script src="/static/app.js?v=persona-v1-20261028" defer></script>
+<script src="/static/weather-visuals.js?v=stylist-gender-20261028" defer></script><script src="/static/product-preview.js?v=1" defer></script><script src="/static/app.js?v=product-preview-20261028" defer></script>
 </body></html>
