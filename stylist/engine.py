@@ -17,7 +17,12 @@ from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .grounding import PREFIX, attribute_claim_problems, attribute_context, ground_attribute_fallback
 from .models import Draft, Look, Plan, Reply, SessionState, Task
-from .personas import itinerary_weather_message, progress_message, unsupported_city_message
+from .personas import (
+    itinerary_weather_message,
+    progress_message,
+    technical_detail_message,
+    unsupported_city_message,
+)
 from .policy import frozen_products, interpret_task, suitability, validate_look
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
@@ -268,6 +273,8 @@ class Stylist:
             return draft_payload
 
         async def style_node(data):
+            if data["plan"].get("technical_question"):
+                return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
                 report("styling", progress_message(request.assistant_persona, "styling"))
             draft = await self.llm.generate("style", draft_payload(data), Draft)

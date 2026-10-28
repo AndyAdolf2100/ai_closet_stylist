@@ -39,6 +39,12 @@ def weather_location_limit_message(persona_id):
     return "这次超过10个地区了，一次还看不了这么多。先挑10个，我们分开查就好。"
 
 
+def technical_detail_message(persona_id):
+    if persona_id == "male_calm_v1":
+        return "这部分技术细节我不太清楚，就不乱说了。"
+    return "这部分我不太懂呢，具体的技术细节就不乱猜啦。"
+
+
 def progress_message(persona_id, stage):
     male = persona_id == "male_calm_v1"
     messages = {

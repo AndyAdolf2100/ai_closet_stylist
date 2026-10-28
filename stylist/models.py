@@ -69,6 +69,7 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
 
 class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
+    technical_question: bool = False
     conversation_only: bool = False
     weather_only: bool = False
     location_limit_exceeded: bool = False
