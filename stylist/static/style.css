@@ -286,8 +286,8 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 }
 
 /* Registered sprite frames only: no eye overlays, fades, glows or body transforms. */
-:root .mascot.companion-sprite{position:relative;--sprite:url('/static/assets/yiyi-female-blink-v4.webp');--blink-period:18s;--blink-delay:-2s;background-image:var(--sprite);background-size:600% 300%;background-position:0 50%;background-color:#fff7f3;border-radius:22px;animation:companion-cel-blink var(--blink-period) steps(1,end) var(--blink-delay) infinite;transform:none}
-:root[data-stylist-gender=male] .mascot.companion-sprite{--sprite:url('/static/assets/yiyi-male-blink-v4.webp');--blink-period:20s;--blink-delay:-4s;background-image:var(--sprite);background-color:#f0f4f6}
+:root .mascot.companion-sprite{position:relative;--sprite:url('/static/assets/yiyi-female-blink-v5.webp');--blink-period:18s;--blink-delay:-2s;background-image:var(--sprite);background-size:600% 300%;background-position:0 50%;background-color:#fff7f3;border-radius:22px;animation:companion-cel-blink var(--blink-period) steps(1,end) var(--blink-delay) infinite;transform:none}
+:root[data-stylist-gender=male] .mascot.companion-sprite{--sprite:url('/static/assets/yiyi-male-blink-v5.webp');--blink-period:20s;--blink-delay:-4s;background-image:var(--sprite);background-color:#f0f4f6}
 :root .mascot.companion-sprite::before,:root .mascot.companion-sprite::after{content:none;animation:none}
 :root .mascot.companion-sprite.avatar-mini{width:56px;height:56px;border-radius:50%;background-position-y:0;--blink-delay:-1s}
 :root .mascot.companion-sprite.weather-mascot{width:68px;height:68px;border-radius:18px;background-position-y:100%;--blink-delay:-6s}
@@ -297,4 +297,3 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 @media(prefers-reduced-motion:reduce){:root .mascot.companion-sprite{animation:none!important;background-position-x:0}}
 /* Trim atlas-edge sampling at fractional CSS/device pixels. */
 :root .mascot.companion-sprite{clip-path:inset(1px)}
-:root[data-stylist-gender=male] .companion-sprite:not(.avatar-mini):not(.weather-mascot){clip-path:inset(4% 1px 1px)}
