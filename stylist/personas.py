@@ -25,6 +25,20 @@ def unsupported_city_message(persona_id, city):
     return f"{city}的天气，我这边暂时还查不到呢。"
 
 
+def itinerary_weather_message(persona_id, city, reason):
+    if reason == "weather_city_unsupported":
+        return unsupported_city_message(persona_id, city)
+    if reason == "city_needs_selection":
+        return f"还不确定你说的{city}是哪里，补一下省市会更准确。"
+    return f"{city}这一天的天气暂时没查到，先别按确定的温度准备。"
+
+
+def weather_location_limit_message(persona_id):
+    if persona_id == "male_calm_v1":
+        return "这次超过10个地区了。一次最多查10个，先选10个，其余的下一轮再查。"
+    return "这次超过10个地区了，一次还看不了这么多。先挑10个，我们分开查就好。"
+
+
 def progress_message(persona_id, stage):
     male = persona_id == "male_calm_v1"
     messages = {

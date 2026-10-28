@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .personas import PersonaId
 
+MAX_WEATHER_LOCATIONS = 10
+
 
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -20,6 +22,12 @@ class Slot(StrEnum):
     ACCESSORY = "accessory"
 
 
+class TripStop(Model):
+    city_name: str = Field(min_length=1, max_length=80, pattern=r"^[^/→、|;；]+$")
+    province_name: str = Field(default="", max_length=80)
+    event_date: date | None = None
+
+
 class Task(Model):
     occasion: str = "日常"
     scene: str = ""
@@ -28,6 +36,7 @@ class Task(Model):
     height_cm: float | None = Field(default=None, ge=30, le=280)
     event_date: date | None = None
     city: str | None = None
+    itinerary: list[TripStop] = Field(default_factory=list, max_length=MAX_WEATHER_LOCATIONS)
     weather_policy: Literal["auto", "ignored", "provided"] = "auto"
     weather_description: str = ""
     temp_min: float | None = None
@@ -55,12 +64,14 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
                     "weather_policy", "weather_description", "temp_min", "temp_max", "walk_minutes",
                     "indoor_temperature", "budget_yuan", "source", "no_heels", "no_bare_shoulders",
                     "excluded_materials", "excluded_colors", "excluded_categories", "preferences",
-                    "owned_descriptions", "target_description"]
+                    "owned_descriptions", "target_description", "itinerary"]
 
 
 class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
     conversation_only: bool = False
+    weather_only: bool = False
+    location_limit_exceeded: bool = False
     weather_scope: Literal["none", "day", "week", "next7"] = "none"
     use_inventory: bool = True
     new_task: bool = False
@@ -132,6 +143,7 @@ class Look(Model):
 
 class Reply(Model):
     conversation_only: bool = False
+    weather_only: bool = False
     conversation_id: str
     version: int
     mode: Literal["consult", "recommend", "modify", "weekly"]

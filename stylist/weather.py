@@ -13,7 +13,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from .errors import StylistError
+from .errors import AuthenticationExpired, StylistError
+from .models import MAX_WEATHER_LOCATIONS
 
 TZ = ZoneInfo("Asia/Shanghai")
 MUNICIPALITIES = {"CN-BJ": "北京市", "CN-SH": "上海市", "CN-TJ": "天津市", "CN-CQ": "重庆市"}
@@ -141,6 +142,31 @@ class WeatherService:
             raise StylistError("city_needs_selection", "这个地点还需要确认，请填写更完整的省市名称。", 422)
         return data["matches"][0]
 
+    async def forecast_itinerary(self, upstream, stops, scope="day", start=None):
+        """Read each stop independently; one unavailable city cannot replace another's forecast."""
+        if len(stops) > MAX_WEATHER_LOCATIONS:
+            raise StylistError("weather_location_limit", "一次最多查10个地区的天气。", 422)
+        semaphore = asyncio.Semaphore(3)
+
+        async def lookup(stop):
+            async with semaphore:
+                location = {"city_name": stop.city_name, "province_name": stop.province_name,
+                            "event_date": (stop.event_date or start or today()).isoformat()}
+                try:
+                    forecast = await self.forecast(upstream, stop.city_name, stop.province_name,
+                        "day" if stop.event_date else scope, stop.event_date or start)
+                except AuthenticationExpired:
+                    raise
+                except StylistError as exc:
+                    return {**location, "status": "unavailable", "reason": exc.code, "forecast": None}
+                return {**location, "city_name": forecast["city_name"],
+                        "province_name": forecast["province_name"], "status": "ok", "forecast": forecast}
+
+        locations = await asyncio.gather(*(lookup(stop) for stop in stops))
+        return {"source": "itinerary_forecast", "locations": locations, "timezone": "Asia/Shanghai",
+                "complete": all(location["status"] == "ok" and not location["forecast"].get("missing_dates")
+                                for location in locations)}
+
     async def locate(self, upstream, latitude, longitude):
         # City-level precision is sufficient. Never forward the browser's full precision.
         lat, lon = round(latitude, 2), round(longitude, 2)
@@ -211,9 +237,13 @@ class WeatherService:
 
 def apply_forecast(task, forecast):
     effective = task.model_copy(deep=True)
-    days = forecast.get("days") or []
+    reports = [location["forecast"] for location in forecast["locations"] if location.get("forecast")] if (
+        forecast.get("source") == "itinerary_forecast") else [forecast]
+    days = [day for report in reports for day in report.get("days", [])]
     if days:
         effective.temp_min = min(d["temp_min"] for d in days)
         effective.temp_max = max(d["temp_max"] for d in days)
-        effective.weather_description = "；".join(d["date"] + " " + d["condition_day"] + "／" + d["condition_night"] for d in days)
+        effective.weather_description = "；".join(
+            report.get("city_name", "") + " " + d["date"] + " " + d["condition_day"] + "／" + d["condition_night"]
+            for report in reports for d in report.get("days", []))
     return effective

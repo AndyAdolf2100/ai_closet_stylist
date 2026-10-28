@@ -8,6 +8,8 @@
 
 省市联动与本地城市列表、自然天气背景、衣衣灾害动作及置顶预警见[专项说明](docs/WEATHER_WARNINGS_AND_CITY_PICKER.md)。真实预警数据源尚未接通，不将普通天气提醒当作红黄色预警；[视觉样式演示](http://127.0.0.1:8466/static/weather-preview.html)中的预警均为演示。
 
+天气支持一次分别查询最多 10 个地区；超过上限时按当前助理口吻提醒分批，不截断、不偷偷拆批。单城未来七天仍算一个地区。多地行程逐地核对天气，查不到的地区单独说明；只问天气不会额外生成搭配。
+
 ## 启动
 
 ```sh
@@ -92,3 +94,5 @@ uv run python scripts/evaluate_semantics.py
 顶部选择男版或女版后，下一次发送会采用对应表达：男版沉稳细致、克制温暖；女版细腻体贴、温柔可爱且从容。支持日常闲聊、倾诉、亲近表达与有分寸的互怼；纯闲聊保留已有穿搭任务。形象仍由浏览器记住，尚无账号性别自动匹配或长期偏好设置。规则、参考与边界见[需求文档第13章](docs/PRD_AI_CLOSET_STYLIST.md#13-双助理人格与日常对话)。
 
 显式真实文字模型评测：`python -m scripts.evaluate_personas --live`，需要已配置模型，产生模型调用费用。使用合成用户与临时数据库，不读取真实衣橱、不执行图像生成；输出默认保存至被忽略的 `var/persona-review/live.json`。
+
+对话验收矩阵与人设评分见 [对话验收](docs/DIALOGUE_QA.md)。使用 `python -m scripts.evaluate_personas --list` 无费用查看场景；真实模型评测加 `--judge` 审核男女助理的自然表达，未审核时退出码为 2，不能视为人设通过。可复用测试 skill 位于 [stylist-dialogue-qa](skills/stylist-dialogue-qa/SKILL.md)。

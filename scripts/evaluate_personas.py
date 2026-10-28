@@ -5,6 +5,7 @@ synthetic prompts and model replies; no tokens or account credentials are logged
 """
 import argparse
 import asyncio
+import hashlib
 import json
 import tempfile
 import time
@@ -16,7 +17,18 @@ from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.llm import LanguageModel
 from stylist.models import ChatRequest, SessionState
+from stylist.personas import persona_instructions
 from stylist.store import Store
+
+from .dialogue_validation import (
+    EXPECTATIONS,
+    SCENARIOS,
+    DialogueUpstream,
+    PersonaReview,
+    check_reply,
+    review_status,
+    visible_text,
+)
 
 CASES = [
     ("greeting", "早呀，你今天怎么样？", True),
@@ -92,7 +104,9 @@ class ObservedModel:
         return result
 
 
-async def run(args):
+async def run(args, *, scenarios=None, expectations=None, upstream_type=DialogueUpstream):
+    scenarios = SCENARIOS if scenarios is None else scenarios
+    expectations = EXPECTATIONS if expectations is None else expectations
     settings = Settings.load()
     if not (settings.llm_key and settings.llm_url and settings.llm_model):
         raise SystemExit("Live model is not configured")
@@ -103,7 +117,16 @@ async def run(args):
 
     def save():
         output.write_text(json.dumps({"kind": "live_text_model_synthetic_adapters", "model": settings.llm_model,
-            "cases": results, "passed": sum(not r["errors"] for r in results), "total": len(results)},
+            "profile_sha256": {p: hashlib.sha256(persona_instructions(p).encode()).hexdigest()
+                               for p in ["male_calm_v1", "female_warm_v1"]},
+            "business_services": "synthetic_only", "paid_images": "not_executed",
+            "cases": results, "automatic_passed": sum(not r["automatic_errors"] for r in results),
+            "accepted": sum(not r["errors"] and r["persona_review"]["status"] == "passed" for r in results),
+            "persona_review_passed": sum(r["persona_review"]["status"] == "passed" for r in results),
+            "persona_review_failed": sum(r["persona_review"]["status"] in {"failed", "invalid_evidence", "error"}
+                                         for r in results),
+            "persona_review_pending": sum(r["persona_review"]["status"] == "pending" for r in results),
+            "total": len(results)},
             ensure_ascii=False, indent=2))
 
     async def session(persona, rows, label):
@@ -113,13 +136,17 @@ async def run(args):
                 store = Store(local.database)
                 model = ObservedModel(LanguageModel(local))
                 engine = Stylist(local, store, model)
+                upstream = upstream_type(label) if label in scenarios else SyntheticUpstream()
                 previous = None
                 for i, (name, message, chat_only) in enumerate(rows):
                     chosen = persona
-                    if label == "sequence" and i >= 8:
+                    if (label == "sequence" and i >= 8) or (label == "persona_switch" and i >= 1):
                         chosen = "female_warm_v1" if persona == "male_calm_v1" else "male_calm_v1"
                     record = {"case": f"{persona}/{label}/{name}", "persona": chosen, "message": message,
-                              "expected_chat_only": chat_only, "errors": []}
+                              "expected_chat_only": chat_only, "errors": [],
+                              "persona_review": {"status": "pending"}}
+                    expected = expectations.get(f"{label}/{name}", {})
+                    record["expected"] = expected
                     start = time.monotonic()
                     before = None
                     if previous:
@@ -127,8 +154,12 @@ async def run(args):
                             before = SessionState.model_validate_json(conn.execute(
                                 "SELECT state_json FROM stylist_sessions WHERE id=?", (previous.conversation_id,)).fetchone()[0])
                     model.calls.clear()
+                    if isinstance(upstream, DialogueUpstream):
+                        upstream.calls.clear()
+                        if hasattr(upstream, "events"):
+                            upstream.events.clear()
                     try:
-                        reply = await engine.chat(SyntheticUpstream(), ChatRequest(message=message,
+                        reply = await engine.chat(upstream, ChatRequest(message=message,
                             request_id=f"eval-{label}-{name}-{i}", assistant_persona=chosen,
                             conversation_id=previous.conversation_id if previous else None,
                             expected_version=previous.version if previous else 0))
@@ -140,17 +171,44 @@ async def run(args):
                             record["errors"].append("empty_reply")
                         if chat_only and (reply.looks or reply.weather or reply.pending_confirmation):
                             record["errors"].append("chat_triggered_outfit_or_weather_or_approval")
-                        if not chat_only and not reply.looks:
+                        if not chat_only and not reply.looks and not (
+                                expected.get("no_looks") or expected.get("allow_empty_looks")):
                             record["errors"].append("missing_requested_advice")
+                        record["business_calls"] = list(getattr(upstream, "calls", []))
+                        record["business_events"] = list(getattr(upstream, "events", []))
+                        record["errors"].extend(check_reply(reply, expected, record["business_calls"],
+                                                           model.calls, previous))
+                        if hasattr(upstream, "check"):
+                            record["errors"].extend(upstream.check(reply, expected))
                         if before and chat_only:
                             with store.connection() as conn:
                                 after = SessionState.model_validate_json(conn.execute(
                                     "SELECT state_json FROM stylist_sessions WHERE id=?", (reply.conversation_id,)).fetchone()[0])
                             if (after.task, after.mode, after.looks) != (before.task, before.mode, before.looks):
                                 record["errors"].append("chat_overwrote_outfit")
-                        previous = reply
+                        prior = previous
+                        previous = reply  # A review failure must not replay a committed turn with an old version.
+                        record["automatic_errors"] = record["errors"].copy()
+                        if args.judge:
+                            reviewer = LanguageModel(local)
+                            review = await reviewer.generate("review_dialogue", {
+                                "expected_persona": persona_instructions(chosen), "message": message,
+                                "previous_reply": prior.model_dump(mode="json") if prior else None,
+                                "visible_reply": visible_text(reply), "current_weather": reply.weather,
+                                "current_task": reply.task.model_dump(mode="json"),
+                                "business_evidence": record["business_calls"],
+                                "expected": expected, "evidence_kind": "synthetic_business_fixtures",
+                            }, PersonaReview)
+                            record["persona_review"] = {"status": review_status(review, visible_text(reply)),
+                                                        "reviewer_model": local.llm_model,
+                                                        **review.model_dump()}
+                            if record["persona_review"]["status"] != "passed":
+                                record["errors"].append("persona_review_" + record["persona_review"]["status"])
                     except Exception as exc:
                         record["errors"].append(getattr(exc, "code", type(exc).__name__))
+                        if "automatic_errors" in record:
+                            record["persona_review"] = {"status": "error"}
+                    record.setdefault("automatic_errors", record["errors"].copy())
                     record["seconds"] = round(time.monotonic() - start, 2)
                     record["model_calls"] = model.calls.copy()
                     results.append(record)
@@ -165,15 +223,35 @@ async def run(args):
                 jobs.append(session(persona, [case], "single"))
         if not args.only or "sequence" in args.only:
             jobs.append(session(persona, SEQUENCE, "sequence"))
+        for name, rows in scenarios.items():
+            if not args.only or name in args.only:
+                jobs.append(session(persona, rows, name))
     await asyncio.gather(*jobs)
-    print(json.dumps({"total": len(results), "passed": sum(not r["errors"] for r in results)}))
+    print(json.dumps({"total": len(results), "automatic_passed": sum(not r["automatic_errors"] for r in results),
+                      "persona_review_passed": sum(r["persona_review"]["status"] == "passed" for r in results),
+                      "persona_review_pending": sum(r["persona_review"]["status"] == "pending" for r in results)}))
+    return 1 if any(r["errors"] for r in results) else (0 if args.judge else 2)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--live", action="store_true", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--live", action="store_true", help="调用真实文字模型，会产生费用")
+    mode.add_argument("--list", action="store_true", help="列出场景，不读取模型配置或调用服务")
+    parser.add_argument("--judge", action="store_true", help="额外调用文字模型审核人设、自然度和事实")
     parser.add_argument("--output", default="var/persona-review/live.json")
     parser.add_argument("--concurrency", type=int, default=4)
-    parser.add_argument("--only", nargs="*")
+    parser.add_argument("--only", nargs="+")
     args = parser.parse_args()
-    asyncio.run(run(args))
+    names = {case[0] for case in CASES} | {"sequence"} | set(SCENARIOS)
+    if args.only and not set(args.only) <= names:
+        parser.error("Unknown cases: " + ", ".join(sorted(set(args.only) - names)))
+    if not 1 <= args.concurrency <= 8:
+        parser.error("concurrency must be between 1 and 8")
+    if args.list:
+        for name, count in [(case[0], 1) for case in CASES] + [("sequence", len(SEQUENCE))] + [
+                (name, len(rows)) for name, rows in SCENARIOS.items()]:
+            if not args.only or name in args.only:
+                print(f"{name}: {count} turns x 2 personas")
+    else:
+        raise SystemExit(asyncio.run(run(args)))

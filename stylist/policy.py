@@ -4,7 +4,8 @@ import re
 from pydantic import ValidationError
 
 from .errors import StylistError
-from .models import Look, Plan, Product, SessionState, Slot, Task
+from .models import MAX_WEATHER_LOCATIONS, Look, Plan, Product, SessionState, Slot, Task
+from .personas import weather_location_limit_message
 
 
 def merge_task(state: SessionState, plan: Plan, message: str) -> Task:
@@ -14,7 +15,14 @@ def merge_task(state: SessionState, plan: Plan, message: str) -> Task:
         if field not in Task.model_fields or not spans or any(not s or s not in message for s in spans):
             raise StylistError("unverified_requirement", "需求解析不够明确，请换个说法；原要求已保留。", 422)
         data[field] = change.value
-    return Task.model_validate(data)
+    if "city" in plan.changes and "itinerary" not in plan.changes:
+        data["itinerary"] = []  # A newly specified single city supersedes an earlier trip.
+    task = Task.model_validate(data)
+    if task.itinerary:
+        task.city = task.itinerary[0].city_name  # Retain the existing single-city field for compatibility.
+    elif "city" in plan.changes and task.city and re.search(r"[/→、|;；]", task.city):
+        raise StylistError("itinerary_required", "多地行程应逐站填写itinerary，city只能填写一个城市。", 422)
+    return task
 
 
 async def interpret_task(llm, payload, state, message):
@@ -34,11 +42,28 @@ async def interpret_task(llm, payload, state, message):
         if previous.conversation_only:
             previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
                 "weather_scope": "none", "changes": {}, "new_task": False,
-                "replace_slots": [], "clarification": None})
+                "replace_slots": [], "clarification": None, "weather_only": False,
+                "location_limit_exceeded": False})
+        else:
+            itinerary = previous.changes.get("itinerary")
+            if previous.location_limit_exceeded or (
+                    itinerary and isinstance(itinerary.value, list) and len(itinerary.value) > MAX_WEATHER_LOCATIONS):
+                previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
+                    "weather_only": True, "changes": {}, "replace_slots": [], "new_task": False,
+                    "clarification": weather_location_limit_message(payload.get("assistant_persona"))})
+                return previous, state.task.model_copy(deep=True)
+            if previous.weather_only:
+                previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
+                    "replace_slots": [], "weather_scope": previous.weather_scope if previous.weather_scope != "none" else "day"})
         try:
-            return previous, merge_task(state, previous, message)
+            task = merge_task(state, previous, message)
+            if previous.weather_only:
+                supplied = previous.changes.get("weather_policy")
+                task.weather_policy = "provided" if supplied and supplied.value == "provided" else "auto"
+            return previous, task
         except (StylistError, ValidationError) as exc:
-            validation_errors = exc.errors(include_input=False, include_url=False) if isinstance(exc, ValidationError) else []
+            validation_errors = exc.errors(include_input=False, include_url=False) if isinstance(exc, ValidationError) else (
+                [{"loc": ["city"], "msg": exc.message}] if exc.code == "itinerary_required" else [])
             if attempt == 1:
                 raise StylistError("invalid_requirements", "这次没有准确整理好需求，原输入已保留，请调整表述后重试。", 422) from None
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "衣衣对话与人设验收"
+  short_description: "回归验证穿搭、天气和连续对话，并审核男女助理的人设与自然表达"
+  default_prompt: "使用 $stylist-dialogue-qa 验收衣衣的对话、天气和衣橱推荐，分别检查男女助理的表达并区分模拟与真实模型证据。"

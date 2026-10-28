@@ -157,8 +157,16 @@ function showReply(reply) {
   conversation = reply.conversation_id; version = reply.version;
   const node = bubble('assistant', reply.message);
   const label = { advice: '穿法建议', outfit: '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
-  if (!reply.conversation_only) node.prepend(el('div', 'badge', label[reply.delivery] || '穿搭建议'));
-  if (reply.weather?.days?.length) node.append(forecastCard(reply.weather));
+  if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
+  if (reply.weather?.source === 'itinerary_forecast') {
+    const route = el('section', 'itinerary-weather');
+    route.setAttribute('aria-label', '行程各地天气');
+    for (const stop of reply.weather.locations || []) {
+      if (stop.forecast?.days?.length) route.append(forecastCard(stop.forecast));
+      else route.append(el('div', 'warning', stop.message || `${stop.city_name}的天气暂时还查不到。`));
+    }
+    node.append(route);
+  } else if (reply.weather?.days?.length) node.append(forecastCard(reply.weather));
   for (const [lookIndex, look] of (reply.looks || []).entries()) {
     const card = el('article', 'look'); card.append(el('h3', '', look.title));
     if (look.items?.length) {

@@ -16,7 +16,7 @@ from langgraph.types import Command, RetryPolicy, interrupt
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .models import Draft, Look, Plan, Reply, SessionState, Task
-from .personas import progress_message, unsupported_city_message
+from .personas import itinerary_weather_message, progress_message, unsupported_city_message
 from .policy import frozen_products, interpret_task, suitability, validate_look
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
@@ -89,11 +89,11 @@ class Stylist:
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
-            if request.weather_policy is not None and not plan.conversation_only:
+            if request.weather_policy is not None and not plan.conversation_only and not plan.weather_only:
                 task.weather_policy = request.weather_policy
             if request.source is not None and not plan.conversation_only:
                 task.source = request.source
-            if request.location and "city" not in plan.changes and not plan.conversation_only:
+            if request.location and "city" not in plan.changes and not task.itinerary and not plan.conversation_only:
                 task.city = request.location.city_name
             if task.event_date is None and not plan.conversation_only:
                 task.event_date = today.date()
@@ -113,7 +113,7 @@ class Stylist:
                     "frozen": [p.model_dump(mode="json") for p in frozen]}
 
         def approval(data):
-            if request.confirm_plan and not data["plan"].get("conversation_only"):
+            if request.confirm_plan and not data["plan"].get("conversation_only") and not data["plan"].get("weather_only"):
                 approved = interrupt({"kind": "plan_confirmation", "message": "请确认这次穿搭需求，再继续生成。",
                                       "task": data["task"]})
                 return {"cancelled": approved is not True}
@@ -130,6 +130,34 @@ class Stylist:
                 if task.weather_policy == "provided":
                     weather = {"source": "user", "description": task.weather_description,
                                "temp_min": task.temp_min, "temp_max": task.temp_max}
+                elif task.itinerary:
+                    # The route, not the browser's selected city, determines these lookups.
+                    task.temp_min = task.temp_max = None
+                    task.weather_description = ""
+                    weather = await self.weather.forecast_itinerary(upstream, task.itinerary,
+                        plan.weather_scope if plan.weather_scope != "none" else "day", task.event_date)
+                    unavailable = []
+                    for location in weather["locations"]:
+                        if location["status"] == "ok":
+                            forecast = location["forecast"]
+                            forecast["official_warnings"] = await self.alerts.lookup(forecast)
+                            warnings.extend(forecast["city_name"] + "：" + tip for tip in forecast["warnings"])
+                        else:
+                            reason = location.pop("reason")
+                            unavailable.append(reason)
+                            location["message"] = itinerary_weather_message(
+                                request.assistant_persona, location["city_name"], reason)
+                            warnings.append(location["message"])
+                    # Never inherit a prior city's temperatures when a route only partially resolves.
+                    effective_task.temp_min = effective_task.temp_max = None
+                    effective_task.weather_description = ""
+                    effective_task = apply_forecast(effective_task, weather)
+                    if len(unavailable) == len(task.itinerary) and all(
+                            reason == "weather_city_unsupported" for reason in unavailable):
+                        plan.clarification = " ".join(warnings)
+                        return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
+                                "effective_task": effective_task.model_dump(mode="json"),
+                                "weather": weather, "warnings": warnings, "service_gap": False}
                 elif not task.city:
                     warnings.append("还不知道你在哪座城市。可以点「使用当前位置」或手动选城市，才能结合真实天气；这次先给穿法参考。")
                 else:
@@ -165,7 +193,8 @@ class Stylist:
                                 raise
                             except StylistError:
                                 weather = None
-            return {"effective_task": effective_task.model_dump(mode="json"), "weather": weather,
+            return {"task": task.model_dump(mode="json"),
+                    "effective_task": effective_task.model_dump(mode="json"), "weather": weather,
                     "warnings": warnings, "service_gap": service_gap}
 
         async def retrieve_node(data):
@@ -208,6 +237,7 @@ class Stylist:
             draft_payload = {
                 "assistant_persona": request.assistant_persona,
                 "conversation_only": plan.conversation_only,
+                "weather_only": plan.weather_only,
                 "message": request.message, "task": task.model_dump(mode="json"), "mode": plan.mode,
                 "history": state.messages[-8:], "weather": weather,
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
@@ -222,8 +252,10 @@ class Stylist:
             if not data["plan"].get("conversation_only"):
                 report("styling", progress_message(request.assistant_persona, "styling"))
             draft = await self.llm.generate("style", draft_payload(data), Draft)
-            if data["plan"].get("conversation_only"):
+            if data["plan"].get("conversation_only") or data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"looks": []})
+            if data["plan"].get("weather_only"):
+                draft = draft.model_copy(update={"follow_ups": []})
             return {"draft": draft.model_dump(mode="json")}
 
         def validate_node(data):
@@ -248,7 +280,7 @@ class Stylist:
             if plan.clarification or data.get("cancelled"):
                 return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
                     mode=plan.mode, delivery="clarification", message=plan.clarification or "已取消本次生成。",
-                    task=task).model_dump(mode="json")}
+                    weather_only=plan.weather_only, weather=data.get("weather"), task=task).model_dump(mode="json")}
             cid = data["session_id"]
             draft = Draft.model_validate(data["draft"])
             pool = {key: Product.model_validate(p) for key, p in data["pool"].items()}
@@ -270,6 +302,7 @@ class Stylist:
                 warnings.append("以下为文字参考，尚未匹配成可确认的真实商品方案。")
             reply = Reply(conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
                           delivery=delivery, conversation_only=plan.conversation_only,
+                          weather_only=plan.weather_only,
                           message=draft.message, task=task, looks=looks, weather=weather,
                           warnings=list(dict.fromkeys(warnings)), follow_ups=draft.follow_ups)
             return {"reply": reply.model_dump(mode="json")}
@@ -319,7 +352,7 @@ class Stylist:
                 config = self.thread(owner, request)
                 snapshot = await graph.aget_state(config)
                 if snapshot.values and (snapshot.values["session_id"] != cid or
-                                        snapshot.values["session"] != state.model_dump(mode="json")):
+                                        SessionState.model_validate(snapshot.values["session"]) != state):
                     raise StylistError("run_context_changed", "任务上下文已变化，请重新发起。", 409)
                 paused = any(t.interrupts for t in snapshot.tasks)
                 if decision is not None and not paused:
@@ -337,8 +370,10 @@ class Stylist:
                 reply = Reply.model_validate(output["reply"])
                 task, plan = Task.model_validate(output["task"]), Plan.model_validate(output["plan"])
                 if not plan.conversation_only:
-                    state.task, state.mode = task, plan.mode
-                if reply.delivery != "clarification" and not plan.conversation_only:
+                    state.task = task
+                    if not plan.weather_only:
+                        state.mode = plan.mode
+                if reply.delivery != "clarification" and not plan.conversation_only and not plan.weather_only:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
