@@ -15,6 +15,7 @@ from langgraph.types import Command, RetryPolicy, interrupt
 
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
+from .grounding import PREFIX, attribute_claim_problems, attribute_context, ground_attribute_fallback
 from .models import Draft, Look, Plan, Reply, SessionState, Task
 from .personas import itinerary_weather_message, progress_message, unsupported_city_message
 from .policy import frozen_products, interpret_task, suitability, validate_look
@@ -40,6 +41,22 @@ class RunState(TypedDict, total=False):
     problems: list
     reply: dict
     cancelled: bool
+
+
+def last_business_intent(messages):
+    """Use saved server reply metadata; a preserved outfit is not the latest request type."""
+    for message in reversed(messages):
+        if message.get("role") != "assistant":
+            continue
+        try:
+            reply = json.loads(message["content"])
+        except (ValueError, TypeError, KeyError):
+            continue
+        if not isinstance(reply, dict) or reply.get("conversation_only"):
+            continue
+        if isinstance(reply.get("weather_only"), bool):
+            return "weather" if reply["weather_only"] else "styling"
+    return None
 
 
 def retryable(exc):
@@ -85,6 +102,7 @@ class Stylist:
                 "assistant_persona": request.assistant_persona,
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
+                "last_business_intent": last_business_intent(state.messages),
                 "current_looks": [{"title": x.title, "pieces": x.pieces,
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
@@ -245,6 +263,7 @@ class Stylist:
                 "frozen_keys": [p.key for p in frozen], "replace_slots": plan.replace_slots,
                 "concept_fallback": concept, "warnings": warnings,
                 "excluded_candidate_reasons": rejected,
+                "attribute_context": attribute_context(pool.values()),
             }
             return draft_payload
 
@@ -265,13 +284,32 @@ class Stylist:
                 {key: Product.model_validate(p) for key, p in data["pool"].items()},
                 Task.model_validate(data["effective_task"]),
                 [Product.model_validate(x) for x in data["frozen"]], data["plan"]["mode"])
+            if not data["plan"].get("conversation_only") and not data["plan"].get("weather_only"):
+                problems.extend(attribute_claim_problems(Draft.model_validate(data["draft"]),
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}))
             return {"problems": problems}
 
         async def repair_node(data):
+            attribute_only = all(problem.startswith(PREFIX) for problem in data["problems"])
+            instruction = ("只修正缺少依据的文字，原选款已经通过结构和禁穿检查，保留原造型数量及每套selected_keys；"
+                           "不要因尺寸或功能未知就清空衣物，改为具体的试穿核对、选款目标或未知说明。"
+                           if attribute_only else
+                           "只修正不合格的选择和文字；没有合法组合就给明确标为文字参考的方案，selected_keys留空。")
             draft = await self.llm.generate("style", {**draft_payload(data), "validation_errors": data["problems"],
-                "instruction": "只修正不合格的选择；没有合法组合就给明确标为文字参考的方案，selected_keys留空。"}, Draft)
+                "previous_draft": data["draft"], "instruction": instruction}, Draft)
+            if attribute_only:
+                original = Draft.model_validate(data["draft"])
+                if [look.selected_keys for look in draft.looks] != [look.selected_keys for look in original.looks]:
+                    draft = ground_attribute_fallback(original,
+                        {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
             repaired = {**data, "draft": draft.model_dump(mode="json")}
-            if validate_node(repaired)["problems"]:
+            problems = validate_node(repaired)["problems"]
+            if problems and all(problem.startswith(PREFIX) for problem in problems):
+                draft = ground_attribute_fallback(draft,
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                repaired["draft"] = draft.model_dump(mode="json")
+                problems = validate_node(repaired)["problems"]
+            if problems:
                 raise StylistError("outfit_validation_failed", "这次选款未通过要求检查，原搭配已保留。", 422)
             return {"draft": repaired["draft"], "problems": []}
 
@@ -382,6 +420,7 @@ class Stylist:
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
+                        "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
                         "looks": [{"title": x.title, "pieces": x.pieces, "how": x.how,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},

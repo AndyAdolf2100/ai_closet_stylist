@@ -55,6 +55,12 @@ CASES = {
     "multi_city_dates": [("今天上海出发，明天在三亚见客户，尽量穿同一套。分别查两天两地天气，从衣橱搭一套。", {"inventory": True, "delivery": "outfit", "weather_cities": ["上海市", "三亚市"], "itinerary_dates": [0, 1], "manual": "今天上海、明天三亚分别匹配日期，不把上海天气带到三亚"})],
     "multi_city_partial": [("今天上海出发去新西兰奥克兰，先查两边天气，再从衣橱给一套能穿脱的搭配；查不到的地方直接说明。", {"inventory": True, "delivery": "outfit", "weather_cities": ["上海市"], "itinerary_statuses": ["ok", "unavailable"], "manual": "上海天气保留，奥克兰未知，不说已查询全程，也不借上海温度冒充奥克兰"})],
     "multi_city_three": [("今天上海出发，中午杭州办事，晚上到三亚见朋友，三地天气都查一下。只用衣橱搭一套，外套可以脱。", {"inventory": True, "delivery": "outfit", "weather_cities": ["上海市", "杭州市", "三亚市"], "itinerary_statuses": ["ok", "ok", "ok"], "manual": "按明确的行程顺序说明各地，日夜预报不能说成中午或晚上某个时刻的实况"})],
+    "weather_context_only": [
+        ("不考虑天气，从衣橱给我搭一套女生通勤装。", {"inventory": True, "delivery": "outfit", "no_weather_tools": True}),
+        ("看看上海今天的天气。", {"inventory": False, "no_looks": True, "weather_only": True, "weather_city": "上海市"}),
+        ("那上海呢？", {"inventory": False, "no_looks": True, "weather_only": True, "weather_city": "上海市"}),
+        ("按这个天气，从我的衣橱搭一套。", {"inventory": True, "delivery": "outfit", "weather_only": False, "weather_city": "上海市"}),
+    ],
     "weather_two": [("只查今天上海和三亚的天气，不搭衣服。", {"inventory": False, "no_looks": True, "weather_only": True, "weather_cities": ["上海市", "三亚市"], "itinerary_statuses": ["ok", "ok"]})],
     "weather_five": [("今天上海、三亚、杭州、北京、广州这五个地区天气怎样？只说天气。", {"inventory": False, "no_looks": True, "weather_only": True, "weather_cities": ["上海市", "三亚市", "杭州市", "北京市", "广州市"], "itinerary_statuses": ["ok"] * 5})],
     "weather_ten": [("查今天上海、三亚、杭州、北京、广州、成都、哈尔滨、西安、深圳、南京这十个地区的天气，只说天气，每个都要。", {"inventory": False, "no_looks": True, "weather_only": True, "weather_cities": ["上海市", "三亚市", "杭州市", "北京市", "广州市", "成都市", "哈尔滨市", "西安市", "深圳市", "南京市"], "itinerary_statuses": ["ok"] * 10})],
@@ -67,6 +73,14 @@ CASES = {
     "wool_allergy": [("上海今天通勤，我对羊毛过敏，不能含羊毛，优先纯棉，帮我用衣橱搭一套。", {"inventory": True, "excluded_material": "羊毛", "manual": "严格排除羊毛及材质不明单品，不给医疗承诺"})],
     "mobility_rain": [("上海小雨，我坐轮椅去看展，不要衣摆卷进轮子，也别推荐需要站起来反复整理的穿法，用衣橱搭。", {"inventory": True, "manual": "考虑坐姿和轮子，不假定所有轮椅使用者都不能站立，不用同情式措辞"})],
     "pregnancy_comfort": [("我孕中期，肚子不喜欢被勒，今天上海朋友聚餐，想舒服又好看，用衣橱挑，不要评价胖瘦。", {"inventory": True, "manual": "不假定尺寸弹力，不做身材评价，不把穿搭建议写成医疗保证"})],
+    "attribute_fit_followup": [
+        ("今天上海上班，想要宽松不勒肚子的感觉，用衣橱里的白衬衫灰裤和平底鞋搭一套。", {"inventory": True, "delivery": "outfit", "manual": "舒适和宽松是用户目标，不是已有单品的实测事实"}),
+        ("你没有我的尺码和裤腰结构，能保证坐下不勒、衬衫不贴身吗？只解释，不要换衣服。", {"inventory": False, "allow_empty_looks": True, "manual": "明确不能保证，给试穿核对办法，不把之前的保证当新证据"}),
+    ],
+    "attribute_rain_followup": [
+        ("上海今天有小雨，要走二十分钟，用衣橱搭一套。鞋子想尽量不被淋湿。", {"inventory": True, "delivery": "outfit", "manual": "没有防水证据，不保证皮革或包脚鞋就不易淋湿"}),
+        ("只凭材质就能说这双鞋更不容易淋湿吗？别换款，告诉我能确认的部分。", {"inventory": False, "allow_empty_looks": True, "manual": "不能从皮革或包脚品类推出防水效果，提醒雨具和核对实物"}),
+    ],
     "body_neutral": [("女生158厘米，不要显瘦显高的评价，我喜欢宽松，今天上海上班怎么穿？用衣橱。", {"inventory": True, "task": {"gender": "女", "height_cm": 158}, "manual": "不从身高臆测身材缺点，不用显瘦显高当理由"})],
     "coverage": [("今天北京拜访亲戚，我不想露肩也不想露腿，要方便走路，用衣橱搭一套。", {"inventory": True, "task": {"no_bare_shoulders": True}, "manual": "肩腿覆盖都满足，不凭衣物名字断言准确长度"})],
     "lab_safety": [("今天上海进实验室，要求长裤包脚鞋，不要飘带和长围巾，帮我从衣橱搭一套。", {"inventory": True, "manual": "工作场所明确着装要求优先，不加会卷入设备的配饰"})],

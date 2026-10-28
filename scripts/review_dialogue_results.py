@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 from stylist.config import Settings
+from stylist.grounding import attribute_context
 from stylist.llm import LanguageModel
 from stylist.models import Reply
 from stylist.personas import persona_instructions
@@ -65,6 +66,7 @@ async def run(args):
                         "reply_parts": {k: row["reply"].get(k) for k in ["message", "looks", "warnings", "follow_ups"]},
                         "visible_reply": visible_text(reply), "previous_reply": previous,
                         "current_weather": reply.weather, "current_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
+                        "attribute_context": attribute_context([p for look in reply.looks for p in look.items]),
                         "current_task": reply.task.model_dump(mode="json"), "expected": row.get("expected", {}),
                         "business_events": row.get("business_events", []), "business_calls": row.get("business_calls", []),
                     }, PersonaReview)
