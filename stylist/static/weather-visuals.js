@@ -16,6 +16,7 @@
     const node = make('article', 'official-warning warning-' + alert.level);
     node.dataset.level = alert.level;
     const picture = make('div', 'hazard-mascot');
+    picture.dataset.hazard = hazards.includes(alert.hazard) ? alert.hazard : 'general';
     const index = Math.max(0, hazards.indexOf(alert.hazard) < 0 ? 15 : hazards.indexOf(alert.hazard));
     picture.style.backgroundPosition = `${(index % 4) * 100 / 3}% ${Math.floor(index / 4) * 100 / 3}%`;
     picture.setAttribute('role', 'img'); picture.setAttribute('aria-label', '衣衣提醒：' + alert.event);

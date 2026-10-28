@@ -1,23 +1,46 @@
 <!doctype html>
-<html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><link rel="stylesheet" href="/static/style.css?v=unified-window-blink-v3-20261028"></head>
+<html lang="zh-CN" data-stylist-gender="female">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><script src="/static/appearance.js?v=unified-window-blink-v3-20261028"></script><link rel="stylesheet" href="/static/style.css?v=unified-window-blink-v3-20261028"></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/">衣间<span>YOUR EVERYDAY STYLIST</span></a>
   <button id="new-chat" class="primary">＋ 开始新的穿搭</button>
   <div class="section-label">最近的对话</div><nav id="history"></nav>
-  <div class="sidebar-bottom"><p>让已有的衣服，<br>穿出喜欢的自己。</p><button id="check-apis" class="subtle">检查服务连接</button><button id="logout" class="subtle">退出登录</button></div>
+  <div class="sidebar-bottom"><p data-stylist-copy="sidebar">让已有的衣服，<br>穿出喜欢的自己。</p><button id="check-apis" class="subtle">检查服务连接</button><button id="logout" class="subtle">退出登录</button></div>
 </aside>
 <main>
-  <header><div class="header-brand"><span class="status-dot"></span>衣衣 · 你的私人搭配师</div><button id="mobile-new" class="subtle">＋ 新对话</button><button id="login-open" class="subtle">登录衣橱</button></header>
+  <header>
+    <div class="header-brand"><span class="status-dot"></span>衣衣<span class="header-subtitle"> · 你的私人搭配师</span></div>
+    <div class="stylist-switch" role="group" aria-label="搭配师形象" title="切换衣衣的形象与界面风格，穿搭对象以对话要求为准">
+      <span class="switch-label" aria-hidden="true">搭配师形象</span>
+      <button type="button" data-stylist-gender="female" aria-pressed="true" aria-label="女版衣衣">女版</button>
+      <button type="button" data-stylist-gender="male" aria-pressed="false" aria-label="男版衣衣">男版</button>
+    </div>
+    <button id="mobile-new" class="subtle">＋ 新对话</button><button id="login-open" class="subtle">登录衣橱</button>
+  </header>
+  <div id="appearance-status" class="sr-only" role="status" aria-live="polite"></div>
   <section id="official-warnings" class="official-warnings" aria-label="当前城市气象灾害预警" aria-live="polite" hidden></section>
   <div class="weather-toolbar"><button id="location-open" class="location-chip">⌖ 选择城市 / 定位</button><span id="location-label">让穿搭也照顾天气</span><button id="forecast-refresh" class="subtle" hidden>刷新</button></div>
-  <div id="feed" aria-live="polite"><section id="welcome"><div class="eyebrow">A LITTLE CARE, EVERY DAY</div><h1>今天，穿得喜欢。</h1><p>我是衣衣，你的日常搭配小伙伴。<br>从天气到衣橱，一起搭出舒服又像你的样子。</p><div class="mascot hero-mascot" data-mood="greeting" role="img" aria-label="女版衣衣倚在窗边，托着脸微笑，轻轻眨眼"></div><div class="suggestions"><button data-prompt="帮我结合今天的真实天气，用衣橱搭一套通勤装，分早间、白天和晚间说穿法，平底鞋，舒服优先。">☀ 今天穿什么 · 早晚都照顾 ↗</button><button data-prompt="帮我结合本周每天的天气，从今天到周日安排穿搭；雨雪雾大风要提醒，没有天气数据不要猜。">☁ 本周穿搭 · 跟着天气安排 ↗</button><button data-prompt="只咨询穿法：海军蓝针织衫、米白直筒裤和白色平底鞋，不塞衣角，怎么穿得利落？">✿ 旧衣服，也有新感觉 ↗</button></div></section><section id="weather-panel" hidden aria-label="穿搭天气预报"></section></div>
+  <div id="feed" aria-live="polite">
+    <section id="welcome">
+      <div class="eyebrow" data-stylist-copy="eyebrow">A LITTLE CARE, EVERY DAY</div>
+      <h1 data-stylist-copy="title">今天，穿得喜欢。</h1>
+      <p data-stylist-copy="intro">我是衣衣，你的日常搭配小伙伴。<br>从天气到衣橱，一起搭出舒服又像你的样子。</p>
+      <div class="welcome-character"><div class="mascot hero-mascot" data-mood="greeting" role="img" aria-label="女版衣衣倚在窗边，托着脸微笑，轻轻眨眼"></div><span class="character-note">衣衣 / 你的日常搭配伙伴</span></div>
+      <div class="style-notes" aria-label="男版界面风格"><span>干净配色</span><span>舒服轮廓</span><span>细节有度</span></div>
+      <div class="suggestions">
+        <button data-prompt="帮我结合今天的真实天气，用衣橱搭一套通勤装，分早间、白天和晚间说穿法，平底鞋，舒服优先。"><span class="suggestion-icon" aria-hidden="true">☀</span><span class="suggestion-copy"><strong data-stylist-copy="today">今天穿什么 · 早晚都照顾</strong><small>看看天气，搭一套舒服的出门装</small></span><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+        <button data-prompt="帮我结合本周每天的天气，从今天到周日安排穿搭；雨雪雾大风要提醒，没有天气数据不要猜。"><span class="suggestion-icon" aria-hidden="true">☁</span><span class="suggestion-copy"><strong data-stylist-copy="week">本周穿搭 · 跟着天气安排</strong><small>从周一到周日，提前少一点纠结</small></span><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+        <button data-prompt="只咨询穿法：海军蓝针织衫、米白直筒裤和白色平底鞋，不塞衣角，怎么穿得利落？"><span class="suggestion-icon" aria-hidden="true">✧</span><span class="suggestion-copy"><strong data-stylist-copy="wardrobe">旧衣服，也有新感觉</strong><small>从手边的一件衣服，找到新思路</small></span><span class="suggestion-arrow" aria-hidden="true">↗</span></button>
+      </div>
+    </section>
+    <section id="weather-panel" hidden aria-label="穿搭天气预报"></section>
+  </div>
   <footer><div id="notice" role="status"></div><form id="chat-form"><textarea id="message" placeholder="和衣衣说说今天的安排、喜欢的风格…" rows="2" maxlength="6000" aria-label="穿搭需求"></textarea><div class="composer-bottom"><div class="controls"><select id="source" aria-label="衣物来源"><option value="">沿用当前衣物范围</option><option value="wardrobe">只用个人衣橱</option><option value="hybrid">已有优先，允许系统补充</option><option value="catalog">系统衣橱</option></select><select id="weather" aria-label="天气考虑方式"><option value="">沿用天气选择 · 默认参考</option><option value="auto">结合所选城市天气</option><option value="ignored">这次不考虑天气</option></select><label style="font-size:11px;display:flex;align-items:center;gap:4px"><input id="confirm-plan" type="checkbox">先确认需求</label></div><button id="send" type="submit" class="primary">发送 ↑</button></div></form><p class="fine-print">舒服自在，永远优先 · 试穿生图另行报价与确认</p></footer>
 </main>
 <dialog id="login-dialog"><form id="login-form"><div class="eyebrow">YOUR OWN WARDROBE</div><h2>登录你的衣橱</h2><p>使用现有 AI Closet 账号，连接你的真实衣物。</p><label>手机号<input id="mobile" inputmode="tel" autocomplete="tel" pattern="1[3-9][0-9]{9}" required maxlength="11"></label><label>验证码<input id="code" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{4,8}" required maxlength="8"></label><div id="login-error" role="alert"></div><div class="dialog-actions"><button type="button" id="login-cancel" class="subtle">稍后</button><button type="submit" class="primary" id="login-submit">连接衣橱</button></div></form></dialog>
 <dialog id="service-dialog"><h2>服务连接检查</h2><p>实际查询当前账号可用的接口，不执行扣费生图。</p><pre id="service-results"></pre><button id="service-close" class="primary">关闭</button></dialog>
 <dialog id="location-dialog"><form id="location-form"><div class="eyebrow">A LITTLE WEATHER CARE</div><h2>你在哪座城市呀？</h2><p>选择省份和城市就好，不需要具体地址。也可以点击定位，经确认后使用；坐标会降低精度交给OpenStreetMap转换城市，不写入对话。</p><button type="button" id="locate-me" class="location-action">⌖ 使用当前位置</button><div id="location-status" role="status"></div><label>省份 / 直辖市 / 自治区<select id="province-name" required aria-label="选择省份"><option value="">请选择省份</option></select></label><label>城市<select id="city-name" required disabled aria-label="选择城市"><option value="">请先选择省份</option></select></label><div class="dialog-actions"><button type="button" id="location-cancel" class="subtle">稍后再说</button><button type="submit" id="location-save" class="primary">确认城市，看看天气</button></div><p class="geo-credit">省市列表保存在本项目；天气可用范围以服务端城市目录为准。定位数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a></p></form></dialog>
 <dialog id="image-dialog"><h2>试穿这套搭配</h2><div id="image-details"></div><div id="image-status" role="status"></div><div class="dialog-actions"><button id="image-cancel" class="subtle">暂不生成</button><button id="image-confirm" class="primary">确认费用并生成</button></div></dialog>
-<script src="/static/weather-visuals.js?v=weather-eight-20261027" defer></script><script src="/static/app.js?v=durable-runs-20261028" defer></script>
+<script src="/static/weather-visuals.js?v=stylist-gender-20261028" defer></script><script src="/static/app.js?v=durable-runs-20261028" defer></script>
 </body></html>

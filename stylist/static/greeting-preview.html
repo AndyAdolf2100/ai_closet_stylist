@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-stylist-gender="female">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>衣衣 · 窗台眨眼预览</title>
+  <script src="/static/appearance.js?v=unified-window-blink-v3-20261028"></script>
   <link rel="stylesheet" href="/static/style.css?v=unified-window-blink-v3-20261028">
   <style>
     body{display:block;max-width:860px;margin:auto;padding:32px 24px}
@@ -11,21 +12,42 @@
     p{font-size:14px;line-height:1.8;color:var(--muted)}
     .examples{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:40px;padding:32px 0}
     .example{text-align:center}
-    .examples .hero-mascot{position:relative;right:auto;top:auto;transform:none;margin:12px auto;width:180px;height:180px}
-    .examples .small{width:106px;height:106px}
+    .examples .example .mascot.hero-mascot[data-mood=greeting]{position:relative;right:auto;top:auto;transform:none;margin:12px auto;width:190px;height:190px}
+    .examples .example .mascot.hero-mascot.small[data-mood=greeting]{width:112px;height:112px}
     .sheet{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px}
+    .preview-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0}
+    .preview-controls .stylist-switch{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:24px}
+    .blink-controls{display:flex;gap:6px}
+    .blink-controls button{font-size:12px;padding:8px 12px}
+    .blink-controls button[aria-pressed=true]{background:var(--soft);border-color:var(--accent)}
+    body[data-blink-frame=open] .mascot.hero-mascot::after{display:none}
+    :root body[data-blink-frame=closed] .examples .mascot.hero-mascot[data-mood=greeting]::after{animation:none;background-position:0 100%}
+    .sheet-male,:root[data-stylist-gender=male] .sheet-female{display:none}
+    :root[data-stylist-gender=male] .sheet-male{display:block}
     a{color:var(--accent)}
   </style>
 </head>
 <body>
   <a href="/mobile/">← 返回衣间</a>
-  <h1>女版衣衣柔光倚窗眨眼</h1>
-  <p>身体和窗景固定，眼睛六帧开合，每 4.8 秒循环一次，先静静停留再眨眼。系统开启“减少动态效果”时显示静态首帧。</p>
+  <h1>衣衣 · 窗边的安静时刻</h1>
+  <p>男女版统一采用自然成年比例与柔光倚窗托腮画风。身体和窗景固定，只让眼睛轻轻开合；女版每 4.8 秒、男版每 5.6 秒眨眼。系统开启“减少动态效果”时显示静态首帧。</p>
+  <div class="preview-controls">
+    <div class="stylist-switch" role="group" aria-label="搭配师形象"><button type="button" data-stylist-gender="female" aria-pressed="true" aria-label="女版衣衣">女版</button><button type="button" data-stylist-gender="male" aria-pressed="false" aria-label="男版衣衣">男版</button></div>
+    <div class="blink-controls" role="group" aria-label="眨眼预览"><button type="button" data-frame="auto" aria-pressed="true">自动眨眼</button><button type="button" data-frame="open" aria-pressed="false">睁眼</button><button type="button" data-frame="closed" aria-pressed="false">闭眼</button></div>
+  </div>
+  <div id="appearance-status" class="sr-only" role="status" aria-live="polite"></div>
   <div class="examples">
-    <div class="example"><div class="mascot hero-mascot" data-mood="greeting" role="img" aria-label="女版衣衣柔光倚窗眨眼的循环动画"></div><p>桌面尺寸</p></div>
-    <div class="example"><div class="mascot hero-mascot small" data-mood="greeting" role="img" aria-label="女版衣衣柔光倚窗眨眼的循环动画"></div><p>手机尺寸</p></div>
+    <div class="example"><div class="mascot hero-mascot" data-mood="greeting" role="img" aria-label="衣衣窗边眨眼的循环动画"></div><p>桌面尺寸</p></div>
+    <div class="example"><div class="mascot hero-mascot small" data-mood="greeting" role="img" aria-label="衣衣窗边眨眼的循环动画"></div><p>手机尺寸</p></div>
   </div>
   <p>原始精灵图：3 列 × 2 行，按从左到右、从上到下播放。</p>
-  <img class="sheet" src="/static/assets/yiyi-female-window-blink-v3.png" alt="女版衣衣柔光倚窗眨眼六帧精灵图" width="1536" height="1024">
+  <img class="sheet sheet-female" src="/static/assets/yiyi-female-window-blink-v3.png" alt="女版衣衣柔光倚窗眨眼六帧精灵图" width="1536" height="1024">
+  <img class="sheet sheet-male" src="/static/assets/yiyi-male-window-blink-v1.png" alt="男版衣衣倚在窗边眨眼六帧精灵图" width="1536" height="1024">
+  <script>
+    document.querySelectorAll('[data-frame]').forEach(button => button.addEventListener('click', () => {
+      document.body.dataset.blinkFrame = button.dataset.frame;
+      document.querySelectorAll('[data-frame]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    }));
+  </script>
 </body>
 </html>
