@@ -71,30 +71,35 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 
 ## 4. 新服务对外接口
 
+自有接口统一为 `/stylist-api/`，便于与原 Go `/api/` 在同域名下分流；前后端需一起更新，旧 `/api/` 不保留别名。
+上文列出的上游接口保持原路径。Nginx 检测与合并说明见 [共享路由](NGINX_SHARED_ROUTING.md)。
+
 | 方法与路径 | 行为 |
 | --- | --- |
 | `GET /health` | 只证明服务存活及模型是否配置，不冒充所有上游可用 |
-| `POST /auth/mobile-login` | 本地登录代理；生产模式关闭 |
-| `POST /api/chat` | JSON 请求／结构化回复，包含 request_id、conversation_id、expected_version |
-| `POST /api/chat/stream` | SSE：progress、result、error；错误保留稳定 code，长请求发送心跳 |
-| `POST /api/location/resolve` | 用户点击授权后提交经纬度，降低精度并通过逆地理编码与业务城市目录确认；只返回城市，不持久化精确坐标 |
-| `POST /api/weather/forecast` | 当前用户选定城市与day/week/next7范围，返回逐日白天／夜间预报、数据缺口与穿搭提醒 |
-| `GET /api/conversations` | 本账号最近对话 |
-| `GET /api/conversations/{id}` | 本账号历史及当前版本 |
-| `POST /api/wardrobe/export` | 导出当前账号可见的全部正常衣橱图片与清单到本机私有目录；只读业务数据，图片优先抠图、原图兜底 |
-| `POST /api/integrations/check` | 当前登录态逐项真实只读检查，包含模型小请求；不执行生图、保存或扣费 |
-| `POST /api/images/quote` | 根据当前搭配版本、look_index，生成有期限的费用确认 |
-| `POST /api/images/{action_id}/confirm` | confirmed=true 才执行一次；false 取消未执行动作 |
-| `GET /api/images/{action_id}` | 查询本账号本地执行状态，不会重新生成 |
+| `POST /stylist-api/auth/mobile-login` | 原账号服务登录代理；生产默认关闭，测试站点可显式开启 `STYLIST_ALLOW_MOBILE_LOGIN=true` |
+| `POST /stylist-api/chat` | JSON 请求／结构化回复，包含 request_id、conversation_id、expected_version |
+| `POST /stylist-api/chat/stream` | SSE：progress、result、error；错误保留稳定 code，长请求发送心跳 |
+| `POST /stylist-api/location/resolve` | 用户点击授权后提交经纬度，降低精度并通过逆地理编码与业务城市目录确认；只返回城市，不持久化精确坐标 |
+| `POST /stylist-api/weather/forecast` | 当前用户选定城市与day/week/next7范围，返回逐日白天／夜间预报、数据缺口与穿搭提醒 |
+| `GET/PUT /stylist-api/companion-profile` | 当前账号称呼、角色及定制偏好 |
+| `GET/PUT /stylist-api/memories` | 当前账号手记，保存校验版本 |
+| `GET /stylist-api/conversations` | 本账号最近对话 |
+| `GET /stylist-api/conversations/{id}` | 本账号历史及当前版本 |
+| `POST /stylist-api/wardrobe/export` | 导出当前账号可见的全部正常衣橱图片与清单到本机私有目录；只读业务数据，图片优先抠图、原图兜底 |
+| `POST /stylist-api/integrations/check` | 当前登录态逐项真实只读检查，包含模型小请求；不执行生图、保存或扣费 |
+| `POST /stylist-api/images/quote` | 根据当前搭配版本、look_index，生成有期限的费用确认 |
+| `POST /stylist-api/images/{action_id}/confirm` | confirmed=true 才执行一次；false 取消未执行动作 |
+| `GET /stylist-api/images/{action_id}` | 查询本账号本地执行状态，不会重新生成 |
 
 除登录和存活检查外，业务接口需要现有 Bearer。当前服务是新协议，不能直接用旧 Vue 客户端发送旧 `turn_id` 动作；本项目随附独立移动页面，替换旧 App 接入前需明确做客户端适配。
 
-2026-10-27新增只读业务API `POST /api/weather/get_weather`：服务端按权威解析后的省市读取14天范围，返回列表中的实际日期，供本周匹配。现有远端响应已确认包含`temp_day`、`temp_night`、`condition_day`、`condition_night`与`data_format`，未包含早间逐小时、风力和能见度；不能把日夜温度解释为准确早晚时刻实况。`POST /api/chat`可额外传`location={city_name,province_name}`；不接受经纬度直接写入对话状态。
+2026-10-27新增只读业务API `POST /api/weather/get_weather`：服务端按权威解析后的省市读取14天范围，返回列表中的实际日期，供本周匹配。现有远端响应已确认包含`temp_day`、`temp_night`、`condition_day`、`condition_night`与`data_format`，未包含早间逐小时、风力和能见度；不能把日夜温度解释为准确早晚时刻实况。`POST /stylist-api/chat`可额外传`location={city_name,province_name}`；不接受经纬度直接写入对话状态。
 
 定位接口请求为JSON：`{latitude,longitude,coordinate_system?}`，默认`coordinate_system=wgs84`；高德GCJ-02/百度BD-09不直接兼容。成功返回`city_name`、`province_name`、可选区名`district_name`及来源。对于直辖市，OSM中的`city`可能实际是区，需以`ISO3166-2-lvl4`或省级直辖市名称归一后查询天气目录，不能直接将区名当作地级城市。
 
 ## 可管理长记忆（PRD-12）
 
-本服务新增 `GET /api/memories`、`PUT /api/memories`，必须带当前账号身份。与旧 Go 服务同名探测路径是不同的数据域，不代理旧记忆。请求／响应 `{revision, enabled, entries:[{id, category, content}]}`，拒绝客户端 owner 字段；保存需携带读取时的 revision，冲突返回 409 `memory_conflict`，不覆盖其他窗口修改。
+本服务新增 `GET /stylist-api/memories`、`PUT /stylist-api/memories`，必须带当前账号身份。与旧 Go 服务同名探测路径是不同的数据域，不代理旧记忆。请求／响应 `{revision, enabled, entries:[{id, category, content}]}`，拒绝客户端 owner 字段；保存需携带读取时的 revision，冲突返回 409 `memory_conflict`，不覆盖其他窗口修改。
 
 独立表 `stylist_memory_books(owner_id, revision, book_json)`，兼容 SQLite／MySQL／PostgreSQL SQL 适配。每账号最多30条，每条240字；正文纯文本。明确聊天保存与 `Store.finish` 同事务提交，幂等请求不会重复添加；同内容去重。暂停不会删除条目；删除只移除活跃手记，不清除历史对话或检查点快照。详见 [长记忆](LONG_TERM_MEMORY.md)。

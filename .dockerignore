@@ -9,3 +9,11 @@ __pycache__
 .ruff_cache
 docs
 tests
+config
+deploy
+!deploy/docker
+!deploy/docker/start.sh
+scripts
+skills
+*.tar
+*.tar.gz

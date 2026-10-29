@@ -258,7 +258,7 @@
 | `GET /api/user_product/quick_edit_list` | 个人衣橱选款、本人图库导出 | 分页读取本人正常衣物；推荐当前最多三页、每页 50 件，导出采用独立分页；参与 AI 搭配标志仍有上游过滤缺口 |
 | `GET /api/product/list` | 用户允许系统商品且语义工具不可用时补充候选 | 用户 Bearer；当前回退只读第一页 50 件，不代表全库覆盖 |
 | `POST /api/weather/get_weather` | 天气卡、指定日期及多日穿搭的预报读取 | 传权威确认后的省、市及 `days=14`；虽然使用 POST，业务语义为只读；仅使用返回的实际日期 |
-| `GET /api/memories` | 服务连接检查中的只读接口探测 | 仅为旧上游探测，不用于本项目手记；本项目同名路径属于独立 API，见 LONG_TERM_MEMORY.md |
+| `GET /api/memories` | 服务连接检查中的只读接口探测 | 仅为旧上游探测，不用于本项目手记；本项目手记路径为 `/stylist-api/memories`，见 LONG_TERM_MEMORY.md |
 
 当前不使用存在界面状态变更副作用的旧商品详情入口或 `user_all_list` 作为常规召回方式，避免一次选衣操作意外清除原 App 的提示或修改排序。
 

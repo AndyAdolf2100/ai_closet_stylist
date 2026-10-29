@@ -192,17 +192,17 @@ def test_approval_status_api_and_draining(tmp_path, monkeypatch):
     headers = {'Authorization': 'Bearer owner-1'}
     body = {'message':'只咨询穿法', 'request_id':'api-approval-001', 'confirm_plan':True}
     with TestClient(app) as client:
-        waiting = client.post('/api/chat', headers=headers, json=body)
+        waiting = client.post('/stylist-api/chat', headers=headers, json=body)
         assert waiting.status_code == 200 and waiting.json()['pending_confirmation']
-        status = client.get('/api/runs/api-approval-001', headers=headers).json()
+        status = client.get('/stylist-api/runs/api-approval-001', headers=headers).json()
         assert status['status'] == 'awaiting_confirmation' and status['next_nodes'] == ['approval']
         assert status['completed_nodes'] == ['understand']
-        assert client.get('/api/runs/api-approval-001', headers={'Authorization':'Bearer other'}).status_code == 404
-        assert client.post('/api/chat/approval', headers=headers, json={'request':{**body,'message':'篡改内容'},'approved':True}).status_code == 409
-        result = client.post('/api/chat/approval', headers=headers, json={'request':body,'approved':True})
+        assert client.get('/stylist-api/runs/api-approval-001', headers={'Authorization':'Bearer other'}).status_code == 404
+        assert client.post('/stylist-api/chat/approval', headers=headers, json={'request':{**body,'message':'篡改内容'},'approved':True}).status_code == 409
+        result = client.post('/stylist-api/chat/approval', headers=headers, json={'request':body,'approved':True})
         assert result.status_code == 200 and result.json()['delivery'] == 'advice'
-        assert client.get('/api/runs/api-approval-001', headers=headers).json()['status'] == 'completed'
+        assert client.get('/stylist-api/runs/api-approval-001', headers=headers).json()['status'] == 'completed'
         assert client.post('/internal/drain').status_code == 403
         app.state.runs.draining = True
         assert client.get('/health/ready').status_code == 503
-        assert client.post('/api/chat', headers=headers, json={**body,'request_id':'drained-test-001'}).status_code == 503
+        assert client.post('/stylist-api/chat', headers=headers, json={**body,'request_id':'drained-test-001'}).status_code == 503

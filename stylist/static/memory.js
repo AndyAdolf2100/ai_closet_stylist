@@ -111,7 +111,7 @@
   async function read() {
     const current = ++generation, api = client; reset(); busy = true; controls(); $('memory-loading').hidden = false;
     try {
-      const result = await api('/api/memories'); if (current !== generation) return;
+      const result = await api('/stylist-api/memories'); if (current !== generation) return;
       draft = copy(result); render();
     } catch (error) {
       if (current !== generation) return;
@@ -134,7 +134,7 @@
     if (new Set(saved.entries.map(x => x.content)).size !== saved.entries.length) { notify('这件事已经在手记里了，不必再写一遍。'); return; }
     const current = generation, api = client; activePicker?.hide(); busy = true; controls();
     try {
-      await api('/api/memories', {method:'PUT',body:JSON.stringify(saved)});
+      await api('/stylist-api/memories', {method:'PUT',body:JSON.stringify(saved)});
       if (current !== generation) return;
       busy = false; close(); notify(saved.enabled ? '手记收好了。下次聊天，我会参考你留下的这些小事。' : '手记收好了，参考也已暂停。想再用时，回来打开就好。');
     } catch (error) {

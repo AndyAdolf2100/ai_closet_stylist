@@ -19,7 +19,7 @@ class LoginRequest(Model):
 
 
 async def login(settings, request):
-    if os.getenv("STYLIST_ENV") == "production":
+    if os.getenv("STYLIST_ENV") == "production" and not settings.allow_mobile_login:
         raise StylistError("local_login_disabled", "生产环境请使用 App 已验证的登录态。", 404)
     try:
         key = serialization.load_pem_public_key(Path(settings.login_public_key).read_bytes())

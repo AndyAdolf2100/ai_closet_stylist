@@ -21,6 +21,7 @@ class Settings:
     max_candidates: int = 60
     login_public_key: str = ""
     login_app_version: str = "1.2.0"
+    allow_mobile_login: bool = False
     alerts_url: str = ""
     alerts_key: str = field(default="", repr=False)
     cors_origins: tuple[str, ...] = ("http://127.0.0.1:8465", "http://localhost:8465")
@@ -53,6 +54,7 @@ class Settings:
             checkpoint_database=os.getenv("STYLIST_CHECKPOINT_DATABASE", local.get("checkpoint_database") or ""),
             login_public_key=os.getenv("STYLIST_LOGIN_PUBLIC_KEY", (raw.get("upstream_auth") or {}).get("public_key_path") or ""),
             login_app_version=os.getenv("STYLIST_LOGIN_APP_VERSION", (raw.get("upstream_auth") or {}).get("app_version") or "1.2.0"),
+            allow_mobile_login=os.getenv("STYLIST_ALLOW_MOBILE_LOGIN", "").lower() in {"1", "true", "yes"},
             alerts_url=os.getenv("STYLIST_ALERTS_URL", ""),
             alerts_key=os.getenv("STYLIST_ALERTS_KEY", ""),
         )

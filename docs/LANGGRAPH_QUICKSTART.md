@@ -87,9 +87,9 @@ asyncio.run(main())
 - 勾选输入区“先确认需求”，先返回需求确认，点击确认或取消继续。
 - 同一请求恢复必须携带完全相同的 ChatRequest 和 request_id；换一个 request_id 就是新任务。
 - 前端将原请求保存在当前标签页的 sessionStorage；断线自动重连，刷新后从同一请求恢复。用户退出登录时清除本地待恢复请求。
-- `GET /api/runs/{request_id}` 查看当前账号的任务状态与待执行节点。
-- `POST /api/chat/approval` 接收 `{ "request": 原ChatRequest, "approved": true或false }`；服务端验证账号、请求摘要和会话版本，不接受客户端指定 owner。
-- `/api/chat/stream` 的连接关闭不取消后台生成。运行中另一连接接入会复用本进程任务，或等待原实例释放执行权。
+- `GET /stylist-api/runs/{request_id}` 查看当前账号的任务状态与待执行节点。
+- `POST /stylist-api/chat/approval` 接收 `{ "request": 原ChatRequest, "approved": true或false }`；服务端验证账号、请求摘要和会话版本，不接受客户端指定 owner。
+- `/stylist-api/chat/stream` 的连接关闭不取消后台生成。运行中另一连接接入会复用本进程任务，或等待原实例释放执行权。
 - 会话执行租约45秒、每10秒续租。进程异常死亡后，浏览器重连在租约到期后接管；数据库必须可用。PostgreSQL 下还持有每个执行的 advisory lock，避免存活但失去租约的旧实例与新实例同时写检查点。
 - Bearer 只存在内存，不写入检查点。恢复需要用户提供有效登录态。关闭页面后旧实例仍会尽力完成任务；如果期间实例也死亡，本版需要页面重新打开/重连才触发恢复，没有独立后台调度器自动捞取无人订阅的任务。
 

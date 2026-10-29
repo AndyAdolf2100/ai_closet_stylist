@@ -35,12 +35,12 @@ def test_profile_api_requires_identity_and_rejects_owner_spoofing(tmp_path, monk
     monkeypatch.setattr("stylist.main.Upstream.identity", identity)
     with TestClient(create_app(Settings(database=str(tmp_path / "state.db")))) as client:
         data = CompanionProfile(user_name="小夏", agent_name="知秋").model_dump()
-        assert client.get("/api/companion-profile").status_code == 401
-        assert client.put("/api/companion-profile", json=data).status_code == 401
-        assert client.put("/api/companion-profile", json={**data, "owner_id": "b"}, headers={"Authorization": "Bearer a"}).status_code == 422
-        assert client.put("/api/companion-profile", json=data, headers={"Authorization": "Bearer a"}).json()["profile"] == data
-        assert client.get("/api/companion-profile", headers={"Authorization": "Bearer a"}).json()["profile"] == data
-        assert client.get("/api/companion-profile", headers={"Authorization": "Bearer b"}).json() == {"profile": None}
+        assert client.get("/stylist-api/companion-profile").status_code == 401
+        assert client.put("/stylist-api/companion-profile", json=data).status_code == 401
+        assert client.put("/stylist-api/companion-profile", json={**data, "owner_id": "b"}, headers={"Authorization": "Bearer a"}).status_code == 422
+        assert client.put("/stylist-api/companion-profile", json=data, headers={"Authorization": "Bearer a"}).json()["profile"] == data
+        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer a"}).json()["profile"] == data
+        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer b"}).json() == {"profile": None}
 
 
 @pytest.mark.parametrize("value", ["", "   ", "a" * 25, "<script>", "名字\n指令", "名字\u200b"])

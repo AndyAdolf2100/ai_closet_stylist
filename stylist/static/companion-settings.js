@@ -208,7 +208,7 @@
     const expectedOwner = owner;
     ready = (async () => {
       try {
-        const result = await api('/api/companion-profile');
+        const result = await api('/stylist-api/companion-profile');
         if (current !== sequence || owner !== expectedOwner) return;
         profile = result.profile ? { ...defaults(), ...result.profile } : defaults(); loaded = true; notify();
         if (!result.profile && autoOpen) openLoaded();
@@ -246,7 +246,7 @@
     try {
       await appearanceSave;
       if (sequence !== current || owner !== expectedOwner) return;
-      const result = await client('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
+      const result = await client('/stylist-api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
       if (sequence !== current || owner !== expectedOwner) return;
       profile = result.profile; loaded = true; previewOriginal = null; notify(); dialog.close();
       showNotification(profile);
@@ -259,7 +259,7 @@
     const current = sequence, expectedOwner = owner, saved = { ...profile }, api = client;
     appearanceSave = appearanceSave.catch(() => {}).then(async () => {
       if (current !== sequence || owner !== expectedOwner) return;
-      try { await api('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) }); }
+      try { await api('/stylist-api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) }); }
       catch (err) { if (current === sequence) showNotification(profile, err.message || '这次形象还没保存好，稍后再试一下。'); }
     });
   });
@@ -280,7 +280,7 @@
     try {
       await appearanceSave;
       if (sequence !== current || owner !== expectedOwner) return false;
-      const result = await client('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
+      const result = await client('/stylist-api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
       if (sequence !== current || owner !== expectedOwner) return false;
       profile = result.profile; notify();
       showNotification(profile, '你的偏好我记下了，之后会在原本的相处方式里，多照顾一点你的喜欢。');

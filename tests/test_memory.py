@@ -39,13 +39,13 @@ def test_memory_api_identity_validation_and_conflict(tmp_path, monkeypatch):
     monkeypatch.setattr('stylist.main.Upstream.identity', identity)
     with TestClient(create_app(Settings(database=str(tmp_path / 'memory.db')))) as client:
         a, b = {'Authorization': 'Bearer a'}, {'Authorization': 'Bearer b'}
-        assert client.get('/api/memories').status_code == 401
-        assert client.put('/api/memories', json=book().model_dump()).status_code == 401
-        assert client.put('/api/memories', headers=a, json={**book().model_dump(), 'owner_id': 'b'}).status_code == 422
-        assert client.put('/api/memories', headers=a, json=book().model_dump()).status_code == 200
-        assert client.put('/api/memories', headers=a, json=book().model_dump()).status_code == 409
-        assert client.get('/api/memories', headers=b).json()['entries'] == []
-        assert client.get('/api/memories', headers=a).json()['entries'][0]['content'] == '我不穿高跟鞋'
+        assert client.get('/stylist-api/memories').status_code == 401
+        assert client.put('/stylist-api/memories', json=book().model_dump()).status_code == 401
+        assert client.put('/stylist-api/memories', headers=a, json={**book().model_dump(), 'owner_id': 'b'}).status_code == 422
+        assert client.put('/stylist-api/memories', headers=a, json=book().model_dump()).status_code == 200
+        assert client.put('/stylist-api/memories', headers=a, json=book().model_dump()).status_code == 409
+        assert client.get('/stylist-api/memories', headers=b).json()['entries'] == []
+        assert client.get('/stylist-api/memories', headers=a).json()['entries'][0]['content'] == '我不穿高跟鞋'
 
 
 def test_memory_limits_and_explicit_save_syntax():

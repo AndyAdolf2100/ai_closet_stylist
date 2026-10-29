@@ -148,7 +148,7 @@ async function loadForecast(location = selectedCity) {
   forecastBusy = true;
   $('location-label').textContent = agentText('衣衣正在看看天气…');
   try {
-    const data = await api('/api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
+    const data = await api('/stylist-api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
     if (sequence !== forecastSequence) return false;
     selectedCity = { city_name: data.city_name, province_name: data.province_name }; sessionStorage.setItem(CITY_KEY, JSON.stringify(selectedCity)); updateCityLabel();
     let panel = $('weather-panel'); if (!panel) { panel = el('section'); panel.id = 'weather-panel'; $('feed').prepend(panel); }
@@ -295,7 +295,7 @@ function showReply(reply) {
         if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
         preview.disabled = true;
         try {
-          const quote = await api('/api/images/quote', { method: 'POST', body: JSON.stringify({ conversation_id: conversation, version, look_index: lookIndex }) });
+          const quote = await api('/stylist-api/images/quote', { method: 'POST', body: JSON.stringify({ conversation_id: conversation, version, look_index: lookIndex }) });
           imageAction = quote.action_id; $('image-details').replaceChildren(el('p', '', quote.title), el('strong', '', `本次将消耗 ${quote.points_cost} 积分`));
           for (const note of quote.notices) $('image-details').append(el('p', '', note));
           $('image-status').textContent = ''; $('image-confirm').disabled = false; $('image-cancel').textContent = '暂不生成'; $('image-dialog').showModal();
@@ -325,7 +325,7 @@ async function refreshHistory() {
   if (!session) return;
   const owner = session.user.id, sequence = ++historySequence;
   try {
-    const rows = await api('/api/conversations');
+    const rows = await api('/stylist-api/conversations');
     if (session?.user.id !== owner || sequence !== historySequence) return;
     $('history-status').textContent = rows.length ? '' : '还没有历史对话，开始聊聊吧。';
     for (const container of [$('history'), $('mobile-history-list')]) {
@@ -342,7 +342,7 @@ async function refreshHistory() {
           if (busy || session?.user.id !== owner) return;
           setBusy(true); $('history-status').textContent = '正在打开对话…';
           try {
-            const record = await api('/api/conversations/' + row.id);
+            const record = await api('/stylist-api/conversations/' + row.id);
             if (session?.user.id !== owner) return;
             $('feed').replaceChildren();
             for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
@@ -391,7 +391,7 @@ async function sendMessage(resuming = false) {
     let received = false;
     while (!received) {
       try {
-        const response = await fetch('/api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
+        const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
         if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
         const reader = response.body.getReader(), decoder = new TextDecoder(); let buffer = '';
         try {
@@ -438,7 +438,7 @@ function showPlanApproval(request) {
       setBusy(true);
       const chatOwner = session.user.id;
       try {
-        const reply = await api('/api/chat/approval', {method:'POST', body:JSON.stringify({request, approved})});
+        const reply = await api('/stylist-api/chat/approval', {method:'POST', body:JSON.stringify({request, approved})});
         savePending(null); actions.remove(); showReply(reply);
         if (approved && !reply.pending_confirmation) dailyCheckin.completeChat(chatOwner);
         await refreshHistory();
@@ -477,7 +477,7 @@ $('login-form').onsubmit = async event => {
   try {
     let device = sessionStorage.getItem('stylist-device-id');
     if (!device) { device = 'stylist-' + crypto.randomUUID(); sessionStorage.setItem('stylist-device-id', device); }
-    const response = await fetch('/auth/mobile-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mobile: $('mobile').value, code: $('code').value, device_id: device }) });
+    const response = await fetch('/stylist-api/auth/mobile-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mobile: $('mobile').value, code: $('code').value, device_id: device }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.message || '登录未成功');
     if (lastSessionOwner && lastSessionOwner !== data.user.id) { conversation = null; version = 0; $('feed').replaceChildren(); clearHistory(); }
     session = data; lastSessionOwner = data.user.id; sessionStorage.setItem(KEY, JSON.stringify(data)); $('code').value = ''; $('notice').textContent = ''; $('login-dialog').close(); loginStatus(); await window.CompanionSettings?.setOwner(data.user.id, api); await refreshHistory(); if (selectedCity) loadForecast();
@@ -486,14 +486,14 @@ $('login-form').onsubmit = async event => {
 $('check-apis').onclick = async () => {
   if (!requireLogin()) return;
   $('service-dialog').showModal(); $('service-results').textContent = '正在逐项查询，请稍候…';
-  try { const report = await api('/api/integrations/check', { method: 'POST' }); $('service-results').textContent = report.results.map(x => `${x.interface}\n  ${x.status} · ${x.code}${x.latency_ms != null ? ' · ' + x.latency_ms + 'ms' : ''}${x.facts ? '\n  ' + JSON.stringify(x.facts) : ''}`).join('\n\n'); }
+  try { const report = await api('/stylist-api/integrations/check', { method: 'POST' }); $('service-results').textContent = report.results.map(x => `${x.interface}\n  ${x.status} · ${x.code}${x.latency_ms != null ? ' · ' + x.latency_ms + 'ms' : ''}${x.facts ? '\n  ' + JSON.stringify(x.facts) : ''}`).join('\n\n'); }
   catch (err) { $('service-results').textContent = ''; notifyIssue(err.message); }
 };
 $('service-close').onclick = () => $('service-dialog').close();
 $('image-cancel').onclick = async () => {
   if ($('image-cancel').disabled) return;
   if (imageAction && !$('image-confirm').disabled) {
-    try { await api('/api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: false }) }); }
+    try { await api('/stylist-api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: false }) }); }
     catch (err) { notifyIssue(err.message); return; }
   }
   $('image-dialog').close(); imageAction = null;
@@ -503,7 +503,7 @@ $('image-confirm').onclick = async () => {
   $('image-confirm').disabled = true; $('image-cancel').disabled = true;
   const waiting = el('div', 'companion-wait'); waiting.append(mascot('wardrobe'), el('p', '', '已确认本次费用，衣衣正在提交试穿。请稍等，不要重复生成。')); $('image-status').replaceChildren(waiting);
   try {
-    const action = await api('/api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: true }) });
+    const action = await api('/stylist-api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: true }) });
     $('image-status').textContent = action.status === 'completed' ? '试穿完成' : '状态：' + action.status;
     const image = (action.result?.result_image_url || action.result?.result_image || '').replace(/^http:/i, 'https:');
     if (image && /^https:\/\//i.test(image)) { const img = el('img'); img.src = image; img.alt = '本次搭配的试穿预览'; img.style.width = '100%'; img.referrerPolicy = 'no-referrer'; $('image-details').append(img); }
@@ -544,7 +544,7 @@ $('locate-me').onclick = async () => {
   try {
     const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }));
     if (!current()) return;
-    const city = await api('/api/location/resolve', { method: 'POST', body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude, coordinate_system: 'wgs84' }) });
+    const city = await api('/stylist-api/location/resolve', { method: 'POST', body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude, coordinate_system: 'wgs84' }) });
     await citiesReady;
     if (!current()) return;
     if (!cityPicker.setValue(city)) { notifyIssue('已识别到 ' + city.city_name + '，请搜索或点选对应城市。'); return; }

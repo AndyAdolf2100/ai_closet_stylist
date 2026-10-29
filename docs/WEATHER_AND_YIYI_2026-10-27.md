@@ -5,7 +5,7 @@
 - 沿用奶油色、绿色基调，增加克制的淡粉、圆角与轻微动效；成年女性Q版搭配师「衣衣」，温柔但不幼儿化。
 - 页面支持用户点击后请求浏览器定位，也可手动填写城市。定位调用Nominatim前降低坐标精度；仅确认后的城市写入当前请求，不把精确坐标写进模型或会话。
 - 服务端验证身份后，把定位结果通过既有`city.resolve`确认为业务城市；需消歧时交由用户填写。Nominatim提供者URL可通过`STYLIST_GEOCODER_URL`替换。
-- 新增`POST /api/location/resolve`和`POST /api/weather/forecast`，均需Bearer。既有业务`POST /api/weather/get_weather`为只读预报，不触发衣橱或积分写入。
+- 新增`POST /stylist-api/location/resolve`和`POST /stylist-api/weather/forecast`，均需Bearer。既有业务`POST /api/weather/get_weather`为只读预报，不触发衣橱或积分写入。
 - 今天按实际日期取预报，本周从所选起始日期至周日，未来七天为独立范围；逐日按日期匹配，不按返回列表顺序猜测。
 - 实际出行的文字搭配也查询天气；普通配色原理咨询不查，用户明确忽略天气仍优先尊重。
 - 根据可用预报生成雨、雪、雾、雷雨、大风、冷热与温差提醒。提醒为穿搭出行建议，不能冒充官方灾害预警。

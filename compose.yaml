@@ -1,0 +1,52 @@
+name: aicloset-assistant
+
+services:
+  stylist:
+    image: ${STYLIST_IMAGE:-aicloset-stylist:local}
+    build:
+      context: .
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: ./config/deploy.env
+        format: raw
+    environment:
+      STYLIST_ENV: production
+      STYLIST_DATABASE: /app/var/stylist.sqlite3
+      STYLIST_CHECKPOINT_DATABASE: ""
+      STYLIST_LOGIN_PUBLIC_KEY: /run/stylist/login-public.pem
+      LANGSMITH_TRACING: "false"
+    ports:
+      - "127.0.0.1:8466:8000"
+    volumes:
+      - stylist-data:/app/var
+      - type: bind
+        source: ./config/login-public.pem
+        target: /run/stylist/login-public.pem
+        read_only: true
+        bind:
+          create_host_path: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 330s
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3).close()"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  stylist-data:

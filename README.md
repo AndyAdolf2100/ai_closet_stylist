@@ -20,6 +20,9 @@ sh run-local.sh
 
 打开 <http://127.0.0.1:8466/mobile/>，使用现有账号的手机号与验证码登录。接口说明：<http://127.0.0.1:8466/docs>。
 
+Stylist 自有接口使用 `/stylist-api/`，与原 Go Server 的 `/api/` 分开；登录代理为 `/stylist-api/auth/mobile-login`。
+前后端同步更新后刷新页面。Nginx 同文件管理与按路径分流见 [共享路由说明](docs/NGINX_SHARED_ROUTING.md)。
+
 `run-local.sh` 默认只读引用相邻旧项目的 `config/config.yaml`，复用现有模型配置、MCP 地址和登录公钥；不导入旧项目代码，也不复制凭证。旧服务的 8465 端口保持独立。账号服务存在单点登录约束，在新页面登录可能使同账号的旧标签页失效。
 
 独立部署时使用环境变量，避免依赖旧项目路径：
@@ -97,6 +100,15 @@ uv run python scripts/evaluate_semantics.py
 签到使用前端内存 store，按账号隔离，以北京时间划分日期；刷新页面即清空，不写数据库或浏览器存储，不改变真实积分。月历的日期、星期和月份由本地日期计算生成，不调用旧服务的签到、积分或搭配日历接口。
 
 ## LangGraph 与部署
+
+这台 CentOS7 测试机的环境、打包、跳板机上传、安装、Nginx合并、验收、更新及回退统一见
+[测试服务器配置与部署流程](docs/TEST_SERVER_DEPLOYMENT.md)。
+
+当前测试机使用 [amd64离线包、一条命令部署](docs/SIMPLE_DEPLOYMENT.md)：前端与Agent同容器，脚本校验并加载已构建镜像、更新应用和现有Nginx；优先读取独立私密配置，缺失才提示输入Key，后续保留配置和SQLite持久数据。用户已提供版本 `20261029T111906Z-8ca143d32b14-10412` 的部署成功输出；登录、衣橱及模型效果仍需单独验收。无需镜像仓库，运行配置、密钥、数据和发布tar不提交Git。
+
+当前测试机实际为CentOS7、x86_64、Docker20.10.7，已确认Ubuntu版Compose二进制存在GLIBC不兼容；该机器请先读 [CentOS7部署补充](docs/CENTOS7_DEPLOYMENT.md)，使用静态链接Compose离线包，不套用Ubuntu系统工具安装命令。
+
+单域名 Ubuntu 测试服务器优先使用 [Docker + Nginx 部署说明](docs/DOCKER_UBUNTU_DEPLOYMENT.md)：前端和 Agent 同镜像，配置与持久数据在镜像外，支持源码构建或离线镜像上传；目标域名 `aicloset-assistant.wxbjq.top`。已有 App 登录态接入的生产模板保持默认关闭网页登录；独立测试站点可通过 `STYLIST_ALLOW_MOBILE_LOGIN=true` 显式开启现有验证码登录。
 
 入门和节点对应关系见 [LangGraph 入门](docs/LANGGRAPH_QUICKSTART.md)；滚动发布、排空、断线恢复、PostgreSQL 配置和当前限制见 [K8s 部署说明](docs/KUBERNETES_DEPLOYMENT.md)。部署前先运行 `uv run python -m stylist.migrate` 创建业务及检查点表。
 

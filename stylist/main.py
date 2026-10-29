@@ -80,7 +80,7 @@ def create_app(settings=None):
         runs.draining = True
         return {"draining": True}
 
-    @app.post("/api/integrations/check")
+    @app.post("/stylist-api/integrations/check")
     async def integrations(authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         # Invalid login must prompt reauthentication, not a successful report of widespread outages.
@@ -96,11 +96,11 @@ def create_app(settings=None):
         Path("var/integrations.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
         return report
 
-    @app.post("/auth/mobile-login")
+    @app.post("/stylist-api/auth/mobile-login")
     async def mobile_login(request: LoginRequest):
         return await login(settings, request)
 
-    @app.post("/api/location/resolve")
+    @app.post("/stylist-api/location/resolve")
     async def resolve_location(request: LocateRequest, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         await upstream.identity()
@@ -108,43 +108,43 @@ def create_app(settings=None):
             raise StylistError("coordinate_system_unsupported", "当前定位接口使用浏览器WGS84坐标；高德GCJ-02或百度BD-09坐标不能直接混用，请选择浏览器定位或手动选城市。", 422)
         return await engine.weather.locate(upstream, request.latitude, request.longitude)
 
-    @app.get("/api/companion-profile")
+    @app.get("/stylist-api/companion-profile")
     async def companion_profile(authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         profile = await asyncio.to_thread(store.companion_profile, owner)
         return {"profile": profile.model_dump(mode="json") if profile else None}
 
-    @app.put("/api/companion-profile")
+    @app.put("/stylist-api/companion-profile")
     async def save_companion_profile(profile: CompanionProfile, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         await asyncio.to_thread(store.save_companion_profile, owner, profile)
         return {"profile": profile.model_dump(mode="json")}
 
-    @app.get("/api/memories")
+    @app.get("/stylist-api/memories")
     async def memory_book(authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.memory_book, owner)
 
-    @app.put("/api/memories")
+    @app.put("/stylist-api/memories")
     async def save_memory_book(book: MemoryBook, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.save_memory_book, owner, book)
 
-    @app.post("/api/weather/forecast")
+    @app.post("/stylist-api/weather/forecast")
     async def weather_forecast(request: ForecastRequest, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         await upstream.identity()
         return await engine.weather.forecast(upstream, request.location.city_name,
             request.location.province_name, request.scope, request.event_date)
 
-    @app.post("/api/weather/alerts")
+    @app.post("/stylist-api/weather/alerts")
     async def weather_alerts(request: ForecastRequest, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         await upstream.identity()
         city = await engine.weather.resolve(upstream, request.location.city_name, request.location.province_name)
         return await alerts.lookup(city)
 
-    @app.post("/api/chat", response_model=None)
+    @app.post("/stylist-api/chat", response_model=None)
     async def chat(request: ChatRequest, authorization: str | None = Header(default=None)):
         return await runs.run(engine, Upstream(settings, require_token(authorization)), request)
 
@@ -152,11 +152,11 @@ def create_app(settings=None):
         request: ChatRequest
         approved: bool
 
-    @app.post("/api/chat/approval")
+    @app.post("/stylist-api/chat/approval")
     async def approve(body: PlanDecision, authorization: str | None = Header(default=None)):
         return await runs.run(engine, Upstream(settings, require_token(authorization)), body.request, body.approved)
 
-    @app.get("/api/runs/{request_id}")
+    @app.get("/stylist-api/runs/{request_id}")
     async def run_status(request_id: str, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         owner = await upstream.identity()
@@ -174,7 +174,7 @@ def create_app(settings=None):
         return {"request_id": request_id, "status": status, "next_nodes": list(snapshot.next),
                 "completed_nodes": snapshot.values.get("completed_nodes", [])}
 
-    @app.post("/api/chat/stream")
+    @app.post("/stylist-api/chat/stream")
     async def stream_chat(request: ChatRequest, authorization: str | None = Header(default=None)):
         token = require_token(authorization)
 
@@ -221,30 +221,30 @@ def create_app(settings=None):
         return StreamingResponse(events(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
-    @app.get("/api/conversations")
+    @app.get("/stylist-api/conversations")
     async def conversations(authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.conversations, owner)
 
-    @app.post("/api/wardrobe/export")
+    @app.post("/stylist-api/wardrobe/export")
     async def wardrobe_export(authorization: str | None = Header(default=None)):
         return await export_wardrobe(Upstream(settings, require_token(authorization)))
 
-    @app.get("/api/conversations/{conversation_id}")
+    @app.get("/stylist-api/conversations/{conversation_id}")
     async def history(conversation_id: str, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.history, owner, conversation_id)
 
-    @app.post("/api/images/quote")
+    @app.post("/stylist-api/images/quote")
     async def image_quote(request: ImageQuoteRequest, authorization: str | None = Header(default=None)):
         return await images.quote(Upstream(settings, require_token(authorization)), request)
 
-    @app.post("/api/images/{action_id}/confirm")
+    @app.post("/stylist-api/images/{action_id}/confirm")
     async def image_confirm(action_id: str, request: ImageConfirmRequest,
                             authorization: str | None = Header(default=None)):
         return await images.confirm(Upstream(settings, require_token(authorization)), action_id, request.confirmed)
 
-    @app.get("/api/images/{action_id}")
+    @app.get("/stylist-api/images/{action_id}")
     async def image_status(action_id: str, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return images.status(owner, action_id)
