@@ -164,3 +164,112 @@ async def test_runner_passes_current_profile_to_both_model_stages_and_reviewer(t
             assert row["companion_profile"]["agent_name"] == "沐沐"
         if scenario == "companion_role_switch" and row["expected"].get("switch_persona"):
             assert row["persona"] != row["case"].split("/")[0]
+
+
+def test_preference_acceptance_checks_real_items_not_just_claimed_style():
+    from stylist.models import Look, Product, Slot
+    expected = EXPECTATIONS['preference_outfit_casual/answer']
+    bad = reply().model_copy(update={"delivery": "outfit", "task": Task(no_heels=True),
+        "message": "已经按你的休闲偏好搭好了。", "looks": [Look(title="休闲搭配", items=[
+            Product(source="user", product_id="211", slot=Slot.TOP, styles=["优雅"]),
+            Product(source="user", product_id="209", slot=Slot.SHOES)])]})
+    errors = check_reply(bad, expected, ['/api/user_product/quick_edit_list'])
+    assert 'selected_items_ignore_style_preference' in errors and 'selected_forbidden_item' in errors
+    bad.looks[0].items = [Product(source="user", product_id="201", slot=Slot.TOP, styles=["休闲"])]
+    assert not check_reply(bad, expected, ['/api/user_product/quick_edit_list'])
+
+
+def test_paired_review_rejects_unproven_effect_and_invented_quotes():
+    from scripts.preference_comparison import PreferenceComparison, comparison_status
+    review = PreferenceComparison(meaningful_difference=False, persona_preserved=True, requirements_preserved=True,
+                                  evidence_a="甲回复", evidence_b="乙回复", reason="只改了语气词")
+    assert comparison_status(review, '甲回复', '乙回复') == 'failed'
+    assert comparison_status(review.model_copy(update={'meaningful_difference': True}), '甲回复', '乙回复') == 'passed'
+    assert comparison_status(review.model_copy(update={'evidence_a': '不存在的引文'}), '甲回复', '乙回复') == 'invalid_evidence'
+
+
+@pytest.mark.asyncio
+async def test_preference_inventory_resolves_style_evidence_and_avoids_real_services():
+    upstream = DialogueUpstream('preference_outfit_casual')
+    data = await upstream.get('/api/user_product/quick_edit_list', {})
+    ids = {row['product_id'] for row in data['list']}
+    assert {'201', '211', '209'} <= ids
+    result = await upstream.call('product.resolve', {'items': [{'source': 'user', 'product_id': '211'}]})
+    assert result['items'][0]['styles'] == [{'name': '优雅'}]
+    with pytest.raises(AssertionError):
+        await upstream.call('digital_twin_tryon', {})
+
+
+@pytest.mark.parametrize('paired_passes,expected_exit', [(True, 0), (False, 1)])
+@pytest.mark.asyncio
+async def test_preference_pair_runner_checks_profiles_and_propagates_failure(tmp_path, monkeypatch, paired_passes, expected_exit):
+    import json
+
+    from scripts import evaluate_personas as runner
+    from scripts.preference_comparison import PreferenceComparison
+
+    class FixtureModel:
+        def __init__(self, settings):
+            pass
+
+        async def generate(self, name, payload, result_type):
+            if name == 'review_preferences':
+                assert payload['a']['message'] == payload['b']['message']
+                assert {payload[side]['companion_profile']['conversation_style'] for side in ('a', 'b')} == {'温柔鼓励', '直接坦诚'}
+                return PreferenceComparison(meaningful_difference=paired_passes, persona_preserved=True,
+                    requirements_preserved=True, evidence_a=payload['a']['visible_reply'].splitlines()[0],
+                    evidence_b=payload['b']['visible_reply'].splitlines()[0], reason='模拟配对结果，仅验证验收器')
+            if name == 'review_dialogue':
+                return PersonaReview(persona_fit=4, naturalness=4, relevance=4, factuality=4,
+                    evidence=payload['visible_reply'].splitlines()[0], reason='模拟单轮审核')
+            current = CompanionProfile.model_validate(payload['companion_profile'])
+            assert current.conversation_style in {'温柔鼓励', '直接坦诚'}
+            if name == 'plan':
+                return Plan(mode='consult', conversation_only=True, use_inventory=False)
+            return Draft(message='先选一件最小的事情开始。' if current.conversation_style == '直接坦诚' else '今天辛苦了，我们慢慢来。')
+
+    monkeypatch.setattr(runner, 'LanguageModel', FixtureModel)
+    monkeypatch.setattr(runner.Settings, 'load', lambda: Settings(llm_key='fake', llm_url='https://unused.invalid', llm_model='fake'))
+    output = tmp_path / 'preferences.json'
+    assert await runner.run(Namespace(output=str(output), concurrency=2,
+        only=['preference_tone_gentle', 'preference_tone_direct'], judge=True)) == expected_exit
+    report = json.loads(output.read_text())
+    assert report['accepted'] == 4
+    assert len(report['preference_comparisons']) == 2
+    for pair in report['preference_comparisons']:
+        assert pair['status'] == ('passed' if paired_passes else 'failed')
+        assert pair['cases'] == sorted(pair['cases'])
+
+
+def test_preference_cases_cover_every_profile_option_and_validate_snapshots():
+    """New UI/model options must acquire executable dialogue expectations."""
+    from scripts.preference_dialogues import EXPECTATIONS as expected
+    from scripts.preference_dialogues import SCENARIOS as scenarios
+    profiles = [CompanionProfile.model_validate(row['companion_profile']) for row in expected.values()]
+    schema = CompanionProfile.model_json_schema()['properties']
+    for field in ['conversation_style', 'reply_detail', 'style_preferences', 'dressing_priorities', 'zodiac']:
+        definition = schema[field]
+        if field == 'zodiac':
+            options = next(x['enum'] for x in definition['anyOf'] if 'enum' in x)
+        else:
+            options = definition.get('items', definition)['enum']
+        observed = set()
+        for profile in profiles:
+            value = getattr(profile, field)
+            observed.update(value if isinstance(value, list) else [value])
+        assert set(options) <= observed, field
+    assert {f'{scenario}/{name}' for scenario, rows in scenarios.items() for name, _, _ in rows} == set(expected)
+
+
+def test_zodiac_acceptance_rejects_wrong_profile_reference():
+    assert 'missing_expected_zodiac' in check_reply(reply().model_copy(update={'message': '你是白羊座。'}), {'mentioned_zodiac': '天秤座'}, [])
+    assert 'missing_expected_zodiac' not in check_reply(reply().model_copy(update={'message': '聊聊天秤座的传统说法，仅作娱乐。'}), {'mentioned_zodiac': '天秤座'}, [])
+
+
+@pytest.mark.asyncio
+async def test_missing_style_fixture_has_no_matching_inventory():
+    upstream = DialogueUpstream('preference_no_matching_style')
+    rows = (await upstream.get('/api/user_product/quick_edit_list', {}))['list']
+    assert rows and all({'name': '复古'} not in row.get('styles', []) for row in rows)
+    full = DialogueUpstream('preference_style_04')
+    assert any({'name': '复古'} in row.get('styles', []) for row in (await full.get('/api/user_product/quick_edit_list', {}))['list'])

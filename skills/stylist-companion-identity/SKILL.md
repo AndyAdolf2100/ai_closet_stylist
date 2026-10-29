@@ -16,3 +16,9 @@ description: 为衣衣穿搭项目维护可重命名的陪伴设置与四步对�
 验收至少包括：四步返回与取消、默认名/自定义名、性别与助理人格分离、为他人搭配、昵称作为资料而非指令、账号隔离、保存失败重试、桌面与窄屏、历史消息及已发送任务。pytest 使用模拟外部服务与临时数据库；生成角色素材用 imagegen 并保留原人物身份，源码引用的最终素材必须在项目内。真实模型、原服务账号和付费生图须按项目授权规则区分证据。
 
 可执行对话案例位于 `scripts/companion_dialogues.py`，由 `scripts.evaluate_personas` 自动纳入男女两套评测；完整逐轮矩阵见 `docs/DIALOGUE_QA.md` 的“称呼与角色对话矩阵”。修改资料传递或角色切换时至少复测 `companion_names`、`companion_role_switch`、`companion_other_target` 和 `companion_name_injection`，同时运行 `tests/test_companion_identity.py`、`tests/test_dialogue_validation.py` 及 `tests/companion_settings.test.cjs`。显式性别覆盖和未知性别应检查结构化 task，称呼与自然度则阅读真实可见回复，不能把模拟回复当作模型表现证据。
+
+「了解我」是独立于四步引导的可选设置，使用同一 CompanionProfile：`zodiac`、`conversation_style`、`reply_detail`、`style_preferences`、`dressing_priorities`。资料读写、重命名及请求快照需完整保留这些字段。偏好叠加在基础男女人格上，穿搭默认偏好低于本轮要求、真实库存、禁穿、天气及冻结，不套用于他人；星座不用于推断性格。修改这些字段或提示词时增加 `scripts/preference_dialogues.py` 的问题回答与实际选款检验，按 `docs/DIALOGUE_QA.md` 的“个性化偏好对照验收”执行。核对成对回答的实际差异及真实商品，不能把资料成功传入等同于偏好有效。
+
+已选星座并为本人请求搭配时，按运行时规则主动加入今日星座娱乐灵感（灵感色、鼓励性主题及真实衣物穿法），不冒充外部查询或真实运势。以 `preference_zodiac_outfit` 验收主动加入、拒绝后停用、他人穿搭和闲聊边界；无星座、纯天气不主动加入。核对上海日期上下文及实际衣物颜色，偏好、禁穿、天气与冻结优先。此规则替代过去只在用户主动提星座时才使用的限制。
+
+星座闲聊时本轮指定星座优先，明确指代可延续上文，否则用本轮 zodiac；未设且对象不明才询问。临时话题不保存，回到本人／修改／清空后使用当前资料，不能串用旧设置。对应 `preference_zodiac_default_*`、`preference_zodiac_context`、`preference_zodiac_unset`；全偏好选项及组合边界见 `scripts/preference_coverage.py` 和对话验收文档。

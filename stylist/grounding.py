@@ -6,6 +6,7 @@ from .models import Draft
 PREFIX = "属性依据不足："
 _PATTERNS = {
     "fit": re.compile(r"(?:不会|不易|不容易|不太会|不)(?:再|有|太|会)?(?:勒|贴身|贴肚|紧绷)|(?:没有|无|不会有)(?:任何|明显|一点)?(?:压迫感|压迫|束缚感)|(?:坐下|坐着|坐久|久坐|走路|活动|抬手|走动|吃饭).{0,8}(?:都|更|比较|也|很|会)?(?:自在|轻松|舒服|舒适|自如|放松)|(?:对腰腹|对肚子|对腹部).{0,16}(?:更友好|更轻松|更自在|更舒适|更舒服|无负担)|(?:腰腹|肚子|腹部|腰部).{0,16}(?:不|无|更|充足|足够|容易|友好|自在|舒服|舒适|宽松|空间|松量|余量|压迫|受压)|(?:不|不会)(?:压|勒)(?:肚|腹|腰)"),
+    "comfort": re.compile(r"(?:也|很|更|都|就|又)(?:舒服|舒适)|(?:鞋|乐福鞋|运动鞋).{0,5}(?:好走|不累)|久走不累"),
     "design": re.compile(r"宽松|松紧腰|弹性腰头|弹力腰|腰头有弹性|有弹性|富有弹性|松紧设计|有伸缩余量"),
     "weather": re.compile(r"防水|防雨|防滑|挡雨|挡风|(?:更?不容易|不易|不会|不太会).{0,12}(?:湿|雨|水)|(?:防止|减少|少让|降低).{0,24}(?:湿|淋|雨|水)|(?:雨|雨水|雨点).{0,16}(?:面积|机会|概率).{0,8}(?:少|小|降低)"),
 }
@@ -107,7 +108,7 @@ def ground_attribute_fallback(draft: Draft, pool, persona):
             if clause_kinds:
                 replacements = []
                 for group, sentence in (("fit", fit), ("weather", weather)):
-                    applies = bool(clause_kinds & {"fit", "design"}) if group == "fit" else "weather" in clause_kinds
+                    applies = bool(clause_kinds & {"fit", "design", "comfort"}) if group == "fit" else "weather" in clause_kinds
                     if applies and group not in seen:
                         replacements.append(sentence)
                         seen.add(group)

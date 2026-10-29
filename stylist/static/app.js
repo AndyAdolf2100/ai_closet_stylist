@@ -193,7 +193,9 @@ function productGrid(items) {
   const grid = el('div', 'products');
   for (const item of items) {
     const product = el('div', 'product');
-    const url = (item.cutout_image || item.original_image || '').replace(/^http:/i, 'https:');
+    const urls = [item.cutout_image, item.original_image].map(value => (value || '').replace(/^http:/i, 'https:')).filter(value => /^https:\/\//i.test(value));
+    const url = urls[0] || '';
+    const missing = () => el('div', 'product-image-missing', '暂无衣物图片');
     if (url && /^https:\/\//i.test(url)) {
       const img = el('img'); img.src = url; img.alt = (item.color || '') + (item.secondary_class_name || item.class_name || '单品');
       img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
@@ -201,8 +203,13 @@ function productGrid(items) {
       const original = (item.original_image || '').replace(/^http:/i, 'https:');
       imageButton.dataset.previewSrc = /^https:\/\//i.test(original) ? original : url;
       imageButton.setAttribute('aria-label', '放大查看' + img.alt);
+      img.onerror = () => {
+        if (urls[1] && img.src !== urls[1]) { img.src = urls[1]; return; }
+        imageButton.replaceWith(missing());
+      };
       imageButton.append(img); product.append(imageButton);
     }
+    if (!url) product.append(missing());
     product.append(el('div', '', (item.color || '') + (item.secondary_class_name || item.class_name || item.title || '单品')));
     product.append(el('span', '', item.source === 'user' ? '个人衣橱' : '系统衣橱')); grid.append(product);
   }

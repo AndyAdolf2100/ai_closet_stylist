@@ -77,6 +77,8 @@ async def test_profile_reaches_planning_and_styling_without_mixing_user_and_agen
         async def generate(self, name, payload, result_type):
             assert payload["companion_profile"] == profile.model_dump(mode="json")
             assert payload["assistant_persona"] == persona
+            from datetime import datetime
+            assert datetime.fromisoformat(payload["now"]).utcoffset().total_seconds() == 8 * 3600
             if name == "plan":
                 return Plan(mode="consult", use_inventory=False, new_task=for_other, use_profile_gender=not for_other)
             assert payload["task"]["gender"] == (None if for_other else user_gender)

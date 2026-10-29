@@ -29,6 +29,7 @@ from .dialogue_validation import (
     review_status,
     visible_text,
 )
+from .preference_comparison import PreferenceComparison, comparison_status
 
 CASES = [
     ("greeting", "早呀，你今天怎么样？", True),
@@ -113,6 +114,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     results = []
+    comparisons = []
     semaphore = asyncio.Semaphore(args.concurrency)
 
     def save():
@@ -120,7 +122,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
             "profile_sha256": {p: hashlib.sha256(persona_instructions(p).encode()).hexdigest()
                                for p in ["male_calm_v1", "female_warm_v1"]},
             "business_services": "synthetic_only", "paid_images": "not_executed",
-            "cases": results, "automatic_passed": sum(not r["automatic_errors"] for r in results),
+            "preference_comparisons": comparisons, "cases": results, "automatic_passed": sum(not r["automatic_errors"] for r in results),
             "accepted": sum(not r["errors"] and r["persona_review"]["status"] == "passed" for r in results),
             "persona_review_passed": sum(r["persona_review"]["status"] == "passed" for r in results),
             "persona_review_failed": sum(r["persona_review"]["status"] in {"failed", "invalid_evidence", "error"}
@@ -201,9 +203,10 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                                 "expected_persona": persona_instructions(chosen), "message": message,
                                 "companion_profile": profile.model_dump(mode="json") if profile else None,
                                 "previous_reply": prior.model_dump(mode="json") if prior else None,
-                                "visible_reply": visible_text(reply), "current_weather": reply.weather,
+                                "visible_reply": visible_text(reply), "reply_parts": {k: reply.model_dump(mode="json")[k] for k in ["message", "looks", "warnings", "follow_ups"]}, "current_weather": reply.weather,
                                 "current_task": reply.task.model_dump(mode="json"),
                                 "business_evidence": record["business_calls"],
+                                "selected_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
                                 "expected": expected, "evidence_kind": "synthetic_business_fixtures",
                             }, PersonaReview)
                             record["persona_review"] = {"status": review_status(review, visible_text(reply)),
@@ -234,10 +237,39 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
             if not args.only or name in args.only:
                 jobs.append(session(persona, rows, name))
     await asyncio.gather(*jobs)
+    paired = {}
+    for record in results:
+        group = record.get("expected", {}).get("comparison")
+        if group:
+            paired.setdefault((record["persona"], group), []).append(record)
+    for (persona, group), records in sorted(paired.items()):
+        records = sorted(records, key=lambda r: r["case"])
+        entry = {"persona": persona, "group": group, "status": "pending", "cases": [r["case"] for r in records]}
+        comparisons.append(entry)
+        if len(records) != 2 or any("reply" not in r for r in records):
+            entry["status"] = "incomplete"
+        elif args.judge:
+            def sample(record):
+                from stylist.models import Reply
+                reply = Reply.model_validate(record["reply"])
+                return {"companion_profile": record["companion_profile"], "message": record["message"],
+                        "visible_reply": visible_text(reply), "selected_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items]}
+            a, b = [sample(r) for r in records]
+            try:
+                review = await LanguageModel(settings).generate("review_preferences", {
+                    "group": group, "expected_persona": persona_instructions(persona), "a": a, "b": b}, PreferenceComparison)
+                entry.update(review.model_dump())
+                entry["status"] = comparison_status(review, a["visible_reply"], b["visible_reply"])
+            except Exception as exc:
+                entry.update(status="error", error=getattr(exc, "code", type(exc).__name__))
+        save()
+        print(json.dumps({"comparison": group, "persona": persona, "status": entry["status"]}), flush=True)
     print(json.dumps({"total": len(results), "automatic_passed": sum(not r["automatic_errors"] for r in results),
                       "persona_review_passed": sum(r["persona_review"]["status"] == "passed" for r in results),
                       "persona_review_pending": sum(r["persona_review"]["status"] == "pending" for r in results)}))
-    return 1 if any(r["errors"] for r in results) else (0 if args.judge else 2)
+    if any(r["errors"] for r in results) or any(c["status"] in {"failed", "invalid_evidence", "error"} for c in comparisons):
+        return 1
+    return 0 if args.judge and all(c["status"] == "passed" for c in comparisons) else 2
 
 
 if __name__ == "__main__":

@@ -592,3 +592,6 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 /* Chapter tabs keep their width and scroll horizontally on narrow screens. */
 .preferences-tabs{min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
 .preferences-tabs button{flex:0 0 auto;white-space:nowrap}
+
+.product-image-missing{display:grid;place-items:center;min-height:120px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:var(--soft);color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:760px){.product-image-missing{min-height:92px}}

@@ -33,6 +33,7 @@ from .policy import (
     unchanged_replacement_problems,
     validate_look,
 )
+from .preferences import preferred_pool, wardrobe_requested
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
 from .weather import WeatherService, apply_forecast
@@ -133,6 +134,10 @@ class Stylist:
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            if (plan.mode == "consult" and not plan.conversation_only and not plan.weather_only
+                    and not plan.technical_question and wardrobe_requested(request.message, state.messages)):
+                plan.mode = "recommend"
+                plan.use_inventory = True
             if (request.companion_profile and plan.use_profile_gender and task.gender is None
                     and not plan.conversation_only and not plan.weather_only):
                 task.gender = request.companion_profile.user_gender
@@ -289,6 +294,14 @@ class Stylist:
                     pool, service_gap = {}, True
                     logger.warning("Wardrobe read failed (%s)", exc.code)
                     warnings.append(service_notice(request.assistant_persona, "inventory"))
+            profile = request.companion_profile
+            styles = [task.style] if task.style else (profile.style_preferences if profile and plan.use_profile_preferences else [])
+            pool, missing = preferred_pool(pool, styles, frozen)
+            if pool and missing:
+                names = "、".join(missing)
+                warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
+                                 if request.assistant_persona == "male_calm_v1" else
+                                 f"这次候选里暂时没有明确标为{names}的衣物，我先用现有单品给你一点接近的搭配灵感。"))
             return {"pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
 
@@ -305,8 +318,15 @@ class Stylist:
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
             draft_payload = {
+                "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
+                "expression_guidance": ({
+                    "直接坦诚": "先用第一句话给具体可执行的下一步，再简短解释和关心；不要先铺一段安慰，不命令或冷硬。",
+                    "温柔鼓励": "先具体接住本轮感受，再给轻一点的鼓励和选择空间，不急着安排任务。",
+                    "轻松幽默": "场合合适时用一点自然幽默，不强行搞笑或嘲笑用户。",
+                }.get(request.companion_profile.conversation_style, "沿用当前基础人格")
+                    if request.companion_profile else "沿用当前基础人格"),
                 "conversation_only": plan.conversation_only,
                 "weather_only": plan.weather_only,
                 "message": request.message, "task": task.model_dump(mode="json"), "mode": plan.mode,

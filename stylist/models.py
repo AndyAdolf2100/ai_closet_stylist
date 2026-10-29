@@ -73,6 +73,7 @@ class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
     technical_question: bool = False
     use_profile_gender: bool = True
+    use_profile_preferences: bool = True
     conversation_only: bool = False
     weather_only: bool = False
     location_limit_exceeded: bool = False

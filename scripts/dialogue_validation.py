@@ -10,6 +10,9 @@ from stylist.weather import today
 
 from .companion_dialogues import EXPECTATIONS as COMPANION_EXPECTATIONS
 from .companion_dialogues import SCENARIOS as COMPANION_SCENARIOS
+from .preference_dialogues import EXPECTATIONS as PREFERENCE_EXPECTATIONS
+from .preference_dialogues import PRODUCTS as PREFERENCE_PRODUCTS
+from .preference_dialogues import SCENARIOS as PREFERENCE_SCENARIOS
 
 SCENARIOS = {
     "weather_city_switch": [
@@ -67,6 +70,23 @@ EXPECTATIONS = {
     "persona_switch/switch": {"no_tools": True, "task": {"gender": "女"}},
 }
 
+SCENARIOS["wardrobe_default"] = [
+    ("ordinary", "帮我搭一套日常穿搭，不穿高跟鞋，不考虑天气。", False),
+    ("consult_word", "咨询一下，白衬衫怎么搭裤子？不穿高跟鞋，不考虑天气。", False),
+]
+SCENARIOS["wardrobe_opt_out"] = [
+    ("text", "不要输出衣柜内容，只给白衬衫灰裤平底鞋的文字穿法，不查天气。", False),
+    ("resume", "现在从我的衣橱选一套实际衣服，不穿高跟鞋，不考虑天气。", False),
+]
+for turn in ["ordinary", "consult_word"]:
+    EXPECTATIONS[f"wardrobe_default/{turn}"] = {"inventory": True, "delivery": "outfit", "no_weather_tools": True,
+        "review_focus": "未明确排除衣橱，应实际选款；咨询一下不等于只要文字建议。"}
+EXPECTATIONS["wardrobe_opt_out/text"] = {"no_tools": True, "delivery": "advice", "no_real_items": True}
+EXPECTATIONS["wardrobe_opt_out/resume"] = {"inventory": True, "delivery": "outfit", "no_weather_tools": True,
+    "review_focus": "本轮恢复衣橱选款，不能沿用前文文字限定。"}
+
+SCENARIOS.update(PREFERENCE_SCENARIOS)
+EXPECTATIONS.update(PREFERENCE_EXPECTATIONS)
 SCENARIOS.update(COMPANION_SCENARIOS)
 EXPECTATIONS.update(COMPANION_EXPECTATIONS)
 
@@ -82,6 +102,9 @@ PRODUCTS = [
 class DialogueUpstream:
     def __init__(self, scenario):
         self.scenario, self.calls = scenario, []
+        self.products = PREFERENCE_PRODUCTS if scenario in PREFERENCE_SCENARIOS else PRODUCTS
+        if scenario == "preference_no_matching_style":
+            self.products = [p for p in self.products if {"name": "复古"} not in p.get("styles", [])]
 
     async def identity(self):
         return "synthetic-persona-evaluation"
@@ -91,7 +114,7 @@ class DialogueUpstream:
         if path != "/api/user_product/quick_edit_list":
             raise AssertionError("Unexpected business endpoint")
         rows = [] if self.scenario == "empty_wardrobe" else [
-            {**p, "user_product_id": p["product_id"]} for p in PRODUCTS]
+            {**p, "user_product_id": p["product_id"]} for p in self.products]
         return {"list": rows, "pagination": {"total": len(rows)}}
 
     async def forecast(self, city):
@@ -118,7 +141,7 @@ class DialogueUpstream:
         if name == "product.resolve":
             keys = {x["product_id"] for x in args["items"] if x["source"] == "user"}
             return {"items": [{**p, "user_product_id": p["product_id"], "source": "user"}
-                              for p in PRODUCTS if p["product_id"] in keys]}
+                              for p in self.products if p["product_id"] in keys]}
         if name == "outfit.search-saved":
             return {"matches": []}
         if name == "weather.get" and self.scenario == "weather_failure":
@@ -189,6 +212,14 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
         errors.append("stiff_technical_language")
     if any(token in follow for follow in reply.follow_ups for token in ["我可以", "要不要我"]):
         errors.append("assistant_voice_followup")
+    if expected.get("mentioned_zodiac") and expected["mentioned_zodiac"] not in visible_text(reply):
+        errors.append("missing_expected_zodiac")
+    if expected.get("selected_style"):
+        garments = [p for look in reply.looks for p in look.items if p.slot in {"top", "bottom", "dress"}]
+        if not garments or any(expected["selected_style"] not in p.styles for p in garments):
+            errors.append("selected_items_ignore_style_preference")
+    if any(p.product_id in expected.get("forbid_item_ids", []) for look in reply.looks for p in look.items):
+        errors.append("selected_forbidden_item")
     return errors
 
 

@@ -54,6 +54,11 @@ async def run(args):
 
     async def one(index, row, previous):
         async with semaphore:
+            if getattr(args, "only_failed", False) and row["persona_review"].get("status") == "passed":
+                report["cases"].append({**row, "source_index": index, "review_reused": True})
+                report["cases"].sort(key=lambda row: row["source_index"])
+                save()
+                return
             item = {**row, "source_index": index, "initial_persona_review": row["persona_review"],
                     "errors": row["automatic_errors"].copy()}
             if not row.get("reply"):
@@ -63,6 +68,7 @@ async def run(args):
                 try:
                     review = await LanguageModel(settings).generate("review_dialogue_audit", {
                         "expected_persona": persona_instructions(row["persona"]), "message": row["message"],
+                        "companion_profile": row.get("companion_profile"),
                         "reply_parts": {k: row["reply"].get(k) for k in ["message", "looks", "warnings", "follow_ups"]},
                         "visible_reply": visible_text(reply), "previous_reply": previous,
                         "current_weather": reply.weather, "current_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
@@ -89,6 +95,7 @@ async def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true", required=True)
+    parser.add_argument("--only-failed", action="store_true", help="只复审首次审核未通过项，保留其他结果")
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--concurrency", type=int, default=4)
