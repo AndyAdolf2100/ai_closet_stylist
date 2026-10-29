@@ -1,8 +1,12 @@
 import asyncio
+import logging
 
 from .errors import AuthenticationExpired, StylistError
 from .models import Product, ProductRef, Task
+from .personas import service_notice
 from .policy import infer_slot, suitability
+
+logger = logging.getLogger(__name__)
 
 
 def from_row(row, source, extra=None):
@@ -44,18 +48,18 @@ async def resolve_products(mcp, refs, extras=None):
     return products
 
 
-async def weather_for(task: Task, mcp):
+async def weather_for(task: Task, mcp, persona_id=None):
     if task.weather_policy == "ignored":
         return None, []
     if task.weather_policy == "provided":
         return {"source": "user", "description": task.weather_description,
                 "temp_min": task.temp_min, "temp_max": task.temp_max}, []
     if not task.city:
-        return None, ["没有提供城市，本次不按实时天气筛选。"]
+        return None, [service_notice(persona_id, "city_missing")]
     try:
         cities = await mcp.call("city.resolve", {"name": task.city})
         if cities["status"] != "resolved" or cities["truncated"] or len(cities["matches"]) != 1:
-            return None, ["城市尚未唯一确认，本次不按实时天气筛选；可补充省市。"]
+            return None, [service_notice(persona_id, "city_selection")]
         city = cities["matches"][0]
         params = {"city_name": city["city_name"], "province_name": city["province_name"]}
         if task.event_date:
@@ -65,10 +69,12 @@ async def weather_for(task: Task, mcp):
     except AuthenticationExpired:
         raise
     except StylistError as exc:
-        return None, [f"本次未获得有效天气，不按实时天气筛选（{exc.code}）。"]
+        logger.warning("Weather fallback failed (%s)", exc.code)
+        kind = {"forecast_date_unavailable": "weather_date", "city_needs_selection": "city_selection"}.get(exc.code, "weather")
+        return None, [service_notice(persona_id, kind)]
 
 
-async def retrieve(upstream, mcp, task, query, frozen=()):
+async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None):
     """Bounded retrieval; a limited pool is never presented as the whole inventory."""
     refs, extras, warnings = [], {}, []
     if task.source != "catalog":
@@ -85,7 +91,7 @@ async def retrieve(upstream, mcp, task, query, frozen=()):
             if not rows or page * 50 >= total:
                 break
         if total > 150:
-            warnings.append("个人衣橱较多，本次先检查部分候选，不代表全部库存。")
+            warnings.append(service_notice(persona_id, "inventory_partial"))
     if task.source in {"catalog", "hybrid"}:
         found = False
         if task.gender:
@@ -104,11 +110,12 @@ async def retrieve(upstream, mcp, task, query, frozen=()):
             except AuthenticationExpired:
                 raise
             except StylistError as exc:
-                warnings.append(f"系统语义检索未完成（{exc.code}），改用有限的已发布商品候选。")
+                logger.warning("Catalog search failed (%s)", exc.code)
+                warnings.append(service_notice(persona_id, "catalog_search"))
         if not found:
             result = await upstream.get("/api/product/list", {"page": 1, "page_size": 50})
             refs.extend(ProductRef(source="system", product_id=str(x["product_id"])) for x in result.get("list") or [])
-            warnings.append("系统衣橱仅检查本次返回的候选，不代表全库搜索。")
+            warnings.append(service_notice(persona_id, "catalog_partial"))
     refs.extend(ProductRef(source=p.source, product_id=p.product_id) for p in frozen)
     # Preserve attributes from the current result while revalidating its identity.
     for p in frozen:

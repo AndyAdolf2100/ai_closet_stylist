@@ -161,6 +161,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                     try:
                         reply = await engine.chat(upstream, ChatRequest(message=message,
                             request_id=f"eval-{label}-{name}-{i}", assistant_persona=chosen,
+                            location=expected.get("location"),
                             conversation_id=previous.conversation_id if previous else None,
                             expected_version=previous.version if previous else 0))
                         record["reply"] = reply.model_dump(mode="json")

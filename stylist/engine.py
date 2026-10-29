@@ -2,6 +2,7 @@
 import asyncio
 import hashlib
 import json
+import logging
 import operator
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -20,13 +21,23 @@ from .models import Draft, Look, Plan, Reply, SessionState, Task
 from .personas import (
     itinerary_weather_message,
     progress_message,
+    service_notice,
     technical_detail_message,
     unsupported_city_message,
 )
-from .policy import frozen_products, interpret_task, suitability, validate_look
+from .policy import (
+    REPLACEMENT_PREFIX,
+    frozen_products,
+    interpret_task,
+    suitability,
+    unchanged_replacement_problems,
+    validate_look,
+)
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
 from .weather import WeatherService, apply_forecast
+
+logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
@@ -108,19 +119,30 @@ class Stylist:
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
                 "last_business_intent": last_business_intent(state.messages),
+                "selected_location": request.location.model_dump(mode="json") if request.location else None,
                 "current_looks": [{"title": x.title, "pieces": x.pieces,
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            if plan.location_limit_exceeded:
+                return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"), "frozen": []}
             if request.weather_policy is not None and not plan.conversation_only and not plan.weather_only:
                 task.weather_policy = request.weather_policy
             if request.source is not None and not plan.conversation_only:
                 task.source = request.source
-            if request.location and "city" not in plan.changes and not task.itinerary and not plan.conversation_only:
+            explicit_city = plan.changes.get("city")
+            explicit_route = plan.changes.get("itinerary")
+            if (request.location and not (explicit_city and explicit_city.value)
+                    and not (explicit_route and explicit_route.value)
+                    and not plan.conversation_only and (plan.weather_only or not task.itinerary)):
                 task.city = request.location.city_name
+                if plan.weather_only:
+                    task.itinerary = []
+            if plan.weather_only and "event_date" not in plan.changes:
+                task.event_date = today.date()
             if task.event_date is None and not plan.conversation_only:
                 task.event_date = today.date()
-            if task.weather_policy == "ignored" and not plan.conversation_only:
+            if (task.weather_policy == "ignored" or (plan.weather_only and task.weather_policy == "auto")) and not plan.conversation_only:
                 task.temp_min = task.temp_max = None
                 task.weather_description = ""
             frozen = []
@@ -182,7 +204,7 @@ class Stylist:
                                 "effective_task": effective_task.model_dump(mode="json"),
                                 "weather": weather, "warnings": warnings, "service_gap": False}
                 elif not task.city:
-                    warnings.append("还不知道你在哪座城市。可以点「使用当前位置」或手动选城市，才能结合真实天气；这次先给穿法参考。")
+                    warnings.append(service_notice(request.assistant_persona, "city_missing"))
                 else:
                     scope = plan.weather_scope if plan.weather_scope != "none" else ("week" if plan.mode == "weekly" else "day")
                     province = request.location.province_name if request.location and request.location.city_name == task.city else ""
@@ -203,11 +225,18 @@ class Stylist:
                             return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
                                     "effective_task": effective_task.model_dump(mode="json"),
                                     "weather": None, "warnings": [], "service_gap": False}
-                        warnings.append(f"完整预报暂时没取到（{exc.code}），不能保证早晚或整周天气。")
+                        if exc.code == "city_needs_selection" and plan.weather_only:
+                            plan.clarification = itinerary_weather_message(request.assistant_persona, task.city, exc.code)
+                            return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
+                                    "effective_task": effective_task.model_dump(mode="json"),
+                                    "weather": None, "warnings": [], "service_gap": False}
+                        logger.warning("Weather forecast failed (%s)", exc.code)
+                        kind = {"forecast_date_unavailable": "weather_date", "city_needs_selection": "city_selection"}.get(exc.code, "weather")
+                        warnings.append(service_notice(request.assistant_persona, kind))
                         if scope == "day":
                             try:
                                 async with upstream.mcp() as mcp:
-                                    weather, cautions = await weather_for(task, mcp)
+                                    weather, cautions = await weather_for(task, mcp, request.assistant_persona)
                                 warnings.extend(cautions)
                                 if weather and weather.get("source") == "server_mcp":
                                     effective_task.temp_min = effective_task.temp_max = weather["temp"]
@@ -231,7 +260,7 @@ class Stylist:
                 try:
                     async with upstream.mcp() as mcp:
                         pool, cautions, rejected = await retrieve(upstream, mcp, effective_task,
-                                                                 plan.search_query, frozen)
+                                                                 plan.search_query, frozen, request.assistant_persona)
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
                             try:
@@ -240,12 +269,14 @@ class Stylist:
                             except AuthenticationExpired:
                                 raise
                             except StylistError as exc:
-                                warnings.append(f"本次未复用已保存搭配（{exc.code}）。")
+                                logger.warning("Saved outfits unavailable (%s)", exc.code)
+                                warnings.append(service_notice(request.assistant_persona, "saved_outfits"))
                 except AuthenticationExpired:
                     raise
                 except StylistError as exc:
                     pool, service_gap = {}, True
-                    warnings.append(f"本次衣橱读取未完成（{exc.code}），以下先给文字参考。")
+                    logger.warning("Wardrobe read failed (%s)", exc.code)
+                    warnings.append(service_notice(request.assistant_persona, "inventory"))
             return {"pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
 
@@ -257,6 +288,9 @@ class Stylist:
             service_gap, weather, warnings, rejected = (data[k] for k in ("service_gap", "weather", "warnings", "rejected"))
             # A partial or absent candidate pool must not force a fabricated outfit.
             concept = plan.mode != "consult" and plan.use_inventory and (service_gap or not pool)
+            original_targets = {p.key for p in state.looks[0].items if p.slot in plan.replace_slots} if state.looks and plan.mode == "modify" else set()
+            replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
+                                   for slot in plan.replace_slots} if plan.mode == "modify" else {}
             draft_payload = {
                 "assistant_persona": request.assistant_persona,
                 "conversation_only": plan.conversation_only,
@@ -264,11 +298,14 @@ class Stylist:
                 "message": request.message, "task": task.model_dump(mode="json"), "mode": plan.mode,
                 "history": state.messages[-8:], "weather": weather,
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
-                               for p in pool.values()],
+                               for p in pool.values() if p.key not in original_targets],
+                "replacement_options": replacement_options,
                 "frozen_keys": [p.key for p in frozen], "replace_slots": plan.replace_slots,
                 "concept_fallback": concept, "warnings": warnings,
                 "excluded_candidate_reasons": rejected,
                 "attribute_context": attribute_context(pool.values()),
+                "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
+                                      for p in state.looks[0].items] if state.looks else [],
             }
             return draft_payload
 
@@ -294,6 +331,11 @@ class Stylist:
             if not data["plan"].get("conversation_only") and not data["plan"].get("weather_only"):
                 problems.extend(attribute_claim_problems(Draft.model_validate(data["draft"]),
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
+            if data["plan"]["mode"] == "modify":
+                state = SessionState.model_validate(data["session"])
+                problems.extend(unchanged_replacement_problems(Draft.model_validate(data["draft"]),
+                    state.looks, Plan.model_validate(data["plan"]).replace_slots,
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}))
             return {"problems": problems}
 
         async def repair_node(data):
@@ -311,6 +353,12 @@ class Stylist:
                         {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
             repaired = {**data, "draft": draft.model_dump(mode="json")}
             problems = validate_node(repaired)["problems"]
+            if any(problem.startswith(REPLACEMENT_PREFIX) for problem in problems):
+                options = draft_payload(data)["replacement_options"]
+                kind = "replacement_failed" if any(options.values()) else "replacement"
+                draft = Draft(message=service_notice(request.assistant_persona, kind))
+                repaired["draft"] = draft.model_dump(mode="json")
+                problems = validate_node(repaired)["problems"]
             if problems and all(problem.startswith(PREFIX) for problem in problems):
                 draft = ground_attribute_fallback(draft,
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
@@ -341,10 +389,10 @@ class Stylist:
                                   why=look.why, how=look.how, notes=list(dict.fromkeys(notes))))
             selected = any(look.items for look in looks)
             if plan.mode == "modify" and not selected:
-                warnings.append("本次未完成真实单品替换，原搭配仍保留；当前内容为穿法参考。")
+                warnings.append(service_notice(request.assistant_persona, "original_retained"))
             delivery = "advice" if plan.mode == "consult" or not plan.use_inventory else ("outfit" if selected else "concept")
             if delivery == "concept":
-                warnings.append("以下为文字参考，尚未匹配成可确认的真实商品方案。")
+                warnings.append(service_notice(request.assistant_persona, "concept"))
             reply = Reply(conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
                           delivery=delivery, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,

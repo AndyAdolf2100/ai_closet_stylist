@@ -14,7 +14,17 @@ def merge_task(state: SessionState, plan: Plan, message: str) -> Task:
         spans = [change.evidence] if isinstance(change.evidence, str) else change.evidence
         if field not in Task.model_fields or not spans or any(not s or s not in message for s in spans):
             raise StylistError("unverified_requirement", "需求解析不够明确，请换个说法；原要求已保留。", 422)
-        data[field] = change.value
+        if change.operation == "remove":
+            if not isinstance(data[field], list) or field == "itinerary" or not isinstance(change.value, list):
+                raise StylistError("invalid_change_operation", f"{field}需要用明确的新值更新，不能按列表移除。", 422)
+            data[field] = [value for value in data[field] if value not in change.value]
+        elif change.operation == "update" and field in {"preferences", "excluded_materials", "excluded_colors", "excluded_categories"} and isinstance(change.value, list):
+            data[field] = list(data[field])
+            for value in change.value:
+                if value not in data[field]:
+                    data[field].append(value)
+        else:
+            data[field] = change.value
     if "city" in plan.changes and "itinerary" not in plan.changes:
         data["itinerary"] = []  # A newly specified single city supersedes an earlier trip.
     task = Task.model_validate(data)
@@ -23,6 +33,28 @@ def merge_task(state: SessionState, plan: Plan, message: str) -> Task:
     elif "city" in plan.changes and task.city and re.search(r"[/→、|;；]", task.city):
         raise StylistError("itinerary_required", "多地行程应逐站填写itinerary，city只能填写一个城市。", 422)
     return task
+
+
+def discard_stale_restatements(state: SessionState, plan: Plan, message: str):
+    """Keep existing values without accepting stale citations as evidence of a new update."""
+    if plan.new_task:
+        return plan
+    changes = dict(plan.changes)
+    for field, change in plan.changes.items():
+        if change.operation != "update":
+            continue
+        spans = [change.evidence] if isinstance(change.evidence, str) else change.evidence
+        if spans and all(span and span in message for span in spans):
+            continue
+        if field == "city" and state.task.itinerary and "itinerary" not in plan.changes:
+            continue  # Even the same city can explicitly replace an earlier route.
+        try:
+            normalized = Task.model_validate({**state.task.model_dump(), field: change.value})
+        except ValidationError:
+            continue
+        if getattr(normalized, field) == getattr(state.task, field):
+            changes.pop(field)
+    return plan.model_copy(update={"changes": changes})
 
 
 async def interpret_task(llm, payload, state, message):
@@ -39,6 +71,15 @@ async def interpret_task(llm, payload, state, message):
                         task_validation_errors=validation_errors,
                         repair_instruction="修复抽取结果，不向用户追问内部格式问题。证据必须逐字来自本条message，禁止省略号拼接。多段原话请用字符串数组；无法精确摘录时直接引用完整原message。修正task_validation_errors指出的字段值，例如event_date只能是YYYY-MM-DD的单日日期，不能填日期范围或本周等文字。保留所有正确要求。")
         previous = await llm.generate("plan", data, Plan)
+        selected = payload.get("selected_location")
+        city_change = previous.changes.get("city")
+        if selected and city_change and isinstance(city_change.value, str):
+            spans = [city_change.evidence] if isinstance(city_change.evidence, str) else city_change.evidence
+            if (city_change.value.removesuffix("市") == selected["city_name"].removesuffix("市")
+                    and (not spans or any(not span or span not in message for span in spans))):
+                # This default is supplied by the trusted request, not a fabricated user citation.
+                previous = previous.model_copy(update={"changes": {field: change for field, change in previous.changes.items() if field != "city"}})
+        previous = discard_stale_restatements(state, previous, message)
         if previous.technical_question:
             previous = previous.model_copy(update={"conversation_only": True})
         if previous.conversation_only:
@@ -51,7 +92,7 @@ async def interpret_task(llm, payload, state, message):
             if previous.location_limit_exceeded or (
                     itinerary and isinstance(itinerary.value, list) and len(itinerary.value) > MAX_WEATHER_LOCATIONS):
                 previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
-                    "weather_only": True, "changes": {}, "replace_slots": [], "new_task": False,
+                    "weather_only": True, "location_limit_exceeded": True, "changes": {}, "replace_slots": [], "new_task": False,
                     "clarification": weather_location_limit_message(payload.get("assistant_persona"))})
                 return previous, state.task.model_copy(deep=True)
             if previous.weather_only:
@@ -74,7 +115,8 @@ async def interpret_task(llm, payload, state, message):
             return previous, task
         except (StylistError, ValidationError) as exc:
             validation_errors = exc.errors(include_input=False, include_url=False) if isinstance(exc, ValidationError) else (
-                [{"loc": ["city"], "msg": exc.message}] if exc.code == "itinerary_required" else [])
+                [{"loc": ["city"] if exc.code == "itinerary_required" else [], "msg": exc.message}]
+                if exc.code in {"itinerary_required", "invalid_change_operation"} else [])
             if attempt == 1:
                 raise StylistError("invalid_requirements", "这次没有准确整理好需求，原输入已保留，请调整表述后重试。", 422) from None
 
@@ -192,3 +234,21 @@ def frozen_products(looks: list[Look], replace_slots):
     if not looks:
         return []
     return [p for p in looks[0].items if p.slot not in replace_slots]
+
+
+REPLACEMENT_PREFIX = "替换未发生："
+
+
+def unchanged_replacement_problems(draft, current_looks, replace_slots, candidates):
+    if not current_looks or not replace_slots:
+        return []
+    problems = []
+    for index, look in enumerate(draft.looks):
+        if not look.selected_keys:
+            continue
+        for slot in replace_slots:
+            before = {p.key for p in current_looks[0].items if p.slot == slot}
+            after = {key for key in look.selected_keys if key in candidates and candidates[key].slot == slot}
+            if before and before == after:
+                problems.append(f"{REPLACEMENT_PREFIX}looks.{index} 的{slot}仍是原商品；选择不同商品，找不到合适替代就说明未换成并返回文字参考")
+    return problems

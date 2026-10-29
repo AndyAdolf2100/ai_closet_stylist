@@ -10,7 +10,23 @@ from .dialogue_validation import PRODUCTS, DialogueUpstream
 CASES = {
     "rain_long_walk": [
         ("今天上海下雨，15到20度，要走一小时，不穿高跟鞋，从衣橱搭一套。", {"inventory": True, "task": {"no_heels": True, "walk_minutes": 60}, "manual": "雨天鞋面和实际防滑证据，不凭品类承诺防水"}),
-        ("别的保留，只换双更适合下雨走路的鞋。", {"inventory": True, "freeze_except": ["shoes"], "manual": "保留未修改衣物，不编造鞋的防雨能力"}),
+        ("别的保留，只换双更适合下雨走路的鞋。", {"inventory": True, "allow_empty_looks": True, "must_change_slots": ["shoes"], "freeze_except": ["shoes"], "manual": "保留未修改衣物，不编造鞋的防雨能力"}),
+    ],
+    "replacement_identity": [
+        ("不考虑天气，用衣橱白衬衫、灰长裤、米白薄外套和黑色平底包脚短靴搭一套。", {"inventory": True, "delivery": "outfit", "item_keys": ["user:109"], "no_weather_tools": True}),
+        ("只换成另一双平底鞋，其他衣服全部保留。", {"inventory": True, "delivery": "outfit", "must_change_slots": ["shoes"], "freeze_except": ["shoes"], "no_weather_tools": True}),
+    ],
+    "audit_text_followup": [
+        ("只讲白衬衫、灰裤和平底鞋的穿法，不查衣橱和天气，不塞衣角。", {"no_tools": True, "delivery": "advice", "preference_contains": "不塞"}),
+        ("保持这三件，穿法再简洁一点，不找商品。", {"no_tools": True, "delivery": "advice", "preference_contains": "不塞"}),
+        ("先不聊穿搭了，今天好累，陪我说两句。", {"no_tools": True, "no_looks": True, "chat": True}),
+    ],
+    "audit_weather_failure": [("上海今天出门怎么穿？只给文字建议，不查衣橱。", {"no_weather": True, "inventory": False, "no_internal_codes": True})],
+    "located_weather": [
+        ("明天三亚和北京的天气分别怎样，只查天气。", {"weather_only": True, "no_looks": True, "inventory": False, "weather_cities": ["三亚市", "北京市"]}),
+        ("今天天气怎么样？", {"location": {"city_name": "上海市", "province_name": "上海市"}, "weather_city": "上海市", "weather_only": True, "no_looks": True, "inventory": False}),
+        ("今天新西兰奥克兰天气呢？", {"location": {"city_name": "上海市", "province_name": "上海市"}, "weather_only": True, "no_weather": True, "no_looks": True, "no_style": True, "inventory": False, "delivery": "clarification", "forbid_text": ["上海", "20度", "15度"]}),
+        ("今天会下雨吗？", {"location": {"city_name": "上海市", "province_name": "上海市"}, "weather_city": "上海市", "weather_only": True, "no_looks": True, "inventory": False}),
     ],
     "cold_snow": [("今天哈尔滨零下十几度、下雪，我要坐公交再走二十分钟，用衣橱搭一套，保暖第一。", {"inventory": True, "manual": "足够保暖，不用单件薄衬衫应付严寒；无证据不保证防滑"})],
     "cold_layers": [("今天哈尔滨零下十几度、下雪，坐公交再走二十分钟。用衣橱里的白色长袖衬衫、米色羊毛针织衫叠穿，外面加黑色羽绒长外套，配长裤和黑色包脚短靴，给一套并说明从里到外怎么穿。", {"inventory": True, "delivery": "outfit", "item_keys": ["user:101", "user:107", "user:108", "user:102", "user:109"], "manual": "衬衫+针织+羽绒正常返回，说明层次和数据边界；不编造保暖等级或防滑性能"})],
@@ -150,12 +166,18 @@ class ExploratoryUpstream(DialogueUpstream):
             ids = {p["product_id"] for p in args["items"]}
             return {"items": [{**p, "user_product_id": p["product_id"], "source": "user"}
                               for p in PRODUCTS + EXTRA_PRODUCTS if p["product_id"] in ids]}
+        if name == "weather.get" and self.scenario == "explore_audit_weather_failure":
+            self.calls.append(name)
+            raise StylistError("forecast_unavailable", "合成测试：天气查询失败")
         if name == "weather.get":
             self.calls.append(name)
             raise StylistError("forecast_date_unavailable", "合成测试未提供该日期实况")
         return await super().call(name, args)
 
     async def forecast(self, city):
+        if self.scenario == "explore_audit_weather_failure":
+            self.calls.append("forecast")
+            raise StylistError("forecast_unavailable", "合成测试：天气查询失败")
         self.events.append({"tool": "forecast", "city": city["city_name"]})
         self.calls.append("forecast")
         low, high = {"三亚市": (25, 31), "哈尔滨市": (-15, -5), "广州市": (26, 33),
@@ -169,6 +191,8 @@ class ExploratoryUpstream(DialogueUpstream):
 
     def check(self, reply, expected):
         errors = []
+        if expected.get("preference_contains") and expected["preference_contains"] not in " ".join(reply.task.preferences):
+            errors.append("lost_existing_preference")
         if not set(expected.get("item_keys", [])) <= {p.key for look in reply.looks for p in look.items}:
             errors.append("missing_requested_items")
         if "technical_unknown" in expected:

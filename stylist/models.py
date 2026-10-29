@@ -58,6 +58,7 @@ class Task(Model):
 class Change(Model):
     value: Any
     evidence: str | list[str]
+    operation: Literal["update", "replace", "remove"] = "update"
 
 
 TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_date", "city",

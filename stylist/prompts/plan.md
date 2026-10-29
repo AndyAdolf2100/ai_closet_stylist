@@ -17,9 +17,13 @@ weather_scope：今天/明天/指定一天实际出行的搭配，无论是否�
 “优先用已有衣橱、不穿高跟鞋”是场景推荐和禁忌，不代表指定了高跟鞋。只有正面明确要求围绕某件已有衣物才填写target_description。缺少目标时保持null，不能要求确认不存在的目标。
 
 new_task只在用户明确另起独立任务、改变穿着对象或新场合且要求不沿用原任务时为true。普通追问和局部纠正不清空状态。
+定位默认：selected_location是本轮页面已定位或确认的城市。用户问“今天天气怎么样/今天下雨吗/今天多少度”等没有指定城市的天气问题时，默认用这个城市，不问用户在哪、不猜北京、不从旧旅行行程抄城市进changes；城市由程序填入，不需要编造当前原文证据。纯天气查询未指定日期时默认今天，以now为准，不沿用旧行程的未来日期；用户明确承接“那天”时，才从上下文解析日期并用本轮“那天”作证据提取event_date。用户明确说另一个城市或多地，尊重本轮地点，不用定位覆盖；查不到指定城市也不能偷偷换成定位城市。没有定位时才沿用明确上下文或询问城市。
+
 changes只包含本轮明确新增或改变的字段。每个字段必须有evidence，逐字摘录本条message中支持该变化的片段，不能引用历史原文当作本轮证据。
 evidence可为一个原文字符串，也可为多个不连续原文片段组成的字符串数组。不能在一个字符串中用“……”拼接。若多个要求合并进scene/preferences，使用原文片段数组，或直接引用完整原message。
 例如message含“我不穿高跟鞋，也不穿羊毛”，应输出changes.no_heels={"value":true,"evidence":"不穿高跟鞋"}，changes.excluded_materials={"value":["羊毛"],"evidence":"不穿羊毛"}。evidence不能改写、补字、省略中间内容或规范化原文标点。
+“保持这三件、其他不变、再简洁一点”是沿用已有条件，不需要把旧条件“不塞衣角”等重新作为本轮变化。旧条件已经存在于current_task，不能给它编造本轮引文；只提取这次新增的简洁表达等要求。重复旧值不代表撤销或重新授权。
+Change.operation默认update：preferences、excluded_materials、excluded_colors、excluded_categories会追加新增值并保留旧值，其他字段更新为本轮值。用户明确撤销某个数组条件时，operation=remove并在value列出撤销的旧值，证据必须来自本轮撤销原话；用户明确整体重设列表时才用operation=replace。比如“现在可以穿羊毛了”可输出excluded_materials={"value":["羊毛"],"operation":"remove","evidence":"可以穿羊毛"}；“不再要求不塞衣角”可输出preferences={"value":["不塞衣角"],"operation":"remove","evidence":"不再要求不塞衣角"}。单说“简洁一点”只追加简洁要求，不删除旧偏好。
 未改变的字段不输出。数组更新时保留以前仍适用的条件；用户明确撤销才移除。值必须符合Task字段定义。
 occasion、scene、style、city、weather_description都是字符串，不得输出数组。多个场景可用“通勤与周末”这样的单个字符串表达，或把逐日活动写入preferences字符串数组。event_date只能是单日YYYY-MM-DD，不使用日期范围；日期范围由weather_scope控制。
 

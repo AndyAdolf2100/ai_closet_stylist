@@ -161,8 +161,20 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
         errors.append("unsupported_city_reached_styling")
     if expected.get("freeze_except") and previous and previous.looks:
         frozen = {p.key for p in previous.looks[0].items if p.slot not in expected["freeze_except"]}
-        if not reply.looks or not frozen <= {p.key for p in reply.looks[0].items}:
+        retained = {p.key for p in reply.retained_items} if reply.delivery == "concept" else (
+            {p.key for p in reply.looks[0].items} if reply.looks else set())
+        if not frozen <= retained:
             errors.append("frozen_items_changed")
+    if expected.get("must_change_slots") and previous and previous.looks and reply.delivery == "outfit":
+        for slot in expected["must_change_slots"]:
+            old = {p.key for p in previous.looks[0].items if p.slot == slot}
+            for look in reply.looks:
+                new = {p.key for p in look.items if p.slot == slot}
+                if old and old == new:
+                    errors.append("unchanged_replacement")
+    if expected.get("no_internal_codes") and any(code in text for code in [
+            "forecast_unavailable", "forecast_date_unavailable", "city_needs_selection", "inventory_read_failed", "saved_outfits_failed"]):
+        errors.append("internal_error_code_visible")
     if not expected.get("technical_question") and any(token in text for token in
             ["接入", "支持范围", "接口", "数据源", "降级", "结构校验", "selected_keys", "use_inventory"]):
         errors.append("stiff_technical_language")
