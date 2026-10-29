@@ -595,3 +595,12 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 
 .product-image-missing{display:grid;place-items:center;min-height:120px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:var(--soft);color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:760px){.product-image-missing{min-height:92px}}
+
+/* Keep editable controls readable without triggering iPhone focus zoom, including landscape. */
+@media(max-width:760px),(hover:none) and (pointer:coarse){
+  #message,
+  #login-dialog input,
+  #location-dialog .city-picker-input,
+  #companion-dialog .companion-field input,
+  select{font-size:max(16px,1rem)}
+}

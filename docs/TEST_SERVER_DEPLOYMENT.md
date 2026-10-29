@@ -449,3 +449,19 @@ exit
 36项Node前端测试通过，Ruff、Shell语法和部署文档链接／命令检查通过。
 新增回归覆盖首次预置私密配置免Key提示且不覆盖原文件；外部服务为模拟，没有真实模型或付费生成调用。
 此次提交文档和必要部署代码，不自动重新打包、更新服务器或推送Git远端。
+
+### iPhone输入自动放大修复（待服务器更新与真机复测）
+
+登录框继承的12px字号、手记的14px字号会触发iPhone Safari输入聚焦放大。
+修复将手机宽度及无悬停粗指针设备（含横屏）的聊天、登录、搜索、称呼、手记输入字号设为至少16px，
+保留手动双指缩放；主样式和手记样式版本已更新。
+36项前端回归、样式分发检查和amd64镜像断网启动检查通过；这不代替iPhone键盘弹出时的真机验收。
+
+对应离线包 `aicloset-assistant-iphone-input-amd64.tar.gz` 上传到服务器 `/tmp/` 后执行：
+
+```bash
+sudo bash -o pipefail -c 'tar -xOf /tmp/aicloset-assistant-iphone-input-amd64.tar.gz aicloset-assistant/install.sh | bash -s -- /tmp/aicloset-assistant-iphone-input-amd64.tar.gz'
+```
+
+成功后在iPhone刷新页面，检查登录、聊天、城市搜索和手记输入，竖屏／横屏点击后页面不再额外放大，
+键盘关闭后仍可正常滚动，手动双指缩放仍可用。此次不声明已经在服务器发布修复。
