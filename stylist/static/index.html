@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN" data-stylist-gender="female">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><script src="/static/appearance.js?v=identity-letter-v12"></script><link rel="stylesheet" href="/static/style.css?v=scrollbar-v16"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>衣间 · 私人穿搭师</title><script src="/static/appearance.js?v=identity-letter-v12"></script><link rel="stylesheet" href="/static/style.css?v=history-single-line-v22"><link rel="stylesheet" href="/static/checkin.css?v=1"></head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/">衣间<span>YOUR EVERYDAY STYLIST</span></a>
@@ -11,17 +11,14 @@
 <main>
   <header>
     <div class="header-brand"><span class="status-dot"></span><span data-agent-name>衣衣</span><span class="header-subtitle"> · 你的私人搭配师</span></div>
-    <div class="stylist-switch" role="group" aria-label="搭配师形象" title="切换衣衣的形象与回复风格，下次发送生效；穿搭对象以对话要求为准">
-      <span class="switch-label" aria-hidden="true">搭配师形象</span>
-      <button type="button" data-stylist-gender="female" aria-pressed="true" aria-label="女版衣衣">女版</button>
-      <button type="button" data-stylist-gender="male" aria-pressed="false" aria-label="男版衣衣">男版</button>
-    </div>
-    <button id="companion-open" class="subtle" aria-haspopup="dialog" aria-controls="companion-dialog">称呼与形象</button>
-    <button id="mobile-history" class="subtle" aria-haspopup="dialog" aria-controls="history-dialog">历史</button><button id="login-open" class="subtle">登录衣橱</button>
+    <details id="settings-menu" class="settings-menu">
+      <summary id="settings-open" aria-label="设置" title="设置"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--paper)"/><circle cx="15" cy="12" r="2" fill="var(--paper)"/><circle cx="9" cy="18" r="2" fill="var(--paper)"/></svg><span>设置</span></summary>
+      <div class="settings-panel"><div class="settings-caption">偏好设置</div><button id="companion-open" type="button" aria-haspopup="dialog" aria-controls="companion-dialog"><span><strong>称呼与形象</strong><small>修改昵称、称呼与助理形象</small></span><span aria-hidden="true">›</span></button></div>
+    </details>
+    <button id="mobile-history" class="subtle" aria-label="历史对话" title="历史对话" aria-haspopup="dialog" aria-controls="history-dialog"><!-- Lucide rotate-ccw-clock, ISC; see assets/LUCIDE-LICENSE.md --><svg class="history-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="history-label">历史</span></button><button id="login-open" class="wardrobe-connection" aria-haspopup="dialog" aria-controls="login-dialog"><span class="wardrobe-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="17" rx="2"/><path d="M12 3v17M9 10v3m6-3v3M7 20v1m10-1v1"/></svg></span><span id="login-label">登录衣橱</span><span class="wardrobe-connection-dot" aria-hidden="true"></span></button>
   </header>
   <div id="appearance-status" class="sr-only" role="status" aria-live="polite"></div>
-  <section id="official-warnings" class="official-warnings" aria-label="当前城市气象灾害预警" aria-live="polite" hidden></section>
-  <div class="weather-toolbar"><button id="location-open" class="location-chip">⌖ 选择城市 / 定位</button><span id="location-label">让穿搭也照顾天气</span></div>
+  <div class="weather-toolbar"><button id="location-open" class="location-chip">⌖ 选择城市 / 定位</button><span id="location-label">让穿搭也照顾天气</span><button id="checkin-open" class="checkin-entry" aria-haspopup="dialog" aria-controls="checkin-dialog"><span aria-hidden="true">✧</span><span><strong id="checkin-entry-label">对话签到</strong><small id="checkin-entry-meta">+10 体验积分</small></span><span class="checkin-entry-arrow" aria-hidden="true">↗</span></button></div>
   <div id="feed" aria-live="polite">
     <section id="welcome">
       <div class="eyebrow" data-stylist-copy="eyebrow">A LITTLE CARE, EVERY DAY</div>
@@ -59,5 +56,15 @@
 </form>
 </dialog>
 <dialog id="image-dialog"><h2>试穿这套搭配</h2><div id="image-details"></div><div id="image-status" role="status"></div><div class="dialog-actions"><button id="image-cancel" class="subtle">暂不生成</button><button id="image-confirm" class="primary">确认费用并生成</button></div></dialog>
-<script src="/static/scrollbars.js?v=1" defer></script><script src="/static/weather-visuals.js?v=identity-v1" defer></script><script src="/static/product-preview.js?v=1" defer></script><script src="/static/city-picker.js?v=1" defer></script><script src="/static/companion-portraits.js?v=identity-letter-v12" defer></script><script src="/static/companion-settings.js?v=identity-letter-v12" defer></script><script src="/static/app.js?v=weather-toolbar-v3" defer></script>
+<dialog id="checkin-dialog" aria-labelledby="checkin-title">
+  <div class="checkin-top"><span class="eyebrow">A LITTLE JOY, EVERY DAY</span><button id="checkin-close" class="subtle" aria-label="关闭签到">关闭 ×</button></div>
+  <div class="checkin-hero"><div class="checkin-seal" aria-hidden="true">✧</div><h2 id="checkin-title">和<span id="checkin-agent">衣衣</span>的每日之约</h2><p id="checkin-state"></p></div>
+  <div class="checkin-stats"><div><strong id="checkin-total">0</strong><small>体验积分</small></div><div><strong id="checkin-days">0</strong><small>累计签到 · 天</small></div></div>
+  <div class="checkin-month-bar"><button id="checkin-prev" aria-label="上个月">‹</button><strong id="checkin-month"></strong><button id="checkin-next" aria-label="下个月">›</button></div>
+  <div class="checkin-week" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+  <div id="checkin-calendar" class="checkin-calendar" aria-label="签到月历"></div>
+  <p id="checkin-task"></p><button id="checkin-action" class="primary"></button><div id="checkin-feedback" role="status" aria-live="polite"></div>
+  <p class="checkin-note">体验版 · 每日奖励 10 积分，同一天仅可领取一次<br>按北京时间计算；刷新后清空，不计入账户真实积分。</p>
+</dialog>
+<script src="/static/scrollbars.js?v=1" defer></script><script src="/static/checkin.js?v=1" defer></script><script src="/static/weather-visuals.js?v=identity-v1" defer></script><script src="/static/product-preview.js?v=1" defer></script><script src="/static/city-picker.js?v=1" defer></script><script src="/static/companion-portraits.js?v=identity-letter-v12" defer></script><script src="/static/companion-settings.js?v=settings-menu-v2" defer></script><script src="/static/app.js?v=history-single-line-v8" defer></script>
 </body></html>

@@ -142,6 +142,11 @@ class Store:
 
     def conversations(self, owner):
         with self.connection() as conn:
-            rows = conn.execute("SELECT id,version,updated_at FROM stylist_sessions WHERE owner_id=? AND version>0 ORDER BY updated_at DESC LIMIT 50",
-                                (owner,)).fetchall()
+            rows = conn.execute(
+                "SELECT s.id,s.version,s.updated_at,"
+                "(SELECT m.user_message FROM stylist_messages m "
+                "WHERE m.conversation_id=s.id AND m.owner_id=s.owner_id "
+                "ORDER BY m.version ASC LIMIT 1) AS title "
+                "FROM stylist_sessions s WHERE s.owner_id=? AND s.version>0 "
+                "ORDER BY s.updated_at DESC LIMIT 50", (owner,)).fetchall()
             return [dict(r) for r in rows]

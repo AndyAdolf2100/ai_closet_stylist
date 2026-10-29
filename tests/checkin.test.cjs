@@ -1,0 +1,41 @@
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const {JSDOM} = require('jsdom');
+const {createStore, dayKey} = require('../stylist/static/checkin.js');
+test('Shanghai midnight unlocks a new day; duplicate claims never add points', () => {
+  let now = new Date('2026-10-29T15:59:59Z');
+  const store = createStore(() => now); store.setOwner('a');
+  assert.equal(store.claim(), false); store.completeChat('a'); assert(store.claim());
+  assert.equal(store.claim(), false); assert.equal(store.snapshot().points, 10);
+  now = new Date('2026-10-29T16:00:00Z');
+  assert.equal(dayKey(now), '2026-10-30'); assert.equal(store.snapshot().eligible, false);
+  assert.equal(store.claim(), false); store.completeChat('a'); assert(store.claim());
+  assert.equal(store.snapshot().points, 20);
+});
+test('late replies cannot reward another account; memory resets with a fresh store', () => {
+  const store = createStore(); store.setOwner('a'); store.completeChat('a'); store.claim();
+  store.setOwner('b'); assert.equal(store.completeChat('a'), false); assert.equal(store.claim(), false);
+  assert.equal(store.snapshot().points, 0); store.setOwner(null); assert.equal(store.completeChat('b'), false);
+  store.setOwner('a'); assert.equal(store.snapshot().points, 10);
+  const fresh = createStore(); fresh.setOwner('a'); assert.equal(fresh.snapshot().points, 0);
+});
+test('dialog guides login and chat, renders calendar and rewards once without persistence', () => {
+  const dom = new JSDOM(fs.readFileSync('stylist/static/index.html', 'utf8'), {url:'http://synthetic.invalid', runScripts:'outside-only'});
+  const w = dom.window, $ = id => w.document.getElementById(id);
+  w.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  w.HTMLDialogElement.prototype.close = function () { this.open = false; };
+  let logins = 0, chats = 0;
+  w.eval(fs.readFileSync('stylist/static/checkin.js', 'utf8'));
+  const ui = w.DailyCheckin.mount({onLogin:()=>logins++, onChat:()=>chats++});
+  $('checkin-open').click(); $('checkin-action').click(); assert.equal(logins, 1);
+  ui.setOwner('a'); $('checkin-open').click(); $('checkin-action').click(); assert.equal(chats, 1);
+  ui.completeChat('a'); $('checkin-open').click(); $('checkin-action').click(); $('checkin-action').click();
+  assert.equal($('checkin-total').textContent, '10'); assert.equal($('checkin-days').textContent, '1');
+  assert.equal(w.document.querySelectorAll('.is-signed').length, 1);
+  const month = $('checkin-month').textContent; $('checkin-prev').click(); assert.notEqual($('checkin-month').textContent, month);
+  $('checkin-next').click(); assert.equal($('checkin-month').textContent, month);
+  assert.equal(w.localStorage.length, 0); assert.equal(w.sessionStorage.length, 0);
+  ui.setOwner('b'); assert.equal($('checkin-total').textContent, '0'); assert(!$('checkin-dialog').open);
+  dom.window.close();
+});

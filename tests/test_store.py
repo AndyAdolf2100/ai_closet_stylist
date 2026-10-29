@@ -40,3 +40,21 @@ def test_stale_head_and_expired_worker_cannot_overwrite(tmp_path):
     stale = request(conversation_id=cid, expected_version=0).model_copy(update={"request_id": "test-request-002"})
     with pytest.raises(StylistError, match="stale_version"):
         store.reserve("1", stale)
+
+
+def test_conversation_title_uses_first_saved_question_and_stays_owner_scoped(tmp_path):
+    store = Store(str(tmp_path / "titles.db"))
+    with store.connection() as conn:
+        for cid, owner, updated in [("first", "a", "2026-10-28"), ("latest", "a", "2026-10-29"),
+                                    ("private", "b", "2026-10-30"), ("missing", "a", "2026-10-27")]:
+            conn.execute("INSERT INTO stylist_sessions(id,owner_id,state_json,version,updated_at) VALUES(?,?,?,?,?)",
+                         (cid, owner, "{}", 2, updated))
+        for cid, owner, version, message in [("first", "a", 2, "只换鞋"), ("first", "a", 1, "今天通勤怎么穿？"),
+                                              ("latest", "a", 1, "周末想去公园"), ("private", "b", 1, "其他账号提问")]:
+            conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",
+                         (cid, owner, version, message, "{}"))
+    rows = store.conversations("a")
+    assert [row["id"] for row in rows] == ["latest", "first", "missing"]
+    assert [row["title"] for row in rows] == ["周末想去公园", "今天通勤怎么穿？", None]
+    assert store.conversations("b")[0]["title"] == "其他账号提问"
+    assert store.conversations("unknown") == []

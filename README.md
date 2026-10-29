@@ -85,6 +85,12 @@ uv run python scripts/evaluate_semantics.py
 
 本轮机器可读检查产物保存在被忽略的 `var/` 下。测试人物条件为合成场景，不代表账号持有人的真实身体条件或长期偏好。
 
+## 对话签到体验
+
+天气栏的「对话签到」可打开月历，男女角色沿用各自主题色，手机与桌面共用响应式界面。登录后完成一轮对话，可手动领取每日 10 体验积分；等待确认、取消及失败请求不奖励，查看历史对话不触发签到。
+
+签到使用前端内存 store，按账号隔离，以北京时间划分日期；刷新页面即清空，不写数据库或浏览器存储，不改变真实积分。月历的日期、星期和月份由本地日期计算生成，不调用旧服务的签到、积分或搭配日历接口。
+
 ## LangGraph 与部署
 
 入门和节点对应关系见 [LangGraph 入门](docs/LANGGRAPH_QUICKSTART.md)；滚动发布、排空、断线恢复、PostgreSQL 配置和当前限制见 [K8s 部署说明](docs/KUBERNETES_DEPLOYMENT.md)。部署前先运行 `uv run python -m stylist.migrate` 创建业务及检查点表。

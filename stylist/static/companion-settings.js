@@ -49,7 +49,7 @@
   function openMessage() {
     if (!notificationMessage || notification.hidden || notification.classList.contains('is-leaving')) return;
     const message = notificationMessage;
-    messageReturnFocus = document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
+    messageReturnFocus = document.getElementById('settings-open') || document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
     hideNotification();
     messageDialog.dataset.persona = message.persona;
     messageDialog.querySelector('h2').textContent = `${message.name}的来信`;
@@ -67,7 +67,7 @@
     notification.hidden = true;
     notification.querySelector('strong').textContent = '';
     notification.querySelector('p').textContent = ''; notificationMessage = null;
-    if (focused) document.getElementById('companion-open')?.focus({ preventScroll: true });
+    if (focused) (document.getElementById('settings-open') || document.getElementById('companion-open'))?.focus({ preventScroll: true });
   }
   function dismissNotification() {
     pauseNotification();
@@ -84,12 +84,12 @@
     pauseNotification();
     if (!notification.hidden && !notification.classList.contains('is-leaving') && !notification.contains(document.activeElement) && !notification.matches(':hover')) notificationTimer = setTimeout(dismissNotification, 9000);
   }
-  function showNotification(saved) {
+  function showNotification(saved, body) {
     pauseNotification(); clearTimeout(notificationExitTimer); notificationExitTimer = null; notification.classList.remove('is-leaving');
     notification.dataset.persona = saved.assistant_persona;
     notification.hidden = false;
     notification.querySelector('strong').textContent = saved.agent_name;
-    notification.querySelector('p').textContent = `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
+    notification.querySelector('p').textContent = body ?? `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
     notificationMessage = { name: saved.agent_name, persona: saved.assistant_persona, body: notification.querySelector('p').textContent };
     notification.querySelector('.companion-message-open').setAttribute('aria-label', `阅读${saved.agent_name}的完整消息`);
     scheduleDismiss();
@@ -232,6 +232,7 @@
   }
   window.visualViewport?.addEventListener('resize', viewport); window.visualViewport?.addEventListener('scroll', viewport); window.addEventListener('resize', viewport); viewport();
   window.CompanionSettings = {
+    notify: body => showNotification({ ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' }, body),
     setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
     getProfile: () => owner && loaded ? { ...profile, assistant_persona: (previewOriginal ?? document.documentElement.dataset.stylistGender) === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
   };
