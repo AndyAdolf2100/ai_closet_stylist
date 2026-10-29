@@ -19,7 +19,7 @@ test('male/female atlases use equal cover geometry without stretching faces',()=
  const sprites=t.cards.map(card=>card.querySelector('.companion-portrait'));
  assert.equal(sprites[0].style.width,sprites[1].style.width);assert.equal(sprites[0].style.height,sprites[1].style.height);
  assert.equal(parseFloat(sprites[0].style.width),350);assert.equal(sprites[0].style.top,'0px');assert.equal(sprites[1].style.top,'0px');assert(Math.abs(parseFloat(sprites[0].style.height)-350/0.75)<0.001);
- assert(t.images[0].source.endsWith('female-breeze-atlas-v2.png'));assert(t.images[1].source.endsWith('male-breeze-atlas-v2.png'));
+ assert(t.images[0].source.endsWith('female-breeze-atlas-v4.png'));assert(t.images[1].source.endsWith('male-breeze-atlas-v4.png'));
  t.resize(136,225);assert.equal(parseFloat(sprites[0].style.height),225);assert.equal(parseFloat(sprites[0].style.width),168.75);
  t.dom.window.close();
 });

@@ -20,7 +20,7 @@
       const item = { sprite, aspect: null }; portraits.set(card, item); resize.observe(card);
       const preload = new Image();
       const gender = sprite.dataset.portrait === 'male' ? 'male' : 'female';
-      const src = `/static/assets/characters/yiyi-${gender}-breeze-atlas-v2.png`;
+      const src = `/static/assets/characters/yiyi-${gender}-breeze-atlas-v4.png`;
       preload.onload = () => {
         item.aspect = (preload.naturalWidth / columns) / (preload.naturalHeight / rows);
         if (!Number.isFinite(item.aspect) || item.aspect <= 0) return;

@@ -4,7 +4,7 @@ const path=require('node:path');
 const {createCanvas,loadImage}=require('@napi-rs/canvas');
 const {W,H,COUNT,COLUMNS,ROWS,configs}=require('../scripts/build_companion_sprites.cjs');
 for(const gender of ['female','male'])test(`${gender}: shipped atlas keeps body/background fixed and blinks without moving the figure`,async()=>{
- const atlas=await loadImage(path.join(__dirname,`../stylist/static/assets/characters/yiyi-${gender}-breeze-atlas-v2.png`));
+ const atlas=await loadImage(path.join(__dirname,`../stylist/static/assets/characters/yiyi-${gender}-breeze-atlas-v4.png`));
  assert.equal(atlas.width,W*COLUMNS);assert.equal(atlas.height,H*ROWS);
  const canvas=createCanvas(W,H),ctx=canvas.getContext('2d');
  function frame(index){ctx.clearRect(0,0,W,H);ctx.drawImage(atlas,(index%COLUMNS)*W,Math.floor(index/COLUMNS)*H,W,H,0,0,W,H);return ctx.getImageData(0,0,W,H).data;}
@@ -20,4 +20,21 @@ for(const gender of ['female','male'])test(`${gender}: shipped atlas keeps body/
   }
  }
  assert(eyeChanges>0);assert(hairChanges>0);
+ const half=frame(36),closed=frame(37),reopening=frame(38);
+ let distinctStates=0;
+ for(const [cx,cy] of configs[gender].eyes)for(let y=cy-3;y<=cy+3;y++)for(let x=cx-5;x<=cx+5;x++){
+  const i=(y*W+x)*4;
+  assert.deepEqual(half.slice(i,i+4),reopening.slice(i,i+4),'opening and closing use the drawn half-blink');
+  if(half[i]!==closed[i]&&half[i]!==base[i])distinctStates++;
+ }
+ assert(distinctStates>0,'half-closed is a distinct drawing');
+});
+
+test('male and female use identical full-canvas dimensions for both stills and atlases',async()=>{
+ for(const [suffix,width,height] of [['standing-v3.jpg',W,H],['breeze-atlas-v4.png',W*COLUMNS,H*ROWS]]){
+  for(const gender of ['female','male']){
+   const image=await loadImage(path.join(__dirname,`../stylist/static/assets/characters/yiyi-${gender}-${suffix}`));
+   assert.equal(image.width,width);assert.equal(image.height,height);
+  }
+ }
 });

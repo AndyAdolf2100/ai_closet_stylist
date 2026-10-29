@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="zh-CN" data-stylist-gender="female"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>初识 · 称呼与形象预览</title><script src="/static/appearance.js?v=identity-v1"></script><link rel="stylesheet" href="/static/style.css?v=identity-fullscreen-v6"></head>
+<html lang="zh-CN" data-stylist-gender="female"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>初识 · 称呼与形象预览</title><script src="/static/appearance.js?v=identity-v1"></script><link rel="stylesheet" href="/static/style.css?v=identity-blink-v8"></head>
 <body style="align-items:center;justify-content:center;padding:24px;background:#f4f1eb"><section style="max-width:560px;text-align:center"><p class="eyebrow">A LITTLE CLOSER</p><h1 style="font-size:32px">从一个名字，慢慢认识。</h1><p style="line-height:1.9;color:#8a8c7b">这里可以预览四步初识对话，设置不会写入你的账号。<br>正式入口在首页的“称呼与形象”。</p><button id="preview-open" class="primary">重新打开初识对话</button><p id="notice" style="margin-top:24px"></p></section>
-<script src="/static/companion-portraits.js?v=identity-fullscreen-v6"></script><script src="/static/companion-settings.js?v=identity-fullscreen-v6"></script><script>
+<script src="/static/companion-portraits.js?v=identity-blink-v8"></script><script src="/static/companion-settings.js?v=identity-blink-v8"></script><script>
 let previewProfile = null;
 CompanionSettings.setOwner('design-preview', async (path, options = {}) => {
   if (options.method === 'PUT') previewProfile = JSON.parse(options.body);

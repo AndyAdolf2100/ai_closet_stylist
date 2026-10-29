@@ -398,7 +398,7 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 #companion-title{overflow-wrap:anywhere}
 @media(max-width:760px){.header-brand>[data-agent-name]{max-width:70px}}
 
-/* Matched medium-distance portraits; breeze and blink use whole-frame atlases. */
+/* Fixed portraits; atlases change only local eyelids and hair tips. */
 .companion-portrait{position:absolute;left:50%;top:0;transform:translateX(-50%);background-size:800% 600%;background-position:0 0;background-repeat:no-repeat;pointer-events:none;visibility:hidden}
 .portrait-ready .companion-portrait{visibility:visible;animation:companion-portrait-breeze 4s steps(1,end) infinite}
 .portrait-ready>img{opacity:0}
