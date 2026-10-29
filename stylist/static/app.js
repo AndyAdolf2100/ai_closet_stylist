@@ -130,7 +130,7 @@ function forecastCard(data, compact = false) {
   if (compact) card.classList.add('compact');
   return card;
 }
-function updateCityLabel() { $('location-open').textContent = selectedCity ? '⌖ ' + selectedCity.city_name : '⌖ 选择城市 / 定位'; $('forecast-refresh').hidden = !selectedCity; }
+function updateCityLabel() { $('location-open').textContent = selectedCity ? '⌖ ' + selectedCity.city_name : '⌖ 选择城市 / 定位'; }
 function showWarnings(data) {
   const box = $('official-warnings'); box.replaceChildren(); box.hidden = false;
   if (data.alerts?.length) {
@@ -154,7 +154,7 @@ async function loadForecast(location = selectedCity) {
   if (location.city_name !== selectedCity?.city_name || location.province_name !== selectedCity?.province_name) {
     warningSequence++; $('official-warnings').replaceChildren(el('p', 'warning-feed-notice', '正在确认新城市，预警信息随后更新…')); $('official-warnings').hidden = false;
   }
-  forecastBusy = true; $('forecast-refresh').disabled = true;
+  forecastBusy = true;
   $('location-label').textContent = agentText('衣衣正在看看天气…');
   try {
     const data = await api('/api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
@@ -170,11 +170,11 @@ async function loadForecast(location = selectedCity) {
   } catch (err) {
     if (sequence !== forecastSequence) return false;
     if (session) showWarnings({ status: 'unavailable', alerts: [], message: '城市或天气确认未完成，暂时无法核对对应预警。' });
-    $('location-label').textContent = '天气暂未取到，可稍后刷新'; $('location-status').textContent = err.message;
+    $('location-label').textContent = '天气暂未取到，可重新选择城市重试'; $('location-status').textContent = err.message;
     $('notice').textContent = err.message;
-    if ($('weather-panel')) { $('weather-panel').replaceChildren(el('p', 'weather-unavailable', '这次没有取到最新天气，先不显示旧预报。可以稍后刷新。')); }
+    if ($('weather-panel')) { $('weather-panel').replaceChildren(el('p', 'weather-unavailable', '这次没有取到最新天气，先不显示旧预报。可以稍后重新选择城市重试。')); }
     return false;
-  } finally { if (sequence === forecastSequence) { forecastBusy = false; $('forecast-refresh').disabled = false; } }
+  } finally { if (sequence === forecastSequence) { forecastBusy = false; } }
 }
 function pendingBubble(persona) {
   const node = bubble('assistant', ''); node.classList.add('pending');
@@ -558,7 +558,6 @@ $('location-form').onsubmit = async event => {
     $('location-save').textContent = '确认城市，看看天气'; updateLocationSave();
   }
 };
-$('forecast-refresh').onclick = () => { if (!forecastBusy) loadForecast(); };
 $('companion-open').onclick = () => { if (!busy && requireLogin()) window.CompanionSettings?.open(); };
 if (session) window.CompanionSettings?.setOwner(session.user.id, api);
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
