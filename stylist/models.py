@@ -178,6 +178,12 @@ class CompanionProfile(Model):
     agent_name: str = Field(default="衣衣", min_length=1, max_length=24)
     assistant_persona: PersonaId = "female_warm_v1"
 
+    zodiac: Literal["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"] | None = None
+    conversation_style: Literal["自然相处", "温柔鼓励", "直接坦诚", "轻松幽默"] = "自然相处"
+    reply_detail: Literal["适中", "简洁重点", "细致解释"] = "适中"
+    style_preferences: list[Literal["简约", "休闲", "通勤", "温柔", "复古", "运动", "街头", "优雅"]] = Field(default_factory=list, max_length=3)
+    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "已有衣物优先", "尝试新风格"]] = Field(default_factory=list, max_length=3)
+
     @model_validator(mode="after")
     def validate_names(self):
         self.user_name, self.agent_name = self.user_name.strip(), self.agent_name.strip()

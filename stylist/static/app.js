@@ -311,7 +311,7 @@ function setBusy(value) {
   $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
   $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
-  $('location-open').disabled = value; $('companion-open').disabled = value;
+  $('location-open').disabled = value; $('companion-open').disabled = value; $('preferences-open').disabled = value;
 }
 async function refreshHistory() {
   if (!session) return;
@@ -567,6 +567,11 @@ $('companion-open').onclick = () => {
   if (busy) return;
   closeSettingsMenu(true);
   if (requireLogin()) window.CompanionSettings?.open();
+};
+$('preferences-open').onclick = async () => {
+  if (busy) return;
+  closeSettingsMenu(true);
+  if (requireLogin()) await window.PersonalPreferences.open();
 };
 document.addEventListener('click', event => {
   if (settingsMenu.open && !settingsMenu.contains(event.target)) closeSettingsMenu();

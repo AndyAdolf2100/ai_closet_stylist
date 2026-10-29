@@ -509,3 +509,86 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 #login-open.wardrobe-connection:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:760px){#login-open.wardrobe-connection{font-size:11px;gap:6px;padding:5px 10px 5px 5px}.wardrobe-connection-icon{width:26px;height:26px}.wardrobe-connection-icon svg{width:18px;height:18px}}
 @media(max-width:380px){#login-open.wardrobe-connection{gap:5px;padding-right:8px}.wardrobe-connection-dot{display:none!important}}
+
+/* Optional preferences: celestial cards with a stable, accessible selection state. */
+.settings-panel #preferences-open{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:64px;max-width:none;text-align:left;white-space:normal;padding:12px;border:0;background:transparent;color:var(--ink)}
+.settings-panel #preferences-open:hover{background:var(--soft)}
+.settings-panel #preferences-open>span:first-child{min-width:0;flex:1}.settings-panel #preferences-open>span:last-child{font-size:20px;flex-shrink:0}
+/* A personal notebook, with three quiet chapters rather than a long form. */
+#preferences-dialog{--pref-tint:#f3e8e1;--pref-paper:#fffaf5;--pref-detail:#a0807d;width:min(800px,calc(100% - 48px));max-width:none;max-height:calc(var(--preferences-height,100dvh) - 48px);padding:0;border-radius:28px;border:1px solid var(--line);background:radial-gradient(ellipse at 0 0,var(--pref-tint),transparent 55%),var(--pref-paper);color:var(--ink);box-shadow:0 28px 100px #45403230}
+:root[data-stylist-gender=male] #preferences-dialog{--pref-tint:#dfeaf1;--pref-paper:#f7fafc;--pref-detail:#70899e}
+#preferences-form{display:flex;flex-direction:column;max-height:calc(var(--preferences-height,100dvh) - 50px);min-height:0}
+.preferences-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:30px 36px 18px;flex-shrink:0}
+#preferences-dialog h2{font:28px/1.5 Georgia,'Songti SC',serif;margin:9px 0 0;letter-spacing:1px;color:var(--ink)}
+.preferences-heading .eyebrow{font-size:8px;letter-spacing:2.7px;color:var(--pref-detail)}
+#preferences-close{display:grid;place-items:center;min-width:44px;height:44px;font-size:24px;font-weight:300;color:var(--muted);padding:0;margin:-8px -12px 0 0}
+.preferences-letter{display:flex;align-items:center;gap:15px;margin:0 36px 22px;min-height:64px}
+.preferences-letter .mascot{width:53px;height:53px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px #ffffff80}
+#preferences-speaker{font-size:11px;color:var(--pref-detail);letter-spacing:1px}
+#preferences-dialog #preferences-letter-copy{font-size:13px;line-height:1.8;margin:5px 0 0;color:var(--muted);max-width:510px}
+.preferences-letter-star{margin-left:auto;color:var(--pref-detail);font-size:35px;opacity:.5}
+.preferences-tabs{display:flex;justify-content:flex-start;margin:0 36px;border-bottom:1px solid var(--line);flex-shrink:0;gap:24px}
+.preferences-tabs button{position:relative;border:0;border-radius:0;background:transparent;padding:12px 0 15px;color:var(--muted);font-size:13px;min-height:44px;letter-spacing:.4px}
+.preferences-tabs button small{font:italic 12px Georgia,serif;opacity:.6;margin-right:6px}
+.preferences-tabs button[aria-selected=true]{color:var(--accent)}
+.preferences-tabs button[aria-selected=true]::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent)}
+.preferences-scroll{padding:24px 36px 28px;overflow:auto;min-height:0;overscroll-behavior:contain}
+.preferences-scroll [role=tabpanel]{outline-offset:4px}
+.preferences-page-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-bottom:8px}
+#preferences-dialog #zodiac-clear{border:0;background:transparent;color:var(--muted);padding:8px 0;font-size:11px;min-height:44px}
+#preferences-dialog #zodiac-clear[aria-pressed=true]{color:var(--accent);text-decoration:underline;text-underline-offset:5px}
+.zodiac-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 20px;margin:6px 0 20px}
+#preferences-dialog .zodiac-card{position:relative;min-width:0;overflow:visible;padding:0 0 8px;border:0;background:transparent;text-align:center;color:var(--ink);border-radius:14px;box-shadow:none}
+.zodiac-art{position:relative;display:block;width:100%;aspect-ratio:1;background-image:url('/static/assets/zodiac-palaces-v1.png');background-size:400% 300%;background-repeat:no-repeat;background-color:var(--soft);border-radius:50% 50% 12px 12px;box-shadow:inset 0 0 0 1px #ffffff80,0 5px 14px #71636a10;filter:saturate(.65);transition:filter .25s,box-shadow .25s,transform .25s;overflow:hidden}
+.zodiac-art::before{content:'';position:absolute;inset:0;background:linear-gradient(150deg,#fff5eb30,transparent 55%,#fff5eb30);pointer-events:none}
+.zodiac-card strong{display:block;font:14px/1.5 Georgia,'Songti SC',serif;letter-spacing:1px;margin:10px 0 3px;font-weight:400}
+.zodiac-card small{display:block;font-size:9px;letter-spacing:.8px;color:var(--muted);opacity:.8}
+#preferences-dialog .zodiac-card[aria-pressed=true]{color:var(--accent)}
+.zodiac-card[aria-pressed=true] .zodiac-art{box-shadow:0 0 0 3px var(--pref-paper),0 0 0 4px var(--pref-detail),0 6px 20px #8b748326;filter:saturate(.95)}
+.zodiac-card[aria-pressed=true]::after{content:'✦';position:absolute;right:4px;top:4px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:var(--pref-paper);color:var(--accent);font-size:16px;border:1px solid var(--line)}
+.zodiac-art::after{content:'✦';position:absolute;color:#fff9e7;text-shadow:0 0 9px #ffe1af;top:15%;left:20%;font-size:14px;opacity:.5;animation:palace-shimmer 5s ease-in-out infinite;pointer-events:none}
+.zodiac-card:nth-child(3n+2) .zodiac-art::after{animation-delay:-1.7s;left:70%;top:28%}.zodiac-card:nth-child(3n) .zodiac-art::after{animation-delay:-3.2s}
+@keyframes palace-shimmer{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:.9;transform:scale(1.1)}}
+#preferences-dialog .preferences-hint{font-size:11px;color:var(--muted);line-height:1.9;margin:14px 0 0}
+.preferences-star-note{text-align:center;opacity:.75}
+#preferences-dialog fieldset{border:0;padding:0;margin:4px 0 30px;min-width:0}
+#preferences-dialog legend{font:18px/1.7 Georgia,'Songti SC',serif;color:var(--ink);margin-bottom:16px;padding:0}
+#preferences-dialog legend small{font:10px sans-serif;color:var(--muted);margin-left:6px}
+[data-preference-group]{display:flex;flex-wrap:wrap;gap:10px}
+#preferences-dialog .preference-chip{position:relative;padding:12px 18px;min-height:46px;border-radius:12px;background:#ffffff50;color:var(--ink);border:1px solid var(--line);box-shadow:none;text-align:left}
+.preference-chip strong{font-size:12px;line-height:1.6;font-weight:400}.preference-chip small{display:block;color:var(--muted);font-size:11px;line-height:1.7;margin-top:6px}
+[data-preference-group=conversation_style]{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#preferences-dialog [data-preference-group=conversation_style] .preference-chip{padding:20px 18px;min-height:88px}
+#preferences-dialog [data-preference-group=conversation_style] strong{font:17px Georgia,'Songti SC',serif}
+[data-preference-group=reply_detail]{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+#preferences-dialog .preference-chip[aria-pressed=true]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+.preferences-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:18px 36px 24px;border-top:1px solid var(--line);background:var(--pref-paper);flex-shrink:0}
+.preferences-save-note{font-size:10px;letter-spacing:.5px;color:var(--muted)}
+#preferences-save{min-height:46px;border-radius:24px;padding:11px 24px;font-size:12px;letter-spacing:1px;background:var(--accent);color:white}
+#preferences-save span{margin-left:16px}#preferences-reset{min-height:44px;padding:8px 0;color:var(--muted);font-size:11px}
+#preferences-dialog button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(hover:hover){.zodiac-card:hover .zodiac-art{transform:translateY(-3px);filter:saturate(.95)}#preferences-dialog .preference-chip:hover{border-color:var(--pref-detail)}}
+@media(max-width:760px){#preferences-dialog{position:fixed;inset:var(--preferences-top,0px) 0 auto;width:100%;height:var(--preferences-height,100dvh);max-height:none;border:0;border-radius:0;margin:0}#preferences-form{height:100%;max-height:100%;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.preferences-heading{padding:calc(22px + env(safe-area-inset-top)) 22px 15px}#preferences-dialog h2{font-size:22px;letter-spacing:.5px}.preferences-heading .eyebrow{font-size:7px;letter-spacing:1.7px}.preferences-letter{margin:0 22px 18px;gap:12px}.preferences-letter .mascot{width:42px;height:42px}#preferences-dialog #preferences-letter-copy{font-size:12px}.preferences-letter-star{display:none}.preferences-tabs{margin:0 22px;gap:16px;justify-content:flex-start}.preferences-tabs button{font-size:12px}.preferences-tabs button small{font-size:10px;margin-right:3px}.preferences-scroll{flex:1;padding:18px 22px 24px}.zodiac-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 14px}.zodiac-card strong{font-size:13px}.zodiac-card small{font-size:8px}.preferences-footer{padding:12px 22px max(14px,env(safe-area-inset-bottom))}.preferences-save-note{display:none}#preferences-save{padding:11px 18px}#preferences-dialog legend{font-size:17px}[data-preference-group=reply_detail]{grid-template-columns:1fr}#preferences-dialog [data-preference-group=reply_detail] .preference-chip{display:flex;align-items:center;justify-content:space-between;gap:10px}.preference-chip small{font-size:10px}#preferences-dialog [data-preference-group=reply_detail] small{margin:0}#preferences-dialog [data-preference-group=conversation_style] .preference-chip{padding:16px 12px}#preferences-dialog .preference-chip{padding:11px 14px}}
+@media(prefers-reduced-motion:reduce){.zodiac-art::after{animation:none}.zodiac-art{transition:none}.zodiac-card:hover .zodiac-art{transform:none}}
+
+/* Stable chapter header: reserve the tallest copy at every viewport width. */
+#preferences-dialog{height:min(800px,calc(var(--preferences-height,100dvh) - 48px))}
+#preferences-form{height:100%}
+.preferences-letter{flex-shrink:0}
+.preferences-letter>div{flex:1;min-width:0}
+.preferences-letter-copy-slot{display:grid;max-width:510px}
+#preferences-dialog .preferences-letter-copy-slot>p{grid-area:1/1;font-size:13px;line-height:1.8;margin:5px 0 0;overflow-wrap:anywhere}
+.preferences-letter-measure{visibility:hidden;pointer-events:none;user-select:none}
+.preferences-letter-star{flex-shrink:0}
+@media(max-width:760px){#preferences-dialog{height:var(--preferences-height,100dvh)}#preferences-dialog .preferences-letter-copy-slot>p{font-size:12px}}
+
+/* Reset is a text action, never a selectable preference. */
+#preferences-reset,#preferences-reset:hover,#preferences-reset:active{border:0;background:transparent;box-shadow:none;transform:none;-webkit-tap-highlight-color:transparent}
+#preferences-reset:focus:not(:focus-visible){outline:none}
+
+/* A message hosted by a modal keeps the shared notification typography. */
+#companion-notification .companion-notification-copy p{color:inherit}
+
+/* Chapter tabs keep their width and scroll horizontally on narrow screens. */
+.preferences-tabs{min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
+.preferences-tabs button{flex:0 0 auto;white-space:nowrap}

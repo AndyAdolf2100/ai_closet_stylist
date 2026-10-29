@@ -59,3 +59,10 @@ Use case: photorealistic-natural. Asset type: weather-card background, new THUND
 ```text
 Use case: photorealistic-natural. Asset type: new HEAVY RAIN weather-card background sibling of attached reference rain-garden photo. Input image is a style/palette/composition reference. Generate a single new landscape 3:2 photo, ideally 1536x1024, matching its creamy gray daylight, muted sage-green leaves, subtle pale blush flowers, dreamy natural photography and soft depth of field. Make rainfall clearly heavier than the reference: dense visible diagonal rain streaks across the right and upper-middle, heavy droplets running from wet leaves on the right, many overlapping raindrop splashes and concentric ripples on a garden pond at lower right, a soft curtain of rain obscuring distant greenery. Keep it bright enough to use as a warm cream weather UI background; calm overcast daylight, no lightning, no bright sun, no black storm sky, no flooding, no people/buildings/landmarks, no text/icons/watermarks/borders. Most recognizable heavy-rain details in the right half and upper right because left and bottom will fade under CSS. Left third soft and uncluttered but natural, not a painted white fade. Do not create a collage or UI mockup. This is a new sibling image, do not overwrite reference.
 ```
+
+
+## 十二星宫卡片（2026-10-29）
+
+`zodiac-palaces-v1.png` 由内置 imagegen 生成，用于「设置 → 了解我」的星座选择。图集为四列三行，按行依次为白羊、金牛、双子、巨蟹、狮子、处女、天秤、天蝎、射手、摩羯、水瓶、双鱼；CSS 使用 400% × 300% 背景尺寸定位，不裁切原图。名称及日期由 HTML 渲染，不在图片中烘焙。
+
+生成方向：等尺寸十二宫无间隔图集，云端微型星宫、珍珠象牙建筑、金色星光、柔和粉蓝夜空；各宫以对应星座意象区分，统一居中，适合小尺寸卡片。图片是装饰性娱乐素材，不提供运势或性格判定。选中标识独立绘制，星光动效支持 prefers-reduced-motion。

@@ -35,7 +35,7 @@
   messageDialog.setAttribute('aria-labelledby', 'companion-message-title');
   messageDialog.innerHTML = `<div class="companion-letter-top"><span>A MESSAGE FOR YOU</span><button type="button" class="companion-letter-close" aria-label="关闭来信">×</button></div><div class="companion-letter-heading"><span class="mascot companion-sprite avatar-mini" aria-hidden="true"></span><div><p>有一份心意，想让你知道</p><h2 id="companion-message-title"></h2></div><span class="companion-letter-star" aria-hidden="true">✧</span></div><div class="companion-letter-scroll" tabindex="0" aria-label="来信正文"><article class="companion-letter-paper"><p class="companion-letter-body"></p><p class="companion-letter-signature"></p></article></div><div class="companion-letter-footer"><span>把这一刻，留在日常里。</span><button type="button" class="companion-letter-done">读完啦</button></div>`;
   document.body.append(messageDialog);
-  let notificationTimer = null, notificationExitTimer = null, notificationMessage = null, messageReturnFocus = null;
+  let notificationTimer = null, notificationExitTimer = null, notificationMessage = null, messageReturnFocus = null, notificationReturnFocus = null;
   function clearMessage() {
     if (messageDialog.open) messageDialog.close();
     messageDialog.querySelector('.companion-letter-body').textContent = '';
@@ -49,7 +49,7 @@
   function openMessage() {
     if (!notificationMessage || notification.hidden || notification.classList.contains('is-leaving')) return;
     const message = notificationMessage;
-    messageReturnFocus = document.getElementById('settings-open') || document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
+    messageReturnFocus = notificationReturnFocus || document.getElementById('settings-open') || document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
     hideNotification();
     messageDialog.dataset.persona = message.persona;
     messageDialog.querySelector('h2').textContent = `${message.name}的来信`;
@@ -67,7 +67,9 @@
     notification.hidden = true;
     notification.querySelector('strong').textContent = '';
     notification.querySelector('p').textContent = ''; notificationMessage = null;
-    if (focused) (document.getElementById('settings-open') || document.getElementById('companion-open'))?.focus({ preventScroll: true });
+    if (notification.parentElement !== document.body) document.body.append(notification);
+    if (focused) (notificationReturnFocus || document.getElementById('settings-open') || document.getElementById('companion-open'))?.focus({ preventScroll: true });
+    notificationReturnFocus = null;
   }
   function dismissNotification() {
     pauseNotification();
@@ -84,7 +86,14 @@
     pauseNotification();
     if (!notification.hidden && !notification.classList.contains('is-leaving') && !notification.contains(document.activeElement) && !notification.matches(':hover')) notificationTimer = setTimeout(dismissNotification, 9000);
   }
+  document.addEventListener('close', event => {
+    if (event.target instanceof HTMLDialogElement && event.target.contains(notification)) hideNotification();
+  }, true);
   function showNotification(saved, body) {
+    // Native modal dialogs live in the top layer; their messages must live inside them.
+    const host = [...document.querySelectorAll('dialog[open]')].filter(item => item !== messageDialog).at(-1) || document.body;
+    if (!notification.contains(document.activeElement)) notificationReturnFocus = document.activeElement;
+    if (notification.parentElement !== host) host.append(notification);
     pauseNotification(); clearTimeout(notificationExitTimer); notificationExitTimer = null; notification.classList.remove('is-leaving');
     notification.dataset.persona = saved.assistant_persona;
     notification.hidden = false;
@@ -233,9 +242,26 @@
     messageDialog.style.setProperty('--companion-viewport-top', `${window.visualViewport?.offsetTop || 0}px`);
   }
   window.visualViewport?.addEventListener('resize', viewport); window.visualViewport?.addEventListener('scroll', viewport); window.addEventListener('resize', viewport); viewport();
+  async function savePreferences(values) {
+    if (!owner || !loaded || saving) throw new Error('请稍后重试或重新登录。');
+    const current = sequence, expectedOwner = owner;
+    const fields = ['zodiac', 'conversation_style', 'reply_detail', 'style_preferences', 'dressing_priorities'];
+    const saved = { ...profile };
+    for (const field of fields) saved[field] = values[field];
+    saving = true;
+    try {
+      await appearanceSave;
+      if (sequence !== current || owner !== expectedOwner) return false;
+      const result = await client('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
+      if (sequence !== current || owner !== expectedOwner) return false;
+      profile = result.profile; notify();
+      showNotification(profile, '你的偏好我记下了，之后会在原本的相处方式里，多照顾一点你的喜欢。');
+      return true;
+    } finally { if (sequence === current) saving = false; }
+  }
   window.CompanionSettings = {
     notify: body => showNotification({ ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' }, body),
-    setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
-    getProfile: () => owner && loaded ? { ...profile, assistant_persona: (previewOriginal ?? document.documentElement.dataset.stylistGender) === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
+    savePreferences, setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
+    getProfile: () => owner && loaded ? { ...JSON.parse(JSON.stringify(profile)), assistant_persona: (previewOriginal ?? document.documentElement.dataset.stylistGender) === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
   };
 })();
