@@ -17,7 +17,7 @@ from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
-from .models import ChatRequest, ForecastRequest, LocateRequest, Model
+from .models import ChatRequest, CompanionProfile, ForecastRequest, LocateRequest, Model
 from .personas import progress_message
 from .progress import events as progress_events
 from .runtime import RunManager
@@ -106,6 +106,18 @@ def create_app(settings=None):
         if request.coordinate_system != "wgs84":
             raise StylistError("coordinate_system_unsupported", "当前定位接口使用浏览器WGS84坐标；高德GCJ-02或百度BD-09坐标不能直接混用，请选择浏览器定位或手动选城市。", 422)
         return await engine.weather.locate(upstream, request.latitude, request.longitude)
+
+    @app.get("/api/companion-profile")
+    async def companion_profile(authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        profile = await asyncio.to_thread(store.companion_profile, owner)
+        return {"profile": profile.model_dump(mode="json") if profile else None}
+
+    @app.put("/api/companion-profile")
+    async def save_companion_profile(profile: CompanionProfile, authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        await asyncio.to_thread(store.save_companion_profile, owner, profile)
+        return {"profile": profile.model_dump(mode="json")}
 
     @app.post("/api/weather/forecast")
     async def weather_forecast(request: ForecastRequest, authorization: str | None = Header(default=None)):

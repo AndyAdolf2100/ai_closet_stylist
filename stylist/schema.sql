@@ -1,4 +1,8 @@
 PRAGMA journal_mode=WAL;
+CREATE TABLE IF NOT EXISTS stylist_companion_profiles (
+  owner_id TEXT PRIMARY KEY, profile_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS stylist_sessions (
   id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 0,
   state_json TEXT NOT NULL, active_claim TEXT, lease_until REAL NOT NULL DEFAULT 0,

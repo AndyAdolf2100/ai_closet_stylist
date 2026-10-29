@@ -9,3 +9,11 @@
 女版统一为米白衬衫、鼠尾草绿无袖马甲、焦糖色半裙、棕色腰带与乐福鞋；保留棕色短卷发、绿色花朵发夹和金色耳饰。男版为米白衬衫、藏蓝开衫、浅褐长裤、棕色腰带与乐福鞋，保留左手腕表。
 
 这些是角色设定图，不直接用作页面动画。页面女版首页使用 `../yiyi-female-window-blink-v4.webp`，保持原窗边姿势，只将长袖开衫改为马甲加衬衫；天气男版使用 `../yiyi-male-weather-blink-v6.webp`，让头肩在每格中占据与女版接近的比例。
+
+`yiyi-female-standing-v1.jpg` / `yiyi-male-standing-v1.jpg`：四步称呼设置最后一步的正常比例上半身站立人像。内置 imagegen 以对应 fullbody-v1 设定图作为身份和服装参考生成，分别使用暖象牙玫瑰背景、雾蓝背景。网页导出为 768×1152 JPEG（只等比例缩小与编码），不改变服装或人物内容。原始生成 PNG 保留在生成工具的默认目录，不引用本机绝对路径。
+
+`yiyi-female-standing-v2.jpg` / `yiyi-male-standing-v2.jpg`：当前称呼设置使用的居中立绘。以男版为镜头距离基准，静态校准头部大小与眼线，两个角色使用相同的等比覆盖布局。
+
+`yiyi-female-breeze-atlas-v2.png` / `yiyi-male-breeze-atlas-v2.png`：各48帧，8列×6行，3072×3072无损PNG，单帧384×512，4秒循环。每个角色始终使用同一张主体和背景；只合成眼睑开合与不超过0.6像素的局部发梢采样位移，身体、头部位置、服装和背景逐像素不变。禁止整个人平移、缩放或逐帧重画。生成失败的整身漂移版本不参与运行。
+
+内置 imagegen 生成的睁眼/闭眼双栏源图位于 `sources/`（虚构角色，非用户照片）。可用 `NODE_PATH=var/ui-check/node_modules node scripts/build_companion_sprites.cjs` 重建（需本地安装 `@napi-rs/canvas`）。构建器对全部帧断言：眼睛和指定发梢区域以外的像素必须与基础立绘相同。校验结果与帧预览写入不提交的 `var/portrait-local-motion/`。减少动态效果显示首帧，隐藏对话框与后台页面暂停；纹理加载失败保留同构图静态图。

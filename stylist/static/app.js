@@ -1,7 +1,11 @@
 'use strict';
 const $ = id => document.getElementById(id);
+const agentName = () => window.CompanionSettings?.agentName() || '衣衣';
+const agentText = text => text.replaceAll('衣衣', agentName());
 const KEY = 'ai-closet-stylist-session-v1';
 let session = null, conversation = null, version = 0, busy = false, imageAction = null;
+let selectedLook = null;
+let outfitGroupSequence = 0;
 let selectedCity = null, forecastScope = 'day', forecastBusy = false, forecastSequence = 0;
 const CITY_KEY = 'ai-closet-stylist-city-v1';
 try { selectedCity = JSON.parse(sessionStorage.getItem(CITY_KEY) || 'null'); } catch { selectedCity = null; }
@@ -22,12 +26,12 @@ const error = (code, message) => Object.assign(new Error(message), { code });
 function loginStatus() { $('login-open').textContent = session ? '衣橱已连接' : '登录衣橱'; }
 function expireSession(message) {
   lastSessionOwner = session?.user?.id || lastSessionOwner;
-  session = null; sessionStorage.removeItem(KEY); loginStatus();
+  session = null; sessionStorage.removeItem(KEY); window.CompanionSettings?.setOwner(null, api); loginStatus();
   clearHistory();
   warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true;
   $('login-error').textContent = message || '登录状态已失效，请重新登录。原输入和当前对话会保留。';
   $('notice').textContent = $('login-error').textContent;
-  for (const id of ['service-dialog', 'location-dialog', 'history-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['service-dialog', 'location-dialog', 'history-dialog', 'companion-dialog']) if ($(id).open) $(id).close();
   if (!$('login-dialog').open) $('login-dialog').showModal();
 }
 function headers() { return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session?.access_token || '') }; }
@@ -41,12 +45,40 @@ async function api(path, options = {}) {
   }
   return data;
 }
-function scrollBottom() { $('feed').scrollTop = $('feed').scrollHeight; }
+const feed = $('feed');
+let followLatest = false, bottomFrame = null;
+function scrollBottom(force = true) {
+  if (force) followLatest = true;
+  if (!followLatest || bottomFrame !== null) return;
+  // Wait until the whole message (including loading/cards) has been inserted.
+  bottomFrame = requestAnimationFrame(() => {
+    bottomFrame = null;
+    if (followLatest) feed.scrollTop = feed.scrollHeight;
+  });
+}
+feed.addEventListener('scroll', () => {
+  followLatest = feed.scrollHeight - feed.clientHeight - feed.scrollTop <= 48;
+}, { passive: true });
+// Observe message heights as well as the viewport: images, wrapped progress
+// text and the mobile keyboard can all change the bottom after insertion.
+const feedResize = new ResizeObserver(() => scrollBottom(false));
+feedResize.observe(feed);
+const observedMessages = new Set();
+new MutationObserver(() => {
+  for (const node of observedMessages) {
+    if (node.parentElement !== feed) { feedResize.unobserve(node); observedMessages.delete(node); }
+  }
+  for (const node of feed.children) {
+    if (!observedMessages.has(node)) { feedResize.observe(node); observedMessages.add(node); }
+  }
+  scrollBottom(false);
+}).observe(feed, { childList: true, subtree: true, characterData: true });
+for (const node of feed.children) { feedResize.observe(node); observedMessages.add(node); }
 function mascot(mood = 'greeting', size = '') {
   const node = el('div', 'mascot companion-sprite ' + size); node.dataset.mood = mood;
   // Offset each portrait so a conversation does not blink in unison.
   node.style.setProperty('--blink-delay', `-${(Math.random() * 15).toFixed(2)}s`);
-  node.setAttribute('role', 'img'); node.setAttribute('aria-label', { greeting: '衣衣向你打招呼', weather: '衣衣查看天气', wardrobe: '衣衣挑选衣服', thinking: '衣衣认真思考', happy: '衣衣展示搭配', rain: '衣衣撑伞提醒' }[mood] || '衣衣');
+  node.setAttribute('role', 'img'); node.setAttribute('aria-label', agentText({ greeting: '衣衣向你打招呼', weather: '衣衣查看天气', wardrobe: '衣衣挑选衣服', thinking: '衣衣认真思考', happy: '衣衣展示搭配', rain: '衣衣撑伞提醒' }[mood] || '衣衣'));
   return node;
 }
 function weatherIcon(text) { return /雪/.test(text) ? '❄' : /雷/.test(text) ? '⛈' : /雨/.test(text) ? '☂' : /雾|霾/.test(text) ? '〰' : /阴|云/.test(text) ? '☁' : '☀'; }
@@ -54,7 +86,7 @@ function forecastCard(data, compact = false) {
   const card = el('section', 'forecast-card');
   WeatherVisuals.background(card, data.days);
   const heading = el('div', 'forecast-heading'); const wet = data.days?.some(day => /雨|雪/.test(day.condition_day + day.condition_night)); heading.append(mascot(wet ? 'rain' : 'weather', 'weather-mascot'));
-  const title = el('div'); title.append(el('strong', '', `${data.city_name} · ${data.scope === 'week' ? '本周天气' : data.scope === 'next7' ? '未来七天' : '出门天气'}`), el('p', '', '衣衣的天气小叮咛')); heading.append(title);
+  const title = el('div'); title.append(el('strong', '', `${data.city_name} · ${data.scope === 'week' ? '本周天气' : data.scope === 'next7' ? '未来七天' : '出门天气'}`), el('p', '', agentText('衣衣的天气小叮咛'))); heading.append(title);
   card.append(heading);
   const days = el('div', 'forecast-days');
   for (const day of data.days || []) {
@@ -72,10 +104,23 @@ function forecastCard(data, compact = false) {
     card.append(periods);
   }
   const alerts = el('div', 'weather-alerts');
-  for (const day of data.days || []) for (const tip of day.reminders || []) {
-    const row = el('div', 'weather-tip ' + tip.severity);
-    row.append(el('span', 'tip-icon', { rain: '☂', snow: '❄', fog: '〰', wind: '彡', layers: '♡', cold: '❄', heat: '☀', storm: 'ϟ' }[tip.kind] || '✿'));
-    const copy = el('div'); copy.append(el('strong', '', (data.days.length > 1 ? `${day.date.slice(5)} ` : '') + tip.title), el('p', '', tip.text)); row.append(copy); alerts.append(row);
+  const groupedTips = data.days?.length > 1;
+  if (groupedTips) alerts.classList.add('weather-alerts-by-day');
+  for (const day of data.days || []) {
+    if (!day.reminders?.length) continue;
+    let container = alerts;
+    if (groupedTips) {
+      const group = el('section', 'weather-tip-day');
+      const heading = el('h4', 'weather-tip-date');
+      const date = el('time', '', day.date.slice(5)); date.dateTime = day.date;
+      heading.append(date, el('span', '', day.weekday)); group.append(heading);
+      container = el('div', 'weather-tip-list'); group.append(container); alerts.append(group);
+    }
+    for (const tip of day.reminders) {
+      const row = el('div', 'weather-tip ' + tip.severity);
+      row.append(el('span', 'tip-icon', { rain: '☂', snow: '❄', fog: '〰', wind: '彡', layers: '♡', cold: '❄', heat: '☀', storm: 'ϟ' }[tip.kind] || '✿'));
+      const copy = el('div'); copy.append(el('strong', '', tip.title), el('p', '', tip.text)); row.append(copy); container.append(row);
+    }
   }
   if (alerts.childNodes.length) card.append(alerts);
   const details = el('details', 'weather-evidence'); details.append(el('summary', '', '预报范围与数据说明'));
@@ -110,7 +155,7 @@ async function loadForecast(location = selectedCity) {
     warningSequence++; $('official-warnings').replaceChildren(el('p', 'warning-feed-notice', '正在确认新城市，预警信息随后更新…')); $('official-warnings').hidden = false;
   }
   forecastBusy = true; $('forecast-refresh').disabled = true;
-  $('location-label').textContent = '衣衣正在看看天气…';
+  $('location-label').textContent = agentText('衣衣正在看看天气…');
   try {
     const data = await api('/api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
     if (sequence !== forecastSequence) return false;
@@ -140,13 +185,13 @@ function pendingBubble(persona) {
   copy.append(status, extra); body.append(avatar, copy); node.append(body);
   const expressions = { connecting: ['greeting', '连接中'], understanding: ['thinking', '整理需求'], weather: ['weather', '核对天气'], wardrobe: ['wardrobe', '挑选衣物'], styling: ['thinking', '构思搭配'], checking: ['happy', '核对方案'] };
   const timer = setInterval(() => { extra.textContent = male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'; }, 15000);
-  return { node, update(data) { const state = expressions[data.stage] || expressions.styling; avatar.dataset.mood = state[0]; avatar.setAttribute('aria-label', '衣衣正在' + state[1]); status.textContent = data.message; }, stop() { clearInterval(timer); node.remove(); } };
+  return { node, update(data) { const state = expressions[data.stage] || expressions.styling; avatar.dataset.mood = state[0]; avatar.setAttribute('aria-label', agentText('衣衣正在') + state[1]); status.textContent = data.message; }, stop() { clearInterval(timer); node.remove(); } };
 }
 function bubble(role, text) {
   $('welcome')?.remove();
   const node = el('section', 'bubble ' + role);
-  if (role === 'assistant') { const author = el('div', 'author'); author.append(mascot('greeting', 'avatar-mini'), el('span', '', '衣衣 · 私人搭配师')); node.append(author); }
-  node.append(el('div', '', text)); $('feed').append(node); scrollBottom(); return node;
+  if (role === 'assistant') { const author = el('div', 'author'); author.append(mascot('greeting', 'avatar-mini'), el('span', '', agentText('衣衣 · 私人搭配师'))); node.append(author); }
+  node.append(el('div', '', text)); feed.append(node); scrollBottom(role === 'user'); return node;
 }
 function bulletSection(card, title, items) {
   if (!items?.length) return;
@@ -174,6 +219,8 @@ function productGrid(items) {
 }
 function showReply(reply) {
   conversation = reply.conversation_id; version = reply.version;
+  if (reply.looks?.length) selectedLook = { conversationId: conversation, lookVersion: reply.version, index: 0 };
+  else if (selectedLook?.conversationId !== conversation) selectedLook = null;
   const node = bubble('assistant', reply.message);
   const label = { advice: '穿法建议', outfit: '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
   if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
@@ -192,8 +239,50 @@ function showReply(reply) {
       el('p', '', '这些衣物仍按你的要求保留，还没有组成新的完整搭配。'), productGrid(reply.retained_items));
     node.append(retained);
   }
-  for (const [lookIndex, look] of (reply.looks || []).entries()) {
+  const looks = reply.looks || [], tabs = [], panels = [];
+  const options = el('div', 'outfit-options');
+  const tabList = el('div', 'outfit-tabs');
+  tabList.setAttribute('role', 'tablist'); tabList.setAttribute('aria-label', '本轮搭配风格');
+  const groupId = 'outfit-' + (++outfitGroupSequence);
+  const activate = index => {
+    // Switching styles should keep the tabs in view rather than jump to the
+    // bottom of a newly expanded card. Sending again resumes following.
+    followLatest = false;
+    tabs.forEach((tab, i) => {
+      tab.setAttribute('aria-selected', String(i === index)); tab.tabIndex = i === index ? 0 : -1;
+      panels[i].hidden = i !== index;
+    });
+    // Start the newly selected outfit at its heading, within the chat feed.
+    feed.scrollTop += options.getBoundingClientRect().top - feed.getBoundingClientRect().top;
+    if (selectedLook?.conversationId === reply.conversation_id && selectedLook.lookVersion === reply.version) {
+      selectedLook.index = index;
+    }
+  };
+  if (looks.length > 1) options.append(tabList);
+  for (const [lookIndex, look] of looks.entries()) {
     const card = el('article', 'look'); card.append(el('h3', '', look.title));
+    if (looks.length > 1) {
+      // Old conversations predate style_name; use a recognizable style from
+      // their title, with a neutral fallback instead of inventing one.
+      const legacyStyle = look.title?.match(/简约通勤|休闲运动|温柔日常|法式复古|商务通勤|通勤|休闲|运动|复古|简约|甜美|街头|优雅/);
+      const tab = el('button', 'outfit-tab', look.style_name || legacyStyle?.[0] || `搭配 ${lookIndex + 1}`);
+      tab.type = 'button'; tab.id = `${groupId}-tab-${lookIndex}`;
+      tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String(lookIndex === 0));
+      tab.setAttribute('aria-controls', `${groupId}-panel-${lookIndex}`); tab.tabIndex = lookIndex === 0 ? 0 : -1;
+      card.id = `${groupId}-panel-${lookIndex}`; card.setAttribute('role', 'tabpanel');
+      card.setAttribute('aria-labelledby', tab.id); card.tabIndex = 0; card.hidden = lookIndex !== 0;
+      tab.onclick = () => activate(lookIndex);
+      tab.onkeydown = event => {
+        let index;
+        if (event.key === 'ArrowRight') index = (lookIndex + 1) % looks.length;
+        else if (event.key === 'ArrowLeft') index = (lookIndex + looks.length - 1) % looks.length;
+        else if (event.key === 'Home') index = 0;
+        else if (event.key === 'End') index = looks.length - 1;
+        else return;
+        event.preventDefault(); activate(index); tabs[index].focus();
+      };
+      tabs.push(tab); panels.push(card); tabList.append(tab);
+    }
     if (look.items?.length) {
       card.append(productGrid(look.items));
     } else { bulletSection(card, '穿什么', look.pieces); }
@@ -215,22 +304,23 @@ function showReply(reply) {
       };
       card.append(preview);
     }
-    node.append(card);
+    options.append(card);
   }
+  if (looks.length) node.append(options);
   for (const warning of reply.warnings || []) node.append(el('div', 'warning', warning));
   if (reply.follow_ups?.length) {
     const actions = el('div', 'followups');
     for (const text of reply.follow_ups) { const button = el('button', '', text); button.onclick = () => { $('message').value = text; $('message').focus(); }; actions.append(button); }
     node.append(actions);
   }
-  scrollBottom();
+  scrollBottom(false);
 }
 function setBusy(value) {
-  busy = value; $('send').disabled = value; $('source').disabled = value; $('weather').disabled = value;
+  busy = value; $('send').disabled = value; $('source').disabled = value;
   $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
   $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
-  $('location-open').disabled = value;
+  $('location-open').disabled = value; $('companion-open').disabled = value;
 }
 async function refreshHistory() {
   if (!session) return;
@@ -253,7 +343,7 @@ async function refreshHistory() {
             $('feed').replaceChildren();
             for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
             conversation = record.conversation_id; version = record.version;
-            $('source').value = ''; $('weather').value = '';
+            $('source').value = '';
             for (const list of [$('history'), $('mobile-history-list')]) {
               list.querySelectorAll('[aria-current]').forEach(item => item.removeAttribute('aria-current'));
               list.children[rows.indexOf(row)]?.setAttribute('aria-current', 'true');
@@ -283,11 +373,13 @@ async function sendMessage(resuming = false) {
   const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
   const text = saved?.request.message || $('message').value.trim();
   if (!text || busy || !requireLogin()) return;
+  if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
   const request = saved?.request || { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: $('confirm-plan').checked };
+  if (!saved && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
   if (!saved) request.assistant_persona = document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1';
   if (!saved && $('source').value) request.source = $('source').value;
-  if (!saved && $('weather').value) request.weather_policy = $('weather').value;
   if (!saved && selectedCity) request.location = selectedCity;
+  if (!saved && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
   savePending({owner: session.user.id, request});
   bubble('user', text); const pending = pendingBubble(request.assistant_persona);
   setBusy(true); $('notice').textContent = '';
@@ -329,7 +421,7 @@ async function sendMessage(resuming = false) {
   } catch (err) {
     if (err.code !== 'authentication_expired') savePending(null);
     pending.stop(); bubble('error', err.message || '请求未完成，请稍后重试。');
-    $('notice').textContent = err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : '输入还在，可以调整后再发给衣衣。';
+    $('notice').textContent = err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。');
     if (err.code === 'authentication_expired') expireSession(err.message);
   } finally { pending.stop(); setBusy(false); }
 }
@@ -348,7 +440,7 @@ function showPlanApproval(request) {
     };
     actions.append(button);
   }
-  $('feed').append(actions); scrollBottom();
+  feed.append(actions); scrollBottom(false);
 }
 $('chat-form').onsubmit = event => { event.preventDefault(); sendMessage(); };
 $('message').onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendMessage(); } };
@@ -372,7 +464,7 @@ $('history-refresh').onclick = async () => {
   try { await refreshHistory(); } finally { $('history-refresh').disabled = busy; }
 };
 $('login-open').onclick = () => $('login-dialog').showModal(); $('login-cancel').onclick = () => $('login-dialog').close();
-$('logout').onclick = () => { savePending(null); sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; lastSessionOwner = null; conversation = null; version = 0; clearHistory(); $('history-dialog').close(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
+$('logout').onclick = () => { savePending(null); sessionStorage.removeItem(KEY); sessionStorage.removeItem(CITY_KEY); selectedCity = null; forecastSequence++; warningSequence++; $('official-warnings').replaceChildren(); $('official-warnings').hidden = true; forecastBusy = false; session = null; window.CompanionSettings?.setOwner(null, api); lastSessionOwner = null; conversation = null; version = 0; clearHistory(); $('history-dialog').close(); $('feed').replaceChildren(); updateCityLabel(); $('location-label').textContent = '让穿搭也照顾天气'; loginStatus(); };
 $('login-form').onsubmit = async event => {
   event.preventDefault(); $('login-submit').disabled = true; $('login-error').textContent = '';
   try {
@@ -381,7 +473,7 @@ $('login-form').onsubmit = async event => {
     const response = await fetch('/auth/mobile-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mobile: $('mobile').value, code: $('code').value, device_id: device }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.message || '登录未成功');
     if (lastSessionOwner && lastSessionOwner !== data.user.id) { conversation = null; version = 0; $('feed').replaceChildren(); clearHistory(); }
-    session = data; lastSessionOwner = data.user.id; sessionStorage.setItem(KEY, JSON.stringify(data)); $('code').value = ''; $('notice').textContent = ''; $('login-dialog').close(); loginStatus(); await refreshHistory(); if (selectedCity) loadForecast();
+    session = data; lastSessionOwner = data.user.id; sessionStorage.setItem(KEY, JSON.stringify(data)); $('code').value = ''; $('notice').textContent = ''; $('login-dialog').close(); loginStatus(); await window.CompanionSettings?.setOwner(data.user.id, api); await refreshHistory(); if (selectedCity) loadForecast();
   } catch (err) { $('login-error').textContent = err.message; } finally { $('login-submit').disabled = false; }
 };
 $('check-apis').onclick = async () => {
@@ -468,6 +560,8 @@ $('location-form').onsubmit = async event => {
   }
 };
 $('forecast-refresh').onclick = () => { if (!forecastBusy) loadForecast(); };
+$('companion-open').onclick = () => { if (!busy && requireLogin()) window.CompanionSettings?.open(); };
+if (session) window.CompanionSettings?.setOwner(session.user.id, api);
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
 setInterval(() => { if (!document.hidden && session && selectedCity && !forecastBusy) loadWarnings(); }, 120000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && session && selectedCity) loadWarnings(); });

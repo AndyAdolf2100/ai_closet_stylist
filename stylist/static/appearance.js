@@ -39,18 +39,20 @@
     gender = normalize(value);
     root.dataset.stylistGender = gender;
     const current = copy[gender];
+    const agentName = window.CompanionSettings?.agentName() || '衣衣';
+    const named = text => text.replaceAll('衣衣', agentName);
     document.querySelectorAll('[data-stylist-copy]').forEach(node => {
       const text = current[node.dataset.stylistCopy];
-      if (text !== undefined) node.textContent = text;
+      if (text !== undefined) node.textContent = named(text);
     });
     document.querySelectorAll('button[data-stylist-gender]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.stylistGender === gender));
     });
     const input = document.getElementById('message');
-    if (input) input.placeholder = current.placeholder;
-    document.querySelectorAll('.hero-mascot').forEach(node => node.setAttribute('aria-label', current.hero));
+    if (input) input.placeholder = named(current.placeholder);
+    document.querySelectorAll('.hero-mascot').forEach(node => node.setAttribute('aria-label', named(current.hero)));
     const status = document.getElementById('appearance-status');
-    if (announce && status) status.textContent = `已切换为${gender === 'male' ? '男' : '女'}版衣衣，后续新请求使用对应回复风格`;
+    if (announce && status) status.textContent = `已切换为${gender === 'male' ? '男' : '女'}版${agentName}，后续新请求使用对应回复风格`;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -59,9 +61,12 @@
       button.addEventListener('click', () => {
         apply(button.dataset.stylistGender, true);
         try { localStorage.setItem(key, gender); } catch { /* Switching still works without persistence. */ }
+        window.dispatchEvent(new CustomEvent('stylist-appearance-selected', { detail: gender }));
       });
     });
   }, { once: true });
+
+  window.addEventListener('companion-profile-change', event => apply(event.detail?.assistant_persona === 'male_calm_v1' ? 'male' : 'female'));
 
   window.addEventListener('storage', event => {
     if (event.key === key || event.key === null) apply(event.key === null ? 'female' : event.newValue);

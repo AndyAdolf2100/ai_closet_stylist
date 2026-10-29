@@ -19,6 +19,8 @@ class LanguageModel:
         instructions = Path(__file__).with_name("prompts").joinpath(prompt_name + ".md").read_text()
         if prompt_name in {"plan", "style"} and payload.get("assistant_persona"):
             instructions += "\n\n" + persona_instructions(payload["assistant_persona"])
+        if prompt_name in {"plan", "style"} and payload.get("companion_profile"):
+            instructions += "\n\n" + Path(__file__).with_name("prompts").joinpath("companion_identity.md").read_text()
         if prompt_name == "plan":
             from .models import Task
             instructions += "\nchanges每项value必须符合对应Task字段的类型与范围：\n" + json.dumps(Task.model_json_schema(), ensure_ascii=False)

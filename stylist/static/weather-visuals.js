@@ -19,7 +19,7 @@
     picture.dataset.hazard = hazards.includes(alert.hazard) ? alert.hazard : 'general';
     const index = Math.max(0, hazards.indexOf(alert.hazard) < 0 ? 15 : hazards.indexOf(alert.hazard));
     picture.style.backgroundPosition = `${(index % 4) * 100 / 3}% ${Math.floor(index / 4) * 100 / 3}%`;
-    picture.setAttribute('role', 'img'); picture.setAttribute('aria-label', '衣衣提醒：' + alert.event);
+    picture.setAttribute('role', 'img'); picture.setAttribute('aria-label', (root.CompanionSettings?.agentName() || '衣衣') + '提醒：' + alert.event);
     const content = make('div', 'official-warning-copy');
     content.append(make('span', 'warning-level', (demo ? '演示 · ' : '') + levels[alert.level] + '预警'), make('strong', '', alert.title));
     content.append(make('p', '', '影响区域：' + alert.area));

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from .errors import StylistError
-from .models import Reply, SessionState
+from .models import CompanionProfile, Reply, SessionState
 
 
 class PostgresConnection:
@@ -58,9 +58,23 @@ class Store:
         finally:
             conn.close()
 
+    def companion_profile(self, owner):
+        with self.connection() as conn:
+            row = conn.execute("SELECT profile_json FROM stylist_companion_profiles WHERE owner_id=?", (owner,)).fetchone()
+        return CompanionProfile.model_validate_json(row["profile_json"]) if row else None
+
+    def save_companion_profile(self, owner, profile):
+        with self.connection() as conn:
+            conn.execute("INSERT INTO stylist_companion_profiles(owner_id,profile_json) VALUES(?,?) "
+                         "ON CONFLICT(owner_id) DO UPDATE SET profile_json=excluded.profile_json,updated_at=CURRENT_TIMESTAMP",
+                         (owner, profile.model_dump_json()))
+        return profile
+
     def reserve(self, owner, request):
         # Omitted persona preserves the digest of requests created before this field existed.
         excluded = {"assistant_persona"} if request.assistant_persona is None else set()
+        if request.companion_profile is None:
+            excluded.add("companion_profile")
         digest = hashlib.sha256(request.model_dump_json(exclude=excluded).encode()).hexdigest()
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")

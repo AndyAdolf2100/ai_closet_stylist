@@ -100,9 +100,6 @@ async def test_full_conversation_corrects_city_and_continues_outfit(tmp_path, pe
     assert reply.task.city == "杭州" and reply.task.no_heels and reply.task.occasion == "工作"
     assert "/api/user_product/quick_edit_list" in upstream.calls
     assert model.payloads[-1]["frozen_keys"] == []
-    if ignored:
-        assert not any(e["tool"] in {"forecast", "city.resolve"} for e in upstream.events)
-        assert reply.weather is None
-    else:
-        assert [e for e in upstream.events if e["tool"] == "forecast"] == [{"tool": "forecast", "city": "杭州市"}]
-        assert reply.weather["city_name"] == "杭州市"
+    # A prior opt-out is turn-local; this correction defaults back to weather.
+    assert [e for e in upstream.events if e["tool"] == "forecast"] == [{"tool": "forecast", "city": "杭州市"}]
+    assert reply.weather["city_name"] == "杭州市"

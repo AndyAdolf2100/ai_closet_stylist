@@ -102,7 +102,7 @@ async def test_persona_switch_keeps_outfit_target_and_is_locked_on_request_repla
     female = await engine.chat(Upstream(), request.model_copy(update={
         "request_id": "persona-female-002", "assistant_persona": "female_warm_v1",
         "conversation_id": male.conversation_id, "expected_version": male.version}))
-    assert female.task.gender == "女" and female.task.weather_policy == "ignored"
+    assert female.task.gender == "女" and female.task.weather_policy == "auto"
     assert all(p["assistant_persona"] == "female_warm_v1" for _, p in model.inputs)
 
 
@@ -112,7 +112,7 @@ def test_pre_persona_request_digest_still_replays_after_upgrade(tmp_path):
     cid, claim, state, _ = store.reserve("owner", request)
     reply = Reply(conversation_id=cid, version=1, mode="consult", delivery="advice", message="结果", task=Task())
     store.finish("owner", request, claim, state, reply)
-    legacy_digest = hashlib.sha256(request.model_dump_json(exclude={"assistant_persona"}).encode()).hexdigest()
+    legacy_digest = hashlib.sha256(request.model_dump_json(exclude={"assistant_persona", "companion_profile"}).encode()).hexdigest()
     with store.connection() as conn:
         conn.execute("UPDATE stylist_requests SET digest=?", (legacy_digest,))
     assert store.reserve("owner", request)[3] == reply

@@ -78,6 +78,7 @@ def _fields(draft, pool):
     for index, look in enumerate(draft.looks):
         products = [pool[key] for key in look.selected_keys if key in pool]
         yield f"looks.{index}.title", look.title, products
+        yield f"looks.{index}.style_name", look.style_name, products
         for field in ("pieces", "why", "how", "notes"):
             for item_index, text in enumerate(getattr(look, field)):
                 yield f"looks.{index}.{field}.{item_index}", text, products
@@ -122,6 +123,8 @@ def ground_attribute_fallback(draft: Draft, pool, persona):
             result["message"] = replacement
         elif parts[-1] == "title":
             result["looks"][int(parts[1])]["title"] = "穿搭参考"
+        elif parts[-1] == "style_name":
+            result["looks"][int(parts[1])]["style_name"] = "日常参考"
         else:
             result["looks"][int(parts[1])][parts[2]][int(parts[3])] = replacement
     return Draft.model_validate(result)

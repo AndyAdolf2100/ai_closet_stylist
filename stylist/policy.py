@@ -99,19 +99,31 @@ async def interpret_task(llm, payload, state, message):
                 previous = previous.model_copy(update={"mode": "consult", "use_inventory": False,
                     "replace_slots": [], "weather_scope": previous.weather_scope if previous.weather_scope != "none" else "day"})
         try:
-            task = merge_task(state, previous, message)
+            weather_state = state
+            if not previous.conversation_only:
+                weather_state = state.model_copy(update={"task": state.task.model_copy(update={
+                    "weather_policy": "auto", "temp_min": None, "temp_max": None, "weather_description": ""})})
+            task = merge_task(weather_state, previous, message)
             # A verified location correction changes the task, not an unspecified garment.
             # Explicit slot replacements and genuine clarification requests keep their path.
             if (previous.mode == "modify" and not previous.replace_slots and not previous.clarification
-                    and previous.changes and set(previous.changes) <= {"city", "itinerary"}):
+                    and set(previous.changes) & {"city", "itinerary"}
+                    and set(previous.changes) <= {"city", "itinerary", "weather_policy"}):
                 has_products = any(look.items for look in state.looks)
                 mode = "weekly" if state.mode == "weekly" else ("recommend" if has_products else "consult")
                 previous = previous.model_copy(update={"mode": mode, "use_inventory": has_products,
                     "weather_scope": previous.weather_scope if previous.weather_scope != "none" else (
                         "week" if mode == "weekly" else "day")})
-            if previous.weather_only:
+            if not previous.conversation_only:
+                # Weather policy belongs to this turn, not a sticky UI preference.
+                # merge_task has already checked the current-message citations.
                 supplied = previous.changes.get("weather_policy")
-                task.weather_policy = "provided" if supplied and supplied.value == "provided" else "auto"
+                task.weather_policy = supplied.value if supplied else "auto"
+                if previous.weather_only and task.weather_policy == "ignored":
+                    task.weather_policy = "auto"
+                if task.weather_policy == "auto":
+                    task.temp_min = task.temp_max = None
+                    task.weather_description = ""
             return previous, task
         except (StylistError, ValidationError) as exc:
             validation_errors = exc.errors(include_input=False, include_url=False) if isinstance(exc, ValidationError) else (

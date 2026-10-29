@@ -109,10 +109,17 @@ async def test_weather_advice_followup_can_select_real_wardrobe_without_previous
         message="从衣橱中选这套。", looks=[LookDraft(title="方便走路的一套",
         selected_keys=["user:1", "user:2", "user:3"], why=["鞋型适合日常活动"],
         how=["长袖T恤配长裤和运动鞋"])]))
-    result = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
+    engine = Stylist(Settings(), store, model)
+    class Weather:
+        async def forecast(self, upstream, city, province, scope, start):
+            calls.append("forecast")
+            return {"city_name": city, "province_name": province, "days": [], "warnings": []}
+    engine.weather = Weather()
+    result = await engine.chat(Upstream(), ChatRequest(
         message="鞋子和层次再调得舒服一点", request_id="weather-outfit-followup",
         conversation_id=cid, expected_version=1))
     assert model.inputs[0][1]["current_mode"] == "consult"
+    assert "forecast" in calls and result.task.weather_policy == "auto"
     assert "/api/user_product/quick_edit_list" in calls and "product.resolve" in calls
     assert result.delivery == "outfit"
     assert [p.key for p in result.looks[0].items] == ["user:1", "user:2", "user:3"]
@@ -216,6 +223,7 @@ async def test_weekly_text_plan_still_checks_weather_and_respects_explicit_opt_o
     assert calls == [("上海市", "week")] and result.weather["days"][0]["condition_day"] == "雪"
     assert model.inputs[-1][1]["candidates"] == []
     calls.clear()
-    result = await engine.chat(Upstream(), ChatRequest(message="本周只给文字方案", request_id="weekly-weather-2",
+    model.plan.changes["weather_policy"] = Change(value="ignored", evidence="不考虑天气")
+    result = await engine.chat(Upstream(), ChatRequest(message="本周只给文字方案，不考虑天气", request_id="weekly-weather-2",
         location=CitySelection(city_name="上海市"), weather_policy="ignored"))
     assert not calls and result.weather is None

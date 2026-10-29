@@ -183,10 +183,17 @@ async def test_engine_queries_route_before_wardrobe_and_delivers_per_city_eviden
 async def test_route_still_respects_no_weather_query_policies(tmp_path, policy):
     class Model:
         async def generate(self, name, payload, result_type):
-            return route_plan("consult") if name == "plan" else Draft(message="按你给的条件说穿法。")
+            if name == "plan":
+                plan = route_plan("consult")
+                plan.changes["weather_policy"] = Change(value=policy, evidence="不考虑天气" if policy == "ignored" else "两地都20度")
+                if policy == "provided":
+                    plan.changes["temp_min"] = Change(value=20, evidence="两地都20度")
+                    plan.changes["temp_max"] = Change(value=20, evidence="两地都20度")
+                return plan
+            return Draft(message="按你给的条件说穿法。")
     upstream = RouteUpstream()
     result = await Stylist(Settings(), Store(str(tmp_path / "state.db")), Model()).chat(upstream, ChatRequest(
-        message="上海到三亚，只讲穿法", request_id="route-no-weather", weather_policy=policy))
+        message="上海到三亚，只讲穿法，" + ("不考虑天气" if policy == "ignored" else "两地都20度"), request_id="route-no-weather", weather_policy=policy))
     assert not upstream.events
     assert result.weather is None if policy == "ignored" else result.weather["source"] == "user"
 

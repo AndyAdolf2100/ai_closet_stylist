@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import date
 from enum import StrEnum
 from typing import Any, Literal
@@ -71,6 +72,7 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
 class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
     technical_question: bool = False
+    use_profile_gender: bool = True
     conversation_only: bool = False
     weather_only: bool = False
     location_limit_exceeded: bool = False
@@ -121,6 +123,7 @@ class Product(ProductRef):
 
 class LookDraft(Model):
     title: str = Field(min_length=1, max_length=100)
+    style_name: str = Field(default="", max_length=16, description="简短风格名，例如简约通勤、休闲运动，用于搭配标签")
     selected_keys: list[str] = Field(default_factory=list, max_length=10)
     pieces: list[str] = Field(default_factory=list, max_length=10)
     why: list[str] = Field(min_length=1, max_length=5)
@@ -136,6 +139,7 @@ class Draft(Model):
 
 class Look(Model):
     title: str
+    style_name: str = Field(default="", max_length=16)
     items: list[Product] = Field(default_factory=list)
     pieces: list[str] = Field(default_factory=list)
     why: list[str] = Field(default_factory=list)
@@ -168,22 +172,45 @@ class SessionState(Model):
     messages: list[dict[str, str]] = Field(default_factory=list)
 
 
+class CompanionProfile(Model):
+    user_name: str = Field(default="", max_length=24)
+    user_gender: Literal["男", "女"] | None = None
+    agent_name: str = Field(default="衣衣", min_length=1, max_length=24)
+    assistant_persona: PersonaId = "female_warm_v1"
+
+    @model_validator(mode="after")
+    def validate_names(self):
+        self.user_name, self.agent_name = self.user_name.strip(), self.agent_name.strip()
+        if not self.agent_name:
+            raise ValueError("请给助理留一个名字")
+        if any(unicodedata.category(c).startswith("C") or c in "<>" for c in self.user_name + self.agent_name):
+            raise ValueError("称呼请使用普通文字，不包含换行或特殊控制符")
+        return self
+
+
 class ChatRequest(Model):
     message: str = Field(min_length=1, max_length=6000)
     conversation_id: str | None = Field(default=None, pattern=r"^sty_[a-f0-9]{32}$")
     expected_version: int = Field(default=0, ge=0)
     request_id: str = Field(min_length=8, max_length=100, pattern=r"^[A-Za-z0-9._:-]+$")
-    weather_policy: Literal["auto", "ignored", "provided"] | None = None
+    weather_policy: Literal["auto", "ignored", "provided"] | None = Field(default=None, deprecated=True, description="兼容旧客户端；天气策略以本轮用户消息为准，此字段不再覆盖对话意图")
     source: Literal["wardrobe", "hybrid", "catalog"] | None = None
     location: "CitySelection | None" = None
     confirm_plan: bool = False
     assistant_persona: PersonaId | None = None
+    selected_look_index: int | None = Field(default=None, ge=0, le=6)
+    companion_profile: CompanionProfile | None = None
 
     @model_validator(mode="after")
     def validate_message(self):
         self.message = self.message.strip()
         if not self.message:
             raise ValueError("请输入搭配需求")
+        if self.companion_profile:
+            if self.assistant_persona is None:
+                self.assistant_persona = self.companion_profile.assistant_persona
+            elif self.assistant_persona != self.companion_profile.assistant_persona:
+                raise ValueError("助理形象设置不一致，请重新选择")
         return self
 
 

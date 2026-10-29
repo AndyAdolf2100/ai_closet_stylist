@@ -109,6 +109,13 @@ class Stylist:
         def unpack(data):
             return Plan.model_validate(data["plan"]), Task.model_validate(data["task"])
 
+        def selected_looks(state):
+            if request.selected_look_index is None:
+                return state.looks[:1]
+            if request.selected_look_index >= len(state.looks):
+                raise StylistError("look_not_found", "这套搭配暂时找不到了，请打开最新对话再选一下。", 409)
+            return [state.looks[request.selected_look_index]]
+
         async def understand(data):
             state = SessionState.model_validate(data["session"])
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
@@ -116,18 +123,21 @@ class Stylist:
             plan, task = await interpret_task(self.llm, {
                 "now": today.isoformat(), "message": request.message,
                 "assistant_persona": request.assistant_persona,
+                "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
                 "last_business_intent": last_business_intent(state.messages),
                 "selected_location": request.location.model_dump(mode="json") if request.location else None,
-                "current_looks": [{"title": x.title, "pieces": x.pieces,
+                "selected_look_index": request.selected_look_index,
+                "current_looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces,
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            if (request.companion_profile and plan.use_profile_gender and task.gender is None
+                    and not plan.conversation_only and not plan.weather_only):
+                task.gender = request.companion_profile.user_gender
             if plan.location_limit_exceeded:
                 return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"), "frozen": []}
-            if request.weather_policy is not None and not plan.conversation_only and not plan.weather_only:
-                task.weather_policy = request.weather_policy
             if request.source is not None and not plan.conversation_only:
                 task.source = request.source
             explicit_city = plan.changes.get("city")
@@ -147,13 +157,14 @@ class Stylist:
                 task.weather_description = ""
             frozen = []
             if plan.mode == "modify":
-                if not state.looks or not state.looks[0].items:
+                current = selected_looks(state)
+                if not current or not current[0].items:
                     # A purely textual previous look is advice, not an editable DB selection.
                     plan.mode = "consult"
                 elif not plan.replace_slots:
                     plan.clarification = "你想调整哪一部分？我会保留其余衣物。"
                 else:
-                    frozen = frozen_products(state.looks, plan.replace_slots)
+                    frozen = frozen_products(current, plan.replace_slots)
             return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
                     "frozen": [p.model_dump(mode="json") for p in frozen]}
 
@@ -288,11 +299,13 @@ class Stylist:
             service_gap, weather, warnings, rejected = (data[k] for k in ("service_gap", "weather", "warnings", "rejected"))
             # A partial or absent candidate pool must not force a fabricated outfit.
             concept = plan.mode != "consult" and plan.use_inventory and (service_gap or not pool)
-            original_targets = {p.key for p in state.looks[0].items if p.slot in plan.replace_slots} if state.looks and plan.mode == "modify" else set()
+            current = selected_looks(state) if plan.mode == "modify" else state.looks[:1]
+            original_targets = {p.key for p in current[0].items if p.slot in plan.replace_slots} if current and plan.mode == "modify" else set()
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
             draft_payload = {
                 "assistant_persona": request.assistant_persona,
+                "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
                 "conversation_only": plan.conversation_only,
                 "weather_only": plan.weather_only,
                 "message": request.message, "task": task.model_dump(mode="json"), "mode": plan.mode,
@@ -305,7 +318,7 @@ class Stylist:
                 "excluded_candidate_reasons": rejected,
                 "attribute_context": attribute_context(pool.values()),
                 "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
-                                      for p in state.looks[0].items] if state.looks else [],
+                                      for p in current[0].items] if current else [],
             }
             return draft_payload
 
@@ -334,7 +347,7 @@ class Stylist:
             if data["plan"]["mode"] == "modify":
                 state = SessionState.model_validate(data["session"])
                 problems.extend(unchanged_replacement_problems(Draft.model_validate(data["draft"]),
-                    state.looks, Plan.model_validate(data["plan"]).replace_slots,
+                    selected_looks(state), Plan.model_validate(data["plan"]).replace_slots,
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
             return {"problems": problems}
 
@@ -385,7 +398,7 @@ class Stylist:
                 notes = list(look.notes)
                 for p in products:
                     notes.extend(suitability(p, effective_task)[1])
-                looks.append(Look(title=look.title, items=products, pieces=look.pieces,
+                looks.append(Look(title=look.title, style_name=look.style_name, items=products, pieces=look.pieces,
                                   why=look.why, how=look.how, notes=list(dict.fromkeys(notes))))
             selected = any(look.items for look in looks)
             if plan.mode == "modify" and not selected:
@@ -477,7 +490,7 @@ class Stylist:
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
                         "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
-                        "looks": [{"title": x.title, "pieces": x.pieces, "how": x.how,
+                        "looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces, "how": x.how,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},
                 ])[-16:]
                 await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply)

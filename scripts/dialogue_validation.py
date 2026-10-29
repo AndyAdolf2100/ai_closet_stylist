@@ -123,7 +123,7 @@ class DialogueUpstream:
 def visible_text(reply):
     parts = [reply.message, *reply.warnings, *reply.follow_ups]
     for look in reply.looks:
-        parts.extend([look.title, *look.pieces, *look.why, *look.how, *look.notes])
+        parts.extend([look.title, look.style_name, *look.pieces, *look.why, *look.how, *look.notes])
     return "\n".join(parts)
 
 

@@ -31,7 +31,7 @@ async def test_simplify_followup_keeps_old_conditions_without_requiring_new_cita
 
     model = Model()
     plan, task = await interpret_task(model, {}, state, "保持这三件，穿法再简洁一点，不找商品。")
-    assert task == state.task and not plan.changes and model.calls == 1
+    assert task == state.task.model_copy(update={"weather_policy": "auto"}) and not plan.changes and model.calls == 1
 
 
 @pytest.mark.parametrize("new_task", [False, True])
