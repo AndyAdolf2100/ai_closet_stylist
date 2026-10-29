@@ -17,6 +17,7 @@ from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
+from .memory import MemoryBook
 from .models import ChatRequest, CompanionProfile, ForecastRequest, LocateRequest, Model
 from .personas import progress_message
 from .progress import events as progress_events
@@ -50,7 +51,7 @@ def create_app(settings=None):
     app.state.engine = engine
     app.state.runs = runs
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
-                       allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
+                       allow_methods=["GET", "POST", "PUT"], allow_headers=["Authorization", "Content-Type"])
 
     @app.exception_handler(StylistError)
     async def error_handler(request, exc):
@@ -118,6 +119,16 @@ def create_app(settings=None):
         owner = await Upstream(settings, require_token(authorization)).identity()
         await asyncio.to_thread(store.save_companion_profile, owner, profile)
         return {"profile": profile.model_dump(mode="json")}
+
+    @app.get("/api/memories")
+    async def memory_book(authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(store.memory_book, owner)
+
+    @app.put("/api/memories")
+    async def save_memory_book(book: MemoryBook, authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(store.save_memory_book, owner, book)
 
     @app.post("/api/weather/forecast")
     async def weather_forecast(request: ForecastRequest, authorization: str | None = Header(default=None)):

@@ -31,13 +31,26 @@ class Store:
     def __init__(self, path):
         self.path = path
         self.postgres = path.startswith(("postgres://", "postgresql://"))
-        if not self.postgres:
+        self.mysql = path.startswith("mysql://")
+        if not self.postgres and not self.mysql:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         with self.connection() as conn:
-            conn.executescript(Path(__file__).with_name("schema.sql").read_text())
+            schema = "schema_mysql.sql" if self.mysql else "schema.sql"
+            conn.executescript(Path(__file__).with_name(schema).read_text())
 
     @contextmanager
     def connection(self):
+        if self.mysql:
+            from .mysql import MySQLConnection, mysql_connection, named_lock
+
+            with mysql_connection(self.path) as conn, named_lock(conn, "store"):
+                try:
+                    yield MySQLConnection(conn)
+                    conn.commit()
+                except BaseException:
+                    conn.rollback()
+                    raise
+            return
         if self.postgres:
             import psycopg
             from psycopg.rows import dict_row
@@ -69,6 +82,27 @@ class Store:
                          "ON CONFLICT(owner_id) DO UPDATE SET profile_json=excluded.profile_json,updated_at=CURRENT_TIMESTAMP",
                          (owner, profile.model_dump_json()))
         return profile
+
+    def memory_book(self, owner):
+        from .memory import MemoryBook
+        with self.connection() as conn:
+            row = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
+        return MemoryBook.model_validate_json(row["book_json"]) if row else MemoryBook()
+
+    def save_memory_book(self, owner, book):
+        with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute("SELECT revision FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
+            if book.revision != (row["revision"] if row else 0):
+                raise StylistError("memory_conflict", "手记已有新的修改。你的草稿仍在，请先重新读取，再合并想留下的内容。", 409)
+            saved = book.model_copy(update={"revision": book.revision + 1}, deep=True)
+            if row:
+                conn.execute("UPDATE stylist_memory_books SET revision=?,book_json=? WHERE owner_id=?",
+                             (saved.revision, saved.model_dump_json(), owner))
+            else:
+                conn.execute("INSERT INTO stylist_memory_books(owner_id,revision,book_json) VALUES(?,?,?)",
+                             (owner, saved.revision, saved.model_dump_json()))
+        return saved
 
     def reserve(self, owner, request):
         # Omitted persona preserves the digest of requests created before this field existed.
@@ -105,7 +139,7 @@ class Store:
                          (owner, request.request_id, cid, digest, "processing"))
             return cid, claim, SessionState.model_validate_json(row["state_json"]), None
 
-    def finish(self, owner, request, claim, state, reply):
+    def finish(self, owner, request, claim, state, reply, memory_save=None):
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             result = conn.execute("UPDATE stylist_sessions SET version=?,state_json=?,active_claim=NULL,"
@@ -113,6 +147,24 @@ class Store:
                                   (reply.version, state.model_dump_json(), reply.conversation_id, owner, claim))
             if result.rowcount != 1:
                 raise StylistError("request_superseded", "这次处理已失效，请刷新查看最新结果。", 409)
+            from .memory import MemoryBook, MemoryEntry, explicit_memory, memory_category
+            content = memory_save.content if memory_save else explicit_memory(request.message)
+            if content is not None:
+                row = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
+                book = MemoryBook.model_validate_json(row["book_json"]) if row else MemoryBook()
+                if not any(entry.content == content for entry in book.entries):
+                    if len(book.entries) >= 30:
+                        raise StylistError("memory_full", "手记已经写满 30 页，先到设置整理一下，再留下这件小事。", 409)
+                    entry_id = "chat_" + hashlib.sha256(request.request_id.encode()).hexdigest()[:32]
+                    book.entries.append(MemoryEntry(id=entry_id, content=content,
+                                                   category=memory_save.category if memory_save else memory_category(content)))
+                    book.revision += 1
+                    if row:
+                        conn.execute("UPDATE stylist_memory_books SET revision=?,book_json=? WHERE owner_id=?",
+                                     (book.revision, book.model_dump_json(), owner))
+                    else:
+                        conn.execute("INSERT INTO stylist_memory_books(owner_id,revision,book_json) VALUES(?,?,?)",
+                                     (owner, book.revision, book.model_dump_json()))
             conn.execute("UPDATE stylist_requests SET status='completed',response_json=? WHERE owner_id=? AND request_id=?",
                          (reply.model_dump_json(), owner, request.request_id))
             conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",

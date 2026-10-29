@@ -14,7 +14,7 @@ let lastSessionOwner = session?.user?.id || null;
 let cityCatalog = null, historySequence = 0;
 const citiesReady = fetch('/static/china-cities.json').then(r => { if (!r.ok) throw new Error('城市列表加载失败，请刷新后重试。'); return r.json(); }).then(data => {
   cityCatalog = data; cityPicker.setCatalog(data); return data;
-}).catch(err => { $('location-status').textContent = err.message; return null; });
+}).catch(err => { notifyIssue(err.message); return null; });
 const el = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text != null) node.textContent = text; return node; };
 let locationSequence = 0, locationSaving = false;
 const cityPicker = new CityPicker($('city-picker'), { onChange: () => {
@@ -34,14 +34,15 @@ function loginStatus() {
   $('login-open').title = session ? '重新登录或切换账号' : '连接你的个人衣橱';
   dailyCheckin.setOwner(session?.user?.id ?? null);
 }
+function notifyIssue(message) { window.CompanionSettings.notify(message || '操作未完成，请稍后再试。'); }
 function expireSession(message) {
   lastSessionOwner = session?.user?.id || lastSessionOwner;
   session = null; sessionStorage.removeItem(KEY); window.CompanionSettings?.setOwner(null, api); loginStatus();
   clearHistory();
-  $('login-error').textContent = message || '登录状态已失效，请重新登录。原输入和当前对话会保留。';
-  $('notice').textContent = $('login-error').textContent;
+  const loginMessage = message || '登录状态已失效，请重新登录。原输入和当前对话会保留。';
   for (const id of ['service-dialog', 'location-dialog', 'history-dialog', 'companion-dialog']) if ($(id).open) $(id).close();
   if (!$('login-dialog').open) $('login-dialog').showModal();
+  notifyIssue(loginMessage);
 }
 function headers() { return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session?.access_token || '') }; }
 function requireLogin() { if (!session) { $('login-dialog').showModal(); return false; } return true; }
@@ -158,8 +159,8 @@ async function loadForecast(location = selectedCity) {
     return true;
   } catch (err) {
     if (sequence !== forecastSequence) return false;
-    $('location-label').textContent = '天气暂未取到，可重新选择城市重试'; $('location-status').textContent = err.message;
-    $('notice').textContent = err.message;
+    $('location-label').textContent = '天气暂未取到，可重新选择城市重试'; $('location-status').textContent = '';
+    notifyIssue(err.message);
     if ($('weather-panel')) { $('weather-panel').replaceChildren(el('p', 'weather-unavailable', '这次没有取到最新天气，先不显示旧预报。可以稍后重新选择城市重试。')); }
     return false;
   } finally { if (sequence === forecastSequence) { forecastBusy = false; } }
@@ -291,14 +292,14 @@ function showReply(reply) {
       const preview = el('button', 'subtle', '查看这套的试穿费用 ↗');
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
-        if (conversation !== reply.conversation_id || version !== reply.version) { $('notice').textContent = '这是历史方案，请先打开对应的最新对话。'; return; }
+        if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
         preview.disabled = true;
         try {
           const quote = await api('/api/images/quote', { method: 'POST', body: JSON.stringify({ conversation_id: conversation, version, look_index: lookIndex }) });
           imageAction = quote.action_id; $('image-details').replaceChildren(el('p', '', quote.title), el('strong', '', `本次将消耗 ${quote.points_cost} 积分`));
           for (const note of quote.notices) $('image-details').append(el('p', '', note));
           $('image-status').textContent = ''; $('image-confirm').disabled = false; $('image-cancel').textContent = '暂不生成'; $('image-dialog').showModal();
-        } catch (err) { $('notice').textContent = err.message; } finally { preview.disabled = false; }
+        } catch (err) { notifyIssue(err.message); } finally { preview.disabled = false; }
       };
       card.append(preview);
     }
@@ -351,13 +352,13 @@ async function refreshHistory() {
               list.children[rows.indexOf(row)]?.setAttribute('aria-current', 'true');
             }
             $('history-status').textContent = ''; $('history-dialog').close();
-          } catch (err) { $('notice').textContent = err.message; $('history-status').textContent = err.message; }
+          } catch (err) { notifyIssue(err.message); $('history-status').textContent = ''; }
           finally { setBusy(false); }
         };
         container.append(button);
       }
     }
-  } catch (err) { if (session?.user.id === owner && sequence === historySequence) { $('notice').textContent = err.message; $('history-status').textContent = err.message; } }
+  } catch (err) { if (session?.user.id === owner && sequence === historySequence) { notifyIssue(err.message); $('history-status').textContent = ''; } }
 }
 function clearHistory() {
   historySequence++; $('history').replaceChildren(); $('mobile-history-list').replaceChildren();
@@ -423,8 +424,8 @@ async function sendMessage(resuming = false) {
     $('message').value = ''; await refreshHistory();
   } catch (err) {
     if (err.code !== 'authentication_expired') savePending(null);
-    pending.stop(); bubble('error', err.message || '请求未完成，请稍后重试。');
-    $('notice').textContent = err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。');
+    pending.stop();
+    if (err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
     if (err.code === 'authentication_expired') expireSession(err.message);
   } finally { pending.stop(); setBusy(false); }
 }
@@ -441,7 +442,7 @@ function showPlanApproval(request) {
         savePending(null); actions.remove(); showReply(reply);
         if (approved && !reply.pending_confirmation) dailyCheckin.completeChat(chatOwner);
         await refreshHistory();
-      } catch (err) { $('notice').textContent = err.message; }
+      } catch (err) { notifyIssue(err.message); }
       finally { setBusy(false); }
     };
     actions.append(button);
@@ -480,20 +481,20 @@ $('login-form').onsubmit = async event => {
     const data = await response.json(); if (!response.ok) throw new Error(data.message || '登录未成功');
     if (lastSessionOwner && lastSessionOwner !== data.user.id) { conversation = null; version = 0; $('feed').replaceChildren(); clearHistory(); }
     session = data; lastSessionOwner = data.user.id; sessionStorage.setItem(KEY, JSON.stringify(data)); $('code').value = ''; $('notice').textContent = ''; $('login-dialog').close(); loginStatus(); await window.CompanionSettings?.setOwner(data.user.id, api); await refreshHistory(); if (selectedCity) loadForecast();
-  } catch (err) { $('login-error').textContent = err.message; } finally { $('login-submit').disabled = false; }
+  } catch (err) { notifyIssue(err.message); } finally { $('login-submit').disabled = false; }
 };
 $('check-apis').onclick = async () => {
   if (!requireLogin()) return;
   $('service-dialog').showModal(); $('service-results').textContent = '正在逐项查询，请稍候…';
   try { const report = await api('/api/integrations/check', { method: 'POST' }); $('service-results').textContent = report.results.map(x => `${x.interface}\n  ${x.status} · ${x.code}${x.latency_ms != null ? ' · ' + x.latency_ms + 'ms' : ''}${x.facts ? '\n  ' + JSON.stringify(x.facts) : ''}`).join('\n\n'); }
-  catch (err) { $('service-results').textContent = err.message; }
+  catch (err) { $('service-results').textContent = ''; notifyIssue(err.message); }
 };
 $('service-close').onclick = () => $('service-dialog').close();
 $('image-cancel').onclick = async () => {
   if ($('image-cancel').disabled) return;
   if (imageAction && !$('image-confirm').disabled) {
     try { await api('/api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: false }) }); }
-    catch (err) { $('notice').textContent = err.message; }
+    catch (err) { notifyIssue(err.message); return; }
   }
   $('image-dialog').close(); imageAction = null;
 };
@@ -506,7 +507,7 @@ $('image-confirm').onclick = async () => {
     $('image-status').textContent = action.status === 'completed' ? '试穿完成' : '状态：' + action.status;
     const image = (action.result?.result_image_url || action.result?.result_image || '').replace(/^http:/i, 'https:');
     if (image && /^https:\/\//i.test(image)) { const img = el('img'); img.src = image; img.alt = '本次搭配的试穿预览'; img.style.width = '100%'; img.referrerPolicy = 'no-referrer'; $('image-details').append(img); }
-  } catch (err) { $('image-status').textContent = err.message; }
+  } catch (err) { $('image-status').replaceChildren(); notifyIssue(err.message); }
   finally { $('image-cancel').disabled = false; $('image-cancel').textContent = '关闭'; }
 };
 $('location-open').onclick = async () => {
@@ -514,7 +515,7 @@ $('location-open').onclick = async () => {
   const owner = session.user.id;
   await citiesReady;
   if (!session || session.user.id !== owner) return;
-  if (!cityCatalog) { $('notice').textContent = '城市列表加载失败，请刷新后重试。'; return; }
+  if (!cityCatalog) { notifyIssue('城市列表加载失败，请刷新后重试。'); return; }
   $('location-status').textContent = ''; updateLocationViewport(); $('location-dialog').showModal();
   cityPicker.setValue(selectedCity); updateLocationSave();
   // Keep the software keyboard closed until the user chooses to search.
@@ -536,7 +537,7 @@ $('location-dialog').addEventListener('close', () => {
 });
 $('locate-me').onclick = async () => {
   if (!requireLogin()) return;
-  if (!window.isSecureContext || !navigator.geolocation) { $('location-status').textContent = '当前浏览器环境不支持定位，可以搜索或点选城市。'; return; }
+  if (!window.isSecureContext || !navigator.geolocation) { notifyIssue('当前浏览器环境不支持定位，可以搜索或点选城市。'); return; }
   const sequence = ++locationSequence, owner = session.user.id;
   const current = () => sequence === locationSequence && session?.user.id === owner && $('location-dialog').open;
   $('locate-me').disabled = true; $('location-status').textContent = '请允许浏览器访问位置，也可以直接搜索或点选城市。';
@@ -546,17 +547,17 @@ $('locate-me').onclick = async () => {
     const city = await api('/api/location/resolve', { method: 'POST', body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude, coordinate_system: 'wgs84' }) });
     await citiesReady;
     if (!current()) return;
-    if (!cityPicker.setValue(city)) { $('location-status').textContent = '已识别到 ' + city.city_name + '，请搜索或点选对应城市。'; return; }
+    if (!cityPicker.setValue(city)) { notifyIssue('已识别到 ' + city.city_name + '，请搜索或点选对应城市。'); return; }
     $('location-status').textContent = '找到 ' + city.city_name + (city.district_name ? ' · ' + city.district_name : '') + ' 啦，请确认后使用。' + (position.coords.accuracy > 5000 ? '浏览器定位精度较低，如果不是你所在的城市，请手动修改。' : '');
-  } catch (err) { if (current()) $('location-status').textContent = err.code === 1 ? '定位权限未开启，搜索或点选城市也可以。' : err.code === 3 ? '定位超时啦，可以再试一次或搜索城市。' : err.message || '暂时没有定位成功，可以搜索或点选城市。'; }
+  } catch (err) { if (current()) notifyIssue(err.code === 1 ? '定位权限未开启，搜索或点选城市也可以。' : err.code === 3 ? '定位超时啦，可以再试一次或搜索城市。' : err.message || '暂时没有定位成功，可以搜索或点选城市。'); }
   finally { if (current()) { $('locate-me').disabled = false; updateLocationSave(); } }
 };
 $('location-form').onsubmit = async event => {
   event.preventDefault();
   if (locationSaving) return;
-  if (forecastBusy) { $('location-status').textContent = '天气正在更新，请稍后再确认。'; return; }
+  if (forecastBusy) { notifyIssue('天气正在更新，请稍后再确认。'); return; }
   const city = cityPicker.getValue();
-  if (!city) { $('location-status').textContent = '请先从列表中选择一座城市。'; cityPicker.input.focus(); return; }
+  if (!city) { notifyIssue('请先从列表中选择一座城市。'); cityPicker.input.focus(); return; }
   locationSequence++; locationSaving = true; $('city-picker').inert = true;
   $('locate-me').disabled = true; updateLocationSave(); $('location-save').textContent = '正在查询天气…';
   try { if (await loadForecast(city)) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
@@ -579,6 +580,10 @@ $('preferences-open').onclick = async () => {
   if (busy) return;
   closeSettingsMenu(true);
   if (requireLogin()) await window.PersonalPreferences.open();
+};
+$('memory-open').onclick = async () => {
+  closeSettingsMenu(true);
+  if (requireLogin()) await window.LongTermMemory.open();
 };
 document.addEventListener('click', event => {
   if (settingsMenu.open && !settingsMenu.contains(event.target)) closeSettingsMenu();

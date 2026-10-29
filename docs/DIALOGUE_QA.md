@@ -237,3 +237,11 @@ NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/companion_settings.
 评测输入分区展示正文与快捷按钮，纯配色思路允许没有搭配卡。旧110轮证据不覆盖。新证据在 `var/persona-review/preferences-fix-20261029/`：50轮第一阶段、18轮衣橱／偏好补测、4轮语气补测，按案例采用最新结果并保留各阶段文件。`final.json` 与 `report.html` 共50个覆盖轮次，结构50/50、逐轮评分50/50；配对5组通过，女版详略的引文仍无效，保留待复核。对剩余初评失败项仅复审原答案，不修改回答以消除评分问题。此证据不代表完整110轮重跑或真实用户衣橱／照片验收。
 
 无费用验证：372项pytest通过，22项环境相关测试跳过；最终相关125项回归通过，Ruff通过。未提交部署文件，未调用付费图片服务。
+
+## 长记忆与手记（2026-10-29）
+
+新增 `scripts/memory_dialogues.py` 四组13轮，男女分别执行。`memory_explicit` 验证明确要求保存→新对话使用→设置删除；`memory_reference` 验证普通事实不保存→“这个一定要记住”引用用户上文→选款不穿高跟；`memory_no_implicit` 覆盖普通陈述、转述、否定、询问；`memory_boundaries` 覆盖本人习惯、他人穿搭与暂停。评测报告记录独立临时库中的 `memory_after`，核对真实保存结果，不能仅凭回复“记住了”判通过。
+
+`tests/test_memory.py` 与 `tests/memory.test.cjs` 补充跨账号、重开读取、版本冲突、快照恢复、删除不复活、原话证据、当轮要求优先、保存失败回滚、前端草稿与迟到响应。真实本地 MySQL 复用这些回归；模型均为模拟，不代表实际自然语言分类准确率。局部冻结与费用仍由原专项测试覆盖，记忆文本没有工具授权能力。
+
+无费用列出场景：`.venv/bin/python -m scripts.evaluate_personas --list --only memory_explicit memory_reference memory_no_implicit memory_boundaries`。真实模型评测需显式授权，本轮未执行。视觉与完整结果见 [长记忆验收](LONG_TERM_MEMORY.md)。

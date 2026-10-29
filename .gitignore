@@ -8,6 +8,7 @@ __pycache__/
 !.env.example
 .DS_Store
 config/local.yaml
+config/mysql-local.env
 var/
 *.sqlite3*
 # Local review document contains screenshots of the authenticated wardrobe.

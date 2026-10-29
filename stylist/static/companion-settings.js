@@ -89,6 +89,33 @@
   document.addEventListener('close', event => {
     if (event.target instanceof HTMLDialogElement && event.target.contains(notification)) hideNotification();
   }, true);
+  // Fixed feedback keeps each persona's voice; business facts pass through unchanged.
+  const feedbackCopy = {
+    '操作未完成，请稍后再试。': ['这次还没完成，稍后再试一下吧。', '这次操作未完成，请稍后重试。'],
+    '城市列表加载失败，请刷新后重试。': ['城市列表暂时没能打开，刷新后再试一下吧。', '城市列表暂时无法读取，请刷新后重试。'],
+    '请先从列表中选择一座城市。': ['先从列表里选一座城市吧，我再帮你看看天气。', '先从列表选择城市，再查询天气。'],
+    '天气正在更新，请稍后再确认。': ['天气还在更新，稍等一下再确认吧。', '天气正在更新，完成后再确认。'],
+    '当前浏览器环境不支持定位，可以搜索或点选城市。': ['这里暂时用不了定位，搜索或点选城市也可以。', '当前浏览器不支持定位，可以搜索或点选城市。'],
+    '定位权限未开启，搜索或点选城市也可以。': ['定位权限还没开启，直接选城市也可以呀。', '定位权限未开启，可以搜索或点选城市。'],
+    '定位超时啦，可以再试一次或搜索城市。': ['这次定位等得有些久，可以重试，也可以直接选城市。', '定位超时，可以重试或搜索城市。'],
+    '图片暂时无法加载，请关闭后重试。': ['这张图片暂时没能打开，关闭后再试一下吧。', '图片暂时无法加载，请关闭后重试。'],
+    '这是历史方案，请先打开对应的最新对话。': ['这是之前的方案，先打开对应的最新对话，再继续吧。', '这是历史方案，请先打开对应的最新对话。'],
+    '给我留一个名字吧，衣衣也很好。': ['给我留一个名字吧，衣衣也很好。', '给我取个名字吧，也可以沿用衣衣。'],
+    '用24字以内的普通文字就好。': ['用24字以内的普通文字就好。', '请使用24字以内的普通文字。'],
+    '还没能读取称呼设置，稍后再试一下。': ['还没能读到你的称呼设置，稍后再试一下吧。', '称呼设置暂时无法读取，请稍后重试。'],
+    '这次还没保存好，你写下的名字还在，再试一下就好。': ['这次还没保存好，你写下的名字还在，再试一下就好。', '这次保存未完成，名字和选择都保留着，可以重试。'],
+    '这次形象还没保存好，稍后再试一下。': ['这次形象还没保存好，稍后再试一下吧。', '这次形象未能保存，请稍后重试。']
+  };
+  function feedbackText(saved, body) {
+    const variants = feedbackCopy[body];
+    if (!variants) return body;
+    const male = saved.assistant_persona === 'male_calm_v1';
+    // Direct/brief settings trim the invitation, retaining the same factual next step.
+    if (profile.conversation_style === '直接坦诚' || profile.reply_detail === '简洁重点') {
+      return variants[male ? 1 : 0].replace(/再试一下吧。$/, '请重试。').replace(/也可以呀。$/, '也可以。');
+    }
+    return variants[male ? 1 : 0];
+  }
   function showNotification(saved, body) {
     // Native modal dialogs live in the top layer; their messages must live inside them.
     const host = [...document.querySelectorAll('dialog[open]')].filter(item => item !== messageDialog).at(-1) || document.body;
@@ -98,7 +125,7 @@
     notification.dataset.persona = saved.assistant_persona;
     notification.hidden = false;
     notification.querySelector('strong').textContent = saved.agent_name;
-    notification.querySelector('p').textContent = body ?? `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
+    notification.querySelector('p').textContent = body != null ? feedbackText(saved, body) : `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
     notificationMessage = { name: saved.agent_name, persona: saved.assistant_persona, body: notification.querySelector('p').textContent };
     notification.querySelector('.companion-message-open').setAttribute('aria-label', `阅读${saved.agent_name}的完整消息`);
     scheduleDismiss();
@@ -171,6 +198,7 @@
     render();
   }
   function setOwner(id, api, autoOpen = true) {
+    window.LongTermMemory?.setOwner(id, api);
     hideNotification(); messageReturnFocus = null; clearMessage(); restoreAppearance();
     const current = ++sequence; owner = id == null ? null : String(id); client = api;
     loaded = false; profile = defaults(); draft = defaults(); saving = false;
@@ -185,7 +213,7 @@
         profile = result.profile ? { ...defaults(), ...result.profile } : defaults(); loaded = true; notify();
         if (!result.profile && autoOpen) openLoaded();
       } catch (err) {
-        if (current === sequence) $('notice').textContent = err.message || '还没能读取称呼设置，稍后再试一下。';
+        if (current === sequence) showNotification(profile, err.message || '还没能读取称呼设置，稍后再试一下。');
       }
     })();
     return ready;
@@ -210,7 +238,7 @@
     event.preventDefault(); if (saving) return; rememberStep();
     const value = step === 0 ? draft.user_name : step === 2 ? draft.agent_name : '';
     if (/[\u0000-\u001f\u007f<>]/u.test(value) || [...value].length > 24 || (step === 2 && !value)) {
-      $('companion-error').textContent = step === 2 && !value ? '给我留一个名字吧，衣衣也很好。' : '用24字以内的普通文字就好。'; return;
+      showNotification(profile, step === 2 && !value ? '给我留一个名字吧，衣衣也很好。' : '用24字以内的普通文字就好。'); return;
     }
     if (step < 3) { step++; render(); return; }
     const current = sequence, expectedOwner = owner, saved = { ...draft };
@@ -222,7 +250,7 @@
       if (sequence !== current || owner !== expectedOwner) return;
       profile = result.profile; loaded = true; previewOriginal = null; notify(); dialog.close();
       showNotification(profile);
-    } catch (err) { if (sequence === current) $('companion-error').textContent = err.message || '这次还没保存好，你写下的名字还在，再试一下就好。'; }
+    } catch (err) { if (sequence === current) showNotification(profile, err.message || '这次还没保存好，你写下的名字还在，再试一下就好。'); }
     finally { if (sequence === current) { saving = false; $('companion-next').disabled = false; $('companion-back').disabled = false; } }
   };
   window.addEventListener('stylist-appearance-selected', event => {
@@ -232,7 +260,7 @@
     appearanceSave = appearanceSave.catch(() => {}).then(async () => {
       if (current !== sequence || owner !== expectedOwner) return;
       try { await api('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) }); }
-      catch (err) { if (current === sequence) $('notice').textContent = err.message || '这次形象还没保存好，稍后再试一下。'; }
+      catch (err) { if (current === sequence) showNotification(profile, err.message || '这次形象还没保存好，稍后再试一下。'); }
     });
   });
   function viewport() {

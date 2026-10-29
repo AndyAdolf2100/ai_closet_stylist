@@ -36,6 +36,11 @@ sh run-local.sh
 
 以上密钥是占位符，不是可用配置。生产环境设置 `STYLIST_ENV=production` 关闭本地手机号登录代理，通过现有 App 提供的 Bearer 登录态访问。本地默认独立 SQLite；多副本部署已增加共享 PostgreSQL 与持久化图检查点支持，仍须真实数据库和 K8s 演练，不能把本地测试当成生产验收完成。
 
+本地也可使用 Docker MySQL，保存本项目的设置、会话、试穿状态与 LangGraph 检查点：
+`uv run python scripts/setup_mysql_local.py`，然后 `sh run-local.sh`。
+只复用本机已有镜像，不拉取新镜像；使用独立 `stylist_local` 数据库，旧 Agent 和远端数据库不变。
+详见 [本地 MySQL 调试](docs/MYSQL_LOCAL.md)。
+
 ## 已实现
 
 - 纯穿搭咨询及追问：延续已有衣物、活动和穿法偏好。普通穿法原理不读商品或天气；明确今日／本周出行的文字方案也按需查询天气。

@@ -27,3 +27,7 @@ CREATE TABLE IF NOT EXISTS stylist_image_actions (
   expires_at REAL NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 );
+
+CREATE TABLE IF NOT EXISTS stylist_memory_books (
+  owner_id TEXT PRIMARY KEY, revision INTEGER NOT NULL, book_json TEXT NOT NULL
+);

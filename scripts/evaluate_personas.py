@@ -16,6 +16,7 @@ from pathlib import Path
 from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.llm import LanguageModel
+from stylist.memory import explicit_memory
 from stylist.models import ChatRequest, CompanionProfile, SessionState
 from stylist.personas import persona_instructions
 from stylist.store import Store
@@ -142,6 +143,16 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                 previous = None
                 for i, (name, message, chat_only) in enumerate(rows):
                     expected = expectations.get(f"{label}/{name}", {})
+                    if expected.get("new_conversation"):
+                        previous = None
+                    if expected.get("clear_memories") or expected.get("pause_memories"):
+                        owner = await upstream.identity()
+                        book = store.memory_book(owner)
+                        if expected.get("clear_memories"):
+                            book.entries = []
+                        if expected.get("pause_memories"):
+                            book.enabled = False
+                        store.save_memory_book(owner, book)
                     chosen = persona
                     if ((label == "sequence" and i >= 8) or (label == "persona_switch" and i >= 1)
                             or expected.get("switch_persona")):
@@ -172,8 +183,16 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                             conversation_id=previous.conversation_id if previous else None,
                             expected_version=previous.version if previous else 0))
                         record["reply"] = reply.model_dump(mode="json")
+                        memory = store.memory_book(await upstream.identity())
+                        record["memory_after"] = memory.model_dump(mode="json")
+                        contents = [entry.content for entry in memory.entries]
+                        if "memory_contents" in expected and contents != expected["memory_contents"]:
+                            record["errors"].append("memory_contents_mismatch")
+                        if expected.get("memory_contains") and not any(expected["memory_contains"] in text for text in contents):
+                            record["errors"].append("expected_memory_missing")
+
                         plans = [x["result"] for x in model.calls if x["name"] == "plan"]
-                        if not plans or plans[-1]["conversation_only"] != chat_only:
+                        if (not plans and explicit_memory(message) is None) or (plans and plans[-1]["conversation_only"] != chat_only):
                             record["errors"].append("conversation_routing")
                         if not reply.message.strip():
                             record["errors"].append("empty_reply")
@@ -206,6 +225,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                                 "visible_reply": visible_text(reply), "reply_parts": {k: reply.model_dump(mode="json")[k] for k in ["message", "looks", "warnings", "follow_ups"]}, "current_weather": reply.weather,
                                 "current_task": reply.task.model_dump(mode="json"),
                                 "business_evidence": record["business_calls"],
+                                "memory_after": record["memory_after"],
                                 "selected_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
                                 "expected": expected, "evidence_kind": "synthetic_business_fixtures",
                             }, PersonaReview)

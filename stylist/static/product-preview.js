@@ -51,7 +51,8 @@
   image.onload = () => { status.textContent = ''; };
   image.onerror = () => {
     image.hidden = true; zoom.disabled = true;
-    status.textContent = '图片暂时无法加载，请关闭后重试。';
+    status.textContent = '暂无可显示的图片';
+    if (dialog.open) window.CompanionSettings?.notify('图片暂时无法加载，请关闭后重试。');
   };
   image.onclick = () => { if (Date.now() - swipeAt > 500) setZoom(!zoomed); };
   stage.onclick = event => { if (event.target === stage) dialog.close(); };

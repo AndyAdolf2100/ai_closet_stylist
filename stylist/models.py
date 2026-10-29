@@ -69,6 +69,12 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
                     "owned_descriptions", "target_description", "itinerary"]
 
 
+class MemorySave(Model):
+    content: str = Field(min_length=1, max_length=240)
+    category: Literal["穿衣习惯", "日常片段", "相处约定"] = "穿衣习惯"
+    authorization: str = Field(min_length=1, max_length=160)
+
+
 class Plan(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"]
     technical_question: bool = False
@@ -82,6 +88,8 @@ class Plan(Model):
     new_task: bool = False
     changes: dict[TaskField, Change] = Field(default_factory=dict)
     replace_slots: list[Slot] = Field(default_factory=list, max_length=6)
+    memory_save: MemorySave | None = None
+    memory_changes: dict[Literal["style", "no_heels", "no_bare_shoulders", "excluded_materials", "excluded_colors", "excluded_categories", "preferences"], Change] = Field(default_factory=dict)
     search_query: str = Field(default="", max_length=500)
     clarification: str | None = None
 

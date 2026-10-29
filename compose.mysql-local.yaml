@@ -1,0 +1,22 @@
+name: stylist-local
+services:
+  mysql:
+    image: ${STYLIST_MYSQL_IMAGE:-mysql:8.0}
+    pull_policy: never
+    environment:
+      MYSQL_DATABASE: stylist_local
+      MYSQL_USER: stylist
+      MYSQL_PASSWORD: ${STYLIST_MYSQL_PASSWORD:?set in config/mysql-local.env}
+      MYSQL_ROOT_PASSWORD: ${STYLIST_MYSQL_ROOT_PASSWORD:?set in config/mysql-local.env}
+    ports:
+      - "127.0.0.1:${STYLIST_MYSQL_PORT:-13306}:3306"
+    volumes:
+      - stylist-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null 2>&1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  stylist-mysql:

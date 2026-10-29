@@ -30,7 +30,7 @@ test('failed save retains the last step and draft, and allows retry',async()=>{
  const {w,dom,$,submit}=await setup();let fail=true;
  await w.CompanionSettings.setOwner('a',async(p,o={})=>{if(o.method==='PUT'){if(fail)throw Error('合成保存失败');return {profile:JSON.parse(o.body)};}return {profile:null};});
  $('companion-user-skip').click();submit();$('companion-agent-name').value='沐沐';submit();submit();await tick();
- assert($('companion-dialog').open);assert.equal($('companion-dialog').dataset.step,'3');assert($('companion-error').textContent.includes('失败'));assert(!$('companion-next').disabled);
+ assert($('companion-dialog').open);assert.equal($('companion-dialog').dataset.step,'3');assert($('companion-notification').textContent.includes('失败')); assert.equal($('companion-error').textContent,''); assert.equal($('companion-notification').parentElement,$('companion-dialog'));assert(!$('companion-next').disabled);
  fail=false;submit();await tick();assert(!$('companion-dialog').open);assert.equal(w.CompanionSettings.getProfile().agent_name,'沐沐');dom.window.close();
 });
 test('late reads and writes cannot apply one account profile to another or logout',async()=>{
@@ -129,4 +129,17 @@ test('saving a renamed companion updates existing message labels without rewriti
  assert.equal(author.textContent,'知秋 · 私人搭配师');submit();await tick();
  assert.equal(author.textContent,'小林 · 私人搭配师');assert.equal(avatar.getAttribute('aria-label'),'小林向你打招呼');
  assert.equal(body.textContent,'知秋刚才的建议。');dom.window.close();
+});
+
+test('preset error messages follow persona and retain the action to recover',async()=>{
+ const {w,dom,$}=await setup();
+ for(const [persona,expected] of [['female_warm_v1','先从列表里选一座城市吧'],['male_calm_v1','先从列表选择城市']]){
+  await w.CompanionSettings.setOwner(persona,async()=>({profile:{...profile(),assistant_persona:persona}}),false);
+  await w.CompanionSettings.open();w.CompanionSettings.notify('请先从列表中选择一座城市。');
+  assert($('companion-notification').textContent.includes(expected));
+  assert.equal($('companion-notification').parentElement,$('companion-dialog'));
+  w.CompanionSettings.notify('报价已失效，需要重新确认费用。');
+  assert($('companion-notification').textContent.includes('报价已失效，需要重新确认费用。'));
+ }
+ dom.window.close();
 });

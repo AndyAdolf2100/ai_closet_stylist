@@ -54,10 +54,14 @@
 
 ## 3. 新增本地状态表
 
-定义见 [`stylist/schema.sql`](../stylist/schema.sql)，仅创建在独立的 `var/stylist.sqlite3`：
+SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在独立的 `var/stylist.sqlite3`。
+本地 Docker MySQL 定义见 [`stylist/schema_mysql.sql`](../stylist/schema_mysql.sql)，使用独立 `stylist_local` 库，
+同时保存 `stylist_checkpoints` 和 `stylist_checkpoint_writes`；不迁移 SQLite 或旧业务库。
+配置与验证见 [本地 MySQL 调试](MYSQL_LOCAL.md)。
 
 | 表 | 用途与约束 |
 | --- | --- |
+| `stylist_companion_profiles` | 当前账号称呼、角色与显式定制偏好 |
 | `stylist_sessions` | owner、当前 version、任务与方案、当前执行 claim／租约；防止旧请求覆盖新结果 |
 | `stylist_requests` | `(owner_id,request_id)` 唯一；内容摘要、状态与响应；同请求重放返回同一结果 |
 | `stylist_messages` | 每轮原输入和完整结构化回复；`(conversation_id,version)` 唯一 |
@@ -88,3 +92,9 @@
 2026-10-27新增只读业务API `POST /api/weather/get_weather`：服务端按权威解析后的省市读取14天范围，返回列表中的实际日期，供本周匹配。现有远端响应已确认包含`temp_day`、`temp_night`、`condition_day`、`condition_night`与`data_format`，未包含早间逐小时、风力和能见度；不能把日夜温度解释为准确早晚时刻实况。`POST /api/chat`可额外传`location={city_name,province_name}`；不接受经纬度直接写入对话状态。
 
 定位接口请求为JSON：`{latitude,longitude,coordinate_system?}`，默认`coordinate_system=wgs84`；高德GCJ-02/百度BD-09不直接兼容。成功返回`city_name`、`province_name`、可选区名`district_name`及来源。对于直辖市，OSM中的`city`可能实际是区，需以`ISO3166-2-lvl4`或省级直辖市名称归一后查询天气目录，不能直接将区名当作地级城市。
+
+## 可管理长记忆（PRD-12）
+
+本服务新增 `GET /api/memories`、`PUT /api/memories`，必须带当前账号身份。与旧 Go 服务同名探测路径是不同的数据域，不代理旧记忆。请求／响应 `{revision, enabled, entries:[{id, category, content}]}`，拒绝客户端 owner 字段；保存需携带读取时的 revision，冲突返回 409 `memory_conflict`，不覆盖其他窗口修改。
+
+独立表 `stylist_memory_books(owner_id, revision, book_json)`，兼容 SQLite／MySQL／PostgreSQL SQL 适配。每账号最多30条，每条240字；正文纯文本。明确聊天保存与 `Store.finish` 同事务提交，幂等请求不会重复添加；同内容去重。暂停不会删除条目；删除只移除活跃手记，不清除历史对话或检查点快照。详见 [长记忆](LONG_TERM_MEMORY.md)。

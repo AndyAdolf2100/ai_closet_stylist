@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 import operator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime
 from typing import Annotated, TypedDict
 from zoneinfo import ZoneInfo
@@ -17,6 +17,7 @@ from langgraph.types import Command, RetryPolicy, interrupt
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .grounding import PREFIX, attribute_claim_problems, attribute_context, ground_attribute_fallback
+from .memory import apply_memory, explicit_memory, memory_intent, verified_memory_save
 from .models import Draft, Look, Plan, Reply, SessionState, Task
 from .personas import (
     itinerary_weather_message,
@@ -42,6 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
+    long_term_memory: list[dict]
     completed_nodes: Annotated[list[str], operator.add]
     session: dict
     session_id: str
@@ -86,13 +88,20 @@ class Stylist:
         self.settings, self.store, self.llm = settings, store, llm
         if store.postgres and settings.checkpoint_database and not settings.checkpoint_database.startswith(("postgres://", "postgresql://")):
             raise ValueError("PostgreSQL 会话必须搭配共享 PostgreSQL 检查点。")
+        if store.mysql and settings.checkpoint_database and not settings.checkpoint_database.startswith("mysql://"):
+            raise ValueError("MySQL 会话必须搭配 MySQL 检查点。")
         self.weather = WeatherService()
         self.alerts = AlertService(settings)
 
     @asynccontextmanager
     async def checkpoints(self):
-        url = self.settings.checkpoint_database or (self.store.path if self.store.postgres else self.store.path + ".checkpoints")
-        if url.startswith(("postgres://", "postgresql://")):
+        url = self.settings.checkpoint_database or (
+            self.store.path if self.store.postgres or self.store.mysql else self.store.path + ".checkpoints")
+        if url.startswith("mysql://"):
+            from .mysql_checkpoint import AsyncMySQLSaver
+
+            yield AsyncMySQLSaver(url)
+        elif url.startswith(("postgres://", "postgresql://")):
             async with AsyncPostgresSaver.from_conn_string(url) as saver:
                 yield saver
         else:
@@ -119,12 +128,16 @@ class Stylist:
 
         async def understand(data):
             state = SessionState.model_validate(data["session"])
+            if explicit_memory(request.message) is not None:
+                return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False).model_dump(mode="json"),
+                        "task": state.task.model_dump(mode="json"), "frozen": []}
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             plan, task = await interpret_task(self.llm, {
                 "now": today.isoformat(), "message": request.message,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
+                "long_term_memory": data.get("long_term_memory", []),
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
                 "last_business_intent": last_business_intent(state.messages),
@@ -134,6 +147,12 @@ class Stylist:
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
+            if memory_save is None and (plan.memory_save is not None or memory_intent(request.message)):
+                # Never let a conversational promise substitute for a validated write.
+                plan = Plan(mode="consult", conversation_only=True, use_inventory=False,
+                            clarification="我想把这件事准确地留下。请告诉我具体要长期记住的那句话；目前还没有保存到手记。")
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             if (plan.mode == "consult" and not plan.conversation_only and not plan.weather_only
                     and not plan.technical_question and wardrobe_requested(request.message, state.messages)):
                 plan.mode = "recommend"
@@ -184,7 +203,7 @@ class Stylist:
         async def weather_node(data):
             plan, task = unpack(data)
             weather, warnings = None, []
-            effective_task = task.model_copy(deep=True)
+            effective_task = apply_memory(task, plan, data.get("long_term_memory", []))
             service_gap = False
             needs_weather = plan.mode != "consult" or plan.weather_scope != "none"
             if needs_weather and task.weather_policy != "ignored":
@@ -295,7 +314,7 @@ class Stylist:
                     logger.warning("Wardrobe read failed (%s)", exc.code)
                     warnings.append(service_notice(request.assistant_persona, "inventory"))
             profile = request.companion_profile
-            styles = [task.style] if task.style else (profile.style_preferences if profile and plan.use_profile_preferences else [])
+            styles = [effective_task.style] if effective_task.style else (profile.style_preferences if profile and plan.use_profile_preferences else [])
             pool, missing = preferred_pool(pool, styles, frozen)
             if pool and missing:
                 names = "、".join(missing)
@@ -321,15 +340,19 @@ class Stylist:
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
+                "long_term_memory": data.get("long_term_memory", []),
                 "expression_guidance": ({
                     "直接坦诚": "先用第一句话给具体可执行的下一步，再简短解释和关心；不要先铺一段安慰，不命令或冷硬。",
                     "温柔鼓励": "先具体接住本轮感受，再给轻一点的鼓励和选择空间，不急着安排任务。",
                     "轻松幽默": "场合合适时用一点自然幽默，不强行搞笑或嘲笑用户。",
                 }.get(request.companion_profile.conversation_style, "沿用当前基础人格")
                     if request.companion_profile else "沿用当前基础人格"),
+                "memory_save_pending": plan.memory_save is not None,
                 "conversation_only": plan.conversation_only,
                 "weather_only": plan.weather_only,
-                "message": request.message, "task": task.model_dump(mode="json"), "mode": plan.mode,
+                "message": request.message,
+                "task": apply_memory(task, plan, data.get("long_term_memory", [])).model_dump(mode="json"),
+                "mode": plan.mode,
                 "history": state.messages[-8:], "weather": weather,
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
                                for p in pool.values() if p.key not in original_targets],
@@ -344,6 +367,11 @@ class Stylist:
             return draft_payload
 
         async def style_node(data):
+            if explicit_memory(request.message) is not None:
+                message = ("这件事记下了，放在「我们的手记」里。你随时可以去设置里修改或删除；暂停参考时，我不会主动使用。"
+                           if request.assistant_persona == "male_calm_v1" else
+                           "这件小事已经收进「我们的手记」啦。想改写或删去，随时去设置里就好；暂停参考时，我不会主动使用。")
+                return {"draft": Draft(message=message).model_dump(mode="json")}
             if data["plan"].get("technical_question"):
                 return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
@@ -458,8 +486,13 @@ class Stylist:
         builder.add_edge("deliver", END)
         return builder.compile(checkpointer=saver)
 
+    async def memory_snapshot(self, owner):
+        book = await asyncio.to_thread(self.store.memory_book, owner)
+        return [entry.model_dump() for entry in book.entries] if book.enabled else []
+
     async def chat(self, upstream, request, decision=None):
         owner = await upstream.identity()
+        explicit_memory(request.message)  # Validate explicit save commands before reserving a task.
         cid, claim, state, replay = await asyncio.to_thread(self.store.reserve, owner, request)
         if replay:
             return replay
@@ -469,7 +502,10 @@ class Stylist:
                 await asyncio.to_thread(self.store.renew, owner, cid, claim)
         pulse = asyncio.create_task(heartbeat())
         try:
-            async with self.checkpoints() as saver:
+            async with self.checkpoints() as saver, (
+                saver.lock_thread(self.thread(owner, request)["configurable"]["thread_id"])
+                if self.store.mysql else nullcontext()
+            ):
                 if self.store.postgres:
                     # A lease protects DB commits; a session lock also prevents stale
                     # workers from writing graph checkpoints after another Pod takes over.
@@ -490,7 +526,8 @@ class Stylist:
                     output = snapshot.values
                 else:
                     value = Command(resume=decision) if paused else (None if snapshot.values else {
-                        "session": state.model_dump(mode="json"), "session_id": cid})
+                        "session": state.model_dump(mode="json"), "session_id": cid,
+                        "long_term_memory": await self.memory_snapshot(owner)})
                     output = await graph.ainvoke(value, config, durability="sync")
                 if "reply" not in output:
                     return Reply(conversation_id=cid, version=request.expected_version, mode=output["plan"]["mode"],
@@ -506,6 +543,7 @@ class Stylist:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
+                memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
@@ -514,7 +552,17 @@ class Stylist:
                         "looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces, "how": x.how,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},
                 ])[-16:]
-                await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply)
+                if memory_save and not output.get("cancelled") and reply.delivery != "clarification":
+                    acknowledgement = ("这件事已经记在「我们的手记」里，你可以随时到设置修改或删除。"
+                                       if request.assistant_persona == "male_calm_v1" else
+                                       "这件小事已经收进「我们的手记」啦，随时可以去设置改写或删去。")
+                    reply.message = acknowledgement + "\n\n" + reply.message
+                    last_reply = json.loads(state.messages[-1]["content"])
+                    last_reply["message"] = reply.message
+                    state.messages[-1]["content"] = json.dumps(last_reply, ensure_ascii=False)
+                else:
+                    memory_save = None
+                await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply, memory_save)
                 return reply
         finally:
             pulse.cancel()

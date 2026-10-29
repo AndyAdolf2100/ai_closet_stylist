@@ -10,6 +10,8 @@ from stylist.weather import today
 
 from .companion_dialogues import EXPECTATIONS as COMPANION_EXPECTATIONS
 from .companion_dialogues import SCENARIOS as COMPANION_SCENARIOS
+from .memory_dialogues import EXPECTATIONS as MEMORY_EXPECTATIONS
+from .memory_dialogues import SCENARIOS as MEMORY_SCENARIOS
 from .preference_dialogues import EXPECTATIONS as PREFERENCE_EXPECTATIONS
 from .preference_dialogues import PRODUCTS as PREFERENCE_PRODUCTS
 from .preference_dialogues import SCENARIOS as PREFERENCE_SCENARIOS
@@ -85,6 +87,8 @@ EXPECTATIONS["wardrobe_opt_out/text"] = {"no_tools": True, "delivery": "advice",
 EXPECTATIONS["wardrobe_opt_out/resume"] = {"inventory": True, "delivery": "outfit", "no_weather_tools": True,
     "review_focus": "本轮恢复衣橱选款，不能沿用前文文字限定。"}
 
+SCENARIOS.update(MEMORY_SCENARIOS)
+EXPECTATIONS.update(MEMORY_EXPECTATIONS)
 SCENARIOS.update(PREFERENCE_SCENARIOS)
 EXPECTATIONS.update(PREFERENCE_EXPECTATIONS)
 SCENARIOS.update(COMPANION_SCENARIOS)
