@@ -17,7 +17,7 @@
 .memory-page-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.memory-page-number{font-size:10px;letter-spacing:.12em;color:var(--muted)}
 #memory-dialog .memory-remove{margin-left:auto;font-size:12px;min-height:44px;color:var(--muted);padding:8px}
 #memory-dialog textarea{display:block;width:100%;box-sizing:border-box;resize:vertical;min-height:96px;max-height:260px;border:0;border-radius:0;background:repeating-linear-gradient(transparent,transparent 31px,var(--line) 32px);font-size:14px;line-height:32px;padding:0 2px;color:var(--ink);overflow-wrap:anywhere}
-#memory-dialog textarea:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.memory-length{display:block;text-align:right;color:var(--muted);font-size:10px;margin-top:10px}
+.memory-length{display:block;text-align:right;color:var(--muted);font-size:10px;margin-top:10px}
 #memory-add{width:100%;min-height:48px;border:1px dashed var(--line);border-radius:10px;background:transparent;color:var(--accent);font-size:13px}
 .memory-footnote{font-size:11px;color:var(--muted);line-height:1.9;margin:20px 0 0}.memory-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:18px 34px;background:var(--paper)}
 .memory-footer>span{font-size:11px;color:var(--muted)}.memory-footer>div{display:flex;gap:8px}.memory-footer button{min-height:44px}#memory-conflict{font-size:12px;line-height:1.8;padding-top:14px}#memory-loading{padding:30px;text-align:center;color:var(--muted)}
@@ -38,5 +38,8 @@
 #memory-dialog .memory-category-options button[aria-selected=true]:after{content:'✓';margin-left:12px}
 #memory-dialog .memory-category-options button:hover{background:var(--soft)}
 #memory-dialog textarea{border:0;box-shadow:none;resize:none;outline:none}
-#memory-dialog textarea:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+
 .memory-page-top{align-items:flex-start}.memory-page-number{line-height:44px}.memory-remove{align-self:flex-start}
+
+#memory-dialog textarea:focus,#memory-dialog textarea:focus-visible{border:0;outline:none;box-shadow:none}
+#memory-dialog .memory-page:has(textarea:focus-visible) .memory-page-number{color:var(--accent);text-decoration:underline;text-underline-offset:4px}
