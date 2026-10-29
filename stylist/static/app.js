@@ -87,7 +87,7 @@ function mascot(mood = 'greeting', size = '') {
   const node = el('div', 'mascot companion-sprite ' + size); node.dataset.mood = mood;
   // Offset each portrait so a conversation does not blink in unison.
   node.style.setProperty('--blink-delay', `-${(Math.random() * 15).toFixed(2)}s`);
-  node.setAttribute('role', 'img'); node.setAttribute('aria-label', agentText({ greeting: '衣衣向你打招呼', weather: '衣衣查看天气', wardrobe: '衣衣挑选衣服', thinking: '衣衣认真思考', happy: '衣衣展示搭配', rain: '衣衣撑伞提醒' }[mood] || '衣衣'));
+  node.setAttribute('role', 'img'); node.dataset.agentAriaTemplate = ({ greeting: '衣衣向你打招呼', weather: '衣衣查看天气', wardrobe: '衣衣挑选衣服', thinking: '衣衣认真思考', happy: '衣衣展示搭配', rain: '衣衣撑伞提醒' }[mood] || '衣衣'); node.setAttribute('aria-label', agentText(node.dataset.agentAriaTemplate));
   return node;
 }
 function weatherIcon(text) { return /雪/.test(text) ? '❄' : /雷/.test(text) ? '⛈' : /雨/.test(text) ? '☂' : /雾|霾/.test(text) ? '〰' : /阴|云/.test(text) ? '☁' : '☀'; }
@@ -95,7 +95,7 @@ function forecastCard(data, compact = false) {
   const card = el('section', 'forecast-card');
   WeatherVisuals.background(card, data.days);
   const heading = el('div', 'forecast-heading'); const wet = data.days?.some(day => /雨|雪/.test(day.condition_day + day.condition_night)); heading.append(mascot(wet ? 'rain' : 'weather', 'weather-mascot'));
-  const title = el('div'); title.append(el('strong', '', `${data.city_name} · ${data.scope === 'week' ? '本周天气' : data.scope === 'next7' ? '未来七天' : '出门天气'}`), el('p', '', agentText('衣衣的天气小叮咛'))); heading.append(title);
+  const title = el('div'); title.append(el('strong', '', `${data.city_name} · ${data.scope === 'week' ? '本周天气' : data.scope === 'next7' ? '未来七天' : '出门天气'}`), namedElement('p', '', '衣衣的天气小叮咛')); heading.append(title);
   card.append(heading);
   const days = el('div', 'forecast-days');
   for (const day of data.days || []) {
@@ -175,10 +175,13 @@ function pendingBubble(persona) {
   const timer = setInterval(() => { extra.textContent = male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'; }, 15000);
   return { node, update(data) { const state = expressions[data.stage] || expressions.styling; avatar.dataset.mood = state[0]; avatar.setAttribute('aria-label', agentText('衣衣正在') + state[1]); status.textContent = data.message; }, stop() { clearInterval(timer); node.remove(); } };
 }
+function namedElement(tag, cls, template) {
+  const node = el(tag, cls, agentText(template)); node.dataset.agentTemplate = template; return node;
+}
 function bubble(role, text) {
   $('welcome')?.remove();
   const node = el('section', 'bubble ' + role);
-  if (role === 'assistant') { const author = el('div', 'author'); author.append(mascot('greeting', 'avatar-mini'), el('span', '', agentText('衣衣 · 私人搭配师'))); node.append(author); }
+  if (role === 'assistant') { const author = el('div', 'author'); author.append(mascot('greeting', 'avatar-mini'), namedElement('span', '', '衣衣 · 私人搭配师')); node.append(author); }
   node.append(el('div', '', text)); feed.append(node); scrollBottom(role === 'user'); return node;
 }
 function bulletSection(card, title, items) {

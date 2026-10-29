@@ -113,6 +113,8 @@
   }
   const notify = () => {
     document.querySelectorAll('[data-agent-name]').forEach(node => { node.textContent = profile.agent_name; node.title = profile.agent_name; });
+    document.querySelectorAll('[data-agent-template]').forEach(node => { node.textContent = node.dataset.agentTemplate.replaceAll('衣衣', profile.agent_name); });
+    document.querySelectorAll('[data-agent-aria-template]').forEach(node => { node.setAttribute('aria-label', node.dataset.agentAriaTemplate.replaceAll('衣衣', profile.agent_name)); });
     window.dispatchEvent(new CustomEvent('companion-profile-change', { detail: owner ? { ...profile } : null }));
   };
   const rememberStep = () => {

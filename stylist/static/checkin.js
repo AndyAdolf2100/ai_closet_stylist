@@ -72,6 +72,7 @@
       render();
     };
     new MutationObserver(() => render()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-stylist-gender'] });
+    root.addEventListener('companion-profile-change', render);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
     // Re-evaluate Shanghai midnight even if the panel stays open overnight.
     setInterval(render, 30000);

@@ -118,3 +118,15 @@ test('notification body opens a complete letter, X only dismisses, and account c
  await w.CompanionSettings.setOwner(null);assert(!letter.open);assert.equal(letter.querySelector('.companion-letter-body').textContent,'');assert.equal($('companion-message-title').textContent,'');
  dom.window.close();
 });
+
+test('saving a renamed companion updates existing message labels without rewriting history',async()=>{
+ const {w,dom,$,submit}=await setup();
+ await w.CompanionSettings.setOwner('a',async(p,o={})=>({profile:o.method==='PUT'?JSON.parse(o.body):profile('知秋')}),false);
+ const author=w.document.createElement('span');author.dataset.agentTemplate='衣衣 · 私人搭配师';author.textContent='知秋 · 私人搭配师';
+ const avatar=w.document.createElement('div');avatar.dataset.agentAriaTemplate='衣衣向你打招呼';
+ const body=w.document.createElement('p');body.textContent='知秋刚才的建议。';w.document.body.append(author,avatar,body);
+ await w.CompanionSettings.open();submit();submit();$('companion-agent-name').value='小林';submit();
+ assert.equal(author.textContent,'知秋 · 私人搭配师');submit();await tick();
+ assert.equal(author.textContent,'小林 · 私人搭配师');assert.equal(avatar.getAttribute('aria-label'),'小林向你打招呼');
+ assert.equal(body.textContent,'知秋刚才的建议。');dom.window.close();
+});
