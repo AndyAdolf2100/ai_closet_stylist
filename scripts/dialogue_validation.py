@@ -8,6 +8,9 @@ from stylist.errors import StylistError
 from stylist.models import Model
 from stylist.weather import today
 
+from .companion_dialogues import EXPECTATIONS as COMPANION_EXPECTATIONS
+from .companion_dialogues import SCENARIOS as COMPANION_SCENARIOS
+
 SCENARIOS = {
     "weather_city_switch": [
         ("sanya", "今天去三亚旅行，先从我的衣橱搭一套，平底鞋。", False),
@@ -63,6 +66,9 @@ EXPECTATIONS = {
     "persona_switch/setup": {"no_tools": True, "task": {"gender": "女"}},
     "persona_switch/switch": {"no_tools": True, "task": {"gender": "女"}},
 }
+
+SCENARIOS.update(COMPANION_SCENARIOS)
+EXPECTATIONS.update(COMPANION_EXPECTATIONS)
 
 PRODUCTS = [
     {"product_id": "101", "class_name": "上衣", "title": "白色长袖衬衫", "color": "白色", "material": "棉"},
@@ -153,6 +159,9 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
     for field, value in expected.get("task", {}).items():
         if getattr(reply.task, field) != value:
             errors.append("task_" + field)
+    for field, values in expected.get("task_contains", {}).items():
+        if not set(values) <= set(getattr(reply.task, field)):
+            errors.append("task_" + field + "_missing")
     if any(token in text for token in expected.get("forbid_text", [])):
         errors.append("stale_or_unsupported_claim")
     if any(token not in text for token in expected.get("must_text", [])):

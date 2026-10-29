@@ -16,7 +16,7 @@ from pathlib import Path
 from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.llm import LanguageModel
-from stylist.models import ChatRequest, SessionState
+from stylist.models import ChatRequest, CompanionProfile, SessionState
 from stylist.personas import persona_instructions
 from stylist.store import Store
 
@@ -139,13 +139,17 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                 upstream = upstream_type(label) if label in scenarios else SyntheticUpstream()
                 previous = None
                 for i, (name, message, chat_only) in enumerate(rows):
+                    expected = expectations.get(f"{label}/{name}", {})
                     chosen = persona
-                    if (label == "sequence" and i >= 8) or (label == "persona_switch" and i >= 1):
+                    if ((label == "sequence" and i >= 8) or (label == "persona_switch" and i >= 1)
+                            or expected.get("switch_persona")):
                         chosen = "female_warm_v1" if persona == "male_calm_v1" else "male_calm_v1"
+                    profile = (CompanionProfile(**expected["companion_profile"], assistant_persona=chosen)
+                               if "companion_profile" in expected else None)
                     record = {"case": f"{persona}/{label}/{name}", "persona": chosen, "message": message,
                               "expected_chat_only": chat_only, "errors": [],
+                              "companion_profile": profile.model_dump(mode="json") if profile else None,
                               "persona_review": {"status": "pending"}}
-                    expected = expectations.get(f"{label}/{name}", {})
                     record["expected"] = expected
                     start = time.monotonic()
                     before = None
@@ -161,6 +165,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                     try:
                         reply = await engine.chat(upstream, ChatRequest(message=message,
                             request_id=f"eval-{label}-{name}-{i}", assistant_persona=chosen,
+                            companion_profile=profile,
                             location=expected.get("location"),
                             conversation_id=previous.conversation_id if previous else None,
                             expected_version=previous.version if previous else 0))
@@ -194,6 +199,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                             reviewer = LanguageModel(local)
                             review = await reviewer.generate("review_dialogue", {
                                 "expected_persona": persona_instructions(chosen), "message": message,
+                                "companion_profile": profile.model_dump(mode="json") if profile else None,
                                 "previous_reply": prior.model_dump(mode="json") if prior else None,
                                 "visible_reply": visible_text(reply), "current_weather": reply.weather,
                                 "current_task": reply.task.model_dump(mode="json"),

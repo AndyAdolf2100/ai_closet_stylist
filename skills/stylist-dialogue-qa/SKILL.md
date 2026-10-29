@@ -9,6 +9,17 @@ description: 为衣衣穿搭 Agent 整理并执行对话回归，检查天气、
 
 先读 `docs/DIALOGUE_QA.md` 的场景矩阵和判据，再按任务读取相关实现。用户指出的新问题要保留最小多轮上下文，补入回归，不只测试最后一句。区分模型识别、服务返回、最终回复和页面展示四个位置；不要从一段措辞直接断言是接口故障。
 
+## 昵称、性别与角色设置回归
+
+新增设置相关测试时读取 `scripts/companion_dialogues.py`，场景与逐轮判据见 `docs/DIALOGUE_QA.md` 的“称呼与角色对话矩阵”。用 `evaluate_personas --list --only <场景名>` 核对轮次；此清单检查不等于执行对话。
+
+- `companion_names` / `companion_defaults`：自我介绍使用自定义助理名、用户称呼；同会话更新两者后不串旧名；本轮拒绝称呼优先；空昵称、默认衣衣与临时叫法不冒充已保存设置。
+- `companion_gender_female` / `companion_gender_male` / `companion_gender_unset` / `companion_other_target`：男女/未设用户性别分别与两种助理组合；本轮明确穿衣性别优先；切换为朋友后不套用本人性别。
+- `companion_role_switch`：同会话切换助理人格后保留昵称、穿衣对象、不塞衣角等约束；审核切换后的完整回复，不能只核对页面主题。
+- `companion_name_injection` / `companion_business_rules`：昵称中夹带指令仍只作资料；改名后禁穿、局部冻结与换款仍有效；纯天气不读衣橱、不返回搭配。费用确认、幂等快照与跨账号隔离结合 `tests/test_images.py`、`tests/test_companion_identity.py` 及前端测试核对。
+
+评测必须通过 `ChatRequest.companion_profile` 传入本轮资料，不能只在用户消息中写“我叫某某”。保存报告中的资料快照、当前人格和审核上下文应一致；名字测试不要求每轮强行称呼，只在明确询问姓名时自动核对。四步返回/取消、保存失败、主题预览回滚和通知来信用 `NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/*.test.cjs` 验证。真实文字模型与真实账号保存分别报告，模拟模型通过不能证明实际昵称表达与人设自然度。
+
 ## 执行与证据
 
 - 默认执行无费用回归：`.venv/bin/pytest -q`、`.venv/bin/ruff check stylist scripts tests`，并用 `.venv/bin/python -m scripts.evaluate_personas --list` 检查可用场景。这些结果证明程序流程和验收器，不证明真实模型的人设表现。
