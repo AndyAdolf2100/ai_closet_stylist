@@ -138,8 +138,9 @@ class Stylist:
                 task.gender = request.companion_profile.user_gender
             if plan.location_limit_exceeded:
                 return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"), "frozen": []}
-            if request.source is not None and not plan.conversation_only:
-                task.source = request.source
+            # System catalog selection is temporarily disabled, including legacy requests/history.
+            if not plan.conversation_only:
+                task.source = "wardrobe"
             explicit_city = plan.changes.get("city")
             explicit_route = plan.changes.get("itinerary")
             if (request.location and not (explicit_city and explicit_city.value)

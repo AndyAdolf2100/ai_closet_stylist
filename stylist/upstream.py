@@ -192,14 +192,13 @@ async def check_integrations(upstream: Upstream):
 
     identity = await probe("GET /api/user/info", upstream.identity)
     if identity is None:
-        for name in ["GET /api/user_product/quick_edit_list", "GET /api/product/list", "GET /api/memories",
+        for name in ["GET /api/user_product/quick_edit_list", "GET /api/memories",
                      "MCP tools/list", *sorted(READ_TOOLS)]:
             results.append({"interface": name, "status": "blocked", "code": "identity_failed"})
         return results
-    wardrobe, system, _ = await asyncio.gather(
+    wardrobe, _ = await asyncio.gather(
         probe("GET /api/user_product/quick_edit_list",
               lambda: upstream.get("/api/user_product/quick_edit_list", {"page": 1, "page_size": 20, "is_ai_outfit": 1})),
-        probe("GET /api/product/list", lambda: upstream.get("/api/product/list", {"page": 1, "page_size": 10})),
         probe("GET /api/memories", lambda: upstream.get("/api/memories")),
     )
     try:
@@ -216,9 +215,8 @@ async def check_integrations(upstream: Upstream):
             else:
                 results.append({"interface": "weather.get", "status": "blocked", "code": "city_unresolved"})
             refs = []
-            for source, data, key in [("user", wardrobe, "user_product_id"), ("system", system, "product_id")]:
-                if data and data.get("list"):
-                    refs.append({"source": source, "product_id": str(data["list"][0][key])})
+            if wardrobe and wardrobe.get("list"):
+                refs.append({"source": "user", "product_id": str(wardrobe["list"][0]["user_product_id"])})
             if refs:
                 await probe("product.resolve", lambda: mcp.call("product.resolve", {"items": refs}))
             else:
@@ -230,7 +228,7 @@ async def check_integrations(upstream: Upstream):
                     "source": "user", "outfit_id": outfit_id, "include_presentation": True}))
             else:
                 results.append({"interface": "outfit.resolve", "status": "blocked", "code": "no_outfit_fixture"})
-            for scope in ["user", "public"]:
+            for scope in ["user"]:
                 await probe(f"kb_search:{scope}", lambda scope=scope: mcp.call("kb_search", {
                     "query": "日常通勤上衣", "gender": "女", "scope": scope, "top_k": 3}))
             await probe("digital_twin_overview", lambda: mcp.call("digital_twin_overview", {}))

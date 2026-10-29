@@ -76,6 +76,9 @@ async def weather_for(task: Task, mcp, persona_id=None):
 
 async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None):
     """Bounded retrieval; a limited pool is never presented as the whole inventory."""
+    # Temporarily use personal clothes only. Keep the catalog branch below for later restoration.
+    task = task.model_copy(update={"source": "wardrobe"})
+    frozen = [p for p in frozen if p.source == "user"]
     refs, extras, warnings = [], {}, []
     if task.source != "catalog":
         # This read endpoint includes all taxonomy slots and does not reset wardrobe badges.

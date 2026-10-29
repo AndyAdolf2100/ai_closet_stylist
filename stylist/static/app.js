@@ -316,7 +316,7 @@ function showReply(reply) {
   scrollBottom(false);
 }
 function setBusy(value) {
-  busy = value; $('send').disabled = value; $('source').disabled = value;
+  busy = value; $('send').disabled = value;
   $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
   $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
@@ -343,7 +343,6 @@ async function refreshHistory() {
             $('feed').replaceChildren();
             for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
             conversation = record.conversation_id; version = record.version;
-            $('source').value = '';
             for (const list of [$('history'), $('mobile-history-list')]) {
               list.querySelectorAll('[aria-current]').forEach(item => item.removeAttribute('aria-current'));
               list.children[rows.indexOf(row)]?.setAttribute('aria-current', 'true');
@@ -377,7 +376,7 @@ async function sendMessage(resuming = false) {
   const request = saved?.request || { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: $('confirm-plan').checked };
   if (!saved && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
   if (!saved) request.assistant_persona = document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1';
-  if (!saved && $('source').value) request.source = $('source').value;
+  // Clothing source selection is temporarily disabled; the server uses personal clothes only.
   if (!saved && selectedCity) request.location = selectedCity;
   if (!saved && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
   savePending({owner: session.user.id, request});
