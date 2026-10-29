@@ -25,10 +25,92 @@
     </form>`;
   document.body.append(dialog);
   window.CompanionPortraits?.mount(dialog);
+  const notification = document.createElement('aside');
+  notification.id = 'companion-notification'; notification.hidden = true;
+  notification.setAttribute('aria-label', '助理消息');
+  notification.innerHTML = `<span class="mascot companion-sprite avatar-mini" aria-hidden="true"></span><div class="companion-notification-copy" role="status" aria-live="polite" aria-atomic="true"><strong></strong><p></p></div><button type="button" class="companion-notification-close" aria-label="关闭助理消息">×</button><button type="button" class="companion-message-open" aria-label="阅读完整消息" aria-haspopup="dialog" aria-controls="companion-message-dialog"></button>`;
+  document.body.append(notification);
+  const messageDialog = document.createElement('dialog');
+  messageDialog.id = 'companion-message-dialog';
+  messageDialog.setAttribute('aria-labelledby', 'companion-message-title');
+  messageDialog.innerHTML = `<div class="companion-letter-top"><span>A MESSAGE FOR YOU</span><button type="button" class="companion-letter-close" aria-label="关闭来信">×</button></div><div class="companion-letter-heading"><span class="mascot companion-sprite avatar-mini" aria-hidden="true"></span><div><p>有一份心意，想让你知道</p><h2 id="companion-message-title"></h2></div><span class="companion-letter-star" aria-hidden="true">✧</span></div><div class="companion-letter-scroll" tabindex="0" aria-label="来信正文"><article class="companion-letter-paper"><p class="companion-letter-body"></p><p class="companion-letter-signature"></p></article></div><div class="companion-letter-footer"><span>把这一刻，留在日常里。</span><button type="button" class="companion-letter-done">读完啦</button></div>`;
+  document.body.append(messageDialog);
+  let notificationTimer = null, notificationExitTimer = null, notificationMessage = null, messageReturnFocus = null;
+  function clearMessage() {
+    if (messageDialog.open) messageDialog.close();
+    messageDialog.querySelector('.companion-letter-body').textContent = '';
+    messageDialog.querySelector('.companion-letter-signature').textContent = '';
+    messageDialog.querySelector('h2').textContent = '';
+  }
+  function closeMessage() { clearMessage(); messageReturnFocus?.focus({ preventScroll: true }); messageReturnFocus = null; }
+  messageDialog.querySelector('.companion-letter-close').onclick = closeMessage;
+  messageDialog.querySelector('.companion-letter-done').onclick = closeMessage;
+  messageDialog.addEventListener('cancel', event => { event.preventDefault(); closeMessage(); });
+  function openMessage() {
+    if (!notificationMessage || notification.hidden || notification.classList.contains('is-leaving')) return;
+    const message = notificationMessage;
+    messageReturnFocus = document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
+    hideNotification();
+    messageDialog.dataset.persona = message.persona;
+    messageDialog.querySelector('h2').textContent = `${message.name}的来信`;
+    messageDialog.querySelector('.companion-letter-body').textContent = message.body;
+    messageDialog.querySelector('.companion-letter-signature').textContent = `— ${message.name}`;
+    messageDialog.querySelector('.companion-letter-scroll').scrollTop = 0;
+    messageDialog.showModal();
+  }
+  function pauseNotification() { clearTimeout(notificationTimer); notificationTimer = null; }
+  function hideNotification() {
+    pauseNotification();
+    clearTimeout(notificationExitTimer); notificationExitTimer = null;
+    notification.classList.remove('is-leaving');
+    const focused = notification.contains(document.activeElement);
+    notification.hidden = true;
+    notification.querySelector('strong').textContent = '';
+    notification.querySelector('p').textContent = ''; notificationMessage = null;
+    if (focused) document.getElementById('companion-open')?.focus({ preventScroll: true });
+  }
+  function dismissNotification() {
+    pauseNotification();
+    if (notification.hidden || notification.classList.contains('is-leaving')) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { hideNotification(); return; }
+    notification.classList.add('is-leaving');
+    // Fallback if the browser drops animationend (e.g. the page is backgrounded).
+    notificationExitTimer = setTimeout(hideNotification, 450);
+  }
+  notification.addEventListener('animationend', event => {
+    if (event.target === notification && event.animationName === 'companion-message-out' && notification.classList.contains('is-leaving')) hideNotification();
+  });
+  function scheduleDismiss() {
+    pauseNotification();
+    if (!notification.hidden && !notification.classList.contains('is-leaving') && !notification.contains(document.activeElement) && !notification.matches(':hover')) notificationTimer = setTimeout(dismissNotification, 9000);
+  }
+  function showNotification(saved) {
+    pauseNotification(); clearTimeout(notificationExitTimer); notificationExitTimer = null; notification.classList.remove('is-leaving');
+    notification.dataset.persona = saved.assistant_persona;
+    notification.hidden = false;
+    notification.querySelector('strong').textContent = saved.agent_name;
+    notification.querySelector('p').textContent = `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
+    notificationMessage = { name: saved.agent_name, persona: saved.assistant_persona, body: notification.querySelector('p').textContent };
+    notification.querySelector('.companion-message-open').setAttribute('aria-label', `阅读${saved.agent_name}的完整消息`);
+    scheduleDismiss();
+  }
+  notification.querySelector('.companion-notification-close').onclick = event => { event.stopPropagation(); dismissNotification(); };
+  notification.querySelector('.companion-message-open').onclick = openMessage;
+  notification.addEventListener('click', event => { if (!event.target.closest('.companion-notification-close')) openMessage(); });
+  notification.addEventListener('mouseenter', pauseNotification);
+  notification.addEventListener('mouseleave', scheduleDismiss);
+  notification.addEventListener('focusin', pauseNotification);
+  notification.addEventListener('focusout', event => { if (!notification.contains(event.relatedTarget)) queueMicrotask(scheduleDismiss); });
+
   const $ = id => document.getElementById(id);
   let owner = null, profile = defaults(), draft = defaults(), step = 0, sequence = 0;
   let client = null, loaded = false, saving = false, ready = Promise.resolve();
-  let appearanceSave = Promise.resolve();
+  let appearanceSave = Promise.resolve(), previewOriginal = null;
+  const previewAppearance = gender => window.dispatchEvent(new CustomEvent('stylist-appearance-preview', { detail: gender }));
+  function restoreAppearance() {
+    if (previewOriginal === null) return;
+    const original = previewOriginal; previewOriginal = null; previewAppearance(original);
+  }
   const notify = () => {
     document.querySelectorAll('[data-agent-name]').forEach(node => { node.textContent = profile.agent_name; node.title = profile.agent_name; });
     window.dispatchEvent(new CustomEvent('companion-profile-change', { detail: owner ? { ...profile } : null }));
@@ -70,12 +152,15 @@
     $('companion-title').tabIndex = -1; $('companion-title').focus({ preventScroll: true });
   }
   function openLoaded() {
-    if (!owner || !loaded || saving) return;
+    if (!owner || !loaded || saving || dialog.open) return;
+    hideNotification(); messageReturnFocus = null; clearMessage();
+    previewOriginal = document.documentElement.dataset.stylistGender === 'male' ? 'male' : 'female';
     draft = { ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' }; step = 0;
     if (!dialog.open) dialog.showModal();
     render();
   }
   function setOwner(id, api, autoOpen = true) {
+    hideNotification(); messageReturnFocus = null; clearMessage(); restoreAppearance();
     const current = ++sequence; owner = id == null ? null : String(id); client = api;
     loaded = false; profile = defaults(); draft = defaults(); saving = false;
     $('companion-next').disabled = false; $('companion-back').disabled = false;
@@ -102,8 +187,14 @@
   $('companion-user-skip').onclick = () => { $('companion-user-name').value = ''; rememberStep(); step = 1; render(); };
   $('companion-agent-default').onclick = () => { $('companion-agent-name').value = '衣衣'; };
   $('companion-back').onclick = () => { if (!saving) { rememberStep(); step = Math.max(0, step - 1); render(); } };
-  dialog.querySelector('.companion-close').onclick = () => { if (!saving) dialog.close(); };
-  dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
+  dialog.querySelector('.companion-cast').addEventListener('change', event => {
+    if (saving || !dialog.open || event.target.name !== 'companion-persona') return;
+    draft.assistant_persona = event.target.value;
+    previewAppearance(draft.assistant_persona === 'male_calm_v1' ? 'male' : 'female');
+  });
+  dialog.querySelector('.companion-close').onclick = () => { if (!saving) { restoreAppearance(); dialog.close(); } };
+  dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); else restoreAppearance(); });
+  dialog.addEventListener('close', () => { if (!dialog.open) restoreAppearance(); });
   $('companion-form').onsubmit = async event => {
     event.preventDefault(); if (saving) return; rememberStep();
     const value = step === 0 ? draft.user_name : step === 2 ? draft.agent_name : '';
@@ -118,8 +209,8 @@
       if (sequence !== current || owner !== expectedOwner) return;
       const result = await client('/api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
       if (sequence !== current || owner !== expectedOwner) return;
-      profile = result.profile; loaded = true; notify(); dialog.close();
-      $('notice').textContent = `${profile.user_name ? profile.user_name + '，' : ''}以后就叫我${profile.agent_name}吧。我们的日常，从这里开始。`;
+      profile = result.profile; loaded = true; previewOriginal = null; notify(); dialog.close();
+      showNotification(profile);
     } catch (err) { if (sequence === current) $('companion-error').textContent = err.message || '这次还没保存好，你写下的名字还在，再试一下就好。'; }
     finally { if (sequence === current) { saving = false; $('companion-next').disabled = false; $('companion-back').disabled = false; } }
   };
@@ -136,10 +227,12 @@
   function viewport() {
     dialog.style.setProperty('--companion-viewport', `${window.visualViewport?.height || window.innerHeight}px`);
     dialog.style.setProperty('--companion-viewport-top', `${window.visualViewport?.offsetTop || 0}px`);
+    messageDialog.style.setProperty('--companion-viewport', `${window.visualViewport?.height || window.innerHeight}px`);
+    messageDialog.style.setProperty('--companion-viewport-top', `${window.visualViewport?.offsetTop || 0}px`);
   }
   window.visualViewport?.addEventListener('resize', viewport); window.visualViewport?.addEventListener('scroll', viewport); window.addEventListener('resize', viewport); viewport();
   window.CompanionSettings = {
     setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
-    getProfile: () => owner && loaded ? { ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
+    getProfile: () => owner && loaded ? { ...profile, assistant_persona: (previewOriginal ?? document.documentElement.dataset.stylistGender) === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
   };
 })();

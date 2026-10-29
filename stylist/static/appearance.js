@@ -66,6 +66,9 @@
     });
   }, { once: true });
 
+  // Draft previews update visuals without saving preferences or profile data.
+  window.addEventListener('stylist-appearance-preview', event => apply(event.detail));
+
   window.addEventListener('companion-profile-change', event => apply(event.detail?.assistant_persona === 'male_calm_v1' ? 'male' : 'female'));
 
   window.addEventListener('storage', event => {
