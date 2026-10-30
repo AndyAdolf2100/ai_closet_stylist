@@ -54,3 +54,13 @@ CREATE TABLE IF NOT EXISTS stylist_memory_books (
   owner_id VARCHAR(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY,
   revision INTEGER NOT NULL, book_json LONGTEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_images (
+  id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+  owner_id VARCHAR(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  conversation_id VARCHAR(191) NOT NULL,
+  status VARCHAR(32) NOT NULL, claim VARCHAR(32) NOT NULL,
+  lease_until DOUBLE NOT NULL DEFAULT 0, image_digest VARCHAR(64) NOT NULL,
+  image_url TEXT NOT NULL,
+  FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

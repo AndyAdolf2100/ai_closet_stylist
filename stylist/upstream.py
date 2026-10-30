@@ -67,6 +67,18 @@ class Upstream:
             raise StylistError("identity_contract_error", "无法确认当前账号，请重新登录。", 401)
         return owner
 
+    async def upload_outfit_image(self, image_data):
+        """Store the final client-composed PNG using the existing authenticated upload API."""
+        try:
+            async with httpx.AsyncClient(timeout=25, trust_env=False, transport=self.transport) as client:
+                response = await client.post(self.settings.server_url + "/api/upload/base64/image",
+                    json={"upload_type": "web", "image_url": image_data},
+                    headers={"Authorization": self.authorization, "version": self.settings.login_app_version,
+                             "device": "PC"})
+                return _business_payload(response)
+        except (httpx.HTTPError, ValueError) as exc:
+            raise StylistError("composition_upload_unknown", "搭配图保存结果暂时无法确认，请手动重试。", 502) from exc
+
     async def forecast(self, city):
         """Existing read-only day/night forecast, despite the upstream POST verb."""
         try:

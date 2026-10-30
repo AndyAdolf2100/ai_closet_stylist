@@ -31,3 +31,10 @@ CREATE TABLE IF NOT EXISTS stylist_image_actions (
 CREATE TABLE IF NOT EXISTS stylist_memory_books (
   owner_id TEXT PRIMARY KEY, revision INTEGER NOT NULL, book_json TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_images (
+  id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, conversation_id TEXT NOT NULL,
+  status TEXT NOT NULL, claim TEXT NOT NULL, lease_until REAL NOT NULL DEFAULT 0,
+  image_digest TEXT NOT NULL, image_url TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+);

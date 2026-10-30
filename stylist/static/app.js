@@ -28,6 +28,8 @@ const dailyCheckin = window.DailyCheckin.mount({
   onChat: () => { if (requireLogin()) { $('message').focus(); window.CompanionSettings.notify('聊聊今天的穿搭吧，收到回复后就可以领取签到奖励。'); } }
 });
 function loginStatus() {
+  window.LocalCutout?.setOwner(session?.user?.id ?? null);
+  window.OutfitImages?.setOwner(session?.user?.id ?? null);
   $('login-label').textContent = session ? '衣橱已连接' : '登录衣橱';
   $('login-open').classList.toggle('is-connected', !!session);
   $('login-open').setAttribute('aria-label', session ? '衣橱已连接，点击重新登录或切换账号' : '登录衣橱');
@@ -36,6 +38,7 @@ function loginStatus() {
 }
 function notifyIssue(message) { window.CompanionSettings.notify(message || '操作未完成，请稍后再试。'); }
 function expireSession(message) {
+  window.OutfitBoard?.close();
   lastSessionOwner = session?.user?.id || lastSessionOwner;
   session = null; sessionStorage.removeItem(KEY); window.CompanionSettings?.setOwner(null, api); loginStatus();
   clearHistory();
@@ -45,6 +48,15 @@ function expireSession(message) {
   notifyIssue(loginMessage);
 }
 function headers() { return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session?.access_token || '') }; }
+window.LocalCutout?.setSourceLoader(async (item, signal, kind='original') => {
+  if (!session || item.source !== 'user' || !/^[1-9][0-9]{0,19}$/.test(item.product_id)) throw Error('image_unavailable');
+  const response = await fetch('/stylist-api/wardrobe/' + item.product_id + '/image-source?kind=' + kind, {headers: headers(), signal, cache:'no-store'});
+  if (!response.ok) {
+    if (response.status === 401) expireSession();
+    throw Error('image_unavailable');
+  }
+  return response.blob();
+});
 function requireLogin() { if (!session) { $('login-dialog').showModal(); return false; } return true; }
 async function api(path, options = {}) {
   const response = await fetch(path, { ...options, headers: headers() });
@@ -55,6 +67,17 @@ async function api(path, options = {}) {
   }
   return data;
 }
+const compositionPath = ref => '/stylist-api/conversations/' + encodeURIComponent(ref.conversationId) + '/composition';
+const compositionQuery = ref => new URLSearchParams({version:ref.version,look_index:ref.index,theme:ref.theme});
+window.OutfitImages?.configure({
+  load: ref => api(compositionPath(ref)+'?'+compositionQuery(ref)),
+  save: ref => api(compositionPath(ref), {method:'POST',body:JSON.stringify({version:ref.version,look_index:ref.index,theme:ref.theme,image_data:ref.image_data,retry:ref.retry})}),
+  download: async ref => {
+    const response=await fetch(compositionPath(ref)+'/download?'+compositionQuery(ref),{headers:headers(),cache:'no-store'});
+    if(!response.ok){if(response.status===401)expireSession();throw Error('下载未完成，请稍后重试。');}
+    return response.blob();
+  }
+});
 const feed = $('feed');
 let followLatest = false, bottomFrame = null;
 function scrollBottom(force = true) {
@@ -286,7 +309,7 @@ function showReply(reply) {
       tabs.push(tab); panels.push(card); tabList.append(tab);
     }
     if (look.items?.length) {
-      card.append(productGrid(look.items));
+      card.append(window.OutfitBoard.create(look, {conversationId:reply.conversation_id,version:reply.version,index:lookIndex}));
     } else { bulletSection(card, '穿什么', look.pieces); }
     bulletSection(card, '为什么这样搭', look.why);
     bulletSection(card, '照着这样穿', look.how);

@@ -4,13 +4,16 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, Header, Request
+from fastapi import Path as ApiPath
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .auth import LoginRequest, login
+from .composition import CompositionInput, Compositions
 from .config import Settings
 from .engine import Stylist
 from .errors import AuthenticationExpired, StylistError
@@ -24,6 +27,7 @@ from .progress import events as progress_events
 from .runtime import RunManager
 from .store import Store
 from .upstream import Upstream, check_integrations
+from .wardrobe_image import read_wardrobe_image
 
 
 def require_token(authorization):
@@ -47,6 +51,8 @@ def create_app(settings=None):
     model = LanguageModel(settings)
     engine = Stylist(settings, store, model)
     images = ImageService(store)
+    compositions = Compositions(store)
+    app.state.compositions = compositions
     alerts = engine.alerts
     app.state.engine = engine
     app.state.runs = runs
@@ -61,6 +67,14 @@ def create_app(settings=None):
     async def health():
         return {"status": "live", "llm_configured": bool(settings.llm_key and settings.llm_model),
                 "integration_status": "unchecked_until_authenticated_probe"}
+
+    @app.get("/stylist-api/wardrobe/{product_id}/image-source")
+    async def wardrobe_image_source(product_id: str = ApiPath(pattern=r"^[1-9][0-9]{0,19}$"),
+                                    kind: Literal["original", "cutout"] = "original",
+                                    authorization: str | None = Header(default=None)):
+        body, media = await read_wardrobe_image(Upstream(settings, require_token(authorization)), product_id, kind=kind)
+        return Response(body, media_type=media, headers={"Cache-Control": "private, no-store",
+                        "X-Content-Type-Options": "nosniff", "Cross-Origin-Resource-Policy": "same-origin"})
 
     @app.get("/health/ready")
     async def ready():
@@ -234,6 +248,26 @@ def create_app(settings=None):
     async def history(conversation_id: str, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.history, owner, conversation_id)
+
+    @app.get("/stylist-api/conversations/{conversation_id}/composition")
+    async def composition_get(conversation_id: str, version: int, look_index: int, theme: str,
+                              authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(compositions.get, owner, conversation_id, version, look_index, theme)
+
+    @app.post("/stylist-api/conversations/{conversation_id}/composition")
+    async def composition_save(conversation_id: str, request: CompositionInput,
+                               authorization: str | None = Header(default=None)):
+        return await compositions.save(Upstream(settings, require_token(authorization)), conversation_id, request)
+
+    @app.get("/stylist-api/conversations/{conversation_id}/composition/download")
+    async def composition_download(conversation_id: str, version: int, look_index: int, theme: str,
+                                   authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        image = await compositions.download(owner, conversation_id, version, look_index, theme)
+        return Response(image, media_type="image/png", headers={"Cache-Control": "private, no-store",
+                        "Content-Disposition": 'attachment; filename="yiyi-outfit.png"',
+                        "X-Content-Type-Options": "nosniff"})
 
     @app.post("/stylist-api/images/quote")
     async def image_quote(request: ImageQuoteRequest, authorization: str | None = Header(default=None)):
