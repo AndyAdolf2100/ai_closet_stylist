@@ -214,7 +214,7 @@ NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/companion_settings.
 
 ## 离线对话题库 HTML
 
-运行 `.venv/bin/python -m scripts.render_dialogue_catalog` 导出 `var/dialogue-audit/dialogue-catalog.html`。直接读取当前基础、人设、业务、偏好和扩展场景，保留完整多轮问题、资料快照、原始判据及共用人设规则；支持搜索、分类、展开和打印。当前150组218轮问题，男女合计436轮，其中偏好110轮。本页是题库，不包含实际模型回答，不代表测试通过；无需联网或模型调用。已核对导出计数、搜索与分类、上下文保留、展开收起，并检查桌面与手机截图。
+运行 `.venv/bin/python -m scripts.render_dialogue_catalog` 导出 `var/dialogue-audit/dialogue-catalog.html`。公开静态入口为 `/static/dialogue-catalog.html`，设计总览底部提供链接。运行 `.venv/bin/python -m scripts.render_dialogue_catalog --output stylist/static/dialogue-catalog.html` 同步公开题库；每次场景或判据变化后重新导出。页面按「类型、用例、作用」列出全部场景，每个用例标明验证目的并可跳转完整多轮详情；用途文案由 `scripts/report_assets/dialogue_purposes.json` 与偏好资料维护，新增场景缺少用途时导出直接报错。直接读取当前基础、人设、业务、记忆、偏好和扩展场景，保留完整多轮问题、资料快照、原始判据及共用人设规则；支持搜索、分类、展开和打印。2026-10-30导出154组231轮问题，男女合计462轮，其中偏好110轮。本页是题库，不包含实际模型回答，不代表测试通过；无需联网或模型调用。已核对导出计数、搜索与分类、上下文保留、展开收起，并检查桌面与手机截图。
 
 ## 偏好与星座首轮真实模型结果（2026-10-29）
 
@@ -245,3 +245,9 @@ NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/companion_settings.
 `tests/test_memory.py` 与 `tests/memory.test.cjs` 补充跨账号、重开读取、版本冲突、快照恢复、删除不复活、原话证据、当轮要求优先、保存失败回滚、前端草稿与迟到响应。真实本地 MySQL 复用这些回归；模型均为模拟，不代表实际自然语言分类准确率。局部冻结与费用仍由原专项测试覆盖，记忆文本没有工具授权能力。
 
 无费用列出场景：`.venv/bin/python -m scripts.evaluate_personas --list --only memory_explicit memory_reference memory_no_implicit memory_boundaries`。真实模型评测需显式授权，本轮未执行。视觉与完整结果见 [长记忆验收](LONG_TERM_MEMORY.md)。
+
+## 逐日天气提醒完整性（2026-10-30）
+
+`tests/weather_tips.test.cjs` 覆盖本周三天预报中间一天6～12℃、无专项提醒时仍显示日期及日常参考，专项提醒保留且不修改服务数据；另覆盖单日缺失reminders的兼容展示。不因无专项提醒宣称没有风险或官方预警。2项前端与14项 `tests/test_weather.py` 通过，均为合成数据，不是远端天气真实性验收。
+
+温度判据补充：最低温≤5℃提示早晚低温，否则最高温≤15℃提示白天偏凉；温差≥7℃独立提醒。北京6～12℃周六触发白天偏凉，4～20℃与2～17℃触发低温和温差。补入15℃、15.1℃、5℃边界及缺失温度用例，53项天气相关与2项前端回归通过。阈值为产品穿衣参考，不是官方预警。

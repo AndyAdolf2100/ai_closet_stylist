@@ -117,7 +117,10 @@ function forecastCard(data, compact = false) {
   const groupedTips = data.days?.length > 1;
   if (groupedTips) alerts.classList.add('weather-alerts-by-day');
   for (const day of data.days || []) {
-    if (!day.reminders?.length) continue;
+    const tips = day.reminders?.length ? day.reminders : [{
+      kind: 'daily', severity: 'notice', title: '日常穿衣小叮咛',
+      text: '按当天温度与活动安排增减衣物，出门前留意最新预报。'
+    }];
     let container = alerts;
     if (groupedTips) {
       const group = el('section', 'weather-tip-day');
@@ -126,9 +129,9 @@ function forecastCard(data, compact = false) {
       heading.append(date, el('span', '', day.weekday)); group.append(heading);
       container = el('div', 'weather-tip-list'); group.append(container); alerts.append(group);
     }
-    for (const tip of day.reminders) {
+    for (const tip of tips) {
       const row = el('div', 'weather-tip ' + tip.severity);
-      row.append(el('span', 'tip-icon', { rain: '☂', snow: '❄', fog: '〰', wind: '彡', layers: '♡', cold: '❄', heat: '☀', storm: 'ϟ' }[tip.kind] || '✿'));
+      row.append(el('span', 'tip-icon', { rain: '☂', snow: '❄', fog: '〰', wind: '彡', layers: '♡', cold: '❄', cool: '❄', heat: '☀', storm: 'ϟ' }[tip.kind] || '✿'));
       const copy = el('div'); copy.append(el('strong', '', tip.title), el('p', '', tip.text)); row.append(copy); container.append(row);
     }
   }

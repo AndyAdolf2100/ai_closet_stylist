@@ -83,7 +83,9 @@ def reminders(condition, low=None, high=None, wind=None, visibility=None):
     if "大风" in condition or "台风" in condition or any(int(x) >= 6 for x in levels):
         add("wind", "风有点大，帮你收好小细节", "外层尽量能扣合，收好围巾、帽子与飘带；强风时别依赖雨伞，留意当地出行提醒。", "important")
     if low is not None and low <= 5:
-        add("cold", "保暖小叮咛", "低温时优先保暖外层与包脚鞋，室内再按体感脱减。")
+        add("cold", "早晚低温，记得保暖", "最低温较低，早晚出门优先保暖外层与包脚鞋，室内再按体感脱减。")
+    elif high is not None and high <= 15:
+        add("cool", "白天也偏凉，外层别太薄", "最高温也不高，白天出门同样备好保暖外层；按活动量和室内温度灵活增减。")
     if high is not None and high >= 30:
         add("heat", "清爽一点，也记得防晒", "选轻薄透气的穿法，备水并关注当地高温提示。")
     if low is not None and high is not None and high - low >= 7:

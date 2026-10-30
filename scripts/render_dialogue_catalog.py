@@ -15,6 +15,7 @@ from .preference_dialogues import SCENARIOS as PREFERENCES
 
 def catalog():
     groups = []
+    purposes = json.loads(Path(__file__).with_name("report_assets").joinpath("dialogue_purposes.json").read_text())
 
     def add(name, rows, category, source, expectations):
         turns = []
@@ -22,7 +23,17 @@ def catalog():
             expected = expectations.get(f'{name}/{turn}', {})
             turns.append({'turn': turn, 'index': index + 1, 'message': message,
                           'chat': chat, 'expected': expected})
-        groups.append({'id': name, 'category': category, 'source': source, 'turns': turns})
+        purpose = purposes.get(name)
+        profile = turns[0]['expected'].get('companion_profile', {})
+        if name.startswith('preference_zodiac_default_'):
+            purpose = f"星座资料为{profile.get('zodiac', '指定星座')}时，默认闲聊对象与资料一致，不冒充真实运势。"
+        elif name.startswith('preference_style_'):
+            purpose = f"风格设置{profile.get('style_preferences', [])}应落实到实际选中衣物，不只复述偏好。"
+        elif name.startswith('preference_priority_'):
+            purpose = f"优先因素{profile.get('dressing_priorities', [])}应体现在穿法与理由中，不保证未知商品性能。"
+        if not purpose:
+            raise ValueError(f'场景缺少用途说明：{name}')
+        groups.append({'id': name, 'category': category, 'purpose': purpose, 'source': source, 'turns': turns})
 
     for case in CASES:
         add(case[0], [case], '日常与人设', 'scripts/evaluate_personas.py · CASES', {})

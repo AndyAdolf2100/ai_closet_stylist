@@ -39,6 +39,28 @@ def test_combined_hazards_keep_serious_advice_without_fake_all_clear():
     assert "wind" not in {t["kind"] for t in reminders("阴", 18, 22, "3-4级")}
 
 
+@pytest.mark.parametrize("low,high,expected", [
+    (6, 12, {"cool"}),  # Saturday: colder daytime, but low > 5 and range < 7.
+    (4, 20, {"cold", "layers"}),
+    (2, 17, {"cold", "layers"}),
+    (9, 15, {"cool"}),
+    (9, 15.1, set()),
+    (5, 12, {"cold", "layers"}),  # Do not duplicate cool/cold advice.
+    (None, 12, {"cool"}),
+    (None, None, set()),
+])
+def test_temperature_tips_cover_cool_daytime_and_threshold_edges(low, high, expected):
+    assert {tip["kind"] for tip in reminders("多云", low, high)} == expected
+
+
+def test_beijing_saturday_forecast_has_specific_cool_day_tip():
+    day = normalize_day({"data_format": "2026-10-31", "temp_day": 12, "temp_night": 6,
+                         "condition_day": "多云", "condition_night": "多云"})
+    assert day["weekday"] == "周六"
+    assert [tip["kind"] for tip in day["reminders"]] == ["cool"]
+    assert "白天也偏凉" in day["reminders"][0]["title"]
+
+
 class FakeUpstream:
     def __init__(self, rows):
         self.rows, self.calls = rows, 0
