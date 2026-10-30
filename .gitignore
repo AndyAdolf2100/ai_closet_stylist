@@ -15,3 +15,5 @@ var/
 *.sqlite3*
 # Local review document contains screenshots of the authenticated wardrobe.
 docs/衣衣产品需求文档.docx
+
+config/postgres-local.env

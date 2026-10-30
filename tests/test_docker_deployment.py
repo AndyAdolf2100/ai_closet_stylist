@@ -150,3 +150,92 @@ async def test_explicit_production_web_login_uses_existing_upstream_contract(leg
     result = await login(Settings(allow_mobile_login=True, login_public_key=str(public_key)),
                          LoginRequest(mobile="13800000000", code="1234", device_id="synthetic-device"))
     assert result == {"access_token": "synthetic-token", "access_token_expires_at": None, "user": {"id": "123"}}
+
+
+@pytest.mark.parametrize("database,checkpoint,valid", [
+    ("var/stylist.sqlite3", "", False),
+    ("postgresql://REPLACE_USER:REPLACE_PASSWORD@REPLACE_HOST:5432/aicloset_stylist", "", False),
+    ("postgresql://fixture:fixture@db.invalid/aicloset_stylist", "local.sqlite3", False),
+    ("postgresql://fixture:fixture@db.invalid/aicloset_stylist", "", True),
+])
+def test_postgres_release_startup_checks_configuration_without_connecting(monkeypatch, database, checkpoint, valid):
+    from pathlib import Path
+
+    monkeypatch.setenv("STYLIST_REQUIRE_POSTGRES", "true")
+    settings = Settings(database=database, checkpoint_database=checkpoint,
+                        llm_url="https://model.invalid", llm_model="fixture", llm_key="fixture")
+    monkeypatch.setattr(Settings, "load", lambda: settings)
+    source = Path("deploy/docker/start.sh").read_text().split("<<'PY'\n", 1)[1].split("\nPY", 1)[0]
+    if valid:
+        exec(compile(source, "startup-check", "exec"), {})
+    else:
+        with pytest.raises(SystemExit, match="STYLIST_"):
+            exec(compile(source, "startup-check", "exec"), {})
+
+
+def test_compose_uses_private_database_configuration():
+    from pathlib import Path
+
+    environment = yaml.safe_load(Path("compose.yaml").read_text())["services"]["stylist"]["environment"]
+    assert environment["STYLIST_REQUIRE_POSTGRES"] == "true"
+    assert "STYLIST_DATABASE" not in environment
+    assert "STYLIST_CHECKPOINT_DATABASE" not in environment
+
+
+def test_explicit_database_import_changes_only_database_name(legacy, tmp_path):
+    path, _ = legacy
+    database_config = tmp_path / "server.yaml"
+    database_config.write_text(yaml.safe_dump({"postgresql": {"default": {
+        "source": "postgresql://fixture:synthetic@db.invalid:5432/aicloset_test?sslmode=prefer&connect_timeout=5"
+    }}}))
+    output = tmp_path / "config"
+    prepare(path, output, database_config)
+    text = (output / "deploy.env").read_text()
+    assert "@db.invalid:5432/aicloset_stylist?sslmode=prefer&connect_timeout=5" in text
+    assert "/aicloset_test" not in text
+
+
+def test_go_postgres_timezone_is_translated_to_libpq_options():
+    from psycopg.conninfo import conninfo_to_dict
+
+    from scripts.prepare_docker_config import postgres_deployment_url
+
+    dsn = postgres_deployment_url("postgresql://fixture:synthetic@db.invalid/aicloset_test?sslmode=prefer&connect_timeout=5&TimeZone=UTC")
+    params = conninfo_to_dict(dsn)
+    assert params["dbname"] == "aicloset_stylist"
+    assert params["options"] == "-c timezone=UTC"
+    assert params["sslmode"] == "prefer"
+
+
+def test_private_runtime_bundle_requires_opt_in_and_excludes_duplicate_source(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    source = tmp_path / "source"
+    for name in FILES:
+        path = source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fixture")
+    (source / "stylist").mkdir()
+    (source / "stylist/main.py").write_text("fixture application")
+    private = tmp_path / "private"
+    private.mkdir()
+    (private / "deploy.env").write_text("STYLIST_LLM_KEY=synthetic-private-key\n")
+    (private / "login-public.pem").write_text("fixture public key")
+    (private / "local.yaml").write_text("must-not-package")
+
+    def save_image(args, check):
+        Path(args[args.index("--output") + 1]).write_bytes(b"fixture image")
+
+    monkeypatch.setattr("scripts.package_deployment.subprocess.run", save_image)
+    output = tmp_path / "private.tar.gz"
+    package(output, image="fixture", root=source, private_config_dir=private, runtime_only=True)
+    assert output.stat().st_mode & 0o777 == 0o600
+    with tarfile.open(output) as archive:
+        names = archive.getnames()
+        assert "aicloset-assistant/image.tar" in names
+        assert not any("/stylist/" in name or name.endswith("local.yaml") for name in names)
+        env = archive.getmember("aicloset-assistant/private-config/deploy.env")
+        assert env.mode == 0o600
+        assert archive.extractfile(env).read() == (private / "deploy.env").read_bytes()
+    with pytest.raises(ValueError, match="requires an image"):
+        package(tmp_path / "invalid.tar.gz", root=source, runtime_only=True)

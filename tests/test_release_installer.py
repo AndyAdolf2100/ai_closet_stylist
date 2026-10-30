@@ -44,6 +44,14 @@ elif name == 'docker':
         if (root/'running').exists(): print('managed-container')
     elif args[:1] == ['build']:
         if os.environ.get('FAIL_BUILD'): sys.exit(1)
+    elif args[:1] == ['compose'] and 'run' in args:
+        if '-T' not in args:
+            print('the input device is not a TTY', file=sys.stderr); sys.exit(1)
+        if '--pull' in args:
+            print('unknown flag: --pull', file=sys.stderr); sys.exit(1)
+        if os.environ.get('CHECK_RUN_STDIN') and sys.stdin.read():
+            print('preflight inherited script input', file=sys.stderr); sys.exit(1)
+        if os.environ.get('FAIL_DATABASE'): sys.exit(1)
     elif args[:1] == ['compose'] and 'up' in args:
         if os.environ.get('FAIL_UP') and not (root/'up-failed').exists():
             (root/'up-failed').touch(); sys.exit(1)
@@ -71,7 +79,7 @@ def host(tmp_path):
     return tmp_path, env
 
 
-def make_release(tmp_path, label, *, offline=False):
+def make_release(tmp_path, label, *, offline=False, private=False):
     source = tmp_path / ('source-' + label)
     for name in FILES:
         path = source / name
@@ -95,6 +103,11 @@ def make_release(tmp_path, label, *, offline=False):
         # Fake Docker below verifies installer ordering, not image format or runtime compatibility.
         (payload / 'image.tar').write_bytes(b'synthetic-docker-image')
         (payload / 'image-name.txt').write_text('aicloset-stylist:offline-fixture\n')
+    if private:
+        private_dir = payload / 'private-config'
+        private_dir.mkdir()
+        (private_dir / 'deploy.env').write_text('STYLIST_LLM_KEY=private-fixture\n')
+        (private_dir / 'login-public.pem').write_text('private-fixture-public-key')
     manifest = payload / 'MANIFEST.sha256'
     manifest.write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + str(p.relative_to(payload)) + '\n'
                                 for p in sorted(payload.rglob('*')) if p.is_file() and p != manifest))
@@ -254,3 +267,40 @@ def test_unsafe_archive_cannot_escape_release_directory(host, kind):
     result = run(archive, env)
     assert result.returncode != 0
     assert not (root / 'escape').exists() and not (root / 'running').exists()
+
+
+def test_database_preflight_failure_keeps_previous_application(host):
+    root, env = host
+    assert run(make_release(root, 'db-original'), env).returncode == 0
+    previous = (root / 'deployment/current').resolve()
+    (root / 'events').write_text('')
+    result = run(make_release(root, 'db-failed'), {**env, 'FAIL_DATABASE': '1'})
+    assert result.returncode != 0
+    assert (root / 'deployment/current').resolve() == previous
+    events = [json.loads(line) for line in (root / 'events').read_text().splitlines()]
+    assert any(name == 'docker' and 'run' in args for name, args in events)
+    assert not any(name == 'docker' and 'up' in args for name, args in events)
+
+
+def test_private_bundle_is_automatic_and_failed_upgrade_restores_config(host):
+    root, env = host
+    env.pop('STYLIST_LLM_KEY')
+    result = run(make_release(root, 'private-first', private=True), env)
+    assert result.returncode == 0, result.stderr
+    original = (root / 'deployment/config/deploy.env').read_bytes()
+    assert original == b'STYLIST_LLM_KEY=private-fixture\n'
+    assert 'private-fixture' not in result.stdout + result.stderr
+    (root / 'deployment/config/deploy.env').write_text('old-config\n')
+    failed = run(make_release(root, 'private-failed', private=True), {**env, 'FAIL_DATABASE': '1'})
+    assert failed.returncode != 0
+    assert (root / 'deployment/config/deploy.env').read_text() == 'old-config\n'
+
+
+def test_preflight_does_not_inherit_installer_stdin(host):
+    root, env = host
+    archive = make_release(root, 'stdin-check', private=True)
+    result = subprocess.run(['bash', str(ROOT / 'install.sh'), str(archive)],
+                            env={**env, 'CHECK_RUN_STDIN': '1'},
+                            input='must-not-reach-preflight', capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert (root / 'deployment/current').is_symlink()

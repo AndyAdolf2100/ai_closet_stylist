@@ -6,13 +6,27 @@ trusted jump host, and keep it out of images, source archives and Git.
 import argparse
 import os
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import yaml
 from cryptography.hazmat.primitives import serialization
 
 
-def prepare(legacy_config: Path, output: Path):
+def postgres_deployment_url(source):
+    parsed = urlsplit(source)
+    if parsed.scheme not in {"postgresql", "postgres"} or not parsed.hostname:
+        raise ValueError("Invalid PostgreSQL source")
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    for key in list(query):
+        if key.lower() == "timezone":
+            zone = query.pop(key)
+            if not zone or any(c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_/-+" for c in zone):
+                raise ValueError("Invalid PostgreSQL timezone")
+            query["options"] = (query.get("options", "") + " -c timezone=" + zone).strip()
+    return urlunsplit(parsed._replace(path="/aicloset_stylist", query=urlencode(query, quote_via=quote)))
+
+
+def prepare(legacy_config: Path, output: Path, database_config: Path | None = None):
     if (output / "deploy.env").exists() or (output / "login-public.pem").exists():
         raise ValueError("Deployment config already exists; refusing to overwrite it")
     try:
@@ -41,9 +55,15 @@ def prepare(legacy_config: Path, output: Path):
             "STYLIST_LLM_KEY": llm["api_key"],
             "STYLIST_LOGIN_APP_VERSION": auth.get("app_version") or "1.2.0",
             "STYLIST_ALLOW_MOBILE_LOGIN": "true",
+            "STYLIST_DATABASE": "postgresql://REPLACE_USER:REPLACE_PASSWORD@REPLACE_HOST:5432/aicloset_stylist",
+            "STYLIST_CHECKPOINT_DATABASE": "",
             "STYLIST_ALERTS_URL": "",
             "STYLIST_ALERTS_KEY": "",
         }
+        if database_config is not None:
+            database_raw = yaml.safe_load(database_config.read_text())
+            source = database_raw["postgresql"]["default"]["source"]
+            values["STYLIST_DATABASE"] = postgres_deployment_url(source)
         if any(not values[k] for k in ["STYLIST_SERVER_URL", "STYLIST_MCP_URL", "STYLIST_LLM_URL",
                                        "STYLIST_LLM_MODEL", "STYLIST_LLM_KEY"]):
             raise ValueError("Required connection settings are missing")
@@ -64,9 +84,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--legacy-config", type=Path, default=Path("../ai_closet_agent/config/config.yaml"))
     parser.add_argument("--output-dir", type=Path, default=Path("config"))
+    parser.add_argument("--database-config", type=Path, help="Explicitly import server PostgreSQL credentials into private deploy.env only")
     args = parser.parse_args()
     try:
-        prepare(args.legacy_config.resolve(), args.output_dir)
+        prepare(args.legacy_config.resolve(), args.output_dir, args.database_config)
     except ValueError as exc:
         parser.exit(1, str(exc) + "\n")
     print("Created deploy.env (0600) and login-public.pem; transfer config/ privately, never into Git or the image.")

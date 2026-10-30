@@ -51,6 +51,8 @@ app_changed=0
 nginx_changed=0
 nginx_backup=''
 had_nginx=0
+config_changed=0
+config_backup=''
 compose_at() {
   local directory=$1 reference=$2
   shift 2
@@ -66,6 +68,15 @@ finish() {
     if (( nginx_changed )); then
       if (( had_nginx )); then cp -p "$nginx_backup" "$nginx_target"; else rm -f "$nginx_target"; fi
       "$nginx_bin" -t && "$nginx_bin" -s reload
+    fi
+    if (( config_changed )); then
+      for name in deploy.env login-public.pem; do
+        if [[ -f "$config_backup/$name" ]]; then
+          cp -p "$config_backup/$name" "$base/config/$name"
+        else
+          rm -f "$base/config/$name"
+        fi
+      done
     fi
     if (( app_changed )); then
       if [[ -n "$previous" && -f "$previous/.env" ]]; then
@@ -107,7 +118,18 @@ release="$base/releases/$version"
 mv "$payload" "$release"
 ln -s "$base/config" "$release/config"
 
-printf '\n[2/5] 准备配置（已有配置保持不变）\n'
+printf '\n[2/5] 准备配置（私密包配置先备份再安装）\n'
+if [[ -d "$release/private-config" ]]; then
+  [[ -f "$release/private-config/deploy.env" && -f "$release/private-config/login-public.pem" ]] || fail '私密配置不完整。'
+  config_backup="$base/backups/config-$version"
+  mkdir -m 700 "$config_backup"
+  for name in deploy.env login-public.pem; do
+    [[ ! -f "$base/config/$name" ]] || cp -p "$base/config/$name" "$config_backup/$name"
+  done
+  config_changed=1
+  install -m 600 "$release/private-config/deploy.env" "$base/config/deploy.env"
+  install -m 644 "$release/private-config/login-public.pem" "$base/config/login-public.pem"
+fi
 if [[ ! -f "$base/config/deploy.env" ]]; then
   if [[ -f /tmp/aicloset-assistant-config/deploy.env ]]; then
     install -m 600 /tmp/aicloset-assistant-config/deploy.env "$base/config/deploy.env"
@@ -128,6 +150,7 @@ if [[ ! -f "$base/config/deploy.env" ]]; then
       printf 'STYLIST_LLM_URL=%s\n' "$STYLIST_LLM_URL"
       printf 'STYLIST_LLM_MODEL=%s\n' "$STYLIST_LLM_MODEL"
       printf 'STYLIST_LLM_KEY=%s\n' "$model_key"
+      printf 'STYLIST_DATABASE=postgresql://REPLACE_USER:REPLACE_PASSWORD@REPLACE_HOST:5432/aicloset_stylist\nSTYLIST_CHECKPOINT_DATABASE=\n'
       printf 'STYLIST_LOGIN_APP_VERSION=%s\nSTYLIST_ALLOW_MOBILE_LOGIN=true\n' "$STYLIST_LOGIN_APP_VERSION"
     } >"$base/config/.deploy.env.new"
     chmod 600 "$base/config/.deploy.env.new"
@@ -153,6 +176,9 @@ else
   # docker build works with the existing Docker 20.10 CLI without a separate buildx plugin.
   docker build -t "$image" "$release"
 fi
+
+printf '\n检查容器到远程 PostgreSQL 的连接并准备独立库\n'
+compose_at "$release" "$image" run --rm -T --no-deps stylist /app/.venv/bin/python -m stylist.database_preflight --create-database </dev/null
 
 printf '\n[4/5] 更新应用并检查健康状态\n'
 app_changed=1

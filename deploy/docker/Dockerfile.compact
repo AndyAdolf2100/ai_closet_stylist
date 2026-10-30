@@ -1,0 +1,12 @@
+ARG STYLIST_RUNTIME_IMAGE=aicloset-stylist:release-amd64
+FROM ${STYLIST_RUNTIME_IMAGE} AS runtime
+USER root
+RUN rm -f /usr/local/bin/uv /usr/local/bin/uvx
+FROM scratch
+COPY --from=runtime / /
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LANGSMITH_TRACING=false
+WORKDIR /app
+USER 10001:10001
+EXPOSE 8000
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/stylist-start"]
+CMD ["/app/.venv/bin/uvicorn", "stylist.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--timeout-graceful-shutdown", "260", "--no-proxy-headers"]

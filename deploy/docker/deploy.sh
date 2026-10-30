@@ -14,10 +14,12 @@ if [ -f image.tar ] && [ -f image-name.txt ]; then
   docker load -i image.tar
   STYLIST_IMAGE=$(cat image-name.txt)
   export STYLIST_IMAGE
-  docker compose up -d --no-build --pull never --wait --wait-timeout 180
+
 else
-  docker compose up -d --build --wait --wait-timeout 180
+  docker compose build
 fi
 
+docker compose run --rm -T --no-deps stylist /app/.venv/bin/python -m stylist.database_preflight --create-database </dev/null
+docker compose up -d --no-build --pull never --wait --wait-timeout 180
 docker compose ps
 echo 'Application started on 127.0.0.1:8466. Configure host Nginx and HTTPS next.'

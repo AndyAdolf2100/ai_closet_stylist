@@ -12,8 +12,7 @@ services:
         format: raw
     environment:
       STYLIST_ENV: production
-      STYLIST_DATABASE: /app/var/stylist.sqlite3
-      STYLIST_CHECKPOINT_DATABASE: ""
+      STYLIST_REQUIRE_POSTGRES: "true"
       STYLIST_LOGIN_PUBLIC_KEY: /run/stylist/login-public.pem
       LANGSMITH_TRACING: "false"
     ports:

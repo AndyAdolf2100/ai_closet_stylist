@@ -2,7 +2,7 @@
 
 目标机器由用户在2026-10-29提供的实际输出确认：CentOS Linux 7 (Core)、x86_64、Docker 20.10.7。此前按Ubuntu准备的系统包安装命令不适用于这台机器；Docker应用镜像、Compose和Nginx站点内容仍可复用，宿主机工具、证书与网络须单独验证。
 
-完整安装和更新以 [离线部署总文档](TEST_SERVER_DEPLOYMENT.md) 为准。用户已提供版本 `20261029T111906Z-8ca143d32b14-10412` 部署成功输出；本文保留宿主机工具及路径说明。
+完整安装和更新以 [离线部署总文档](TEST_SERVER_DEPLOYMENT.md) 为准。用户已提供版本 `20261030T080643Z-91a41c298fa0-2192` 部署成功输出；本文保留宿主机工具及路径说明。
 
 ## Compose 安装
 
@@ -23,7 +23,7 @@ sudo docker compose ls
 
 ## 应用与 Nginx
 
-应用仍用项目中的 `compose.yaml`、私密的 `config/` 和单应用容器。连接配置准备、持久数据与备份方法见 [Docker部署说明](DOCKER_UBUNTU_DEPLOYMENT.md)，但其中apt安装和Ubuntu的sites-available/sites-enabled路径不要照搬。
+应用仍用项目中的 `compose.yaml`、私密的 `config/` 和单应用容器。远程PostgreSQL连接、私密打包与配置备份方法见 [发布操作入口](SIMPLE_DEPLOYMENT.md)。不要照搬Ubuntu的apt或sites-available/sites-enabled路径。
 
 先检查现有Nginx及实际include位置：
 

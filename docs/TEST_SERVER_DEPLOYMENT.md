@@ -1,67 +1,21 @@
 # 测试服务器配置与部署流程
 
-更新日期：2026-10-29。适用于当前 `ai_closet_stylist`，前端与 Agent 使用同一个应用容器。
-本文包含已经确认的服务器信息、发布步骤、Nginx 配置、更新与回退方法。
-服务器只能经跳板机访问，尚未由本机直接执行部署；下列“已确认”来自此前服务器命令输出，仍需部署时复核。
+更新日期：2026-10-30。当前采用前端与Agent同容器、远程PostgreSQL独立库和私密amd64离线包。打包、配置导入及安装命令统一见 [发布操作入口](SIMPLE_DEPLOYMENT.md)，本文件维护服务器环境、站点边界与验收记录。
 
-## 0. 当前实际采用的方案
+## 0. 当前已部署版本
 
-使用用户指定的 **`aicloset-assistant.wxbjq.top`**，助理独立站点文件为
-`/usr/local/nginx/conf/vhost/aicloset-assistant.wxbjq.top.conf`，原测试H5配置保持不变。
-主配置已有 `include vhost/*.conf;`，不用额外引用。
-8466在安装前由用户确认未占用；用户随后提供安装器成功输出，确认应用启动、Nginx配置检查／reload及本机HTTPS代理就绪检查已通过。
-
-此前的 `var/releases/aicloset-assistant.tar.gz` 约65.4MiB，是源码包；目标服务器已实际在下载基础镜像时超时。
-本次使用 `var/releases/aicloset-assistant-offline-amd64.tar.gz` 离线镜像包，按下面的故障处理命令上传重试。
-目标服务器现已返回部署成功，具体版本记录如下；业务接口验收仍单独进行。
-
-### 已部署版本（用户提供服务器输出）
-
-| 项目 | 本次结果 |
+| 项目 | 已确认结果 |
 | --- | --- |
-| 部署日期 | 2026-10-29 |
-| 版本 | `20261029T111906Z-8ca143d32b14-10412` |
-| 入口 | `https://aicloset-assistant.wxbjq.top/`，前端也可访问 `/mobile/` |
-| 配置目录 | `/opt/aicloset-assistant/config` |
-| 版本目录 | `/opt/aicloset-assistant/releases/20261029T111906Z-8ca143d32b14-10412` |
-| 发布包 | `aicloset-assistant-offline-amd64.tar.gz` |
-| 包SHA256 | `8ca143d32b146a974044a3356b56b32f6a5e9633c44d31d56e72857a866f587a` |
-| 证据 | 用户粘贴安装器“部署成功”及版本／配置路径输出 |
+| 版本 | `20261030T080643Z-91a41c298fa0-2192` |
+| 发布包 | `aicloset-assistant-private-amd64-v3.tar.gz`，约142.7MiB |
+| 入口 | `https://aicloset-assistant.wxbjq.top/`，支持 `/mobile/` |
+| 数据库 | 远程 PostgreSQL，独立 `aicloset_stylist` 库 |
+| 配置 | `/opt/aicloset-assistant/config` |
+| 证据 | 用户提供数据库预检成功及安装器“部署成功”输出 |
 
-安装器成功说明镜像加载、容器就绪及通过本机Nginx的HTTPS就绪检查已通过。
-未据此确认公网浏览器、上游登录／衣橱／MCP、真实模型回复、手记持久化或收费／退款全部通过。
-下一步在页面使用已有账号核对这些业务能力；付费生成仍需单独明确确认。
-后续更新复用服务器配置和持久数据卷，无需再次填写Key，不覆盖成开发机MySQL配置。
+服务器通过跳板机访问，以上为用户提供的服务器证据，不是助手直接远程执行结果。应用和HTTPS健康检查通过；登录、衣橱、模型回复、历史持久化和收费业务另行验收。
 
-**后续优先直接读配置：** 本机已生成私密目录 `var/releases/aicloset-assistant-config/`，
-将里面的 `deploy.env`、`login-public.pem` 与代码tar分开上传到服务器 `/tmp/aicloset-assistant-config/`。
-安装器首先复用 `/opt/aicloset-assistant/config/`，首次缺失时再复制预置目录里的文件；
-配置完整时不询问模型Key。私密配置不放进Git、镜像或通用代码tar，不贴文件内容。
-
-本地现用Key来自同级 `ai_closet_agent/config/config.yaml` 当前选中的模型，服务器复用同一份，
-无需申请新Key。当前使用火山方舟服务，Key不是手机号验证码、登录Token或数据库密码，不写进Nginx。
-如果首次只上传tar且没有配置，安装脚本仍会提示输入Key；输入不回显，粘贴后回车。
-
-### 2026-10-29 实际安装失败与处理
-
-服务器执行到 `[3/5] 准备镜像` 时，`FROM python:3.12-slim` 拉取失败，
-报 `registry-1.docker.io/v2/ ... Client.Timeout exceeded while awaiting headers`。
-这是构建机访问Docker Hub超时，应用还未启动；`部署未完成，开始恢复原服务` 是后续回退提示。
-本次流程到第2步已准备的 `/opt/aicloset-assistant/config/` 会保留，重试不必重新输入模型Key。
-
-对此改用包含 `linux/amd64` 应用镜像的离线包：
-`var/releases/aicloset-assistant-offline-amd64.tar.gz`，上传到测试服务器的 `/tmp/` 后执行：
-
-```bash
-sudo bash -o pipefail -c 'tar -xOf /tmp/aicloset-assistant-offline-amd64.tar.gz aicloset-assistant/install.sh | bash -s -- /tmp/aicloset-assistant-offline-amd64.tar.gz'
-```
-
-脚本在包内发现 `image.tar` 和 `image-name.txt` 后直接 `docker load`，
-再以 `--no-build --pull never` 启动；不需要服务器下载基础镜像或Python依赖。
-模型、衣橱及天气服务的运行期连接仍需要网络。
-旧的约65.4MiB包为源码包，不解决本次镜像下载超时。
-本机已成功构建linux/amd64镜像，并在断网、只读文件系统、非root用户容器中验证数据库初始化、就绪检查、新前缀鉴权及旧路由404。
-19项部署回归通过，含只load不build/pull的模拟检查。随后用户提供CentOS7目标机部署成功输出；应用安装及健康检查通过，业务链路仍待带身份验证。
+私密包已包含数据库与模型配置，不需要额外输入密码。包、解包目录和配置备份都含凭证，不提交Git或公开传输。普通包默认不含凭证，镜像始终不含凭证。
 
 ## 1. 当前环境与目标
 
@@ -90,15 +44,13 @@ sudo bash -o pipefail -c 'tar -xOf /tmp/aicloset-assistant-offline-amd64.tar.gz 
 浏览器 → HTTPS Nginx → 127.0.0.1:8466 → Stylist 容器:8000
                                              ├─ 文字模型
                                              ├─ Go REST／MCP／用户服务
-                                             └─ 独立持久数据卷
+                                             └─ 远程 PostgreSQL / aicloset_stylist
 ```
 
 接口约定：Stylist 自有接口为 `/stylist-api/`，登录代理为 `/stylist-api/auth/mobile-login`。
 原 Go `/api/`、账号服务 `/users/` 和 MCP `/mcp` 不改名。
 
-**数据库范围：本轮服务器仍使用 SQLite 持久卷。** 本机开发已支持 Docker MySQL，
-但这次不把开发库搬到服务器，也不修改远端 MySQL、PostgreSQL、Redis 或旧 Agent。
-当前服务器 `compose.yaml` 显式设置 SQLite；只在 `deploy.env` 加 MySQL URL 不会覆盖此项。
+**数据库范围：** 使用远程 PostgreSQL 的独立 `aicloset_stylist` 库，配置来自私密 `deploy.env`；会话与图检查点共用此库，不修改旧业务数据域。
 
 ## 2. 部署前在服务器检查
 
@@ -134,128 +86,21 @@ sudo /usr/local/nginx/sbin/nginx -T 2>&1 \
 `/algorithm` 到 `127.0.0.1:9191`。尚缺完整server块、MCP路由及dev域名的对应关系。
 具体位置和插入写法见 [原API定位与接入](NGINX_API_LOCATION.md)；不根据摘要覆盖整份旧站点。
 
-## 3. 本机生成最新发布包
+## 3. 打包、上传与配置
 
-在开发机项目根目录执行，不在测试服务器执行：
+按 [发布操作入口第1～3节](SIMPLE_DEPLOYMENT.md)准备私密配置、构建amd64镜像并打包，经跳板机上传至目标服务器 `/tmp`。当前Server内网连接已从其备份配置核实，模型设置来自同级Agent；文档不保存账号或密码。本地Docker PostgreSQL连接不能作为服务器部署地址。
 
-```bash
-docker buildx build --platform linux/amd64 --provenance=false --sbom=false --load -t aicloset-stylist:test-amd64 .
-uv run python scripts/package_deployment.py \
-  --bootstrap-config ../ai_closet_agent/config/config.yaml \
-  --image aicloset-stylist:test-amd64 \
-  --output var/releases/aicloset-assistant-offline-amd64.tar.gz
-```
+## 4. 安装前核对
 
-输出离线tar及同名 `.sha256` 文件。构建机须能下载基础镜像和锁定依赖，并支持linux/amd64构建。
-包内包含前端、Agent、部署脚本、`image.tar`、`image-name.txt`及公开连接默认值／登录公钥；
-不包含真实模型Key、本机数据库凭证、用户图片、历史数据库或旧Agent整份配置。
-程序修改后先重新构建镜像再打包；只重打源码不能让已有镜像更新。
+核对包名和 `.sha256`，确认是含镜像的私密包。安装器会备份并应用包内配置，不能假定服务器已有配置总是优先于包内配置。源代码有变化必须先重建镜像。当前测试机不使用需要联网构建的源码包。
 
-该镜像已完成本机amd64构建与断网启动检查，用户随后提供目标Docker20.10.7安装成功输出。
-每次新包仍需核验清单及目标机健康状态，不把某一历史版本成功当作所有后续版本通过。
+## 5. 安装方式
 
-### 生成与本地一致的私密配置（首次需要）
+先解出 `install.sh`，再以 `sudo bash 脚本路径 发布包路径` 从文件执行；具体v3命令见 [发布操作入口](SIMPLE_DEPLOYMENT.md#3-上传与安装更新)。不再使用管道执行安装脚本。
 
-```bash
-uv run python scripts/prepare_docker_config.py \
-  --legacy-config ../ai_closet_agent/config/config.yaml \
-  --output-dir var/releases/aicloset-assistant-config
-```
+安装器验证清单、准备配置、加载镜像，随后从容器预检PostgreSQL，再更新应用与独立助理Nginx站点。等待最终“部署成功”，不是看到数据库预检通过就停止。
 
-按 `llm.default_model_id` 选择模型，不显示密钥、不修改旧Agent。已有配置拒绝覆盖。
-已有服务器配置的正常更新跳过此步骤；本机配置变化不会自动覆盖服务器现用配置。
-
-### 可选源码包（当前测试机不采用）
-
-仅在目标服务器能下载基础镜像及Python依赖时使用：
-
-```bash
-uv run python scripts/package_deployment.py \
-  --bootstrap-config ../ai_closet_agent/config/config.yaml \
-  --output var/releases/aicloset-assistant-source.tar.gz
-```
-
-该包不含 `image.tar`，安装器会在服务器构建。当前测试机已实际遇到Docker Hub超时，继续使用离线包。
-
-## 4. 经跳板机上传
-
-应用tar必须上传到测试服务器，校验文件建议同时上传，不只上传到跳板机自身：
-
-```text
-/tmp/aicloset-assistant-offline-amd64.tar.gz
-/tmp/aicloset-assistant-offline-amd64.tar.gz.sha256
-```
-
-在测试服务器核对：
-
-```bash
-ls -lh /tmp/aicloset-assistant-offline-amd64.tar.gz /tmp/aicloset-assistant-offline-amd64.tar.gz.sha256
-cd /tmp
-sha256sum -c aicloset-assistant-offline-amd64.tar.gz.sha256
-```
-
-应显示 `aicloset-assistant-offline-amd64.tar.gz: OK`。上传包名和路径与命令保持一致。
-
-### 预置配置，避免交互输入Key
-
-另外上传本机私密配置目录中的两个文件，服务器路径为：
-
-```text
-/tmp/aicloset-assistant-config/deploy.env
-/tmp/aicloset-assistant-config/login-public.pem
-```
-
-在拥有这些文件的终端设置权限；管理员上传时使用管理员终端：
-
-```bash
-chmod 700 /tmp/aicloset-assistant-config
-chmod 600 /tmp/aicloset-assistant-config/deploy.env
-chmod 644 /tmp/aicloset-assistant-config/login-public.pem
-```
-
-不把配置内容发到聊天或写入共享日志。已有 `/opt/aicloset-assistant/config/` 优先，不会被上传的新文件自动覆盖。
-
-## 5. 安装与后续更新
-
-### 当前可执行方式：独立助理站点
-
-当前安装脚本管理 `/usr/local/nginx/conf/vhost/aicloset-assistant.wxbjq.top.conf`，
-不自动迁移其他 Server 站点。若其他文件已显式声明助理域名，脚本会拒绝部署；
-先检查冲突文件，不直接删除其他站点。
-
-执行：
-
-```bash
-sudo bash -o pipefail -c 'tar -xOf /tmp/aicloset-assistant-offline-amd64.tar.gz aicloset-assistant/install.sh | bash -s -- /tmp/aicloset-assistant-offline-amd64.tar.gz'
-```
-
-优先读取服务器已有配置，首次可直接读取第4节的预置配置，免手动输入Key。
-只有缺少配置时才提示输入本地现用的模型Key，输入不回显，粘贴后回车。
-默认上游为 `https://aicloset-dev.wxbjq.top` 和 `https://aicloset-dev.wxbjq.top/mcp`；
-这些来自配置，不代表已确认与当前服务器上的哪个服务端口对应。
-已有私密配置会保留。测试网页登录显式开启 `STYLIST_ALLOW_MOBILE_LOGIN=true`。
-
-脚本会验证包内清单、准备配置、构建／加载镜像、更新容器、检查就绪状态，
-然后备份并更新助理站点、执行 `nginx -t`、reload 和 HTTPS JSON 检查。
-失败时按脚本范围尝试恢复上一应用及助理站点；不会回滚数据库内容。
-
-部署后的目录：
-
-```text
-/opt/aicloset-assistant/
-├── config/
-│   ├── deploy.env          模型和上游配置，权限 0600
-│   └── login-public.pem    登录加密公钥
-├── releases/              每个发布版本
-├── current -> releases/…  当前成功版本
-├── previous -> releases/… 上一成功版本（首次没有）
-└── backups/               助理 Nginx 配置备份
-
-Docker 卷：aicloset-assistant_stylist-data
-容器内：/app/var/stylist.sqlite3 及对应检查点文件
-```
-
-不要执行 `docker compose down -v`，不要把本机 `config/local.yaml` 或 MySQL 凭证传入发布目录。
+配置保存在 `/opt/aicloset-assistant/config`，版本在 `releases/`，`current` 和 `previous` 指向成功版本，备份在 `backups/`。会话、设置、手记、试穿状态和检查点保存在远程库。不要删除已有持久资源或改写旧业务库。
 
 ## 6. Nginx 配置与统一文件
 
@@ -369,8 +214,8 @@ Nginx 日志路径以 `nginx -T` 中 `access_log`／`error_log` 为准，不假�
 
 ## 8. 后续更新与回退
 
-**更新：** 重新打包，上传同名 tar 和校验文件，校验后重复第5节安装命令。
-配置和数据卷保留，前后端同时更新；单实例切换会短暂中断，不承诺零停机。
+**更新：** 重新打包，上传同名 tar 和校验文件，校验后按[离线包安装步骤](SIMPLE_DEPLOYMENT.md#3-上传与安装更新)从文件运行安装脚本。
+私密包中的配置经备份后安装，远程数据库保留，前后端同时更新；单实例切换会短暂中断，不承诺零停机。
 如果已经改成合并站点，必须先完成安装器同步后再使用自动更新。
 
 **失败恢复：** 先查看安装输出，脚本已经尝试恢复时不要同时启动另一轮操作。
@@ -398,70 +243,26 @@ curl -fsS http://127.0.0.1:8466/health/ready
 
 ### 数据库和备份边界
 
-服务器当前使用SQLite，位于 `aicloset-assistant_stylist-data` 卷中，主文件为 `/app/var/stylist.sqlite3`。
-会话、设置、手记、试穿状态及检查点不在发布镜像中；同一项目名的更新复用该卷和 `/opt/aicloset-assistant/config/`。
-MySQL代码虽已支持，但当前Compose显式设置SQLite，只改 `deploy.env` 的数据库URL不会生效。
-切远程MySQL需独立建库、修改Compose、备份迁移SQLite及核对账号归属，不能只换地址。
+远程PostgreSQL独立库保存本项目业务状态。使用数据库实例的备份能力或经过授权的逻辑备份流程，应用目录打包不能替代数据库备份。私密配置与TLS证书另行备份。实际备份恢复尚未验收，不提供未经核对的覆盖恢复命令。
 
-完整备份应在无在途请求时停止应用，然后导出整个 `/app/var`（包括检查点及SQLite关联文件），再启动原应用。
-例如在管理员终端中执行，备份包含用户数据，保存在700权限目录：
+## 9. 已遇到的问题
 
-```bash
-sudo -i
-cd /opt/aicloset-assistant/current
-mkdir -p /opt/aicloset-assistant/data-backups
-chmod 700 /opt/aicloset-assistant/data-backups
-docker compose -p aicloset-assistant stop stylist
-docker compose -p aicloset-assistant run --rm --no-deps --pull never --entrypoint /bin/sh stylist \
-  -c 'tar -C /app/var -czf - .' > "/opt/aicloset-assistant/data-backups/data-$(date +%Y%m%d-%H%M%S).tar.gz"
-docker compose -p aicloset-assistant up -d --no-build --pull never --wait
-chmod 600 /opt/aicloset-assistant/data-backups/*.tar.gz
-exit
-```
-
-示例为停机备份步骤，不是已执行的远端备份证据；备份失败时保留现场并恢复服务，不删除原卷。
-私密配置及TLS证书另按服务器备份机制保存。恢复时停应用并核对目标卷，不覆盖原Go业务库。
-
-## 9. 常见故障定位
-
-| 现象 | 首先核对 |
+| 现象 | 处理与边界 |
 | --- | --- |
-| `sudo: nginx: command not found` | 使用 `/usr/local/nginx/sbin/nginx` 完整路径 |
-| GLIBC_2.32／2.34 错误 | 不是应用数据库问题；使用已验证的 CentOS7 Compose，不替换 glibc |
-| 首次构建超时 | 说明使用了源码包；当前测试机使用含已构建amd64镜像的离线包 |
-| 安装器提示域名冲突 | 先检测已有 `server_name`；不要覆盖未知业务配置 |
-| 502 | 容器健康、8466监听、代理目标及 SELinux 审计；不直接关闭 SELinux |
-| `/stylist-api/` 返回404 | 前后端是否同版、proxy_pass 是否误加尾斜杠、浏览器是否仍缓存旧脚本 |
-| 返回旧管理后台HTML | 域名命中了旧站点／旧 location；证书可用不代表代理正确 |
-| 回复迟迟不显示进度 | SSE 的缓冲、压缩、超时及自动重试设置 |
-| 登录后失效 | 上游 Token 过期或被其他登录替换；换本地数据库不改变登录策略 |
+| 镜像仓库访问超时 | 使用已构建amd64镜像的离线包，服务器不拉取基础镜像 |
+| `unknown flag: --pull` | 旧Compose的run不支持此参数，预检已移除 |
+| `the input device is not a TTY` | run增加-T，显式关闭TTY |
+| 预检成功后直接结束 | 从文件运行install.sh；工作区预检额外重定向stdin到/dev/null |
+| `OperationalError; SQLSTATE=none` | 不能仅凭此判断白名单；使用脱敏错误定位。工作区先连postgres维护库检查并创建目标库 |
+| GLIBC版本错误 | 使用CentOS7兼容Compose，不更换系统glibc |
+| 返回旧管理后台HTML | 检查域名对应站点和location，证书可用不代表代理正确 |
+| 502或响应无进度 | 检查容器健康、8466、Nginx上游、SSE缓冲与超时 |
 
-## 10. 验证范围
+## 10. 当前验收
 
-已验证本地新前缀、历史405项Python／46项真实本机MySQL／36项前端回归及独立Nginx片段语法；具体次数为当时记录。
-19项部署回归覆盖模拟安装与回退；amd64镜像已通过本机断网启动检查。
-目标服务器由用户实际执行安装，并提供第0节的成功版本输出，证明该版镜像加载、容器就绪及HTTPS代理检查通过。
-没有直接登录跳板机或执行远端站点合并、远端数据库迁移、完整备份恢复或真实收费生成；带身份业务另行验收。
-
-### 本轮提交前复核
-
-2026-10-29重新核对文档与脚本：407项Python测试通过，46项需显式连接本机MySQL的用例默认跳过；
-36项Node前端测试通过，Ruff、Shell语法和部署文档链接／命令检查通过。
-新增回归覆盖首次预置私密配置免Key提示且不覆盖原文件；外部服务为模拟，没有真实模型或付费生成调用。
-此次提交文档和必要部署代码，不自动重新打包、更新服务器或推送Git远端。
-
-### iPhone输入自动放大修复（待服务器更新与真机复测）
-
-登录框继承的12px字号、手记的14px字号会触发iPhone Safari输入聚焦放大。
-修复将手机宽度及无悬停粗指针设备（含横屏）的聊天、登录、搜索、称呼、手记输入字号设为至少16px，
-保留手动双指缩放；主样式和手记样式版本已更新。
-36项前端回归、样式分发检查和amd64镜像断网启动检查通过；这不代替iPhone键盘弹出时的真机验收。
-
-对应离线包 `aicloset-assistant-iphone-input-amd64.tar.gz` 上传到服务器 `/tmp/` 后执行：
-
-```bash
-sudo bash -o pipefail -c 'tar -xOf /tmp/aicloset-assistant-iphone-input-amd64.tar.gz aicloset-assistant/install.sh | bash -s -- /tmp/aicloset-assistant-iphone-input-amd64.tar.gz'
-```
-
-成功后在iPhone刷新页面，检查登录、聊天、城市搜索和手记输入，竖屏／横屏点击后页面不再额外放大，
-键盘关闭后仍可正常滚动，手动双指缩放仍可用。此次不声明已经在服务器发布修复。
+- 本地复用PostgreSQL17.6 Docker镜像，39项真实临时库回归通过；外部模型和收费接口模拟。
+- 精简amd64镜像通过连接本地PostgreSQL、只读文件系统启动及健康检查。
+- 安装器回归覆盖私密配置自动安装、失败恢复、离线镜像和旧Compose参数；实际Docker Compose管道stdin预检通过。
+- 用户在服务器成功连接维护库、准备目标库，再完成v3安装；版本见第0节。
+- 工作区追加的stdin隔离、维护库优先检查和脱敏错误增强尚不能当作v3已发布内容。
+- 无真实收费／退款、远程备份恢复验收；手机真机、登录、衣橱及模型表现需分别核对。

@@ -40,12 +40,12 @@ export STYLIST_LOGIN_PUBLIC_KEY=/absolute/path/to/public-key.pem
 sh run-local.sh
 ```
 
-以上密钥是占位符，不是可用配置。生产环境设置 `STYLIST_ENV=production` 关闭本地手机号登录代理，通过现有 App 提供的 Bearer 登录态访问。本地默认独立 SQLite；多副本部署已增加共享 PostgreSQL 与持久化图检查点支持，仍须真实数据库和 K8s 演练，不能把本地测试当成生产验收完成。
+以上密钥是占位符，不是可用配置。生产环境设置 `STYLIST_ENV=production` 关闭本地手机号登录代理，通过现有 App 提供的 Bearer 登录态访问。当前本地调试与发布使用 PostgreSQL 独立库 `aicloset_stylist`；多副本和K8s仍需单独演练。
 
-本地也可使用 Docker MySQL，保存本项目的设置、会话、试穿状态与 LangGraph 检查点：
-`uv run python scripts/setup_mysql_local.py`，然后 `sh run-local.sh`。
-只复用本机已有镜像，不拉取新镜像；使用独立 `stylist_local` 数据库，旧 Agent 和远端数据库不变。
-详见 [本地 MySQL 调试](docs/MYSQL_LOCAL.md)。
+本地使用已有 Docker PostgreSQL 镜像：
+`uv run python scripts/setup_postgres_local.py`，然后 `sh run-local.sh`。
+真实本地数据库回归执行 `uv run python scripts/check_postgres_local.py`，只使用临时库和模拟外部服务。
+详见 [PostgreSQL本地与服务器验证](docs/POSTGRES_LOCAL.md)。
 
 ## 已实现
 
@@ -69,7 +69,7 @@ sh run-local.sh
 
 新项目没有复制旧版的多角色 Critics、复杂关键词路由、传统配色评分、隐式画像学习、通用工具选择器、自动衣橱写入及重复数据库层。保留一个需求记录、一条可追踪的执行路径和少量明确接口。
 
-旧项目原有源码、用户数据和未提交改动均保留。本项目只新增自己的运行状态表，不迁移、清空或改动原 MySQL／PostgreSQL 业务表。
+旧项目原有源码、用户数据和未提交改动均保留。本项目只新增自己的运行状态表，不迁移、清空或改动原业务数据库。
 
 ## 数据和接口
 
@@ -107,7 +107,7 @@ uv run python scripts/evaluate_semantics.py
 这台 CentOS7 测试机的环境、打包、跳板机上传、安装、Nginx合并、验收、更新及回退统一见
 [测试服务器配置与部署流程](docs/TEST_SERVER_DEPLOYMENT.md)。
 
-当前测试机使用 [amd64离线包、一条命令部署](docs/SIMPLE_DEPLOYMENT.md)：前端与Agent同容器，脚本校验并加载已构建镜像、更新应用和现有Nginx；优先读取独立私密配置，缺失才提示输入Key，后续保留配置和SQLite持久数据。用户已提供版本 `20261029T111906Z-8ca143d32b14-10412` 的部署成功输出；登录、衣橱及模型效果仍需单独验收。无需镜像仓库，运行配置、密钥、数据和发布tar不提交Git。
+当前测试机使用 [PostgreSQL私密amd64离线包](docs/SIMPLE_DEPLOYMENT.md)：前端＋Agent同容器，自动应用包内私密配置、检查远程独立库、更新应用与Nginx。先解出安装脚本再从文件执行。用户已确认版本 `20261030T080643Z-91a41c298fa0-2192` 部署成功；登录、衣橱及模型效果另验。专用包可按用户授权携带凭证，但配置、密钥、数据及发布包不提交Git，镜像本身不含凭证。
 
 当前测试机实际为CentOS7、x86_64、Docker20.10.7，已确认Ubuntu版Compose二进制存在GLIBC不兼容；该机器请先读 [CentOS7部署补充](docs/CENTOS7_DEPLOYMENT.md)，使用静态链接Compose离线包，不套用Ubuntu系统工具安装命令。
 
