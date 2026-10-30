@@ -92,15 +92,17 @@
       button.append(photo(item), make('span', '', labels[role(item)])); button.onclick = () => select(i); strip.append(button);
     });
     content.append(overview, detail); dialog.append(heading, content, strip); document.body.append(dialog);
-    let selected = 0, zoomed = false;
+    let selected = 0;
     function select(index) {
-      selected = index; zoomed = false; const item = items[index];
+      selected = index; const item = items[index];
       canvas.querySelectorAll('.outfit-piece').forEach((button, i) => button.setAttribute('aria-pressed', String(index === i)));
       [...strip.children].forEach((button, i) => button.setAttribute('aria-pressed', String(index === i)));
       detail.replaceChildren();
-      const imageStage = make('button', 'outfit-original'); imageStage.type = 'button'; imageStage.setAttribute('aria-label', '放大单品详情图片');
+      const imageStage = make('button', 'outfit-original'); imageStage.type = 'button'; imageStage.setAttribute('aria-label', '预览单品大图');
       const image = photo(item, true); imageStage.append(image);
-      imageStage.onclick = () => { zoomed = !zoomed; imageStage.classList.toggle('is-zoomed', zoomed); imageStage.setAttribute('aria-label', zoomed ? '还原单品图片' : '放大单品详情图片'); imageStage.setAttribute('aria-pressed', String(zoomed)); };
+      imageStage.disabled = !safe(item.original_image || item.cutout_image);
+      imageStage.onclick = () => window.ProductPreview?.open(
+        items.map(piece => ({src: safe(piece.original_image || piece.cutout_image), alt: name(piece)})), index, imageStage);
       const info = make('div', 'outfit-item-info');
       info.append(make('span', 'outfit-kicker', `${index + 1} / ${items.length} · ${item.source === 'user' ? '个人衣橱' : '衣物单品'}`), make('h3', '', name(item)));
       const attrs = make('dl', 'outfit-attributes');
@@ -125,6 +127,7 @@
     });
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
     dialog.addEventListener('close', () => {
+      window.ProductPreview?.close();
       document.documentElement.classList.remove('outfit-detail-open'); dialog.remove();
       if (modal === dialog) modal = null;
       if (opener?.isConnected) opener.focus({ preventScroll: true }); opener = null;

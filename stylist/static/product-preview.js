@@ -84,12 +84,16 @@
     if (opener?.isConnected) opener.focus({ preventScroll: true });
     opener = null;
   });
+  function open(items, initial = 0, trigger = null) {
+    if (!items.length) return;
+    gallery = items; index = initial; opener = trigger;
+    show(); dialog.showModal(); document.documentElement.classList.add('preview-open'); close.focus();
+  }
+  window.ProductPreview = { open, close: () => { if (dialog.open) dialog.close(); } };
   document.addEventListener('click', event => {
     const button = event.target.closest('.product-image');
     if (!button) return;
     const buttons = [...button.closest('.products').querySelectorAll('.product-image')];
-    gallery = buttons.map(item => ({ src: item.dataset.previewSrc, alt: item.querySelector('img').alt }));
-    index = buttons.indexOf(button); opener = button;
-    show(); dialog.showModal(); document.documentElement.classList.add('preview-open'); close.focus();
+    open(buttons.map(item => ({ src: item.dataset.previewSrc, alt: item.querySelector('img').alt })), buttons.indexOf(button), button);
   });
 })();

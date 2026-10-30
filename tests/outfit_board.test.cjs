@@ -29,16 +29,38 @@ test('missing historic categories are inferred only from category evidence',()=>
  const {dom,board}=setup();assert.equal(board.role({secondary_class_name:'风衣'}),'outer');
  assert.equal(board.role({class_name:'半身裙'}),'bottom');assert.equal(board.role({description:'外套上有包'}),'other');dom.window.close();
 });
-test('selecting a piece opens its original detail; thumbnails, keyboard, zoom and focus work',async()=>{
+test('selecting a piece opens its original detail; existing large preview restores detail focus',async()=>{
  const {dom,w,board}=setup();const items=[item('top',{title:'白衬衫',material:'棉',color:'白色'}),item('outer',{title:'风衣'}),item('shoes')];
  const root=board.create({title:'舒服的通勤',items});w.document.body.append(root);await ready();
  root.querySelectorAll('.outfit-piece')[1].click();let modal=w.document.querySelector('dialog');assert(modal.open);
  assert.equal(modal.querySelector('.outfit-item-info h3').textContent,'风衣');
  assert.equal(modal.querySelector('.outfit-original img').src,'https://photos.invalid/original.jpg');
  modal.querySelector('.outfit-thumbnail').click();assert.match(modal.querySelector('dl').textContent,/棉/);
- modal.querySelector('.outfit-original').click();assert(modal.querySelector('.is-zoomed'));
+ w.eval(fs.readFileSync('stylist/static/product-preview.js','utf8'));
+ const trigger=modal.querySelector('.outfit-original');trigger.click();
+ const preview=w.document.getElementById('product-preview');assert(preview.open);assert(modal.open);
+ assert.equal(preview.querySelector('img').src,'https://photos.invalid/original.jpg');
+ assert(!modal.querySelector('.is-zoomed'));assert(!preview.querySelector('.is-zoomed'));
+ assert(preview.querySelector('[aria-label="放大图片"]'));
+ const previous=preview.querySelector('[aria-label="上一张商品图片"]');
+ const next=preview.querySelector('[aria-label="下一张商品图片"]');
+ assert(previous.disabled);assert(!next.disabled);next.click();
+ assert.equal(preview.querySelector('img').alt,'风衣');
+ preview.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+ assert.equal(preview.querySelector('img').alt,'shoes');assert(next.disabled);
+ preview.querySelector('img').click();assert(preview.querySelector('.is-zoomed'));
+ preview.querySelector('[aria-label="还原图片大小"]').click();assert(!preview.querySelector('.is-zoomed'));
+ const stage=preview.querySelector('.preview-stage');
+ for(const [type,property,x] of [['touchstart','touches',20],['touchend','changedTouches',160]]){
+  const event=new w.Event(type);Object.defineProperty(event,property,{value:[{clientX:x,clientY:30}]});stage.dispatchEvent(event);
+ }
+ assert.equal(preview.querySelector('img').alt,'风衣');
+ preview.querySelector('[aria-label="关闭图片预览"]').click();assert(!preview.open);assert.equal(w.document.activeElement,trigger);
  modal.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));assert.equal(modal.querySelector('.outfit-item-info h3').textContent,'风衣');
- modal.close();assert(!w.document.querySelector('dialog'));assert.equal(w.document.activeElement,root.querySelector('.outfit-expand'));
+ modal.querySelector('.outfit-original').click();assert.equal(preview.querySelector('img').alt,'风衣');
+ assert.match(preview.querySelector('.preview-caption').textContent,/2 \/ 3/);
+ modal.close();assert(!w.document.querySelector('.outfit-detail'));assert.equal(w.document.activeElement,root.querySelector('.outfit-expand'));
+ assert(!preview.open);
  dom.window.close();
 });
 test('missing/unsafe images and fallback failures are explicit; text cannot inject HTML',async()=>{
