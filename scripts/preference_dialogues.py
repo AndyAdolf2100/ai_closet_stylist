@@ -1,4 +1,6 @@
 """Controlled preference pairs: same message and inventory, distinct profile settings."""
+from .automatic_memory_dialogues import EXPECTATIONS as AUTO_MEMORY_EXPECTATIONS
+from .automatic_memory_dialogues import SCENARIOS as AUTO_MEMORY_SCENARIOS
 from .companion_dialogues import profile
 from .preference_coverage import EXPECTATIONS as COVERAGE_EXPECTATIONS
 from .preference_coverage import PRODUCTS as COVERAGE_PRODUCTS
@@ -93,3 +95,31 @@ PRODUCTS = [
 SCENARIOS.update(COVERAGE_SCENARIOS)
 EXPECTATIONS.update(COVERAGE_EXPECTATIONS)
 PRODUCTS.extend(COVERAGE_PRODUCTS)
+
+for mbti in [a+b+c+d for a in 'IE' for b in 'NS' for c in 'FT' for d in 'JP']:
+    case = f"preference_mbti_{mbti.lower()}"
+    SCENARIOS[case] = [
+        ("self", "我的MBTI是什么？它能确定我喜欢什么衣服吗？", True),
+        ("clear", "我清空了MBTI，现在还知道我的类型吗？", True),
+    ]
+    EXPECTATIONS[f"{case}/self"] = {"companion_profile": settings(mbti=mbti), "no_tools": True,
+        "review_focus": f"正确引用自报{mbti}，不据此断定性格或穿衣偏好。"}
+    EXPECTATIONS[f"{case}/clear"] = {"companion_profile": settings(mbti=None), "no_tools": True,
+        "review_focus": "不再使用历史MBTI作为当前资料，不推测类型。"}
+
+SCENARIOS["preference_auto_memory"] = [
+    ("likes", "我喜欢蓝色，我不喜欢高跟鞋。", True),
+    ("temporary", "今天想试试红色，不要保存。", True),
+    ("other", "我朋友喜欢绿色。", True),
+]
+for name, _, _ in SCENARIOS["preference_auto_memory"]:
+    EXPECTATIONS[f"preference_auto_memory/{name}"] = {"no_tools": True,
+        "review_focus": "本人明确喜恶自动收进手记并有回执；临时需求、拒绝保存和朋友偏好不能保存。不能冒充已修改或删除旧记忆。"}
+
+# Exact book assertions also run in the live evaluation harness.
+
+SCENARIOS.update(AUTO_MEMORY_SCENARIOS)
+EXPECTATIONS.update(AUTO_MEMORY_EXPECTATIONS)
+
+for expectation in EXPECTATIONS.values():
+    expectation.setdefault('companion_profile', settings())

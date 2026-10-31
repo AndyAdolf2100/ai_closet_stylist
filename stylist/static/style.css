@@ -604,3 +604,66 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
   #companion-dialog .companion-field input,
   select{font-size:max(16px,1rem)}
 }
+
+/* MBTI reading cards share the selected companion's palette and character art. */
+#preferences-dialog .mbti-lead{margin:0 0 16px}
+#preferences-dialog [data-preference-group=mbti]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#preferences-dialog [data-preference-group=mbti] .preference-chip{padding:13px 8px;text-align:center;border-radius:14px;min-height:72px;background:var(--pref-paper)}
+#preferences-dialog [data-preference-group=mbti] strong{font:600 17px/1.4 Georgia,serif;letter-spacing:1px}
+#preferences-dialog [data-preference-group=mbti] small{display:block;font-size:10px;letter-spacing:1px;margin-top:5px;color:var(--muted)}
+.mbti-detail{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(130deg,var(--soft),var(--pref-paper));overflow:hidden}
+.mbti-illustration{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+.mbti-companion-art{display:block;width:145px;height:145px;background-image:url('/static/assets/mbti-female-types-v1.png');background-size:400% 400%;background-position:0 0;background-repeat:no-repeat;border-radius:80px 80px 20px 20px}
+:root[data-stylist-gender=male] .mbti-companion-art{background-image:url('/static/assets/mbti-male-types-v1.png')}
+
+
+#preferences-dialog .mbti-detail h3{font:23px/1.5 Georgia,'Songti SC',serif;margin:6px 0 8px}
+.mbti-detail-copy>p{font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+#mbti-dimensions{display:grid;gap:9px;margin:14px 0 0}
+#mbti-dimensions>div{display:grid;grid-template-columns:68px minmax(0,1fr);gap:8px;font-size:11px;line-height:1.7}
+#mbti-dimensions dt{color:var(--accent)}#mbti-dimensions dd{margin:0;color:var(--muted)}
+.mbti-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#mbti-draft-note{font-size:10px;color:var(--muted)}#preferences-dialog #mbti-clear{min-height:44px;padding:8px 0;border:0;background:transparent;color:var(--accent);box-shadow:none}
+.mbti-field a{color:var(--accent);text-underline-offset:3px}
+@media(max-width:480px){.mbti-detail{grid-template-columns:76px minmax(0,1fr);gap:12px;padding:14px 12px}.mbti-companion-art{width:76px;height:76px}#preferences-dialog .mbti-detail h3{font-size:20px}#mbti-dimensions>div{grid-template-columns:1fr;gap:1px}#preferences-dialog [data-preference-group=mbti]{gap:6px}#preferences-dialog [data-preference-group=mbti] strong{font-size:15px}#preferences-dialog [data-preference-group=mbti] small{letter-spacing:0;font-size:10px}}
+/* Collectible paper tabs: stable layout, motion only when requested by the user. */
+#preferences-dialog [data-preference-group=mbti] .preference-chip{isolation:isolate;overflow:hidden;border-radius:18px 11px 18px 11px;background:linear-gradient(145deg,var(--pref-paper),var(--soft));transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+#preferences-dialog [data-preference-group=mbti] .preference-chip::before{content:'✧';position:absolute;right:6px;top:2px;font-size:19px;color:var(--pref-detail);opacity:.35;pointer-events:none;transform:rotate(-15deg)}
+#preferences-dialog [data-preference-group=mbti] .preference-chip:nth-child(3n+2){border-radius:11px 18px 11px 18px}
+#preferences-dialog [data-preference-group=mbti] .preference-chip:nth-child(3n)::before{content:'· ✦';font-size:14px;top:5px}
+#preferences-dialog [data-preference-group=style_preferences],#preferences-dialog [data-preference-group=dressing_priorities]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#preferences-dialog .preference-chip.has-style-art{padding:10px 6px 14px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;border-radius:20px 20px 12px 12px;transition:transform .2s ease,box-shadow .2s ease;overflow:hidden}
+.style-sprite{display:block;width:82px;max-width:100%;aspect-ratio:1;background-image:url('/static/assets/preference-fashion-photo-v2.png');background-size:400% 400%;background-repeat:no-repeat;border-radius:50%;box-shadow:0 3px 12px color-mix(in srgb,var(--accent) 8%,transparent);transition:transform .25s ease}
+.has-style-art strong{font-size:12px;font-weight:500}
+@media(hover:hover){#preferences-dialog [data-preference-group=mbti] .preference-chip:hover{transform:translateY(-3px) rotate(-1deg);box-shadow:0 7px 16px color-mix(in srgb,var(--accent) 12%,transparent)}#preferences-dialog .has-style-art:hover .style-sprite{transform:translateY(-3px) rotate(4deg)}}
+#preferences-dialog [data-preference-group=mbti] .preference-chip:active,#preferences-dialog .has-style-art:active{transform:scale(.97)}
+@media(max-width:480px){#preferences-dialog [data-preference-group=style_preferences],#preferences-dialog [data-preference-group=dressing_priorities]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.style-sprite{width:88px}#preferences-dialog .preference-chip.has-style-art{padding:10px 6px 13px}}
+@media(prefers-reduced-motion:reduce){#preferences-dialog [data-preference-group=mbti] .preference-chip,#preferences-dialog .preference-chip.has-style-art,.style-sprite{transition:none!important;transform:none!important}}
+
+/* Keep the complete garments visible inside each sprite cell. */
+.style-sprite{border-radius:12px}
+
+.mbti-companion-art{border-radius:14px}.mbti-companion-art[hidden]{display:none}
+#preferences-dialog [data-preference-group=mbti] small{font-size:9px;letter-spacing:0;line-height:1.7}
+
+
+.mbti-detail{align-items:start}.mbti-detail-copy{min-width:0;align-self:center;overflow-wrap:anywhere}#mbti-dimensions{grid-column:1 / -1;margin-top:0}
+@media(max-width:480px){.mbti-detail{grid-template-columns:88px minmax(0,1fr);gap:12px}.mbti-companion-art{width:88px;height:88px}#preferences-dialog .mbti-detail h3{font-size:18px;margin-top:0}#mbti-dimensions>div{grid-template-columns:68px minmax(0,1fr);gap:8px}}
+
+/* Use the original simple selected state for the illustrated preference cards. */
+#preferences-dialog [data-preference-group=mbti] .preference-chip[aria-pressed=true],#preferences-dialog .preference-chip.has-style-art[aria-pressed=true]{background:var(--soft);border-color:var(--accent);color:var(--accent);box-shadow:none;transform:none}
+
+/* Unselected MBTI uses companion personality-exploration artwork, never a default type. */
+.mbti-companion-art.mbti-default-art{background-image:url('/static/assets/mbti-companion-exploration-v1.png');background-size:200% 100%;background-position:0 0}
+:root[data-stylist-gender=male] .mbti-companion-art.mbti-default-art{background-image:url('/static/assets/mbti-companion-exploration-v1.png');background-position:100% 0}
+
+/* Style is visual; priorities are compact practical choices. */
+#preferences-dialog [data-preference-group=style_preferences] .has-style-art{padding:7px 7px 13px;gap:10px;border-radius:15px;min-width:0}
+#preferences-dialog [data-preference-group=style_preferences] .style-sprite{width:100%;max-width:none;border-radius:10px;box-shadow:none}
+#preferences-dialog [data-preference-group=style_preferences] strong{font-size:13px;letter-spacing:1px}
+#preferences-dialog [data-preference-group=dressing_priorities]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#preferences-dialog [data-preference-group=dressing_priorities] .has-style-art{flex-direction:row;text-align:left;padding:10px 12px;gap:13px;border-radius:13px;min-width:0;min-height:72px}
+#preferences-dialog [data-preference-group=dressing_priorities] .style-sprite{width:50px;height:50px;flex:0 0 50px;border-radius:9px;box-shadow:none}
+#preferences-dialog [data-preference-group=dressing_priorities] strong{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+@media(hover:hover){#preferences-dialog .has-style-art:hover .style-sprite{transform:scale(1.025)}}
+@media(max-width:760px){#preferences-dialog [data-preference-group=style_preferences]{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#preferences-dialog [data-preference-group=dressing_priorities]{grid-template-columns:1fr}#preferences-dialog [data-preference-group=dressing_priorities] .has-style-art{min-height:68px}}

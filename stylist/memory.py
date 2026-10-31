@@ -1,4 +1,4 @@
-"""User-controlled, account-scoped long-term notes; no implicit extraction."""
+"""User-controlled, account-scoped long-term notes; conservative preference extraction."""
 import re
 import unicodedata
 from typing import Literal
@@ -67,6 +67,21 @@ def explicit_memory(message):
         return MemoryEntry(id="pending", content=content).content
     except ValidationError:
         raise StylistError("invalid_memory", "请把要记住的内容控制在 1—240 字，也可以到设置里的「我们的手记」分成几页整理。", 422) from None
+
+
+def automatic_preference(message):
+    """Keep only explicit first-person preference clauses, never inferred traits."""
+    if re.search(r"不要|别记|不保存|不用记|别存|今天|这次|暂时|如果|假如|假设|比如|举例|他说|她说|说过|[？?“”「」\"]", message):
+        return None
+    if re.search(r"(?:别|不要|不用|无需|不必).{0,6}(?:写|记|存|收录)|(?:什么|是否|是不是)|[吗么](?:[。！!\s]|$)", message):
+        return None
+    clauses = re.split(r"[，,。！!；;\n]", message)
+    selected = [part.strip() for part in clauses if re.fullmatch(
+        r"我(?:一直|平时|通常|特别|很|最)?(?:喜欢|不喜欢|讨厌|偏爱)[^，,。！？!?；;]{1,80}", part.strip())]
+    content = "；".join(selected)
+    if not content or len(content) > 240:
+        return None
+    return MemoryEntry(id="pending", content=content, category=memory_category(content))
 
 
 def memory_category(content):

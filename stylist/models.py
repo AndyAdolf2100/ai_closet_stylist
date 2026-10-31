@@ -187,6 +187,7 @@ class CompanionProfile(Model):
     agent_name: str = Field(default="衣衣", min_length=1, max_length=24)
     assistant_persona: PersonaId = "female_warm_v1"
 
+    mbti: Literal['INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP', 'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'] | None = None
     zodiac: Literal["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"] | None = None
     conversation_style: Literal["自然相处", "温柔鼓励", "直接坦诚", "轻松幽默"] = "自然相处"
     reply_detail: Literal["适中", "简洁重点", "细致解释"] = "适中"

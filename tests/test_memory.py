@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from scripts.automatic_memory_dialogues import CASES as AUTO_MEMORY_CASES
 from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.errors import StylistError
@@ -274,3 +275,89 @@ async def test_unresolved_save_never_returns_a_false_success(tmp_path, invalid_a
 ])
 def test_natural_command_parser_does_not_save_quotes_negations_or_questions(message):
     assert explicit_memory(message) is None
+
+@pytest.mark.parametrize('message', ['今天我喜欢红色', '我朋友喜欢红色', '我喜欢红色吗？', '比如我喜欢红色', '我喜欢红色，不要保存'])
+def test_automatic_preference_excludes_ambiguous_statements(message):
+    from stylist.memory import automatic_preference
+    assert automatic_preference(message) is None
+
+
+@pytest.mark.asyncio
+async def test_auto_preference_saved_once_isolated_and_paused(tmp_path):
+    store, model = Store(str(tmp_path / 'auto.db')), Model()
+    engine = Stylist(Settings(), store, model)
+    for i in range(2):
+        await engine.chat(Upstream(), ChatRequest(message='我喜欢蓝色，我不喜欢高跟鞋。', request_id=f'auto-save-{i}'))
+    saved = store.memory_book('a')
+    assert len(saved.entries) == 1
+    assert saved.entries[0].content == '我喜欢蓝色；我不喜欢高跟鞋'
+    assert not store.memory_book('b').entries
+    saved.enabled = False
+    store.save_memory_book('a', saved)
+    await engine.chat(Upstream(), ChatRequest(message='我喜欢绿色', request_id='paused-auto'))
+    assert len(store.memory_book('a').entries) == 1
+
+
+def test_mbti_all_types_and_invalid():
+    from itertools import product
+
+    from stylist.models import CompanionProfile
+    for parts in product('IE', 'NS', 'FT', 'JP'):
+        value = ''.join(parts)
+        assert CompanionProfile(mbti=value).mbti == value
+    assert CompanionProfile().mbti is None
+    with pytest.raises(ValidationError):
+        CompanionProfile(mbti='ABCD')
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('persona', ['male_calm_v1', 'female_warm_v1'])
+@pytest.mark.parametrize('group', AUTO_MEMORY_CASES)
+async def test_automatic_memory_dialogue_books(tmp_path, persona, group):
+    from scripts.automatic_memory_dialogues import CASES
+
+    class ConversationModel(Model):
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                self.calls.append((name, payload))
+                return Plan(mode='consult', conversation_only=True, use_inventory=False)
+            return await super().generate(name, payload, result_type)
+
+    store, model = Store(str(tmp_path / 'auto-dialogue.db')), ConversationModel()
+    engine = Stylist(Settings(), store, model)
+    previous = None
+    for name, message, expected in CASES[group]:
+        if name in {'paused', 'deleted'}:
+            saved = store.memory_book('a')
+            if name == 'paused':
+                saved.enabled = False
+            else:
+                saved.entries.clear()
+            store.save_memory_book('a', saved)
+        if name == 'new_session':
+            previous = None
+        request = ChatRequest(message=message, request_id=f'auto-{group}-{name}', assistant_persona=persona,
+                              conversation_id=previous.conversation_id if previous else None,
+                              expected_version=previous.version if previous else 0)
+        previous = await engine.chat(Upstream(), request)
+        assert [entry.content for entry in store.memory_book('a').entries] == expected
+        assert not store.memory_book('b').entries
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('persona', ['male_calm_v1', 'female_warm_v1'])
+async def test_auto_memory_failed_reply_retry_and_replay(tmp_path, persona):
+    store, model = Store(str(tmp_path / 'retry-auto.db')), Model()
+    engine = Stylist(Settings(), store, model)
+    request = ChatRequest(message='我喜欢棉质衬衫。', request_id='auto-retry-id', assistant_persona=persona)
+    model.fail = True
+    with pytest.raises(StylistError):
+        await engine.chat(Upstream(), request)
+    assert not store.memory_book('a').entries
+    model.fail = False
+    reply = await engine.chat(Upstream(), request)
+    assert '我们的手记' in reply.message
+    revision = store.memory_book('a').revision
+    await engine.chat(Upstream(), request)
+    assert store.memory_book('a').revision == revision
+    assert [entry.content for entry in store.memory_book('a').entries] == ['我喜欢棉质衬衫']

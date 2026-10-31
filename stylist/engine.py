@@ -17,7 +17,7 @@ from langgraph.types import Command, RetryPolicy, interrupt
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .grounding import PREFIX, attribute_claim_problems, attribute_context, ground_attribute_fallback
-from .memory import apply_memory, explicit_memory, memory_intent, verified_memory_save
+from .memory import apply_memory, automatic_preference, explicit_memory, memory_intent, verified_memory_save
 from .models import Draft, Look, Plan, Reply, SessionState, Task
 from .personas import (
     itinerary_weather_message,
@@ -544,6 +544,12 @@ class Stylist:
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
                 memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
+                if memory_save is None and not memory_intent(request.message):
+                    book = await asyncio.to_thread(self.store.memory_book, owner)
+                    candidate = automatic_preference(request.message)
+                    if book.enabled and len(book.entries) < 30 and candidate and not any(
+                            entry.content == candidate.content for entry in book.entries):
+                        memory_save = candidate
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,

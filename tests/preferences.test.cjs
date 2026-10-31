@@ -41,3 +41,36 @@ test('save failure retains choices; a late save cannot overwrite a different acc
  resolveSave({profile:{...profile,zodiac:'双鱼座'}});await tick();assert.equal(w.CompanionSettings.agentName(),'小林');assert(!$('preferences-dialog').open);
  assert.equal(w.localStorage.getItem('zodiac'),null);dom.window.close();
 });
+test('MBTI cards describe all types, clear drafts and style sprites retain limits',async()=>{
+ const writes=[];const {w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return {profile:writes.at(-1)};}return {profile};});
+ await w.PersonalPreferences.open();$('preference-tab-talk').click();
+ const cards=w.document.querySelectorAll('[data-preference-group="mbti"] button');
+ assert.equal(cards.length,16);
+ for(const card of cards){card.click();assert($('mbti-detail-title').textContent.includes(card.dataset.value));assert.equal($('mbti-dimensions').children.length,4);assert(card.querySelector('small').textContent);}
+ assert.equal(writes.length,0);
+ $('mbti-clear').click();assert.equal($('mbti-dimensions').children.length,0);
+ cards[0].click();$('preferences-close').click();await w.PersonalPreferences.open();assert.equal($('mbti-dimensions').children.length,0);
+ assert.equal(w.document.querySelectorAll('.style-sprite').length,13);
+ const priorities=w.document.querySelectorAll('[data-preference-group="dressing_priorities"] button');
+ for(const card of priorities)card.click();
+ assert.equal(w.document.querySelectorAll('[data-preference-group="dressing_priorities"] [aria-pressed=true]').length,3);
+ cards[1].click();submit();await tick();assert.equal(writes[0].mbti,cards[1].dataset.value);
+ dom.window.close();
+});
+test('all 16 MBTI types have distinct source summaries and sprite coordinates',async()=>{
+ const {w,dom,$}=await setup(async()=>({profile}));
+ await w.PersonalPreferences.open();
+ const positions=new Set(),summaries=new Set();
+ for(const button of w.document.querySelectorAll('[data-preference-group="mbti"] button')){
+  button.click();
+  const art=w.document.querySelector('.mbti-companion-art');
+  assert.equal(art.dataset.mbti,button.dataset.value);assert.equal(art.hidden,false);
+  positions.add(art.style.backgroundPosition);summaries.add($('mbti-detail-summary').textContent);
+  assert.equal($('mbti-detail-title').textContent,button.dataset.value+' 型人格');
+  assert.equal($('mbti-official-source'),null);
+  assert.equal($('mbti-detail-code'),null);
+ }
+ assert.equal(positions.size,16);assert.equal(summaries.size,16);
+ $('mbti-clear').click();assert.equal(w.document.querySelector('.mbti-companion-art').hidden,false);assert(w.document.querySelector('.mbti-companion-art').classList.contains('mbti-default-art'));assert.equal(w.document.querySelector('.mbti-art-caption'),null);assert.equal($('mbti-official-source'),null);
+ dom.window.close();
+});

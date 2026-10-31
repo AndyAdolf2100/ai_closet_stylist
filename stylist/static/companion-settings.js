@@ -273,7 +273,7 @@
   async function savePreferences(values) {
     if (!owner || !loaded || saving) throw new Error('请稍后重试或重新登录。');
     const current = sequence, expectedOwner = owner;
-    const fields = ['zodiac', 'conversation_style', 'reply_detail', 'style_preferences', 'dressing_priorities'];
+    const fields = ['mbti', 'zodiac', 'conversation_style', 'reply_detail', 'style_preferences', 'dressing_priorities'];
     const saved = { ...profile };
     for (const field of fields) saved[field] = values[field];
     saving = true;
