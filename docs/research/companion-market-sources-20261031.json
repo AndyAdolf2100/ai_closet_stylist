@@ -1,0 +1,597 @@
+{
+  "retrieved_at": "2026-10-31",
+  "screenshot_note": "开发者上传到中国区App Store的展示截图；获取时版本，不代表2023—2025历史界面或本次实机游玩截图。版权归各产品权利人。",
+  "products": [
+    {
+      "slug": "deepspace",
+      "id": 1618911882,
+      "name": "恋与深空",
+      "page_url": "https://apps.apple.com/cn/app/%E6%81%8B%E4%B8%8E%E6%B7%B1%E7%A9%BA/id1618911882",
+      "retrieved_at": "2026-10-31",
+      "version": "6.0.0",
+      "images": [
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/f6/9c/17/f69c179c-f3ae-9ba6-4c15-5f28d0f2065f/6.0_U5546_U5e97_U56fe1242x2208-2-_U79e6_U5f7b.png/960x960bb.png",
+          "index": 1,
+          "size": [
+            540,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/40/e4/8b/40e48b77-5a9f-34b0-4990-2ce9d65298fa/6.0_U5546_U5e97_U56fe1242x2208-6-_U9ece_U6df1.png/960x960bb.png",
+          "index": 5,
+          "size": [
+            540,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/17/3e/bd/173ebdb4-8641-eaf2-4cd3-5b2294085b0f/6.0_U5546_U5e97_U56fe1242x2208-7.png/960x960bb.png",
+          "index": 6,
+          "size": [
+            540,
+            960
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "infinity",
+      "id": 6502622479,
+      "name": "无限暖暖",
+      "page_url": "https://apps.apple.com/cn/app/%E6%97%A0%E9%99%90%E6%9A%96%E6%9A%96/id6502622479",
+      "retrieved_at": "2026-10-31",
+      "version": "2.9.1",
+      "images": [
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/5d/02/20/5d0220ca-6c08-c242-dade-95843ee60ba8/2-1.jpg/960x960bb.jpg",
+          "index": 2,
+          "size": [
+            960,
+            540
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/60/87/9d/60879daf-379a-5f47-ac83-97426acb0896/4.jpg/960x960bb.jpg",
+          "index": 4,
+          "size": [
+            960,
+            540
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/7e/40/96/7e40960f-29a6-167b-bc33-34cba498cabf/7.jpg/960x960bb.jpg",
+          "index": 7,
+          "size": [
+            960,
+            540
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "shining",
+      "id": 1455833480,
+      "name": "闪耀暖暖",
+      "page_url": "https://apps.apple.com/cn/app/%E9%97%AA%E8%80%80%E6%9A%96%E6%9A%96/id1455833480",
+      "retrieved_at": "2026-10-31",
+      "version": "6.0.2589982",
+      "images": [
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/5a/09/80/5a0980f0-ada0-2760-c722-399bf59d39d0/IOS-1242x2208-1.jpg/960x960bb.jpg",
+          "index": 2,
+          "size": [
+            540,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/2e/81/a7/2e81a7f8-62e1-c0da-f9ff-670873622d42/IOS-1242x2208-3.jpg/960x960bb.jpg",
+          "index": 4,
+          "size": [
+            540,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/07/30/c3/0730c36d-6a38-f004-c11c-ba460084c7aa/IOS-1242x2208-5.jpg/960x960bb.jpg",
+          "index": 6,
+          "size": [
+            540,
+            960
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "producer",
+      "id": 1258524226,
+      "name": "恋与制作人",
+      "page_url": "https://apps.apple.com/cn/app/%E6%81%8B%E4%B8%8E%E5%88%B6%E4%BD%9C%E4%BA%BA/id1258524226",
+      "retrieved_at": "2026-10-31",
+      "version": "1.41.1029",
+      "images": [
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/76/08/7b/76087b13-410c-66db-0825-5a3faff4b986/_U3010_U8fd0_U8425_U9700_U6c42_U3011_U82f9_U679c_U5546_U5e97_U4e94_U56fe-_U6587_U7269ER-1242x2688-1.png/960x960bb.jpg",
+          "index": 2,
+          "size": [
+            444,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/60/eb/59/60eb59f0-8863-a8e3-0ba2-d209bb5cc5eb/_U3010_U8fd0_U8425_U9700_U6c42_U3011_U82f9_U679c_U5546_U5e97_U4e94_U56fe-_U6587_U7269ER-1242x2688-3.png/960x960bb.jpg",
+          "index": 4,
+          "size": [
+            444,
+            960
+          ]
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/b9/64/14/b964147b-70db-8289-3e67-7deb74854560/_U3010_U8fd0_U8425_U9700_U6c42_U3011_U82f9_U679c_U5546_U5e97_U4e94_U56fe-_U6587_U7269ER-1242x2688-5.png/960x960bb.jpg",
+          "index": 6,
+          "size": [
+            444,
+            960
+          ]
+        }
+      ]
+    },
+    {
+      "id": 1616484963,
+      "name": "搭搭 -AI智能电子衣橱",
+      "version": "5.2.2",
+      "page_url": "https://apps.apple.com/cn/app/%E6%90%AD%E6%90%AD-ai%E6%99%BA%E8%83%BD%E7%94%B5%E5%AD%90%E8%A1%A3%E6%A9%B1/id1616484963",
+      "retrieved_at": "2026-10-31",
+      "images": [
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/87/c2/47/87c24738-94d6-e744-35f7-0f1f889202c8/2d9fee70-5636-4cab-b342-e5b0eadc3a52_1242X2208_Uff081_Uff09.png/960x960bb.png",
+          "index": 1
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/db/3e/3d/db3e3d83-4f17-3b20-97a6-07e15f939644/adbfaafc-f8a7-4d9e-8d1f-e4e9bc9fd77b_1242X2208_Uff082_Uff09.png/960x960bb.png",
+          "index": 2
+        },
+        {
+          "url": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/40/15/1c/40151c49-bf53-efeb-0dd4-8ccf35975950/74dcc1ea-077e-4b36-b0ff-cfa4336e9061_1242X2208_Uff084_Uff09.png/960x960bb.png",
+          "index": 4
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ai",
+      "url": "https://www2.cnnic.cn/n4/2026/1008/c88-11704.html",
+      "title": "CNNIC · 生成式人工智能应用发展报告（2026）",
+      "scope": "2026-10-08；统计截至2026年上半年：用户超7亿、普及率超50%；76.0%的用户用于问答。"
+    },
+    {
+      "id": "st24",
+      "url": "https://www.baijing.cn/article/51429",
+      "title": "Sensor Tower · 2024年12月中国手游发行商全球收入排行榜",
+      "scope": "2025-01-16；Sensor Tower分析师在白鲸出海的原创专栏。全年同比+660%；不含中国第三方安卓。"
+    },
+    {
+      "id": "st25",
+      "url": "https://www.36kr.com/p/3639168080612488",
+      "title": "游戏那点事 / 36氪 · 2025年中国手游发行商榜解读",
+      "scope": "2026-01-14；转述Sensor Tower，叠纸全年同比+45%，发行商榜第8；App Store与Google Play口径。"
+    },
+    {
+      "id": "gross24",
+      "url": "https://cgames.com/contents/2/6509.html",
+      "title": "竞核 · 叠纸还清米哈游钱了？24年叠纸大赚超70亿",
+      "scope": "2025-02-27；媒体引述第三方约70亿元估算，未给出可复算明细；《恋与深空》约60亿元为全平台估算。"
+    },
+    {
+      "id": "rev25",
+      "url": "https://www.youxituoluo.com/534361.html",
+      "title": "游戏陀螺 · 叠纸2025年营收84亿元",
+      "scope": "2026-04-03；引述上观新闻，指标为全年营业收入84亿元，并非全年流水或利润。"
+    },
+    {
+      "id": "rev25original",
+      "url": "https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1080938",
+      "title": "上观新闻 / 解放日报 · 原始报道入口",
+      "scope": "报道原始入口；交叉索引为2026-03-27《解放日报》01版。网页正文依赖脚本，可配合游戏陀螺转述核对。"
+    },
+    {
+      "id": "mobile24",
+      "url": "https://www.36kr.com/p/3116262502891271",
+      "title": "点点数据 / 36氪 · 2024年6款游戏移动端超24亿",
+      "scope": "2025-01-10；数据方授权文章：不含中国安卓、PC和主机。与全平台约70亿元不可相加或直接对比。"
+    },
+    {
+      "id": "deep25",
+      "url": "https://www.cnfin.com/gs-lb/detail/20260113/4364798_1.html",
+      "title": "新华财经 · 2025手游数据出炉",
+      "scope": "2026-01-13；引述Sensor Tower，《恋与深空》2025年收入约5.5亿美元、同比+44%；仅作为产品移动商店数据。"
+    },
+    {
+      "id": "apple",
+      "url": "https://developer.apple.com/cn/news/?id=9mgkwjnm",
+      "title": "Apple Developer · Infold Games如何为无限暖暖装扮出一个开放世界",
+      "scope": "2026-04-03；官方访谈，确认2025 Apple设计大奖“视觉图像”类别获奖及换装、探索设计。"
+    },
+    {
+      "id": "dada",
+      "url": "https://apps.apple.com/cn/app/id1616484963",
+      "title": "搭搭 · 中国区 App Store",
+      "scope": "开发者公开介绍与展示截图；只据公开页面观察录入、管理、搭配、记录与统计，不代替实机完整测评。"
+    },
+    {
+      "id": "goods",
+      "url": "https://js.news.cn/20240909/fe676b15ca95461ba90c7145afd75f75/c.html",
+      "title": "新华网江苏 / 无锡日报 · 谷子店与情绪消费",
+      "scope": "2024-09-09；解释谷子、吧唧与痛包，包含爱好者寻找同好的采访；不是全国人群调查。"
+    },
+    {
+      "id": "board",
+      "url": "https://m.bjnews.com.cn/detail/1777103522129980.html",
+      "title": "新京报 · JoyAI消费雷达Q1消费热词",
+      "scope": "2026-04；痛板、痛包等用品定义的报道；本研究不将单平台成交增幅外推全市场。"
+    },
+    {
+      "id": "bom",
+      "url": "https://k.sina.cn/article_1750344480_6854232002701o6c8.html",
+      "title": "北京交通广播 · 嘻番里，喜欢你",
+      "scope": "2026-06-09；采访商场负责人，核对学清路38号金码大厦B座及沉浸式ACG商业定位。"
+    },
+    {
+      "id": "bom26",
+      "url": "https://m.takefoto.cn/news/2026/06/01/11779104.shtml",
+      "title": "北晚在线 · BOM嘻番里×爱奇艺动漫创作大赛",
+      "scope": "2026-06-01；提及主题店铺超过70%，仍非100%纯谷店。"
+    },
+    {
+      "id": "weibo",
+      "url": "https://xinwen.bjd.com.cn/content/s68dcd108e4b02424b0c10278.html",
+      "title": "北京日报 · 微博IN跨次元引力场正式开业",
+      "scope": "2025-10-01；朝阳公园东侧，约4.2万平方米，零售、餐饮、文创、演艺等混合业态。"
+    },
+    {
+      "id": "weibomap",
+      "url": "https://www.amap.com/place/B0K33U6O6R",
+      "title": "高德地图 · 微博IN跨次元引力场位置",
+      "scope": "位置在朝阳公园东侧、东四环北路辅路与四路居南路交叉口附近；供核对用户记忆，不提供营业时间保证。"
+    },
+    {
+      "id": "beijingmalls",
+      "url": "https://epaper.bjnews.com.cn/html/2025/20250714/20250714_A05/20250714_A05_01_4004_1944423331549679618.html",
+      "title": "新京报 · 年轻人吃谷带火一批老商场",
+      "scope": "2025-07-14；华威大厦、王府井喜悦B2与嘻番里等实际采访。楼层和品牌可能调整。"
+    },
+    {
+      "id": "joycity",
+      "url": "https://36kr.com/p/3092179710244993",
+      "title": "36氪 · 商场B1层的谷子店里，围满了盛装Cos的年轻人",
+      "scope": "2024-12；采访观察北京朝阳大悦城B1层谷店聚集；不是整栋业态清单。"
+    },
+    {
+      "id": "birth",
+      "url": "https://www.stats.gov.cn/sj/zxfb/202602/t20260228_1962662.html",
+      "title": "国家统计局 · 2025年国民经济和社会发展统计公报",
+      "scope": "2026-02-28；2025出生人口792万、出生率5.63‰；全年CPI 0.0%。人口结果不等于个人婚育意愿。"
+    },
+    {
+      "id": "marriage",
+      "url": "https://mzt.fujian.gov.cn/gk/wpldq/202610/t20261008_7221424.htm",
+      "title": "福建省民政厅 · 2025年全国结婚数据公布",
+      "scope": "转引民政部2025年度公报：结婚登记676.5万对、同比+10.8%；采用年度公报而非早期676.3万对季度快报。"
+    },
+    {
+      "id": "prices",
+      "url": "https://www.stats.gov.cn/zwfwck/sjfb/202610/t20261014_1965475.html",
+      "title": "国家统计局 · 2026年9月CPI与PPI解读",
+      "scope": "2026-10-14；CPI同比+0.9%、核心CPI+1.0%、PPI+5.0%。这些数据不支持将当前概括为严重通缩。"
+    },
+    {
+      "id": "boj",
+      "url": "https://www.boj.or.jp/en/about/press/koen_2024/ko240527b.htm",
+      "title": "日本银行 · Price Dynamics in Japan over the Past 25 Years",
+      "scope": "2024-05-27；日本通缩从1990年代后期开始、持续约15年，平均通胀率约-0.3%；不等于整整30年持续通缩。"
+    },
+    {
+      "id": "comiket",
+      "url": "https://www2.comiket.co.jp/info-c/IdealsAndVision.html",
+      "title": "Comic Market委员会 · Ideals and Vision",
+      "scope": "主办方说明1975年创办；同人创作与社群基础早于1990年代经济停滞。仅取年份，未采用文中具体月日。"
+    },
+    {
+      "id": "otaku",
+      "url": "https://www.tfam.museum/Research/PublishingDetail.aspx?ddlLang=zh-tw&id=658",
+      "title": "台北市立美术馆 · 欲望与消费：海洋堂与御宅族文化",
+      "scope": "2007年展览说明；记载1980年代御宅文化与角色模型发展，用于校对时间先后。"
+    },
+    {
+      "id": "imf25",
+      "url": "https://www.imf.org/en/news/articles/2025/12/10/sp121025-md-remarks-2025-china-article-iv-consultation-press-conference",
+      "title": "IMF · 2025中国第四条磋商记者会",
+      "scope": "2025-12-10；讨论内需疲弱、消费信心与通缩压力，用于界定历史阶段，不据此推断2026年全部最新情况。"
+    },
+    {
+      "id": "eva97",
+      "url": "https://www.n510.com/project/syasin_de_kataru_project/seika/1997nenn/1997_17.html",
+      "title": "日本大学后藤研究室 · 1997年EVA观影人群现场记录",
+      "scope": "1997-07-18东京新宿的现场照片与观察；记录年轻人的观影热潮与作品中的人际关系主题，不是全国慰藉效果调查。"
+    },
+    {
+      "id": "animefans",
+      "url": "https://www.videor.co.jp/digestplus/article/2020anime05.html",
+      "title": "Video Research · 日本动画观众与参与方式的变迁",
+      "scope": "2020-06-01；原始采访文章回顾1990年代活动、周边与秋叶原同好空间的发展。"
+    },
+    {
+      "id": "galbraith",
+      "url": "https://www.dukeupress.edu/otaku-and-the-struggle-for-imagination-in-japan",
+      "title": "Duke University Press · Otaku and the Struggle for Imagination in Japan",
+      "scope": "2019年Patrick W. Galbraith民族志著作；出版方介绍角色依恋与粉丝共同构建社会世界。精神慰藉为结合这些研究的文化解释，不能量化到全体年轻人。"
+    },
+    {
+      "id": "offline-28",
+      "url": "https://blerdyotome.com/2025/08/24/love-and-deepspace-wins-best-mobile-game-at-gamescom-2025/",
+      "title": "五位男主同框宣传图",
+      "scope": "2025-08-24发布资料；Blerdy Otome注明来源Press Release。"
+    },
+    {
+      "id": "offline-29",
+      "url": "https://socialbeta.com/article/110508",
+      "title": "BW 2025角色互动",
+      "scope": "2025-07-24；图源@我是小白、@麦麦雪梨冰、@阿橙，Coser现场实景。"
+    },
+    {
+      "id": "offline-30",
+      "url": "https://www.cnenergynews.cn/article/4S6pygc2Yuu",
+      "title": "展台观众全景配图",
+      "scope": "国际金融报2026-06-24报道，经中国能源网转载；仅引用标为《恋与深空》展台的照片，原文未注明拍摄日期。"
+    },
+    {
+      "id": "offline-31",
+      "url": "https://www.morketing.com/detail/28582",
+      "title": "茉莉奶白联名实物与门店照片",
+      "scope": "2026-07-13；门店订单、联名周边与角色杯子。报道中的等待与订单量是门店案例，不作全国统一值。"
+    },
+    {
+      "id": "offline-32",
+      "url": "https://news.17173.com/content/06182026/120648975.shtml",
+      "title": "茉莉奶白联名上线日期与覆盖范围",
+      "scope": "2026-06-18；20家主题店、约2500家氛围店为活动报道口径，非已验客流。"
+    },
+    {
+      "id": "offline-33",
+      "url": "https://finance.sina.com.cn/chanjing/wddc/2026-06-18/doc-inicvmmv2289436.shtml",
+      "title": "茉莉奶白官方说明的媒体转述",
+      "scope": "2026-06-18；小程序卡顿与门店负载的品牌说明。"
+    },
+    {
+      "id": "offline-34",
+      "url": "https://tidenews.com.cn/news.html?id=2828339",
+      "title": "古茗联名杭州主题店现场",
+      "scope": "2024-06-22；顾喆翡、张鑫、潘茹冰，走访下沙福雷德快闪店，主题店与纸袋实景。"
+    }
+  ],
+  "annual_series": [
+    {
+      "year": 2023,
+      "full_platform_gross_cny_100m": null,
+      "store_revenue_index": 100,
+      "note": "normalized baseline, not an absolute amount"
+    },
+    {
+      "year": 2024,
+      "full_platform_gross_estimate_cny_100m": 70,
+      "store_revenue_index": 760,
+      "note": "gross estimate media-reported; index derived from +660%, a different scope"
+    },
+    {
+      "year": 2025,
+      "full_platform_gross_cny_100m": null,
+      "reported_operating_revenue_cny_100m": 84,
+      "store_revenue_index": 1102,
+      "note": "index derived from media-relayed +45%; revenue is not gross"
+    }
+  ],
+  "editorial_photos": [
+    {
+      "name": "weibo-photo-1",
+      "image_url": "https://static.bjd.com.cn/dams-res/editing/image/202510/01/hhvjhgjjbspct84uykszx3li.JPG",
+      "page_url": "https://xinwen.bjd.com.cn/content/s68dcd108e4b02424b0c10278.html",
+      "size": [
+        3008,
+        2000
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional downscale to maximum1600px and JPEG compression; original composition retained"
+    },
+    {
+      "name": "bom-photo-6",
+      "image_url": "https://pic.cnmtpt.com/Uploadfiles/20260601/2026060116342632661.006.jpeg",
+      "page_url": "https://m.takefoto.cn/news/2026/06/01/11779104.shtml",
+      "size": [
+        650,
+        433
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional downscale to maximum1600px and JPEG compression; original composition retained"
+    },
+    {
+      "name": "weibo-photo-3",
+      "image_url": "https://static.bjd.com.cn/dams-res/editing/image/202510/01/srcsxozwlnbreihayssuuaaf.jpg",
+      "page_url": "https://xinwen.bjd.com.cn/content/s68dcd108e4b02424b0c10278.html",
+      "size": [
+        5568,
+        3712
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional downscale to maximum1600px and JPEG compression; original composition retained"
+    }
+  ],
+  "current_report": "stylist/static/companion-strategy.html",
+  "narrative_order": [
+    "高流水与商业事实",
+    "线下热度与茶饮联动",
+    "爆款图鉴",
+    "中国与日本历史背景",
+    "北京谷圈与痛楼",
+    "办公工具背景与产品问题",
+    "陪伴产品选择与PRD",
+    "验证方案",
+    "2023—2025数据附录"
+  ],
+  "japan_archive_photo": {
+    "image_url": "https://www.n510.com/files/2010/02/f4b754ec2eb9df.jpg",
+    "page_url": "https://www.n510.com/project/syasin_de_kataru_project/seika/1997nenn/1997_17.html",
+    "recorded_at": "1997-07-18",
+    "author": "伊藤康史 / 日本大学后藤研究室公开档案",
+    "retrieved_at": "2026-10-31",
+    "scope": "现场观影照片；非代表性慰藉效果调查"
+  },
+  "offline_event_photos": [
+    {
+      "name": "five-leads",
+      "image_url": "https://blerdyotome.com/wp-content/uploads/2025/08/Love-and-Deepspace-Gamescom-Banner.jpg",
+      "page_url": "https://blerdyotome.com/2025/08/24/love-and-deepspace-wins-best-mobile-game-at-gamescom-2025/",
+      "credit": "Blerdy Otome / Press Release，2025-08-24；游戏宣传图",
+      "original_size": [
+        1640,
+        856
+      ],
+      "size": [
+        1640,
+        856
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "game promotional image",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "stage-crowd",
+      "image_url": "https://img-rs.cnenergynews.cn/dp/api/files/imageDir/3e87212b28367a6e61b8394f6b4e2d2f.jpg",
+      "page_url": "https://www.cnenergynews.cn/article/4S6pygc2Yuu",
+      "credit": "中国能源网转载报道配图，具体拍摄时间待核",
+      "original_size": [
+        933,
+        699
+      ],
+      "size": [
+        933,
+        699
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "report published 2026-06-24; photograph date unspecified"
+    },
+    {
+      "name": "bw-1",
+      "image_url": "https://socialbeta.oss-cn-hangzhou.aliyuncs.com/upload/199880-1753264206.jpg",
+      "page_url": "https://socialbeta.com/article/110508",
+      "credit": "SocialBeta，2025-07-24报道配图；具体原作者见图注",
+      "original_size": [
+        2000,
+        1200
+      ],
+      "size": [
+        1800,
+        1080
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "bw-6",
+      "image_url": "https://socialbeta.oss-cn-hangzhou.aliyuncs.com/upload/199880-1753264209.jpg",
+      "page_url": "https://socialbeta.com/article/110508",
+      "credit": "SocialBeta，2025-07-24报道配图；具体原作者见图注",
+      "original_size": [
+        1280,
+        960
+      ],
+      "size": [
+        1280,
+        960
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "molly-1",
+      "image_url": "https://cdn.morketing.com/upload/image/wechat/2026-07/17839117431369505863445740.jpg",
+      "page_url": "https://www.morketing.com/detail/28582",
+      "credit": "Morketing，2026-07-13报道配图",
+      "original_size": [
+        1080,
+        1049
+      ],
+      "size": [
+        1080,
+        1049
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "molly-2",
+      "image_url": "https://cdn.morketing.com/upload/image/wechat/2026-07/1783911744529149553138430.jpg",
+      "page_url": "https://www.morketing.com/detail/28582",
+      "credit": "Morketing，2026-07-13报道配图",
+      "original_size": [
+        1080,
+        1335
+      ],
+      "size": [
+        1080,
+        1335
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "molly-4",
+      "image_url": "https://cdn.morketing.com/upload/image/wechat/2026-07/17839117461437416043454514.jpg",
+      "page_url": "https://www.morketing.com/detail/28582",
+      "credit": "Morketing，2026-07-13报道配图",
+      "original_size": [
+        1080,
+        1420
+      ],
+      "size": [
+        1080,
+        1420
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained; no synthetic crowds",
+      "kind": "published photograph",
+      "date_note": "publication date specified in caption"
+    },
+    {
+      "name": "goodme-crowd",
+      "image_url": "https://meizi-chao-pub.8531.cn/1804313096812343298_720px.jpg?height=405&width=720",
+      "page_url": "https://tidenews.com.cn/news.html?id=2828339",
+      "credit": "潮新闻记者顾喆翡、张鑫／实习生潘茹冰，2024-06-22",
+      "original_size": [
+        720,
+        405
+      ],
+      "size": [
+        720,
+        405
+      ],
+      "retrieved_at": "2026-10-31",
+      "processing": "proportional resize and JPEG compression; scene retained",
+      "kind": "published storefront photograph",
+      "date_note": "report published 2024-06-22"
+    }
+  ]
+}
