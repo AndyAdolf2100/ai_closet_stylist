@@ -1,8 +1,10 @@
 # PostgreSQL 私密离线包：打包与部署
 
-更新日期：2026-10-30。当前测试机为 CentOS7、x86_64，前端与 Agent 同容器，数据保存到远程 PostgreSQL 的独立 `aicloset_stylist` 库。
+更新日期：2026-10-31。当前测试机为 CentOS7、x86_64，前端与 Agent 同容器，数据保存到远程 PostgreSQL 的独立 `aicloset_stylist` 库。
 
 用户已确认版本 `20261030T080643Z-91a41c298fa0-2192` 部署成功，数据库预检、应用及 HTTPS 健康检查通过。地址为 `https://aicloset-assistant.wxbjq.top/`，配置目录为 `/opt/aicloset-assistant/config`。登录、衣橱、模型回复、历史持久化和收费效果分别验收。
+
+2026-10-31 当前工作区已通过两轮 Python 全量回归（每轮538通过／85跳过）、前端及Ruff回归、本地PostgreSQL临时库回归（39通过），以及新amd64镜像启动和旧结构升级冒烟。发布文件名为 `aicloset-assistant-private-amd64-20261031.tar.gz`，镜像为 `aicloset-stylist:release-20261031-4d42334-amd64`；本轮仅打包，未在服务器部署。今天没有SQL表结构变更，MBTI／自动记忆复用JSON字段。从旧v3升级时，会自动补建10月30日新增的 `stylist_outfit_images` 表，不需手工改表。
 
 ## 1. 私密配置
 
@@ -59,14 +61,14 @@ uv run python scripts/package_deployment.py \
 
 通过跳板机将包及校验文件传到实际测试服务器 `/tmp`，而不是只传到跳板机。
 
-下面是已成功执行的v3安装方式。使用其他包名时，替换所有对应文件名：
+本次包上传后的安装命令如下；方式沿用已成功执行的v3文件安装流程：
 
 ```bash
 cd /tmp
-sha256sum -c aicloset-assistant-private-amd64-v3.tar.gz.sha256
-tar -xOf /tmp/aicloset-assistant-private-amd64-v3.tar.gz \
-  aicloset-assistant/install.sh > /tmp/aicloset-install-v3.sh
-sudo bash /tmp/aicloset-install-v3.sh /tmp/aicloset-assistant-private-amd64-v3.tar.gz
+sha256sum -c aicloset-assistant-private-amd64-20261031.tar.gz.sha256 && \
+tar -xOf /tmp/aicloset-assistant-private-amd64-20261031.tar.gz \
+  aicloset-assistant/install.sh > /tmp/aicloset-install-20261031.sh && \
+sudo bash /tmp/aicloset-install-20261031.sh /tmp/aicloset-assistant-private-amd64-20261031.tar.gz
 ```
 
 先解出脚本再从文件运行。不要使用 `tar | bash`：预检容器可能消费管道中的剩余脚本，导致预检成功后不执行后续步骤。工作区脚本已额外将预检stdin重定向到 `/dev/null`；v3服务器成功记录使用的是上述文件执行方式。
