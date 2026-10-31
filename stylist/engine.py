@@ -26,15 +26,17 @@ from .personas import (
     technical_detail_message,
     unsupported_city_message,
 )
+from .planning_dates import explicit_scope, schedule_dates, schedule_problems
 from .policy import (
     REPLACEMENT_PREFIX,
     frozen_products,
+    has_outfit_structure,
     interpret_task,
     suitability,
     unchanged_replacement_problems,
     validate_look,
 )
-from .preferences import preferred_pool, wardrobe_requested
+from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .progress import report
 from .retrieval import retrieve, saved_candidates, weather_for
 from .weather import WeatherService, apply_forecast
@@ -144,9 +146,21 @@ class Stylist:
                 "selected_location": request.location.model_dump(mode="json") if request.location else None,
                 "selected_look_index": request.selected_look_index,
                 "current_looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces,
+                                   "reference_pieces": x.reference_pieces, "wardrobe_complete": x.wardrobe_complete,
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            # Calendar scope is not a rolling seven-day window and survives weather opt-out.
+            if not plan.conversation_only and not plan.weather_only:
+                scope = explicit_scope(request.message)
+                if not scope and plan.mode == "weekly" and not plan.new_task:
+                    scope = next((explicit_scope(row.get("content", "")) for row in reversed(state.messages)
+                                  if row.get("role") == "user" and explicit_scope(row.get("content", ""))), None)
+                if scope:
+                    plan.mode = "weekly"
+                    plan.weather_scope = scope
+                if plan.mode == "weekly" and plan.weather_scope in {"week", "next7"}:
+                    task.event_date = today.date()
             memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
             if memory_save is None and (plan.memory_save is not None or memory_intent(request.message)):
                 # Never let a conversational promise substitute for a validated write.
@@ -154,8 +168,16 @@ class Stylist:
                             clarification="我想把这件事准确地留下。请告诉我具体要长期记住的那句话；目前还没有保存到手记。")
                 return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             if (plan.mode == "consult" and not plan.conversation_only and not plan.weather_only
-                    and not plan.technical_question and wardrobe_requested(request.message, state.messages)):
-                plan.mode = "recommend"
+                    and not plan.technical_question):
+                clothing_preferences = bool(set(plan.changes) & {
+                    "occasion", "scene", "preferences", "style", "owned_descriptions", "excluded_colors",
+                    "excluded_categories", "excluded_materials", "no_heels", "no_bare_shoulders"})
+                if wardrobe_requested(request.message, state.messages, clothing_preferences=clothing_preferences):
+                    plan.mode = "recommend"
+                    plan.use_inventory = True
+            if (not plan.conversation_only and not plan.weather_only and not plan.technical_question
+                    and plan.mode in {"recommend", "modify", "weekly"}
+                    and wardrobe_allowed(request.message, state.messages)):
                 plan.use_inventory = True
             if (request.companion_profile and plan.use_profile_gender and task.gender is None
                     and not plan.conversation_only and not plan.weather_only):
@@ -331,7 +353,7 @@ class Stylist:
             frozen = [Product.model_validate(x) for x in data["frozen"]]
             service_gap, weather, warnings, rejected = (data[k] for k in ("service_gap", "weather", "warnings", "rejected"))
             # A partial or absent candidate pool must not force a fabricated outfit.
-            concept = plan.mode != "consult" and plan.use_inventory and (service_gap or not pool)
+            concept = plan.mode != "consult" and plan.use_inventory and not pool
             current = selected_looks(state) if plan.mode == "modify" else state.looks[:1]
             original_targets = {p.key for p in current[0].items if p.slot in plan.replace_slots} if current and plan.mode == "modify" else set()
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
@@ -353,6 +375,7 @@ class Stylist:
                 "message": request.message,
                 "task": apply_memory(task, plan, data.get("long_term_memory", [])).model_dump(mode="json"),
                 "mode": plan.mode,
+                "planning_dates": schedule_dates(plan, task),
                 "history": state.messages[-8:], "weather": weather,
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
                                for p in pool.values() if p.key not in original_targets],
@@ -398,6 +421,8 @@ class Stylist:
                 problems.extend(unchanged_replacement_problems(Draft.model_validate(data["draft"]),
                     selected_looks(state), Plan.model_validate(data["plan"]).replace_slots,
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
+            problems.extend(schedule_problems(Draft.model_validate(data["draft"]),
+                schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
             return {"problems": problems}
 
         async def repair_node(data):
@@ -405,7 +430,8 @@ class Stylist:
             instruction = ("只修正缺少依据的文字，原选款已经通过结构和禁穿检查，保留原造型数量及每套selected_keys；"
                            "不要因尺寸或功能未知就清空衣物，改为具体的试穿核对、选款目标或未知说明。"
                            if attribute_only else
-                           "只修正不合格的选择和文字；没有合法组合就给明确标为文字参考的方案，selected_keys留空。")
+                           "只修正不合格的选择和文字；只有部分合规衣物时保留实际selected_keys，缺少的品类写reference_pieces。"
+                           "只有确无适合单品时才留空selected_keys并说明unmatched_reason，不为凑齐整套丢掉已有单品。")
             draft = await self.llm.generate("style", {**draft_payload(data), "validation_errors": data["problems"],
                 "previous_draft": data["draft"], "instruction": instruction}, Draft)
             if attribute_only:
@@ -447,7 +473,13 @@ class Stylist:
                 notes = list(look.notes)
                 for p in products:
                     notes.extend(suitability(p, effective_task)[1])
+                if look.unmatched_reason:
+                    notes.append(look.unmatched_reason)
                 looks.append(Look(title=look.title, style_name=look.style_name, items=products, pieces=look.pieces,
+                                  reference_pieces=look.reference_pieces,
+                                  wardrobe_complete=bool(products) and has_outfit_structure(products)
+                                                    and not look.reference_pieces
+                                                    and len(look.pieces) <= len(products),
                                   why=look.why, how=look.how, notes=list(dict.fromkeys(notes))))
             selected = any(look.items for look in looks)
             if plan.mode == "modify" and not selected:
@@ -556,6 +588,7 @@ class Stylist:
                         "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
                         "looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces, "how": x.how,
+                                   "reference_pieces": x.reference_pieces, "wardrobe_complete": x.wardrobe_complete,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},
                 ])[-16:]
                 if memory_save and not output.get("cancelled") and reply.delivery != "clarification":
@@ -578,9 +611,14 @@ class Stylist:
     @staticmethod
     def check_draft(draft, pool, task, frozen, mode):
         problems = []
+        if mode in {"recommend", "weekly"} and pool and not draft.looks:
+            problems.append("已返回个人衣物候选，请给出可用单品的搭配；不能直接省略衣物方案")
         for look in draft.looks:
             if mode == "consult" and look.selected_keys:
                 problems.append("纯咨询不能选择数据库商品")
             elif look.selected_keys:
-                problems.extend(validate_look(look.selected_keys, pool, task, {p.key for p in frozen}))
+                problems.extend(validate_look(look.selected_keys, pool, task, {p.key for p in frozen},
+                                              require_complete=False))
+            elif mode in {"recommend", "weekly"} and pool and not look.unmatched_reason:
+                problems.append("个人候选不为空，应保留适合的真实单品；全部未选时必须说明unmatched_reason")
         return list(dict.fromkeys(problems))

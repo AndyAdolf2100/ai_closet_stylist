@@ -47,7 +47,7 @@ async def test_local_change_uses_the_selected_tab_and_keeps_other_items(tmp_path
     owner = "synthetic-persona-evaluation"
     cid, claim, state, _ = store.reserve(owner, initial)
     state.task = Task(weather_policy="ignored")
-    state.looks = [Look(**x.model_dump(exclude={"selected_keys"}), items=[pool[k] for k in x.selected_keys]) for x in options()]
+    state.looks = [Look(**x.model_dump(exclude={"selected_keys", "unmatched_reason"}), items=[pool[k] for k in x.selected_keys]) for x in options()]
     store.finish(owner, initial, claim, state, Reply(conversation_id=cid, version=1, mode="recommend",
         delivery="outfit", message="三套搭配", task=state.task, looks=state.looks))
     target = options()[selected_index]

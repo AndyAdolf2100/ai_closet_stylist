@@ -156,5 +156,11 @@
 "preference_mbti_esfp":"ESFP自报资料及清空回归，不推断穿衣喜好或固定性格。",
 "preference_mbti_estj":"ESTJ自报资料及清空回归，不推断穿衣喜好或固定性格。",
 "preference_mbti_estp":"ESTP自报资料及清空回归，不推断穿衣喜好或固定性格。",
-"preference_auto_memory":"明确喜恶、临时拒绝保存与朋友偏好的多轮识别。"
+"preference_auto_memory":"明确喜恶、临时拒绝保存与朋友偏好的多轮识别。",
+"memory_auto_compound":"用户原句回归：我喜欢穿短袖，衬衫，不喜欢黄色、绿色；核对完整正负偏好、重复去重、遗漏反馈与回顾。",
+"memory_auto_compound_variants":"同句省略主语的喜欢／不喜欢、但与和、中文／英文逗号、反向语序；保持原话及否定方向。",
+"memory_auto_compound_subject":"并列偏好只继承同句明确本人主语；遇到朋友主语或话题变化立即停止，不误存他人颜色禁忌。",
+"memory_auto_compound_refusal":"同句多偏好仍尊重拒绝保存、疑问和假设，不因识别到部分喜恶而越过边界。",
+"wardrobe_preference_handoff":"分享喜恶并保存→按偏好实际选款→只给文字→恢复衣橱：核对真实单品而非空图片文字卡。",
+"partial_wardrobe":"默认先查个人衣橱：五件建议仅白衬衫有货时保留其图，其余四类作为文字参考，不要求凑齐整套。"
 }

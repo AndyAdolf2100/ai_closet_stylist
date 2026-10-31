@@ -247,7 +247,8 @@ function showReply(reply) {
   if (reply.looks?.length) selectedLook = { conversationId: conversation, lookVersion: reply.version, index: 0 };
   else if (selectedLook?.conversationId !== conversation) selectedLook = null;
   const node = bubble('assistant', reply.message);
-  const label = { advice: '穿法建议', outfit: '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
+  const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
+  const label = { advice: '穿法建议', outfit: partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
   if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
   if (reply.weather?.source === 'itinerary_forecast') {
     const route = el('section', 'itinerary-weather');
@@ -311,11 +312,15 @@ function showReply(reply) {
     if (look.items?.length) {
       card.append(window.OutfitBoard.create(look, {conversationId:reply.conversation_id,version:reply.version,index:lookIndex}));
     } else { bulletSection(card, '穿什么', look.pieces); }
+    bulletSection(card, '其余单品参考 · 未匹配衣橱', look.reference_pieces);
+    if (look.wardrobe_complete === false && !look.reference_pieces?.length && look.items?.length) {
+      bulletSection(card, '整套穿搭建议 · 图片仅含衣橱部分', look.pieces);
+    }
     bulletSection(card, '为什么这样搭', look.why);
     bulletSection(card, '照着这样穿', look.how);
     bulletSection(card, '穿着提醒', look.notes);
     if (look.items?.length) {
-      const preview = el('button', 'subtle', '查看这套的试穿费用 ↗');
+      const preview = el('button', 'subtle', look.wardrobe_complete === false ? '查看已选单品的试穿费用 ↗' : '查看这套的试穿费用 ↗');
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
         if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }

@@ -61,8 +61,8 @@
   }
 
   function board(items, select, active = -1, imageUrl = null) {
-    const root = make('div', 'outfit-flatlay'); root.setAttribute('aria-label', '整套搭配单品组合');
-    if(imageUrl){const final=make('img','outfit-final-image');final.src=imageUrl;final.alt='整套搭配组合图';root.append(final);}
+    const root = make('div', 'outfit-flatlay'); root.setAttribute('aria-label', '衣橱已选单品组合');
+    if(imageUrl){const final=make('img','outfit-final-image');final.src=imageUrl;final.alt='衣橱单品组合图';root.append(final);}
     const positions = layout(items);
     items.forEach((item, index) => {
       const p = positions[index], button = make('button', 'outfit-piece'); button.type = 'button';
@@ -80,7 +80,7 @@
     opener = trigger; const dialog = make('dialog', 'outfit-detail'); modal = dialog;
     dialog.setAttribute('aria-label', `${look.title || '这套搭配'} · 单品详情`);
     const heading = make('div', 'outfit-detail-heading');
-    const title = make('div'); title.append(make('span', 'outfit-kicker', '衣橱里的这一套'), make('h2', '', look.title || '搭配详情'));
+    const title = make('div'); title.append(make('span', 'outfit-kicker', look.wardrobe_complete === false ? '这次选中的衣橱单品' : '衣橱里的这一套'), make('h2', '', look.title || '搭配详情'));
     const close = make('button', 'subtle', '关闭 ×'); close.type = 'button'; close.setAttribute('aria-label', '关闭搭配详情'); close.onclick = () => dialog.close();
     heading.append(title, close);
     const content = make('div', 'outfit-detail-content'), overview = make('section', 'outfit-overview');
@@ -138,7 +138,9 @@
   function create(look,ref=null) {
     const root=make('section','outfit-composition'),stage=make('div','outfit-board-stage');
     const footer=make('div','outfit-board-footer'),text=make('div');
-    text.append(make('span','outfit-kicker',`${look.items.length} 件单品 · 一起穿`),make('p','','把喜欢的衣服，放在一起看看。'));
+    const partial = look.wardrobe_complete === false;
+    text.append(make('span','outfit-kicker',`${look.items.length} 件${partial ? '衣橱单品 · 部分搭配' : '单品 · 一起穿'}`),
+      make('p','',partial ? '图片仅展示衣橱已选单品，其余为文字参考。' : '把喜欢的衣服，放在一起看看。'));
     const actions=make('div','outfit-board-actions');
     const expand=make('button','outfit-expand','展开看看 ↗'),download=make('button','subtle','下载');
     expand.type=download.type='button';actions.append(download,expand);footer.append(text,actions);root.append(stage,footer);

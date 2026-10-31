@@ -9,7 +9,7 @@ from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.errors import StylistError
 from stylist.main import create_app
-from stylist.memory import MemoryBook, MemoryEntry, apply_memory, explicit_memory
+from stylist.memory import MemoryBook, MemoryEntry, apply_memory, automatic_preference, explicit_memory
 from stylist.models import Change, ChatRequest, Draft, Plan, Task
 from stylist.store import Store
 
@@ -282,6 +282,36 @@ def test_automatic_preference_excludes_ambiguous_statements(message):
     assert automatic_preference(message) is None
 
 
+@pytest.mark.parametrize('message,expected', [
+    ('我喜欢穿短袖，衬衫，不喜欢黄色、绿色', '我喜欢穿短袖，衬衫；不喜欢黄色、绿色'),
+    ('我喜欢短袖，衬衫，不喜欢黄色、绿色', '我喜欢短袖，衬衫；不喜欢黄色、绿色'),
+    ('我喜欢穿短袖，衬衫，不喜欢黄色、绿色，不喜欢的没有保存。',
+     '我喜欢穿短袖，衬衫；不喜欢黄色、绿色'),
+    ('我喜欢穿短袖、衬衫，但不喜欢黄色和绿色。', '我喜欢穿短袖、衬衫；但不喜欢黄色和绿色'),
+    ('我不喜欢黄色、绿色，喜欢穿短袖和衬衫。', '我不喜欢黄色、绿色；喜欢穿短袖和衬衫'),
+    ('我喜欢穿短袖,衬衫,不喜欢黄色,绿色。', '我喜欢穿短袖,衬衫；不喜欢黄色,绿色'),
+    ('我喜欢穿短袖，我朋友不喜欢黄色，不喜欢绿色。', '我喜欢穿短袖'),
+    ('我喜欢穿短袖，去逛街，不喜欢绿色。', '我喜欢穿短袖'),
+    ('我喜欢穿短袖。不喜欢黄色。', '我喜欢穿短袖'),
+])
+def test_compound_preferences_keep_polarity_and_same_sentence_subject(message, expected):
+    saved = automatic_preference(message)
+    assert saved.content == expected
+    assert saved.category == '穿衣习惯'
+
+
+@pytest.mark.parametrize('message', [
+    '不喜欢黄色、绿色。',
+    '她喜欢短袖，衬衫，不喜欢黄色、绿色。',
+    '我朋友喜欢短袖，衬衫，不喜欢黄色、绿色。',
+    '我喜欢穿短袖，衬衫，不喜欢黄色、绿色，不要保存。',
+    '我喜欢穿短袖，衬衫，不喜欢黄色、绿色吗？',
+    '假如我喜欢穿短袖，衬衫，不喜欢黄色、绿色。',
+])
+def test_compound_preferences_do_not_infer_owner_or_override_refusal(message):
+    assert automatic_preference(message) is None
+
+
 @pytest.mark.asyncio
 async def test_auto_preference_saved_once_isolated_and_paused(tmp_path):
     store, model = Store(str(tmp_path / 'auto.db')), Model()
@@ -361,3 +391,32 @@ async def test_auto_memory_failed_reply_retry_and_replay(tmp_path, persona):
     await engine.chat(Upstream(), request)
     assert store.memory_book('a').revision == revision
     assert [entry.content for entry in store.memory_book('a').entries] == ['我喜欢棉质衬衫']
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('persona', ['male_calm_v1', 'female_warm_v1'])
+async def test_compound_memory_preserves_disliked_colors_for_next_task(tmp_path, persona):
+    class CompoundModel(Model):
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                self.calls.append((name, payload))
+                if payload['message'] == '我喜欢穿短袖，衬衫，不喜欢黄色、绿色':
+                    return Plan(mode='consult', conversation_only=True, use_inventory=False)
+                return Plan(mode='consult', use_inventory=False, memory_changes={
+                    'excluded_colors': Change(value=['黄色', '绿色'], evidence='不喜欢黄色、绿色')})
+            return await super().generate(name, payload, result_type)
+
+    store, model = Store(str(tmp_path / 'compound.db')), CompoundModel()
+    engine = Stylist(Settings(), store, model)
+    original = ChatRequest(message='我喜欢穿短袖，衬衫，不喜欢黄色、绿色',
+                           request_id='compound-original', assistant_persona=persona)
+    reply = await engine.chat(Upstream(), original)
+    saved = store.memory_book('a')
+    assert [(entry.category, entry.content) for entry in saved.entries] == [
+        ('穿衣习惯', '我喜欢穿短袖，衬衫；不喜欢黄色、绿色')]
+    assert '我们的手记' in reply.message
+    await engine.chat(Upstream(), ChatRequest(message='只讨论穿法原理，不查衣橱和天气。',
+        request_id='compound-next-task', assistant_persona=persona))
+    assert model.calls[-1][1]['long_term_memory'][0]['content'] == saved.entries[0].content
+    assert model.calls[-1][1]['task']['excluded_colors'] == ['黄色', '绿色']
+    assert not store.memory_book('b').entries

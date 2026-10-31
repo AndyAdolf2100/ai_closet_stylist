@@ -84,10 +84,10 @@ def test_catalog_wording_only_supports_attributed_design_not_personal_fit():
     assert context["catalog_labels"] == [{"key": "user:1", "labels": ["宽松", "防水"]}]
 
 
-@pytest.mark.parametrize("field", ["title", "pieces", "why", "how", "notes"])
+@pytest.mark.parametrize("field", ["title", "pieces", "reference_pieces", "unmatched_reason", "why", "how", "notes"])
 def test_claims_in_every_outfit_region_are_checked(field):
     values = dict(title="日常", pieces=[], why=["顺色"], how=["按体感穿脱"])
-    values[field] = "这件衬衫不贴身" if field == "title" else ["这件衬衫不贴身"]
+    values[field] = "这件衬衫不贴身" if field in {"title", "unmatched_reason"} else ["这件衬衫不贴身"]
     assert attribute_claim_problems(Draft(message="已整理", looks=[LookDraft(**values)]), {})
 
 

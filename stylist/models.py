@@ -135,6 +135,10 @@ class LookDraft(Model):
     style_name: str = Field(default="", max_length=16, description="简短风格名，例如简约通勤、休闲运动，用于搭配标签")
     selected_keys: list[str] = Field(default_factory=list, max_length=10)
     pieces: list[str] = Field(default_factory=list, max_length=10)
+    reference_pieces: list[str] = Field(default_factory=list, max_length=10,
+                                      description="本方案未匹配到个人衣物的品类建议，仅文字参考，不进入组合图")
+    unmatched_reason: str = Field(default="", max_length=300,
+                                  description="候选存在却未选任何真实衣物时，说明本方案不适配的具体原因")
     why: list[str] = Field(min_length=1, max_length=5)
     how: list[str] = Field(min_length=1, max_length=6)
     notes: list[str] = Field(default_factory=list, max_length=6)
@@ -151,6 +155,8 @@ class Look(Model):
     style_name: str = Field(default="", max_length=16)
     items: list[Product] = Field(default_factory=list)
     pieces: list[str] = Field(default_factory=list)
+    reference_pieces: list[str] = Field(default_factory=list)
+    wardrobe_complete: bool | None = None
     why: list[str] = Field(default_factory=list)
     how: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)

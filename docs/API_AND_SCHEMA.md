@@ -103,3 +103,7 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 本服务新增 `GET /stylist-api/memories`、`PUT /stylist-api/memories`，必须带当前账号身份。与旧 Go 服务同名探测路径是不同的数据域，不代理旧记忆。请求／响应 `{revision, enabled, entries:[{id, category, content}]}`，拒绝客户端 owner 字段；保存需携带读取时的 revision，冲突返回 409 `memory_conflict`，不覆盖其他窗口修改。
 
 独立表 `stylist_memory_books(owner_id, revision, book_json)`，兼容 SQLite／MySQL／PostgreSQL SQL 适配。每账号最多30条，每条240字；正文纯文本。明确聊天保存与 `Store.finish` 同事务提交，幂等请求不会重复添加；同内容去重。暂停不会删除条目；删除只移除活跃手记，不清除历史对话或检查点快照。详见 [长记忆](LONG_TERM_MEMORY.md)。
+
+
+## 部分衣橱选款（2026-10-31）
+LookDraft新增reference_pieces（最多10条，未匹配品类文字参考）和unmatched_reason（候选非空但一件不选时说明原因）；Look返回reference_pieces与wardrobe_complete（bool，旧记录缺省null）。items始终仅为已选择的当前账号个人衣物；图片绑定／合成仍只使用items。完整结构不再是展示真实单品的前提，单品硬限制、重复／层次冲突与冻结校验保留。

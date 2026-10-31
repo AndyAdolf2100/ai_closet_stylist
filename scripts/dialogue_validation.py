@@ -87,6 +87,30 @@ EXPECTATIONS["wardrobe_opt_out/text"] = {"no_tools": True, "delivery": "advice",
 EXPECTATIONS["wardrobe_opt_out/resume"] = {"inventory": True, "delivery": "outfit", "no_weather_tools": True,
     "review_focus": "本轮恢复衣橱选款，不能沿用前文文字限定。"}
 
+SCENARIOS["wardrobe_preference_handoff"] = [
+    ("preferences", "我喜欢穿短袖，衬衫，不喜欢黄色、绿色", True),
+    ("outfit", "从我的衣橱按刚才的喜好搭一套，不考虑天气。", False),
+    ("text", "这次只给文字穿法，不查衣橱和天气。", False),
+    ("resume", "现在恢复个人衣橱选款，再搭一套，不考虑天气。", False),
+]
+EXPECTATIONS["wardrobe_preference_handoff/preferences"] = {
+    "no_tools": True, "no_looks": True, "memory_contents": ["我喜欢穿短袖，衬衫；不喜欢黄色、绿色"],
+    "review_focus": "仅分享偏好时先收进手记，不主动给空商品的整套建议。"}
+for turn in ["outfit", "resume"]:
+    EXPECTATIONS[f"wardrobe_preference_handoff/{turn}"] = {
+        "inventory": True, "delivery": "outfit", "no_weather_tools": True,
+        "review_focus": "应读取个人衣橱并返回真实单品，保留黄色绿色禁忌，不能只有空selected_keys的文字卡。"
+                        "图片字段及来源由后端专项检查；合成图片不能冒充真实衣橱视觉验收。"}
+EXPECTATIONS["wardrobe_preference_handoff/text"] = {"no_tools": True, "delivery": "advice", "no_real_items": True}
+
+SCENARIOS["partial_wardrobe"] = [
+    ("five_pieces", "只给我一套衬衫、裤子、外套、鞋和包的日常穿搭，不考虑天气。", False),
+]
+EXPECTATIONS["partial_wardrobe/five_pieces"] = {
+    "inventory": True, "delivery": "outfit", "no_weather_tools": True,
+    "owned_items_per_look": 1, "references_per_look": 4,
+    "review_focus": "合成衣橱只有白衬衫，整套五件建议应保留这件真实衣物、四类列文字参考；不能因缺少鞋裤清空选款，也不能编造另四件已在衣橱。"}
+
 SCENARIOS.update(MEMORY_SCENARIOS)
 EXPECTATIONS.update(MEMORY_EXPECTATIONS)
 SCENARIOS.update(PREFERENCE_SCENARIOS)
@@ -109,6 +133,8 @@ class DialogueUpstream:
         self.products = PREFERENCE_PRODUCTS if scenario in PREFERENCE_SCENARIOS else PRODUCTS
         if scenario == "preference_no_matching_style":
             self.products = [p for p in self.products if {"name": "复古"} not in p.get("styles", [])]
+        if scenario == "partial_wardrobe":
+            self.products = [{**PRODUCTS[0], "original_image": "https://example.invalid/synthetic-shirt.jpg"}]
 
     async def identity(self):
         return "synthetic-persona-evaluation"
@@ -156,7 +182,7 @@ class DialogueUpstream:
 def visible_text(reply):
     parts = [reply.message, *reply.warnings, *reply.follow_ups]
     for look in reply.looks:
-        parts.extend([look.title, look.style_name, *look.pieces, *look.why, *look.how, *look.notes])
+        parts.extend([look.title, look.style_name, *look.pieces, *look.reference_pieces, *look.why, *look.how, *look.notes])
     return "\n".join(parts)
 
 
@@ -181,6 +207,13 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
         errors.append("unexpected_looks")
     if expected.get("no_real_items") and any(look.items for look in reply.looks):
         errors.append("fabricated_items")
+    if "owned_items_per_look" in expected and (not reply.looks or any(
+            len(look.items) != expected["owned_items_per_look"] for look in reply.looks)):
+        errors.append("owned_item_count")
+    if "references_per_look" in expected and (not reply.looks or any(
+            len(look.reference_pieces) != expected["references_per_look"] or look.wardrobe_complete is not False
+            for look in reply.looks)):
+        errors.append("partial_wardrobe_references")
     if expected.get("city_contains") and expected["city_contains"] not in (reply.task.city or ""):
         errors.append("requested_city_lost")
     for field, value in expected.get("task", {}).items():

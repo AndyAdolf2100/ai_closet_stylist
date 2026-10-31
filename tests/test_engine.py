@@ -146,7 +146,7 @@ async def test_consultation_followup_never_enters_closet_and_keeps_scene(tmp_pat
                       Draft(message="保持这三件，调整穿法。", looks=[LookDraft(title="自然垂放", pieces=["海军蓝针织衫"],
                             why=["轮廓放松"], how=["下摆自然垂放"])]))
     result = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
-        message="厚针织衫不塞衣角，保持三件。", request_id="advice-followup", conversation_id=cid, expected_version=1))
+        message="厚针织衫不塞衣角，保持三件，不查衣橱，只重新说穿法。", request_id="advice-followup", conversation_id=cid, expected_version=1))
     assert result.mode == "consult" and result.delivery == "advice"
     assert result.task.scene == "周末美术馆" and len(result.task.owned_descriptions) == 3
     assert result.task.preferences == ["不塞衣角"]

@@ -10,6 +10,44 @@ from stylist.store import Store
 from stylist.upstream import check_integrations
 
 
+@pytest.mark.parametrize('persona', ['male_calm_v1', 'female_warm_v1'])
+@pytest.mark.parametrize('text_only,chat_only', [(False, False), (True, False), (False, True)])
+@pytest.mark.asyncio
+async def test_clothing_preferences_used_as_outfit_conditions_return_personal_items_and_images(
+        tmp_path, persona, text_only, chat_only):
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                # Reproduce the saved local plan: clothing conditions, but consult/no inventory.
+                return Plan(mode='consult', use_inventory=False, conversation_only=chat_only, changes={
+                    'preferences': Change(value=['喜欢穿短袖', '喜欢穿衬衫'], evidence=['我喜欢穿短袖', '衬衫']),
+                    'excluded_colors': Change(value=['黄色', '绿色'], evidence=['不喜欢黄色', '绿色'])})
+            return Draft(message='按你的衣物和颜色要求来安排。', looks=[LookDraft(title='衬衫日常穿搭',
+                selected_keys=['user:101', 'user:102', 'user:103'] if payload['candidates'] else [],
+                pieces=['衬衫', '长裤', '平底鞋'], why=['白灰配色'], how=['按体感调整层次'])])
+
+    upstream = DialogueUpstream('wardrobe_only')
+    upstream.products = [{**p, 'original_image': 'https://example.invalid/wardrobe-test.jpg'} for p in PRODUCTS]
+    message = '我喜欢穿短袖，衬衫，不喜欢黄色、绿色'
+    if text_only:
+        message += '，只给文字穿法，不查衣橱。'
+    store = Store(str(tmp_path / 'preferences-outfit.db'))
+    reply = await Stylist(Settings(), store, Model()).chat(upstream, ChatRequest(
+        message=message, request_id='preferences-outfit-photo', assistant_persona=persona))
+    if text_only or chat_only:
+        assert '/api/user_product/quick_edit_list' not in upstream.calls
+        assert not any(look.items for look in reply.looks)
+        if chat_only:
+            assert not reply.looks
+    else:
+        assert '/api/user_product/quick_edit_list' in upstream.calls
+        assert reply.mode == 'recommend' and reply.delivery == 'outfit'
+        assert reply.task.excluded_colors == ['黄色', '绿色']
+        assert all(item.source == 'user' and item.original_image for look in reply.looks for item in look.items)
+        assert any(look.items for look in reply.looks)
+        assert store.memory_book(await upstream.identity()).entries[0].content == '我喜欢穿短袖，衬衫；不喜欢黄色、绿色'
+
+
 @pytest.mark.parametrize("source", ["catalog", "hybrid"])
 @pytest.mark.parametrize("origin", ["request", "history", "model"])
 @pytest.mark.asyncio

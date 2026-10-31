@@ -211,7 +211,12 @@ def top_layer_kind(product: Product):
     return None
 
 
-def validate_look(keys, candidates: dict[str, Product], task: Task, frozen: set[str]):
+def has_outfit_structure(items):
+    slots = {p.slot for p in items}
+    return (Slot.DRESS in slots or {Slot.TOP, Slot.BOTTOM} <= slots) and Slot.SHOES in slots
+
+
+def validate_look(keys, candidates: dict[str, Product], task: Task, frozen: set[str], *, require_complete=True):
     if len(keys) != len(set(keys)) or any(key not in candidates for key in keys):
         return ["引用了不存在或重复的候选单品"]
     if not frozen <= set(keys):
@@ -227,8 +232,7 @@ def validate_look(keys, candidates: dict[str, Product], task: Task, frozen: set[
     for slot in [Slot.BOTTOM, Slot.DRESS, Slot.OUTER, Slot.SHOES]:
         if slots.count(slot) > 1:
             problems.append(f"{slot}位置重复")
-    separates = Slot.TOP in slots and Slot.BOTTOM in slots
-    if not (Slot.DRESS in slots or separates) or Slot.SHOES not in slots:
+    if require_complete and not has_outfit_structure(items):
         problems.append("缺少完整主体衣物或鞋子")
     if Slot.DRESS in slots and (Slot.TOP in slots or Slot.BOTTOM in slots):
         problems.append("连身衣物与上下装结构冲突")

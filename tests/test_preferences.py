@@ -46,3 +46,13 @@ def test_wardrobe_default_respects_explicit_and_historical_opt_outs():
     history = [{'role': 'user', 'content': '不查衣橱，只给文字方案。'}]
     assert not wardrobe_requested('那鞋子怎么搭？', history)
     assert wardrobe_requested('现在从衣橱选实际衣服', history)
+
+
+def test_clothing_conditions_trigger_inventory_only_without_consultation_or_memory_opt_outs():
+    from stylist.preferences import wardrobe_requested
+    message = '我喜欢穿短袖，衬衫，不喜欢黄色、绿色'
+    assert wardrobe_requested(message, clothing_preferences=True)
+    for suffix in ['，只记录偏好。', '，不用搭配。', '，讲讲配色原理。', '，不查衣橱。']:
+        assert not wardrobe_requested(message + suffix, clothing_preferences=True)
+    assert not wardrobe_requested(message, [{'role': 'user', 'content': '只给文字方案，不查衣橱。'}],
+                                  clothing_preferences=True)

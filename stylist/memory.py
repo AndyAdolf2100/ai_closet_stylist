@@ -69,15 +69,44 @@ def explicit_memory(message):
         raise StylistError("invalid_memory", "请把要记住的内容控制在 1—240 字，也可以到设置里的「我们的手记」分成几页整理。", 422) from None
 
 
+def preference_list_item(text):
+    """Only unambiguous clothing/color nouns may extend a comma-separated list."""
+    item = (r"(?:(?:浅|深|亮|暗)?(?:黑|白|灰|红|黄|绿|蓝|紫|粉|棕|米|橙|青|银|金)色"
+            r"|短袖|长袖|衬衫|T恤|毛衣|开衫|卫衣|外套|风衣|西装|夹克|裙子|长裙|短裙"
+            r"|长裤|短裤|牛仔裤|平底鞋|运动鞋|高跟鞋|靴子|围巾|帽子)")
+    return bool(re.fullmatch(item + r"(?:[、和及与]" + item + r")*", text))
+
+
 def automatic_preference(message):
     """Keep only explicit first-person preference clauses, never inferred traits."""
     if re.search(r"不要|别记|不保存|不用记|别存|今天|这次|暂时|如果|假如|假设|比如|举例|他说|她说|说过|[？?“”「」\"]", message):
         return None
     if re.search(r"(?:别|不要|不用|无需|不必).{0,6}(?:写|记|存|收录)|(?:什么|是否|是不是)|[吗么](?:[。！!\s]|$)", message):
         return None
-    clauses = re.split(r"[，,。！!；;\n]", message)
-    selected = [part.strip() for part in clauses if re.fullmatch(
-        r"我(?:一直|平时|通常|特别|很|最)?(?:喜欢|不喜欢|讨厌|偏爱)[^，,。！？!?；;]{1,80}", part.strip())]
+    clauses = re.split(r"([，,。！!；;\n])", message)
+    selected, own_subject = [], False
+    for index in range(0, len(clauses), 2):
+        delimiter = clauses[index - 1] if index else ""
+        if delimiter in {"。", "！", "!", "\n"}:
+            own_subject = False
+        part = clauses[index].strip()
+        if not part:
+            continue
+        preference = re.fullmatch(
+            r"(?:但是|不过|而且|并且|但|也)?(?P<subject>我)?(?:一直|平时|通常|特别|很|最)?"
+            r"(?:不喜欢|喜欢|讨厌|偏爱)(?P<object>[^，,。！？!?；;]{1,80})", part)
+        if (preference and (preference['subject'] or own_subject)
+                and not preference['object'].startswith('的')):
+            selected.append(part)
+            own_subject = True
+        elif own_subject and delimiter in {"，", ","} and preference_list_item(part):
+            # Keep the user's original nouns and punctuation; do not change polarity
+            # or invent an extra first-person statement for an omitted subject.
+            selected[-1] += delimiter + part
+        else:
+            # Another speaker, an unrelated action or a save-status report breaks
+            # the local subject chain. Do not infer ownership across it.
+            own_subject = False
     content = "；".join(selected)
     if not content or len(content) > 240:
         return None
@@ -85,7 +114,7 @@ def automatic_preference(message):
 
 
 def memory_category(content):
-    if re.search(r"穿|衣|鞋|裙|裤|搭配|面料|羊毛", content):
+    if re.search(r"穿|衣|鞋|裙|裤|衬衫|短袖|长袖|搭配|面料|羊毛", content):
         return "穿衣习惯"
     if re.search(r"回复|称呼|说话|建议|听我|安慰|叫我", content):
         return "相处约定"

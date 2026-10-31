@@ -87,3 +87,26 @@ test('half-processed clothes never render; display and download share the final 
  root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.equal(downloaded,'https://photos.invalid/saved-oss.png');
  assert.equal(root.querySelectorAll('.outfit-hotspot').length,2);dom.window.close();
 });
+test('a five-piece suggestion renders only its one owned item and lists the other four as text',async()=>{
+ const {dom,w,board}=setup();
+ const app=fs.readFileSync('stylist/static/app.js','utf8');
+ const el=(tag,cls,text)=>{const n=w.document.createElement(tag);n.className=cls||'';if(text)n.textContent=text;return n;};
+ const bubble=(role,text)=>{const n=el('article',role,text);w.document.body.append(n);return n;};
+ const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;'+
+   app.slice(app.indexOf('function bulletSection('),app.indexOf('function productGrid('))+
+   app.slice(app.indexOf('function showReply('),app.indexOf('function setBusy('))+';return showReply;';
+ const show=new Function('window','el','bubble','scrollBottom',code)(w,el,bubble,()=>{});
+ const selected=item('top',{product_id:'1',title:'白衬衫'});
+ let composed;
+ w.OutfitImages.get=async look=>{composed=look.items;return {image_url:'https://photos.invalid/one-owned.png'}};
+ show({conversation_id:'owned',version:1,delivery:'outfit',message:'组合参考',looks:[{
+  title:'五件穿搭建议',items:[selected],pieces:['白衬衫','长裤','外套','鞋','包'],
+  reference_pieces:['长裤','外套','鞋','包'],wardrobe_complete:false,why:[],how:[],notes:[]}]});
+ await ready();
+ assert.equal(composed.length,1);assert.equal(composed[0].title,'白衬衫');
+ assert.equal(w.document.querySelectorAll('.outfit-hotspot').length,1);
+ assert.equal(w.document.querySelectorAll('li').length,4);
+ assert.match(w.document.body.textContent,/衣橱部分搭配/);assert.match(w.document.body.textContent,/其余单品参考/);
+ assert.match(w.document.body.textContent,/1 件衣橱单品/);
+ dom.window.close();
+});
