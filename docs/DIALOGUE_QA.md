@@ -360,7 +360,7 @@ NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/companion_settings.
 
 ## 2026-11-02 重新生成穿搭入口
 
-结果卡「继续调整这套搭配」改为「重新生成穿搭」，点击直接走对话流选款，不再仅填入输入框；新的真实衣橱卡也保留同名入口。核对request的regenerate_outfit／方案索引／会话版本、原场景／禁穿／日期／手记条件、确有新商品ID、只有一套，以及找不到替代时原状态不变。前端保留草稿与上传锚点，双击只提交一次，等待设置或请求返回期间切换账号不能串结果；报价、试穿与积分确认不自动执行。
+结果卡「继续调整这套搭配」改为「重新生成穿搭」，点击直接走对话流选款，不再仅填入输入框；新的真实衣橱卡也保留同名入口。核对request的regenerate_outfit／方案索引／会话版本、原场景／禁穿／手记条件、北京时间当天日期与重新查询的当天预报、确有新商品ID、只有一套，以及找不到替代时原状态不变。前端保留草稿与上传锚点，双击只提交一次，等待设置或请求返回期间切换账号不能串结果；报价、试穿与积分确认不自动执行。
 
 `tests/test_outfit_regeneration.py` 与相关图片、人物、上传锚点、部分匹配、个人衣橱、Store和日期回归共89项通过；`tests/outfit_regeneration.test.cjs`、`tests/wardrobe_journey.test.cjs`、`tests/api_session.test.cjs`共39项通过。1个真实文字小样使用合成衣橱与临时库，原101／102／103改为101／102／104且只返回一套，要求保持，记录2个style生成／修正阶段结果，不作为HTTP调用数或账单统计；原文与轨迹保留在忽略目录var/outfit-regeneration-live.json。
 

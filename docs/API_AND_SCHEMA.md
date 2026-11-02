@@ -132,7 +132,7 @@ Reply新增可选 `avatar_intent`、`tryon_context:{conversation_id,version,look
 
 复用 `POST /stylist-api/chat/stream`，按钮提交 `message="重新生成穿搭"`、`regenerate_outfit=true`、当前 `conversation_id`／`expected_version`／`selected_look_index` 与新request_id。该动作沿用当前已保存要求，固定文案避免把新增条件静默忽略；有新条件应使用普通对话，不能同时绑定upload_action_id。请求仍由认证账号、会话版本与幂等摘要校验；默认false从摘要排除，以兼容旧请求。
 
-服务端从本账号当前方案读取源衣物和要求，重新读取个人衣橱，只生成所选的一套；周计划保留该套标题中的已存ISO日期。手记默认条件仍走原话证据校验，不改写任务。新结果必须包含至少一件不同的合规个人单品；重复／多套进入修正，仍不能满足时返回outfit_regeneration_unavailable并保留原搭配，不能只改标题冒充成功。该动作不创建试穿报价或调用生成／确认接口，新搭配的试穿另行确认。
+服务端从本账号所选方案读取源衣物和要求，重新读取个人衣橱，只生成一套当天穿搭；日期由服务端按Asia/Shanghai当前日确定，周计划标题中的来源日期不带入新任务。天气策略重置auto、清除旧自报温度，各行程站点日期同样更新为当天；不改变请求协议或幂等摘要。手记默认条件仍走原话证据校验，不改写任务。新结果必须包含至少一件不同的合规个人单品；重复／多套进入修正，仍不能满足时返回outfit_regeneration_unavailable并保留原搭配，不能只改标题冒充成功。该动作不创建试穿报价或调用生成／确认接口，新搭配的试穿另行确认。
 
 ## 历史搭配重新生成（2026-11-02）
 

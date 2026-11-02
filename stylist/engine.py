@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import operator
-import re
 from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime
 from typing import Annotated, TypedDict
@@ -217,13 +216,12 @@ class Stylist:
                 if not source or not source[0].items:
                     raise StylistError("regenerate_context_missing", "请先打开一套已有衣橱搭配，再重新生成。", 409)
                 task = state.task.model_copy(deep=True)
-                if state.mode == "weekly":
-                    day = re.search(r"\d{4}-\d{2}-\d{2}", source[0].title)
-                    if day:
-                        try:
-                            task.event_date = datetime.strptime(day[0], "%Y-%m-%d").date()
-                        except ValueError:
-                            pass
+                # Regeneration is a new outfit for today, even when its source is historical.
+                task.event_date = today.date()
+                task.itinerary = [stop.model_copy(update={"event_date": today.date()}) for stop in task.itinerary]
+                task.weather_policy = "auto"
+                task.temp_min = task.temp_max = None
+                task.weather_description = ""
                 plan = Plan(mode="recommend", use_inventory=True, use_profile_gender=False, weather_scope="day")
                 if planning_payload["long_term_memory"]:
                     defaults = await self.llm.generate("plan", {**planning_payload,
@@ -385,9 +383,10 @@ class Stylist:
                                     "effective_task": effective_task.model_dump(mode="json"),
                                     "weather": None, "warnings": [], "service_gap": False}
                         logger.warning("Weather forecast failed (%s)", exc.code)
-                        kind = {"forecast_date_unavailable": "weather_date", "city_needs_selection": "city_selection"}.get(exc.code, "weather")
+                        kind = {"forecast_date_past": "weather_past", "forecast_date_unavailable": "weather_date",
+                                "city_needs_selection": "city_selection"}.get(exc.code, "weather")
                         warnings.append(service_notice(request.assistant_persona, kind))
-                        if scope == "day":
+                        if scope == "day" and exc.code != "forecast_date_past":
                             try:
                                 async with upstream.mcp() as mcp:
                                     weather, cautions = await weather_for(task, mcp, request.assistant_persona)

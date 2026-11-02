@@ -167,7 +167,9 @@ UI回归 `tests/wardrobe_journey.test.cjs`：展开画廊仅GET，点人物只�
 
 ## 重新生成穿搭入口
 
-检查「重新生成穿搭」实际提交regenerate_outfit与所选方案索引，复用当前对话流，不能只更名或填入草稿；新衣橱卡应可继续重新生成。运行tests/test_outfit_regeneration.py及相关Store／图片／局部修改／日期回归，前端用tests/outfit_regeneration.test.cjs、wardrobe_journey.test.cjs和api_session.test.cjs。核对原场景、禁穿、对象、所选日期和手记条件，一次一套且至少一件新个人单品；重复须修正，无法满足时保留原状态。覆盖草稿／上传锚点保留、双击、待确认、旧版本、账号在设置加载中或请求中切换、请求重放与旧摘要兼容。重新选款不自动试穿／扣积分。真实文字仅必要小样、合成业务和临时库，保留首次结果；浏览器合成链路不冒充真实图片或收费效果。
+检查「重新生成穿搭」实际提交regenerate_outfit与所选方案索引，复用当前对话流，不能只更名或填入草稿；新衣橱卡应可继续重新生成。运行tests/test_outfit_regeneration.py及相关Store／图片／局部修改／日期回归，前端用tests/outfit_regeneration.test.cjs、wardrobe_journey.test.cjs和api_session.test.cjs。核对原场景、禁穿、对象和手记条件；日期改为Asia/Shanghai当天并重新查当日预报，不继承来源日期或旧自报／忽略天气，一次一套且至少一件新个人单品；重复须修正，无法满足时保留原状态。覆盖草稿／上传锚点保留、双击、待确认、旧版本、账号在设置加载中或请求中切换、请求重放与旧摘要兼容。重新选款不自动试穿／扣积分。真实文字仅必要小样、合成业务和临时库，保留首次结果；浏览器合成链路不冒充真实图片或收费效果。
+
+日期回归保留完整上下文：旧日卡片→跨日继续聊天→点旧／当前／周计划卡重新生成，在北京时间已跨午夜而UTC未跨日时仍使用北京时间当天；旧自报温度及忽略设置不继承，多地预报均按当前日。检查真实传给选款的weather、requested_dates与外层选款，不能只核对定位标签；普通文字明确过去日期应提示日期原因且不回退成今日，普通对话明确忽略天气仍有效。仅跑test_outfit_regeneration.py、test_located_weather.py、test_weather.py、test_weather_layering.py、test_planning_dates.py、test_personas.py等必要范围；真实用户原记录只定位原因，不复制进模拟题库，不代用户重新生成／扣费。
 
 ## 试穿来信与失败入口（2026-11-02）
 

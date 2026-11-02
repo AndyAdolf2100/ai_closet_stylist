@@ -1,6 +1,6 @@
 """Explicit regeneration selects a different owned outfit without image writes."""
 import hashlib
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 
@@ -9,8 +9,21 @@ from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.errors import StylistError
 from stylist.memory import MemoryBook, MemoryEntry
-from stylist.models import Change, ChatRequest, Draft, Look, LookDraft, Plan, Product, Reply, Task
+from stylist.models import (
+    Change,
+    ChatRequest,
+    CitySelection,
+    Draft,
+    Look,
+    LookDraft,
+    Plan,
+    Product,
+    Reply,
+    Task,
+    TripStop,
+)
 from stylist.store import Store
+from stylist.weather import today
 
 
 def look(top, title):
@@ -18,15 +31,26 @@ def look(top, title):
         for pid, slot in [(top, 'top'), (102, 'bottom'), (103, 'shoes')]])
 
 
-async def setup(tmp_path, *, weekly=False, no_heels=True):
-    upstream = DialogueUpstream('regeneration')
+async def setup(tmp_path, *, weekly=False, no_heels=True, event_date=None, weather_policy='auto', city=None,
+                itinerary=None):
+    class RegenerationUpstream(DialogueUpstream):
+        async def call(self, name, args):
+            if name == 'city.resolve' and args.get('name') == '北京市':
+                self.calls.append(name)
+                return {'status':'resolved','truncated':False,
+                        'matches':[{'city_name':'北京市','province_name':'北京市'}]}
+            return await super().call(name, args)
+    upstream = RegenerationUpstream('regeneration')
     upstream.products = [*PRODUCTS, {**PRODUCTS[0], 'product_id': '202', 'title': '蓝色长袖衬衫', 'color': '蓝色'}]
     store = Store(str(tmp_path / 'regeneration.db'))
     owner = await upstream.identity()
     initial = ChatRequest(message='已生成的衣橱搭配', request_id='seed-regeneration')
     cid, claim, state, _ = store.reserve(owner, initial)
-    state.task = Task(scene='通勤', gender='女', event_date=date(2026, 11, 2), weather_policy='ignored',
+    state.task = Task(scene='通勤', gender='女', city=city, itinerary=itinerary or [],
+        event_date=event_date or today(), weather_policy=weather_policy,
         no_heels=no_heels, excluded_colors=['黄色', '绿色'], excluded_materials=['羊毛'], preferences=['不塞衣角'])
+    if weather_policy == 'provided':
+        state.task.temp_min, state.task.temp_max, state.task.weather_description = 27, 32, '旧日自报炎热天气'
     state.mode = 'weekly' if weekly else 'recommend'
     state.looks = [look(202, '2026-11-02 第一套'), look(101, '2026-11-04 第二套')]
     store.finish(owner, initial, claim, state, Reply(conversation_id=cid, version=1,
@@ -95,11 +119,11 @@ async def test_failure_to_find_a_different_outfit_keeps_the_original_state(tmp_p
     assert saved['messages'][0]['reply']['looks'] == [item.model_dump(mode='json') for item in before.looks]
 
 
-async def test_weekly_source_regenerates_the_selected_day_as_one_outfit(tmp_path):
+async def test_weekly_source_regenerates_one_outfit_for_today(tmp_path):
     store, upstream, cid, _ = await setup(tmp_path, weekly=True)
     model = Model()
     result = await Stylist(Settings(), store, model).chat(upstream, request(cid))
-    assert result.task.event_date == date(2026, 11, 4)
+    assert result.task.event_date == today()
     assert result.mode == 'recommend' and len(result.looks) == 1
     assert model.payloads[0]['planning_dates'] == []
 
@@ -242,3 +266,86 @@ def test_source_version_is_only_accepted_for_regeneration_and_cannot_be_in_the_f
         ChatRequest(message='普通对话',request_id='not-regeneration',regenerate_from_version=1,expected_version=1)
     with pytest.raises(ValueError):
         request('sty_'+'1'*32,regenerate_from_version=2)
+
+
+@pytest.mark.parametrize('source_date,weather_policy,weekly,historical,route', [
+    (date(2026, 10, 31), 'auto', False, False, False),
+    (date(2026, 10, 31), 'auto', False, True, False),
+    (date(2026, 11, 4), 'auto', True, True, False),
+    (date(2026, 10, 31), 'provided', False, False, False),
+    (date(2026, 10, 31), 'ignored', False, True, False),
+    (date(2026, 10, 31), 'auto', True, True, True),
+])
+async def test_regeneration_fetches_shanghai_today_weather_without_reusing_source_date(
+        tmp_path, monkeypatch, source_date, weather_policy, weekly, historical, route):
+    # Beijing time has crossed midnight while UTC is still the previous date.
+    instant = datetime.fromisoformat('2026-11-03T00:05:00+08:00')
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant.astimezone(tz) if tz else instant.replace(tzinfo=None)
+    monkeypatch.setattr('stylist.engine.datetime', Clock)
+    monkeypatch.setattr('stylist.weather.today', lambda: date(2026, 11, 3))
+    stops = [TripStop(city_name='上海市', event_date=source_date),
+             TripStop(city_name='北京市', event_date=source_date)] if route else []
+    store, upstream, cid, original = await setup(tmp_path, weekly=weekly, event_date=source_date,
+        weather_policy=weather_policy, city='北京市', itinerary=stops)
+    if historical:
+        await add_later_outfit(store, upstream, cid)
+
+    async def forecast(city):
+        upstream.calls.append('forecast')
+        return {'list':[{'data_format':'2026-11-03','temp_day':17,'temp_night':3,
+                         'condition_day':'晴','condition_night':'晴'}]}
+    upstream.forecast = forecast
+
+    class TodayModel(Model):
+        async def generate(self, name, payload, result_type):
+            assert payload['task']['event_date'] == '2026-11-03'
+            assert payload['task']['temp_min'] is None and payload['task']['temp_max'] is None
+            assert '旧日自报' not in payload['task']['weather_description']
+            weather = payload['weather']
+            forecasts = [stop['forecast'] for stop in weather['locations']] if route else [weather]
+            assert all(f['days'][0]['temp_min'] == 3 and f['days'][0]['temp_max'] == 17 for f in forecasts)
+            if not route:
+                assert payload['layering_requirements'][0]['temp_min'] == 3
+            result = await super().generate(name, payload, result_type)
+            result.looks[0].selected_keys.append('user:105')
+            return result
+    model = TodayModel()
+    engine = Stylist(Settings(), store, model)
+    req = request(cid, location=CitySelection(city_name='上海市'))
+    if historical:
+        req = req.model_copy(update={'expected_version':2,'regenerate_from_version':1})
+    reply = await engine.chat(upstream, req)
+    assert reply.task.event_date == date(2026, 11, 3) and reply.task.weather_policy == 'auto'
+    assert reply.task.city == original.task.city and reply.task.scene == original.task.scene
+    assert reply.task.no_heels and reply.task.preferences == ['不塞衣角']
+    assert reply.task.excluded_colors == ['黄色', '绿色'] and reply.task.excluded_materials == ['羊毛']
+    forecasts = [stop['forecast'] for stop in reply.weather['locations']] if route else [reply.weather]
+    assert all(f['requested_dates'] == ['2026-11-03'] and f['scope'] == 'day' for f in forecasts)
+    assert any(p.slot == 'outer' for p in reply.looks[0].items)
+    assert not any('天气暂时没查到' in warning for warning in reply.warnings)
+    history = store.history(await upstream.identity(), cid)
+    assert history['messages'][0]['reply']['task']['event_date'] == source_date.isoformat()
+    calls = list(upstream.calls)
+    assert await engine.chat(upstream, req) == reply
+    assert upstream.calls == calls and len(model.payloads) == 1
+
+
+async def test_explicit_past_date_reports_date_problem_without_current_weather_fallback(tmp_path):
+    from datetime import timedelta
+    past = today() - timedelta(days=2)
+    class PastModel(Model):
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend', weather_scope='day', changes={
+                    'city':Change(value='北京市', evidence='北京'),
+                    'event_date':Change(value=past.isoformat(), evidence=past.isoformat())})
+            return await super().generate(name, payload, result_type)
+    store, upstream, _, _ = await setup(tmp_path)
+    reply = await Stylist(Settings(), store, PastModel()).chat(upstream, ChatRequest(
+        message=f'按{past.isoformat()}北京的天气搭一套', request_id='explicit-past-date-outfit'))
+    assert reply.weather is None and reply.task.event_date == past
+    assert any('过去日期' in warning for warning in reply.warnings)
+    assert 'forecast' not in upstream.calls and 'weather.get' not in upstream.calls

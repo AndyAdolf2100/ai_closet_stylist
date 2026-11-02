@@ -70,7 +70,8 @@ async def weather_for(task: Task, mcp, persona_id=None):
         raise
     except StylistError as exc:
         logger.warning("Weather fallback failed (%s)", exc.code)
-        kind = {"forecast_date_unavailable": "weather_date", "city_needs_selection": "city_selection"}.get(exc.code, "weather")
+        kind = {"forecast_date_past": "weather_past", "forecast_date_unavailable": "weather_date",
+                "city_needs_selection": "city_selection"}.get(exc.code, "weather")
         return None, [service_notice(persona_id, kind)]
 
 
