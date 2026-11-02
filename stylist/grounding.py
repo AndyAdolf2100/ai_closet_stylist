@@ -2,6 +2,7 @@
 import re
 
 from .models import Draft
+from .personas import is_male_persona
 
 PREFIX = "属性依据不足："
 _PATTERNS = {
@@ -83,6 +84,9 @@ def _fields(draft, pool):
         yield f"looks.{index}.unmatched_reason", look.unmatched_reason, products
         for field in ("pieces", "reference_pieces", "why", "how", "notes"):
             for item_index, text in enumerate(getattr(look, field)):
+                if field in {"pieces", "reference_pieces"} and len(text) <= 40 and not re.search(
+                        r"保证|一定|绝对|不会|不贴|不勒|不紧|久走不累|受压|压迫|穿上|坐下|这(?:件|双|条|款)", text):
+                    continue  # A garment/category label is not a promise of personal fit.
                 yield f"looks.{index}.{field}.{item_index}", text, products
 
 
@@ -92,43 +96,68 @@ def attribute_claim_problems(draft, pool):
 
 
 def ground_attribute_fallback(draft: Draft, pool, persona):
-    """After one failed rewrite, replace only unsupported fields and preserve selected IDs."""
-    male = persona == "male_calm_v1"
+    """Remove unsupported sentences intact; put each necessary caveat in notes once."""
+    male = is_male_persona(persona)
     fit = "是否合身、腰腹会不会受压，还要看尺寸和试穿感受。" if male else "这件穿着是否合身，还要试穿看看腰腹有没有受压。"
     weather = "还不能确认防水或防滑效果，雨天带好雨具，留意湿滑路面。" if male else "还不能确认防水或防滑效果，雨天记得带好雨具，也留意脚下。"
     result = draft.model_dump()
+    caveats = {}
     for path, text, products in _fields(draft, pool):
         kinds = _issues(text, products)
         if not kinds:
             continue
-        fragments = re.split(r"([，,。！？!?；;\n]+|但是|不过|然而|可是|而且|并且|但|却)", text)
-        rewritten, seen = [], set()
-        for i in range(0, len(fragments), 2):
-            clause = fragments[i]
-            clause_kinds = _issues(clause, products)
-            if clause_kinds:
-                replacements = []
-                for group, sentence in (("fit", fit), ("weather", weather)):
-                    applies = bool(clause_kinds & {"fit", "design", "comfort"}) if group == "fit" else "weather" in clause_kinds
-                    if applies and group not in seen:
-                        replacements.append(sentence)
-                        seen.add(group)
-                if not replacements:
-                    continue
-                clause = "".join(replacements).rstrip("。")
-            rewritten.append(clause)
-            if i + 1 < len(fragments):
-                rewritten.append(fragments[i + 1])
-        replacement = "".join(rewritten).strip()
         parts = path.split(".")
+        retained = [sentence for sentence in re.split(r"(?<=[。！？!?；;])|\n", text)
+                    if sentence.strip() and not _issues(sentence, products)]
+        replacement = "".join(retained).strip(" ，,；;、\n")
         if parts == ["message"]:
-            result["message"] = replacement
+            # Preserve verified introductory context before an unsupported clause.
+            if not replacement:
+                clauses = re.split(r"[，,]", text)
+                replacement = "，".join(clause for clause in clauses if clause and not _issues(clause, products)).strip(" ，,。")
+            result["message"] = (replacement.rstrip("。") + "。" if replacement else "已按本轮要求整理穿搭参考。")
         elif parts[-1] == "title":
             result["looks"][int(parts[1])]["title"] = "穿搭参考"
         elif parts[-1] == "style_name":
             result["looks"][int(parts[1])]["style_name"] = "日常参考"
         elif parts[-1] == "unmatched_reason":
-            result["looks"][int(parts[1])]["unmatched_reason"] = replacement
+            result["looks"][int(parts[1])]["unmatched_reason"] = replacement or "本次候选尚未确认符合这项要求。"
         else:
             result["looks"][int(parts[1])][parts[2]][int(parts[3])] = replacement
-    return Draft.model_validate(result)
+        if len(parts) > 1:
+            caveats.setdefault(int(parts[1]), set()).update(kinds)
+    for index, look in enumerate(result["looks"]):
+        for field in ("pieces", "reference_pieces", "why", "how", "notes"):
+            look[field] = list(dict.fromkeys(text.strip() for text in look[field] if text.strip()))
+        if not look["why"]:
+            look["why"] = ["按本轮场景和单品组织配色与层次。"]
+        if not look["how"]:
+            look["how"] = ["整理领口、袖口和下摆，穿上走动后再确定。"]
+        kinds = caveats.get(index, set())
+        if kinds & {"fit", "design", "comfort"} and fit not in look["notes"]:
+            look["notes"].append(fit)
+        if "weather" in kinds and weather not in look["notes"]:
+            look["notes"].append(weather)
+    return normalize_draft(Draft.model_validate(result))
+
+
+def normalize_draft(draft):
+    result = draft.model_copy(deep=True)
+    result.follow_ups = [text for text in result.follow_ups if not re.search(
+        r"我可以|我帮你|要不要我|告诉我你|需要我|让我帮你", text)]
+    for look in result.looks:
+        tokens = re.split(r"[+＋]", look.title)
+        if len(tokens) > 1:
+            clean = []
+            for token in tokens:
+                if not clean or token.strip() != clean[-1].strip():
+                    clean.append(token)
+            look.title = "+".join(clean)
+        for field in ("pieces", "reference_pieces", "why", "how", "notes"):
+            setattr(look, field, list(dict.fromkeys(getattr(look, field))))
+        if not look.selected_keys:
+            # A wholly textual card has one garment list. References distinguish
+            # missing pieces only when the card also contains owned items.
+            look.pieces = list(dict.fromkeys(look.pieces + look.reference_pieces))
+            look.reference_pieces = []
+    return result

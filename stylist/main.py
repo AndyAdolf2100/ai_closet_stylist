@@ -20,7 +20,7 @@ from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
-from .memory import MemoryBook
+from .memory import MemoryBook, MemoryBookWrite
 from .models import ChatRequest, CompanionProfile, ForecastRequest, LocateRequest, Model
 from .personas import progress_message
 from .progress import events as progress_events
@@ -140,9 +140,9 @@ def create_app(settings=None):
         return await asyncio.to_thread(store.memory_book, owner)
 
     @app.put("/stylist-api/memories")
-    async def save_memory_book(book: MemoryBook, authorization: str | None = Header(default=None)):
+    async def save_memory_book(book: MemoryBookWrite, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
-        return await asyncio.to_thread(store.save_memory_book, owner, book)
+        return await asyncio.to_thread(store.save_memory_book, owner, MemoryBook.model_validate(book.model_dump()))
 
     @app.post("/stylist-api/weather/forecast")
     async def weather_forecast(request: ForecastRequest, authorization: str | None = Header(default=None)):

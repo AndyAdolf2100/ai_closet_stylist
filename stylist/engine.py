@@ -16,11 +16,31 @@ from langgraph.types import Command, RetryPolicy, interrupt
 
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
-from .grounding import PREFIX, attribute_claim_problems, attribute_context, ground_attribute_fallback
-from .memory import apply_memory, automatic_preference, explicit_memory, memory_intent, verified_memory_save
-from .models import Draft, Look, Plan, Reply, SessionState, Task
+from .grounding import (
+    PREFIX,
+    attribute_claim_problems,
+    attribute_context,
+    ground_attribute_fallback,
+    normalize_draft,
+)
+from .memory import (
+    apply_memory,
+    automatic_preference,
+    boundary_only,
+    clothing_content,
+    explicit_memory,
+    explicit_memory_content,
+    memory_intent,
+    referred_memory,
+    strip_save_claims,
+    verified_memory_save,
+)
+from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Task
 from .personas import (
+    boundary_reply,
+    is_male_persona,
     itinerary_weather_message,
+    persona_reply_focus,
     progress_message,
     service_notice,
     technical_detail_message,
@@ -130,16 +150,36 @@ class Stylist:
 
         async def understand(data):
             state = SessionState.model_validate(data["session"])
+            if boundary_only(request.message):
+                return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False,
+                    clarification="晚安。" if "晚安" in request.message else boundary_reply(request.assistant_persona)
+                    ).model_dump(mode="json"),
+                    "task": state.task.model_dump(mode="json"), "frozen": []}
+            if explicit_memory_content(request.message) is not None and explicit_memory(request.message) is None:
+                return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False,
+                    clarification="这本手记只记录穿搭相关信息，日常片段和相处约定不写进去。我们仍然可以接着聊。"
+                    ).model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             if explicit_memory(request.message) is not None:
                 return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False).model_dump(mode="json"),
                         "task": state.task.model_dump(mode="json"), "frozen": []}
+            reference = referred_memory(request.message, state.messages)
+            if reference:
+                return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False,
+                    memory_save=MemorySave(content=reference, authorization=request.message)).model_dump(mode="json"),
+                    "task": state.task.model_dump(mode="json"), "frozen": []}
+            if memory_intent(request.message) and not clothing_content(request.message) and any(
+                    token in request.message for token in ("我", "喜欢", "称呼", "回复", "日常")):
+                return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False,
+                    clarification="这本手记只记录穿搭相关信息，日常片段和相处约定不写进去。我们仍然可以接着聊。"
+                    ).model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             plan, task = await interpret_task(self.llm, {
                 "now": today.isoformat(), "message": request.message,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
-                "long_term_memory": data.get("long_term_memory", []),
+                "long_term_memory": [note for note in data.get("long_term_memory", [])
+                                     if clothing_content(note["content"]) == note["content"]],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
                 "last_business_intent": last_business_intent(state.messages),
@@ -162,7 +202,9 @@ class Stylist:
                 if plan.mode == "weekly" and plan.weather_scope in {"week", "next7"}:
                     task.event_date = today.date()
             memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
-            if memory_save is None and (plan.memory_save is not None or memory_intent(request.message)):
+            if memory_save is None:
+                plan.memory_save = None
+            if memory_save is None and memory_intent(request.message):
                 # Never let a conversational promise substitute for a validated write.
                 plan = Plan(mode="consult", conversation_only=True, use_inventory=False,
                             clarification="我想把这件事准确地留下。请告诉我具体要长期记住的那句话；目前还没有保存到手记。")
@@ -341,7 +383,7 @@ class Stylist:
             if pool and missing:
                 names = "、".join(missing)
                 warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
-                                 if request.assistant_persona == "male_calm_v1" else
+                                 if is_male_persona(request.assistant_persona) else
                                  f"这次候选里暂时没有明确标为{names}的衣物，我先用现有单品给你一点接近的搭配灵感。"))
             return {"pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
@@ -362,7 +404,8 @@ class Stylist:
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
-                "long_term_memory": data.get("long_term_memory", []),
+                "long_term_memory": [note for note in data.get("long_term_memory", [])
+                                     if clothing_content(note["content"]) == note["content"]],
                 "expression_guidance": ({
                     "直接坦诚": "先用第一句话给具体可执行的下一步，再简短解释和关心；不要先铺一段安慰，不命令或冷硬。",
                     "温柔鼓励": "先具体接住本轮感受，再给轻一点的鼓励和选择空间，不急着安排任务。",
@@ -386,15 +429,17 @@ class Stylist:
                 "attribute_context": attribute_context(pool.values()),
                 "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
                                       for p in current[0].items] if current else [],
+                "reply_focus": persona_reply_focus(request.assistant_persona, request.message)
+                               if plan.conversation_only else "",
+                "current_event_facts": ({"user_statement": request.message,
+                    "instruction": "本轮日常片段只以这句用户原话为事实。前文喜欢某种材质或饮品，不能证明这次穿了该材质、喝了该饮品；未明确的细节保持未知。"}
+                    if plan.conversation_only and any(word in request.message for word in ("昨天", "昨晚", "今天", "上次", "刚才")) else None),
             }
             return draft_payload
 
         async def style_node(data):
             if explicit_memory(request.message) is not None:
-                message = ("这件事记下了，放在「我们的手记」里。你随时可以去设置里修改或删除；暂停参考时，我不会主动使用。"
-                           if request.assistant_persona == "male_calm_v1" else
-                           "这件小事已经收进「我们的手记」啦。想改写或删去，随时去设置里就好；暂停参考时，我不会主动使用。")
-                return {"draft": Draft(message=message).model_dump(mode="json")}
+                return {"draft": Draft(message="这条穿搭信息已整理好。").model_dump(mode="json")}
             if data["plan"].get("technical_question"):
                 return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
@@ -404,7 +449,7 @@ class Stylist:
                 draft = draft.model_copy(update={"looks": []})
             if data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"follow_ups": []})
-            return {"draft": draft.model_dump(mode="json")}
+            return {"draft": normalize_draft(draft).model_dump(mode="json")}
 
         def validate_node(data):
             if not data["plan"].get("conversation_only"):
@@ -439,6 +484,13 @@ class Stylist:
                 if [look.selected_keys for look in draft.looks] != [look.selected_keys for look in original.looks]:
                     draft = ground_attribute_fallback(original,
                         {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                else:
+                    bad_paths = {problem.removeprefix(PREFIX).split(" ", 1)[0] for problem in data["problems"]}
+                    for i, (old, new) in enumerate(zip(original.looks, draft.looks, strict=True)):
+                        for field in ("title", "style_name", "pieces", "reference_pieces"):
+                            if not any(path.startswith(f"looks.{i}.{field}") for path in bad_paths):
+                                setattr(new, field, getattr(old, field))
+            draft = normalize_draft(draft)
             repaired = {**data, "draft": draft.model_dump(mode="json")}
             problems = validate_node(repaired)["problems"]
             if any(problem.startswith(REPLACEMENT_PREFIX) for problem in problems):
@@ -582,6 +634,9 @@ class Stylist:
                     if book.enabled and len(book.entries) < 30 and candidate and not any(
                             entry.content == candidate.content for entry in book.entries):
                         memory_save = candidate
+                if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
+                        "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
+                    reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
@@ -591,15 +646,7 @@ class Stylist:
                                    "reference_pieces": x.reference_pieces, "wardrobe_complete": x.wardrobe_complete,
                                    "items": [p.display_name for p in x.items]} for x in reply.looks]}, ensure_ascii=False)},
                 ])[-16:]
-                if memory_save and not output.get("cancelled") and reply.delivery != "clarification":
-                    acknowledgement = ("这件事已经记在「我们的手记」里，你可以随时到设置修改或删除。"
-                                       if request.assistant_persona == "male_calm_v1" else
-                                       "这件小事已经收进「我们的手记」啦，随时可以去设置改写或删去。")
-                    reply.message = acknowledgement + "\n\n" + reply.message
-                    last_reply = json.loads(state.messages[-1]["content"])
-                    last_reply["message"] = reply.message
-                    state.messages[-1]["content"] = json.dumps(last_reply, ensure_ascii=False)
-                else:
+                if output.get("cancelled") or reply.delivery == "clarification":
                     memory_save = None
                 await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply, memory_save)
                 return reply

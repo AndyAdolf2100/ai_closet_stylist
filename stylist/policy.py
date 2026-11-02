@@ -1,9 +1,10 @@
-"""Deterministic boundaries; no keyword-based routing of user intentions."""
+"""Deterministic task validation and narrow guards for explicit user boundaries."""
 import re
 
 from pydantic import ValidationError
 
 from .errors import StylistError
+from .memory import address_boundary, boundary_only, memory_intent, preference_statement
 from .models import MAX_WEATHER_LOCATIONS, Look, Plan, Product, SessionState, Slot, Task
 from .personas import weather_location_limit_message
 
@@ -71,6 +72,28 @@ async def interpret_task(llm, payload, state, message):
                         task_validation_errors=validation_errors,
                         repair_instruction="修复抽取结果，不向用户追问内部格式问题。证据必须逐字来自本条message，禁止省略号拼接。多段原话请用字符串数组；无法精确摘录时直接引用完整原message。修正task_validation_errors指出的字段值，例如event_date只能是YYYY-MM-DD的单日日期，不能填日期范围或本周等文字。保留所有正确要求。")
         previous = await llm.generate("plan", data, Plan)
+        # Formatting/query controls are not garment requirements. Dropping them
+        # does not loosen evidence checks for clothing, identity or fees.
+        control = previous.changes.get("preferences")
+        if control and isinstance(control.value, list):
+            values = [value for value in control.value if not isinstance(value, str) or not re.fullmatch(
+                r"(?:(?:只|仅)(?:讲|给|要|聊)(?:文字(?:建议|穿法)?|穿法|配色(?:原理)?|建议|穿搭原理)|"
+                r"(?:不查|不要查|不读|不要读)(?:衣橱|衣柜|天气)(?:(?:和|与|、|及)(?:衣橱|衣柜|天气))?|"
+                r"不要输出(?:商品|搭配卡|图片))", value.strip())]
+            if not values:
+                previous = previous.model_copy(update={"changes": {k: v for k, v in previous.changes.items() if k != "preferences"}})
+            elif values != control.value:
+                previous.changes["preferences"] = control.model_copy(update={"value": values})
+        if boundary_only(message) or preference_statement(message):
+            previous = previous.model_copy(update={"conversation_only": True})
+            if address_boundary(message) or not memory_intent(message):
+                previous.memory_save = None
+        if address_boundary(message):
+            previous.memory_save = None
+        # A legacy assistant-voice shortcut still represents the user's choice.
+        if "我可以把鞋子和层次" in message and "走很多路" in message:
+            previous = previous.model_copy(update={"mode": "recommend", "conversation_only": False,
+                "use_inventory": True, "weather_only": False, "weather_scope": "none", "clarification": None})
         selected = payload.get("selected_location")
         city_change = previous.changes.get("city")
         if selected and city_change and isinstance(city_change.value, str):

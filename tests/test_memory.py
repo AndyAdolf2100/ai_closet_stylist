@@ -25,7 +25,7 @@ def test_memory_persistence_conflict_pause_delete_and_account_isolation(tmp_path
     assert Store(path).memory_book('Owner') == saved
     assert not store.memory_book('owner').entries
     with pytest.raises(StylistError, match='memory_conflict'):
-        store.save_memory_book('Owner', book('旧窗口内容'))
+        store.save_memory_book('Owner', book('我喜欢蓝色衬衫'))
     saved.enabled = False
     saved = store.save_memory_book('Owner', saved)
     assert not store.memory_book('Owner').enabled
@@ -166,9 +166,9 @@ async def test_explicit_remember_is_atomic_idempotent_and_does_not_call_model(tm
 @pytest.mark.asyncio
 async def test_full_memory_save_rolls_back_chat_and_preserves_notes(tmp_path):
     store, model = Store(str(tmp_path / 'memory.db')), Model()
-    saved = store.save_memory_book('a', MemoryBook(entries=[MemoryEntry(id=str(i), content=f'内容{i}') for i in range(30)]))
+    saved = store.save_memory_book('a', MemoryBook(entries=[MemoryEntry(id=str(i), content=f'我喜欢第{i}件衬衫') for i in range(30)]))
     with pytest.raises(StylistError, match='memory_full'):
-        await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(message='记住：新的一页', request_id='full-book'))
+        await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(message='记住：我喜欢棉质衬衫', request_id='full-book'))
     assert store.memory_book('a') == saved
     assert not store.conversations('a')
 
@@ -190,16 +190,16 @@ async def test_natural_explicit_memory_is_saved_with_success_receipt(tmp_path, p
         async def generate(self, name, payload, result_type):
             if name == 'plan':
                 return Plan(mode='consult', conversation_only=True, memory_save=MemorySave(
-                    content='我喜欢乌龙茶', category='日常片段', authorization=authorization))
+                    content='我喜欢棉质衬衫', category='穿衣习惯', authorization=authorization))
             assert payload['memory_save_pending']
-            return Draft(message='想聊聊你喜欢的茶吗？')
+            return Draft(message='想聊聊衬衫吗？')
     store = Store(str(tmp_path / 'memory.db'))
     engine = Stylist(Settings(), store, RememberModel())
-    request = ChatRequest(message=f'对了，我喜欢乌龙茶，{authorization}。', request_id='natural-memory', assistant_persona=persona)
+    request = ChatRequest(message=f'对了，我喜欢棉质衬衫，{authorization}。', request_id='natural-memory', assistant_persona=persona)
     reply = await engine.chat(Upstream(), request)
     assert '我们的手记' in reply.message
-    assert store.memory_book('a').entries[0].content == '我喜欢乌龙茶'
-    assert store.memory_book('a').entries[0].category == '日常片段'
+    assert store.memory_book('a').entries[0].content == '我喜欢棉质衬衫'
+    assert store.memory_book('a').entries[0].category == '穿衣习惯'
     assert await engine.chat(Upstream(), request) == reply
     assert store.memory_book('a').revision == 1
     assert store.history('a', reply.conversation_id)['messages'][0]['reply']['message'] == reply.message
@@ -262,7 +262,7 @@ async def test_unresolved_save_never_returns_a_false_success(tmp_path, invalid_a
                         memory_save=MemorySave(content='用户喜欢喝咖啡', authorization='一定要记住') if invalid_action else None)
     store = Store(str(tmp_path / 'memory.db'))
     reply = await Stylist(Settings(), store, MissingActionModel()).chat(Upstream(), ChatRequest(
-        message='对了，我喜欢乌龙茶，这个一定要记住。', request_id='missing-memory-action'))
+        message='对了，我喜欢棉质衬衫，这个一定要记住。', request_id='missing-memory-action'))
     assert reply.delivery == 'clarification' and '还没有保存' in reply.message
     assert not store.memory_book('a').entries
 

@@ -71,7 +71,7 @@ TaskField = Literal["occasion", "scene", "style", "gender", "height_cm", "event_
 
 class MemorySave(Model):
     content: str = Field(min_length=1, max_length=240)
-    category: Literal["穿衣习惯", "日常片段", "相处约定"] = "穿衣习惯"
+    category: Literal["穿衣习惯"] = "穿衣习惯"
     authorization: str = Field(min_length=1, max_length=160)
 
 

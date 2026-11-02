@@ -84,24 +84,27 @@ class Store:
         return profile
 
     def memory_book(self, owner):
-        from .memory import MemoryBook
+        from .memory import decode_memory_book
         with self.connection() as conn:
             row = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
-        return MemoryBook.model_validate_json(row["book_json"]) if row else MemoryBook()
+        return decode_memory_book(row["book_json"] if row else None)[0]
 
     def save_memory_book(self, owner, book):
+        from .memory import decode_memory_book, encode_memory_book, validate_clothing_book
+        validate_clothing_book(book)
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
-            row = conn.execute("SELECT revision FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
+            row = conn.execute("SELECT revision,book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
             if book.revision != (row["revision"] if row else 0):
                 raise StylistError("memory_conflict", "手记已有新的修改。你的草稿仍在，请先重新读取，再合并想留下的内容。", 409)
             saved = book.model_copy(update={"revision": book.revision + 1}, deep=True)
+            retired = decode_memory_book(row["book_json"] if row else None)[1]
             if row:
                 conn.execute("UPDATE stylist_memory_books SET revision=?,book_json=? WHERE owner_id=?",
-                             (saved.revision, saved.model_dump_json(), owner))
+                             (saved.revision, encode_memory_book(saved, retired), owner))
             else:
                 conn.execute("INSERT INTO stylist_memory_books(owner_id,revision,book_json) VALUES(?,?,?)",
-                             (owner, saved.revision, saved.model_dump_json()))
+                             (owner, saved.revision, encode_memory_book(saved, retired)))
         return saved
 
     def reserve(self, owner, request):
@@ -147,24 +150,62 @@ class Store:
                                   (reply.version, state.model_dump_json(), reply.conversation_id, owner, claim))
             if result.rowcount != 1:
                 raise StylistError("request_superseded", "这次处理已失效，请刷新查看最新结果。", 409)
-            from .memory import MemoryBook, MemoryEntry, explicit_memory, memory_category
-            content = memory_save.content if memory_save else explicit_memory(request.message)
+            from .memory import (
+                MemoryEntry,
+                automatic_preference,
+                clothing_content,
+                decode_memory_book,
+                encode_memory_book,
+                explicit_memory,
+                memory_intent,
+                strip_save_claims,
+            )
+            from .personas import memory_receipt
+            content = clothing_content(memory_save.content) if memory_save else explicit_memory(request.message)
+            feedback = automatic_preference(request.message) if content is None and any(
+                token in request.message for token in ("保存", "手记", "记录")) else None
+            if feedback:
+                saved = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
+                existing, _ = decode_memory_book(saved["book_json"] if saved else None)
+                if any(entry.content == feedback.content for entry in existing.entries):
+                    content = feedback.content
+            original_message = reply.message
+            receipt = None
             if content is not None:
                 row = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
-                book = MemoryBook.model_validate_json(row["book_json"]) if row else MemoryBook()
-                if not any(entry.content == content for entry in book.entries):
+                book, retired = decode_memory_book(row["book_json"] if row else None)
+                exists = any(entry.content == content for entry in book.entries)
+                if content and book.enabled and not exists:
                     if len(book.entries) >= 30:
                         raise StylistError("memory_full", "手记已经写满 30 页，先到设置整理一下，再留下这件小事。", 409)
                     entry_id = "chat_" + hashlib.sha256(request.request_id.encode()).hexdigest()[:32]
                     book.entries.append(MemoryEntry(id=entry_id, content=content,
-                                                   category=memory_save.category if memory_save else memory_category(content)))
+                                                   category="穿衣习惯"))
                     book.revision += 1
                     if row:
                         conn.execute("UPDATE stylist_memory_books SET revision=?,book_json=? WHERE owner_id=?",
-                                     (book.revision, book.model_dump_json(), owner))
+                                     (book.revision, encode_memory_book(book, retired), owner))
                     else:
                         conn.execute("INSERT INTO stylist_memory_books(owner_id,revision,book_json) VALUES(?,?,?)",
-                                     (owner, book.revision, book.model_dump_json()))
+                                     (owner, book.revision, encode_memory_book(book, retired)))
+                    receipt = memory_receipt(request.assistant_persona)
+                elif exists and (memory_intent(request.message) or feedback):
+                    receipt = "这条穿搭信息已经在手记里了，不重复新增。"
+                elif not book.enabled and memory_intent(request.message):
+                    receipt = "手记参考已暂停，这次没有新增。想继续记录穿搭信息时，可以到设置打开。"
+                if receipt or memory_save:
+                    if receipt and clothing_content(request.message) != request.message.strip():
+                        receipt += f"\n记下的穿搭部分：{content}"
+                    body = "" if explicit_memory(request.message) is not None else strip_save_claims(reply.message)
+                    reply.message = "\n\n".join(part for part in [receipt, body] if part)
+                    if not reply.message:
+                        reply.message = "这条穿搭信息已经在手记里了。" if exists else "这次先按你说的穿搭方向聊。"
+            if reply.message != original_message:
+                last = json.loads(state.messages[-1]["content"])
+                last["message"] = reply.message
+                state.messages[-1]["content"] = json.dumps(last, ensure_ascii=False)
+                conn.execute("UPDATE stylist_sessions SET state_json=? WHERE id=? AND owner_id=?",
+                             (state.model_dump_json(), reply.conversation_id, owner))
             conn.execute("UPDATE stylist_requests SET status='completed',response_json=? WHERE owner_id=? AND request_id=?",
                          (reply.model_dump_json(), owner, request.request_id))
             conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",

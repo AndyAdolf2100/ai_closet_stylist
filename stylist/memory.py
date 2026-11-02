@@ -1,4 +1,5 @@
 """User-controlled, account-scoped long-term notes; conservative preference extraction."""
+import json
 import re
 import unicodedata
 from typing import Literal
@@ -37,6 +38,77 @@ class MemoryBook(Model):
         return self
 
 
+class ClothingMemoryEntry(MemoryEntry):
+    category: Literal["穿衣习惯"] = "穿衣习惯"
+
+
+class MemoryBookWrite(MemoryBook):
+    entries: list[ClothingMemoryEntry] = Field(default_factory=list, max_length=30)
+
+
+_CLOTHING = re.compile(
+    r"穿|衣|衫|裤|裙|鞋|靴|袜|外套|风衣|西装|毛衣|针织|卫衣|T恤|短袖|长袖|"
+    r"围巾|帽子|手套|包包|手提包|背包|首饰|项链|耳环|耳饰|配饰|面料|羊毛|棉质|棉麻|真丝|"
+    r"尺码|版型|宽松|修身|高腰|低腰|领口|袖口|腰线|腰头|裤脚|搭配|配色|极简|休闲|优雅|复古|街头|运动风|通勤|平时走路|聚酯|涤纶|亚麻|皮革|羊绒|"
+    r"(?:黑|白|灰|红|黄|绿|蓝|紫|粉|棕|米|橙|青|银|金)色")
+_OUTSIDE = re.compile(
+    r"喝|吃|乌龙|茶|咖啡|饮料|饭|电影|音乐|游戏|宠物|杯子|汽车|手机|电脑|"
+    r"昵称|称呼|叫我|叫你|宝贝|亲爱的|说话|回复|回答|安慰|听我|语气|陪我|"
+    r"起床|闹钟|合照|去年|昨天|昨晚|那天|上次|今天|明天|这次|今晚|"
+    r"扣费|密钥|接口|系统指令|忽略.{0,6}规则")
+
+
+def clothing_content(content):
+    """Keep clothing clauses only; do not reinterpret diary or interaction rules as outfits."""
+    text = content.strip()
+    chunks = re.split(r"([，,。！!；;\n])", text)
+    selected, all_relevant = [], True
+    for i in range(0, len(chunks), 2):
+        part = chunks[i].strip()
+        if not part:
+            continue
+        relevant = bool(_CLOTHING.search(part) and not _OUTSIDE.search(part)
+                        and not re.search(r"我(?:朋友|妈妈|同事|家人)|(?:他|她|朋友|同事)(?:喜欢|不喜欢|穿)", part))
+        if relevant:
+            delimiter = chunks[i - 1] if i else ""
+            if selected and delimiter in {"，", ","} and preference_list_item(part):
+                selected[-1] += delimiter + part
+            else:
+                selected.append(part)
+        else:
+            all_relevant = False
+    return text if all_relevant and selected else "；".join(selected)
+
+
+def decode_memory_book(raw):
+    """Exclude obsolete notes without deleting their original stored text on a normal write."""
+    document = json.loads(raw) if raw else {}
+    retired = document.pop("_retired_entries", [])
+    original = MemoryBook.model_validate(document)
+    entries = []
+    for entry in original.entries:
+        content = clothing_content(entry.content)
+        if content != entry.content or entry.category != "穿衣习惯":
+            if entry.model_dump() not in retired:
+                retired.append(entry.model_dump())
+        if content:
+            entries.append(entry.model_copy(update={"content": content, "category": "穿衣习惯"}))
+    return original.model_copy(update={"entries": entries}), retired
+
+
+def encode_memory_book(book, retired):
+    document = book.model_dump(mode="json")
+    if retired:
+        document["_retired_entries"] = retired
+    return json.dumps(document, ensure_ascii=False)
+
+
+def validate_clothing_book(book):
+    if any(entry.category != "穿衣习惯" or not clothing_content(entry.content)
+           or clothing_content(entry.content) != entry.content for entry in book.entries):
+        raise StylistError("memory_scope", "手记只记录穿搭相关的喜好、禁忌和穿衣信息；日常片段与相处约定不用写在这里。", 422)
+
+
 def memory_intent(message):
     """A guard for unresolved explicit requests, never sufficient to save content."""
     plain = re.sub(r'[“「『\"].*?[”」』\"]', '', message)
@@ -44,10 +116,12 @@ def memory_intent(message):
         return False
     if re.search(r"(?:记住|记着|记得|保存)(?:了)?[吗么？?]|(?:举例|比如|假如|假设|如果|他说|她说|我妈说)", plain):
         return False
-    return bool(re.search(r"一定要记住|以后(?:都)?记着|(?:请|帮我|替我|给我|要)记住|把.{0,16}记下来|记住[：:]|别忘了|保存到长记忆|这(?:个|件事)记住", plain))
+    if re.search(r"(?:记住|记着|保存).{0,60}(?:了吗|了么|什么|是否|是不是|[?？])", plain):
+        return False
+    return bool(re.search(r"一定要记住|以后(?:都)?记着|(?:请|帮我|替我|给我|要)记住|把.{0,16}记下来|记住[我：:]|别忘了|保存到长记忆|这(?:个|件事)记住", plain))
 
 
-def explicit_memory(message):
+def explicit_memory_content(message):
     """Resolve only complete, unambiguous save commands from verbatim user text."""
     text = message.strip()
     command = r"(?:(?:请|你|帮我|替我|给我|请帮我)?(?:一定要)?记住|以后(?:都)?记着|把这(?:个|件事)记下来|这(?:个|件事)(?:一定要)?记住|别忘了|保存到长记忆)"
@@ -67,6 +141,11 @@ def explicit_memory(message):
         return MemoryEntry(id="pending", content=content).content
     except ValidationError:
         raise StylistError("invalid_memory", "请把要记住的内容控制在 1—240 字，也可以到设置里的「我们的手记」分成几页整理。", 422) from None
+
+
+def explicit_memory(message):
+    content = explicit_memory_content(message)
+    return clothing_content(content) or None if content is not None else None
 
 
 def preference_list_item(text):
@@ -97,9 +176,12 @@ def automatic_preference(message):
             r"(?:不喜欢|喜欢|讨厌|偏爱)(?P<object>[^，,。！？!?；;]{1,80})", part)
         if (preference and (preference['subject'] or own_subject)
                 and not preference['object'].startswith('的')):
-            selected.append(part)
-            own_subject = True
-        elif own_subject and delimiter in {"，", ","} and preference_list_item(part):
+            if clothing_content(part):
+                selected.append(part)
+                own_subject = True
+            else:
+                own_subject = False
+        elif own_subject and selected and delimiter in {"，", ","} and preference_list_item(part):
             # Keep the user's original nouns and punctuation; do not change polarity
             # or invent an extra first-person statement for an omitted subject.
             selected[-1] += delimiter + part
@@ -114,18 +196,15 @@ def automatic_preference(message):
 
 
 def memory_category(content):
-    if re.search(r"穿|衣|鞋|裙|裤|衬衫|短袖|长袖|搭配|面料|羊毛", content):
-        return "穿衣习惯"
-    if re.search(r"回复|称呼|说话|建议|听我|安慰|叫我", content):
-        return "相处约定"
-    return "日常片段"
+    return "穿衣习惯"
 
 
 def apply_memory(task, plan, entries):
     """Ephemeral defaults only: never contaminate the saved conversation task."""
     if not plan.use_profile_preferences or plan.conversation_only or plan.weather_only or task.target_description:
         return task.model_copy(deep=True)
-    contents = {entry["content"] for entry in entries if entry["category"] == "穿衣习惯"}
+    contents = {entry["content"] for entry in entries if entry["category"] == "穿衣习惯"
+                and clothing_content(entry["content"]) == entry["content"]}
     data, defaults = task.model_dump(), Task().model_dump()
     for field, raw in plan.memory_changes.items():
         change = Change.model_validate(raw)
@@ -154,4 +233,59 @@ def verified_memory_save(action, message, history):
     sources = [message] + [row.get("content", "") for row in history if row.get("role") == "user"]
     if not content or not any(content in source for source in sources):
         return None
-    return MemoryEntry(id="pending", category=action.category, content=content)
+    content = clothing_content(content)
+    return MemoryEntry(id="pending", category="穿衣习惯", content=content) if content else None
+
+
+def strip_save_claims(text):
+    """The transaction owns save receipts; model prose must not contradict its result."""
+    claims = r"手记|保存|收进|记入|写入|记录|记住|记下|记着|记好"
+    paragraphs = []
+    for paragraph in text.splitlines():
+        sentences = re.split(r"(?<=[。！？!?])", paragraph)
+        kept = []
+        for sentence in sentences:
+            if not re.search(claims, sentence):
+                kept.append(sentence)
+                continue
+            # Remove the receipt clause without discarding the user's clothing
+            # information in the same sentence ("记住啦，日常走路多……").
+            cleaned = re.sub(r"^(?:我(?:已经|也)?)?(?:记住|记下|记着)(?:了|啦|着)?[：:，, ]*", "", sentence.strip())
+            cleaned = re.sub(r"我(?:已经|也)?(?:记住|记下)(?:了|啦)?(?=你|您|不喜欢|喜欢)", "", cleaned)
+            clauses = re.split(r"[，,：:]", cleaned)
+            cleaned = "，".join(clause.strip() for clause in clauses if not re.search(claims, clause))
+            cleaned = cleaned.strip(" ，,：:")
+            if re.search(r"\w", cleaned):
+                kept.append(cleaned if cleaned.endswith(("。", "！", "？", "!", "?")) else cleaned + "。")
+        if "".join(kept).strip():
+            paragraphs.append("".join(kept).strip())
+    return "\n\n".join(paragraphs)
+
+
+def preference_statement(message):
+    """Sharing a preference is not authorization to select outfits or change the current task."""
+    if re.search(r"怎么搭|如何搭|怎样搭|会怎么搭|帮.{0,4}(?:搭|挑|选)|搭一|搭两|搭配一下|"
+                 r"换|改成|调整|保留|这套|这一套|这件|那件|试试|想穿|穿什么|怎么穿|"
+                 r"推荐|选款|给(?:我)?[一两二三四五六七1-7]套|从.{0,8}衣[橱柜]|用.{0,8}衣[橱柜]|穿搭方案|"
+                 r"(?:这次|今天).{0,6}(?:正式|休闲|优雅|宽松).{0,3}一点", message):
+        return False
+    return bool(re.search(r"喜欢|讨厌|偏爱|我不穿|我不爱穿|平时走路|没有保存|没保存", message))
+
+
+def address_boundary(message):
+    return bool(re.search(r"(?:别|不要|不许|不用).{0,6}(?:叫我|称呼我|叫.{0,4}宝贝)|别.{0,6}亲昵称呼", message))
+
+
+def boundary_only(message):
+    # A boundary can accompany a real request. Do not swallow that request.
+    return address_boundary(message) and not re.search(
+        r"怎么搭|怎么穿|搭一|搭两|搭配|推荐|选款|给.{0,4}套|衣橱|衣柜|天气|上传|试穿|记住|保存", message)
+
+
+def referred_memory(message, history):
+    if not memory_intent(message) or not re.search(r"刚才|这个|这件|那句|上面|前面", message):
+        return None
+    prior = next((row["content"] for row in reversed(history) if row.get("role") == "user"), "")
+    if len(prior) <= 240 and preference_statement(prior) and clothing_content(prior):
+        return prior
+    return None
