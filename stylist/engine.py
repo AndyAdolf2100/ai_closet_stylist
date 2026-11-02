@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import operator
+import re
 from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime
 from typing import Annotated, TypedDict
@@ -50,10 +51,12 @@ from .personas import (
 )
 from .planning_dates import explicit_scope, schedule_dates, schedule_problems
 from .policy import (
+    REGENERATION_PREFIX,
     REPLACEMENT_PREFIX,
     frozen_products,
     has_outfit_structure,
     interpret_task,
+    regeneration_problems,
     suitability,
     unchanged_replacement_problems,
     validate_look,
@@ -67,6 +70,7 @@ logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
+    regeneration_source: dict | None
     long_term_memory: list[dict]
     completed_nodes: Annotated[list[str], operator.add]
     session: dict
@@ -143,6 +147,9 @@ class Stylist:
         def unpack(data):
             return Plan.model_validate(data["plan"]), Task.model_validate(data["task"])
 
+        def source_session(data):
+            return SessionState.model_validate(data.get("regeneration_source") or data["session"])
+
         def selected_looks(state):
             if request.selected_look_index is None:
                 return state.looks[:1]
@@ -155,7 +162,7 @@ class Stylist:
             return index if index < len(state.looks) and state.looks[index].items else None
 
         async def understand(data):
-            state = SessionState.model_validate(data["session"])
+            state = source_session(data)
             if boundary_only(request.message):
                 return {"plan": Plan(mode="consult", conversation_only=True, use_inventory=False,
                     clarification="晚安。" if "晚安" in request.message else boundary_reply(request.assistant_persona)
@@ -180,7 +187,7 @@ class Stylist:
                     ).model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
             report("understanding", progress_message(request.assistant_persona, "understanding"))
-            plan, task = await interpret_task(self.llm, {
+            planning_payload = {
                 "now": today.isoformat(), "message": request.message,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
@@ -195,7 +202,27 @@ class Stylist:
                                    "reference_pieces": x.reference_pieces, "wardrobe_complete": x.wardrobe_complete,
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
-            }, state, request.message)
+            }
+            if request.regenerate_outfit:
+                source = selected_looks(state)
+                if not source or not source[0].items:
+                    raise StylistError("regenerate_context_missing", "请先打开一套已有衣橱搭配，再重新生成。", 409)
+                task = state.task.model_copy(deep=True)
+                if state.mode == "weekly":
+                    day = re.search(r"\d{4}-\d{2}-\d{2}", source[0].title)
+                    if day:
+                        try:
+                            task.event_date = datetime.strptime(day[0], "%Y-%m-%d").date()
+                        except ValueError:
+                            pass
+                plan = Plan(mode="recommend", use_inventory=True, use_profile_gender=False, weather_scope="day")
+                if planning_payload["long_term_memory"]:
+                    defaults = await self.llm.generate("plan", {**planning_payload,
+                        "regenerate_outfit": True,
+                        "instruction": "沿用current_task，仅提取可用手记的memory_changes，不新增或清空用户要求。"}, Plan)
+                    plan.memory_changes = defaults.memory_changes
+            else:
+                plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
             if plan.avatar_intent:
                 plan.clarification = avatar_invitation(request.assistant_persona, plan.avatar_intent,
                     request.companion_profile, has_outfit=avatar_look(state, plan) is not None)
@@ -248,7 +275,8 @@ class Stylist:
                 task.source = "wardrobe"
             explicit_city = plan.changes.get("city")
             explicit_route = plan.changes.get("itinerary")
-            if (request.location and not (explicit_city and explicit_city.value)
+            if (request.location and (not request.regenerate_outfit or not task.city and not task.itinerary)
+                    and not (explicit_city and explicit_city.value)
                     and not (explicit_route and explicit_route.value)
                     and not plan.conversation_only and (plan.weather_only or not task.itinerary)):
                 task.city = request.location.city_name
@@ -427,13 +455,13 @@ class Stylist:
 
         def draft_payload(data):
             plan, task = unpack(data)
-            state = SessionState.model_validate(data["session"])
+            state = source_session(data)
             pool = {key: Product.model_validate(p) for key, p in data["pool"].items()}
             frozen = [Product.model_validate(x) for x in data["frozen"]]
             service_gap, weather, warnings, rejected = (data[k] for k in ("service_gap", "weather", "warnings", "rejected"))
             # A partial or absent candidate pool must not force a fabricated outfit.
             concept = plan.mode != "consult" and plan.use_inventory and not pool
-            current = selected_looks(state) if plan.mode == "modify" else state.looks[:1]
+            current = selected_looks(state) if plan.mode == "modify" or request.regenerate_outfit else state.looks[:1]
             original_targets = {p.key for p in current[0].items if p.slot in plan.replace_slots} if current and plan.mode == "modify" else set()
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
@@ -466,6 +494,9 @@ class Stylist:
                 "attribute_context": attribute_context(pool.values()),
                 "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
                                       for p in current[0].items] if current else [],
+                "regenerate_from": ({"title": current[0].title, "selected_keys": [p.key for p in current[0].items],
+                    "instruction": "沿用原要求，重新选择一套个人衣橱搭配，至少一件不同单品，不自动试穿。"}
+                    if request.regenerate_outfit and current else None),
                 "reply_focus": persona_reply_focus(request.assistant_persona, request.message)
                                if plan.conversation_only else "",
                 "current_event_facts": ({"user_statement": request.message,
@@ -503,6 +534,9 @@ class Stylist:
                 problems.extend(unchanged_replacement_problems(Draft.model_validate(data["draft"]),
                     selected_looks(state), Plan.model_validate(data["plan"]).replace_slots,
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
+            if request.regenerate_outfit:
+                state = source_session(data)
+                problems.extend(regeneration_problems(Draft.model_validate(data["draft"]), selected_looks(state)[0]))
             problems.extend(schedule_problems(Draft.model_validate(data["draft"]),
                 schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
             return {"problems": problems}
@@ -542,6 +576,8 @@ class Stylist:
                 repaired["draft"] = draft.model_dump(mode="json")
                 problems = validate_node(repaired)["problems"]
             if problems:
+                if request.regenerate_outfit and any(problem.startswith(REGENERATION_PREFIX) for problem in problems):
+                    raise StylistError("outfit_regeneration_unavailable", "这次候选里还没找到不同且符合要求的穿搭，原搭配已保留。", 422)
                 raise StylistError("outfit_validation_failed", "这次选款未通过要求检查，原搭配已保留。", 422)
             return {"draft": repaired["draft"], "problems": []}
 
@@ -631,6 +667,8 @@ class Stylist:
                 await asyncio.to_thread(self.store.renew, owner, cid, claim)
         pulse = asyncio.create_task(heartbeat())
         try:
+            regeneration_source = (await asyncio.to_thread(self.store.regeneration_source, owner, cid, request.regenerate_from_version)
+                                   if request.regenerate_outfit and request.regenerate_from_version is not None else None)
             async with self.checkpoints() as saver, (
                 saver.lock_thread(self.thread(owner, request)["configurable"]["thread_id"])
                 if self.store.mysql else nullcontext()
@@ -656,6 +694,7 @@ class Stylist:
                 else:
                     value = Command(resume=decision) if paused else (None if snapshot.values else {
                         "session": state.model_dump(mode="json"), "session_id": cid,
+                        "regeneration_source": regeneration_source,
                         "long_term_memory": await self.memory_snapshot(owner)})
                     output = await graph.ainvoke(value, config, durability="sync")
                 if "reply" not in output:

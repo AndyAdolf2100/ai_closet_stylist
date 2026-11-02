@@ -229,6 +229,8 @@ class CompanionProfile(Model):
 
 
 class ChatRequest(Model):
+    regenerate_outfit: bool = False
+    regenerate_from_version: int | None = Field(default=None, ge=1)
     upload_action_id: str | None = Field(default=None, pattern=r"^med_[a-f0-9]{32}$")
     message: str = Field(min_length=1, max_length=6000)
     conversation_id: str | None = Field(default=None, pattern=r"^sty_[a-f0-9]{32}$")
@@ -247,6 +249,13 @@ class ChatRequest(Model):
         self.message = self.message.strip()
         if not self.message:
             raise ValueError("请输入搭配需求")
+        if self.regenerate_from_version is not None and (not self.regenerate_outfit or self.regenerate_from_version > self.expected_version):
+            raise ValueError("重新生成的来源必须是已有搭配版本")
+        if self.regenerate_outfit:
+            if not self.conversation_id or self.expected_version < 1:
+                raise ValueError("请先打开已有穿搭，再重新生成")
+            if self.message != "重新生成穿搭" or self.upload_action_id:
+                raise ValueError("重新生成会沿用当前要求；新增条件请直接在对话里说明")
         if self.companion_profile:
             if self.assistant_persona is None:
                 self.assistant_persona = self.companion_profile.assistant_persona

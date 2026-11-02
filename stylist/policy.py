@@ -8,6 +8,17 @@ from .memory import address_boundary, boundary_only, memory_intent, preference_s
 from .models import MAX_WEATHER_LOCATIONS, Look, Plan, Product, SessionState, Slot, Task
 from .personas import weather_location_limit_message
 
+REGENERATION_PREFIX = "outfit_regeneration:"
+
+
+def regeneration_problems(draft, original):
+    if len(draft.looks) != 1:
+        return [REGENERATION_PREFIX + "只重新生成所选的一套穿搭"]
+    old_keys = {item.key for item in original.items}
+    if not set(draft.looks[0].selected_keys) - old_keys:
+        return [REGENERATION_PREFIX + "至少选用一件不同的合规个人衣橱单品，不能只改标题或删掉原单品"]
+    return []
+
 
 def merge_task(state: SessionState, plan: Plan, message: str) -> Task:
     data = Task().model_dump() if plan.new_task else state.task.model_dump()

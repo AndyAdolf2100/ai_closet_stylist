@@ -114,6 +114,10 @@ class Store:
             excluded.add("companion_profile")
         if request.upload_action_id is None:
             excluded.add("upload_action_id")
+        if not request.regenerate_outfit:
+            excluded.add("regenerate_outfit")
+        if request.regenerate_from_version is None:
+            excluded.add("regenerate_from_version")
         digest = hashlib.sha256(request.model_dump_json(exclude=excluded).encode()).hexdigest()
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
@@ -224,6 +228,27 @@ class Store:
                                    (time.time() + 45, cid, owner, claim))
             if changed.rowcount != 1:
                 raise StylistError("request_superseded", "本次任务执行权已变化。", 409)
+
+    def regeneration_source(self, owner, cid, version):
+        """Read an owned, immutable result without rolling back the live conversation."""
+        with self.connection() as conn:
+            row = conn.execute("SELECT reply_json FROM stylist_messages WHERE conversation_id=? AND owner_id=? AND version=?",
+                               (cid, owner, version)).fetchone()
+            if not row:
+                raise StylistError("regenerate_source_missing", "找不到这套搭配的原始记录，请重新打开对话后再试。", 404)
+            reply = Reply.model_validate_json(row["reply_json"])
+            if not reply.looks:
+                # A try-on may reference a later chat turn that retained the prior outfit.
+                rows = conn.execute("SELECT reply_json FROM stylist_messages WHERE conversation_id=? AND owner_id=? AND version<? ORDER BY version DESC",
+                                    (cid, owner, version)).fetchall()
+                for item in rows:
+                    previous = Reply.model_validate_json(item["reply_json"])
+                    if previous.looks:
+                        reply = previous
+                        break
+            if not reply.looks:
+                raise StylistError("regenerate_source_missing", "这条记录没有可重新生成的衣橱搭配。", 409)
+            return SessionState(task=reply.task, mode=reply.mode, looks=reply.looks).model_dump(mode="json")
 
     def history(self, owner, cid):
         with self.connection() as conn:
