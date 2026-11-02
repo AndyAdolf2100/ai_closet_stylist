@@ -2,7 +2,7 @@
 (() => {
   const characters = window.CompanionCharacters;
   const personaGender = id => characters.gender(id);
-  const defaults = () => ({ user_name: '', user_gender: null, agent_name: '衣衣', assistant_persona: 'female_warm_v1', color_scheme:'companion' });
+  const defaults = () => ({ user_name: '', user_gender: null, agent_name: '衣衣', assistant_persona: 'male_calm_v1', color_scheme:'companion' });
   const dialog = document.createElement('dialog');
   dialog.id = 'companion-dialog'; dialog.setAttribute('aria-labelledby', 'companion-title');
   dialog.innerHTML = `
@@ -20,7 +20,7 @@
         <div class="companion-cast-step" data-step="3">
           <div class="companion-cast-tools"><span id="companion-color-label">界面配色</span><fieldset class="companion-color-switch" aria-labelledby="companion-color-label"><label class="companion-color-option"><input id="companion-color-companion" type="radio" name="companion-color-scheme" value="companion"><span><i class="companion-color-swatch companion-color-swatch-follow" aria-hidden="true"></i>跟随助理</span></label><label class="companion-color-option" title="与 App 保持一致"><input id="companion-system-color" type="radio" name="companion-color-scheme" value="system"><span><i class="companion-color-swatch companion-color-swatch-system" aria-hidden="true"></i>系统配色</span></label></fieldset></div>
           <fieldset class="companion-assistant-gender"><legend class="sr-only">选择助理形象的性别，与用户性别独立</legend>
-            ${['female', 'male'].map(gender => { const representative = characters.find(gender === 'male' ? 'male_calm_v1' : 'female_warm_v1'); return `<label class="companion-gender-picture"><input type="radio" name="companion-assistant-gender" value="${gender}"><span class="companion-gender-thumb" aria-hidden="true"><img src="${representative.image}" alt="" width="1536" height="1024"></span><span><strong>${gender === 'female' ? '女助理' : '男助理'}</strong><small>三种性格，慢慢选</small></span><span class="companion-gender-tick" aria-hidden="true">✓</span></label>`; }).join('')}
+            ${['male', 'female'].map(gender => { const representative = characters.find(gender === 'male' ? 'male_calm_v1' : 'female_warm_v1'); return `<label class="companion-gender-picture"><input type="radio" name="companion-assistant-gender" value="${gender}"><span class="companion-gender-thumb" aria-hidden="true"><img src="${representative.image}" alt="" width="1536" height="1024"></span><span><strong>${gender === 'female' ? '女助理' : '男助理'}</strong><small>三种性格，慢慢选</small></span><span class="companion-gender-tick" aria-hidden="true">✓</span></label>`; }).join('')}
           </fieldset>
           <fieldset class="companion-cast companion-character-grid"><legend class="sr-only">选择陪伴你的性格与模样</legend>
             ${characters.all.map(character => `<label class="companion-person companion-character companion-person-${character.gender}" data-character-gender="${character.gender}"><input type="radio" name="companion-persona" value="${character.id}" aria-describedby="${character.id}-summary"><span class="companion-character-art" style="--art-scale:${character.framing.scale};--art-top:${character.framing.top}%;--portrait-left:${character.framing.left}%"><span class="companion-character-frame"><img src="${character.image}" alt="${character.label}助理的静态正面形象，设定身高${character.height}厘米" width="1536" height="1024" loading="lazy" decoding="async"></span></span><span class="companion-person-copy"><strong>${character.label}</strong><span id="${character.id}-summary">${character.summary}</span><small>${character.height} cm</small></span><span class="companion-selected" aria-hidden="true">✓</span></label>`).join('')}
@@ -174,7 +174,7 @@
     if (step === 1) draft.user_gender = dialog.querySelector('[name=companion-user-gender]:checked')?.value || null;
     if (step === 2) draft.agent_name = $('companion-agent-name').value.trim();
     if (step === 3) {
-      draft.assistant_persona = dialog.querySelector('[name=companion-persona]:checked')?.value || 'female_warm_v1';
+      draft.assistant_persona = dialog.querySelector('[name=companion-persona]:checked')?.value || 'male_calm_v1';
       draft.color_scheme = dialog.querySelector('[name=companion-color-scheme]:checked')?.value||'companion';
     }
   };

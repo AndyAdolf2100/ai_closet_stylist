@@ -210,7 +210,7 @@ class CompanionProfile(Model):
     user_name: str = Field(default="", max_length=24)
     user_gender: Literal["男", "女"] | None = None
     agent_name: str = Field(default="衣衣", min_length=1, max_length=24)
-    assistant_persona: PersonaId = "female_warm_v1"
+    assistant_persona: PersonaId = "male_calm_v1"
     color_scheme: Literal["companion", "system"] = "companion"
 
     mbti: Literal['INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP', 'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'] | None = None

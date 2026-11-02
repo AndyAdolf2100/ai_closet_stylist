@@ -4,7 +4,7 @@
 (() => {
   const key = 'ai-closet-stylist-appearance-v1';
   const root = document.documentElement;
-  const normalize = value => value === 'male' ? 'male' : 'female';
+  const normalize = value => value === 'female' ? 'female' : 'male';
   const copy = {
     female: {
       eyebrow: 'A LITTLE CARE, EVERY DAY',
@@ -30,7 +30,7 @@
     },
   };
 
-  let gender = 'female',colorScheme='companion';
+  let gender = 'male',colorScheme='companion';
   try { gender = normalize(localStorage.getItem(key)); } catch { /* Private mode can deny storage. */ }
   // This script runs in <head>, before CSS paints the saved appearance.
   root.dataset.stylistGender = gender;
@@ -71,9 +71,9 @@
   // Draft previews update visuals without saving preferences or profile data.
   window.addEventListener('stylist-appearance-preview', event => apply(typeof event.detail==='string'?event.detail:event.detail?.gender,false,typeof event.detail==='object'?event.detail?.color_scheme:colorScheme));
 
-  window.addEventListener('companion-profile-change', event => apply(event.detail?.assistant_persona?.startsWith('male_') ? 'male' : 'female',false,event.detail?.color_scheme==='system'?'system':'companion'));
+  window.addEventListener('companion-profile-change', event => apply(event.detail?.assistant_persona?.startsWith('female_') ? 'female' : 'male',false,event.detail?.color_scheme==='system'?'system':'companion'));
 
   window.addEventListener('storage', event => {
-    if (event.key === key || event.key === null) apply(event.key === null ? 'female' : event.newValue);
+    if (event.key === key || event.key === null) apply(event.key === null ? 'male' : event.newValue);
   });
 })();

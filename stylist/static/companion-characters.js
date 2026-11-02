@@ -30,7 +30,7 @@
       image: 'yiyi-male-confident-turnaround-transparent-v6.png', summary: '松弛自信 · 直率玩味',
       greeting: '别急着否定自己，先看看你真正喜欢哪一种。' },
   ].map(character => Object.freeze({ ...character, image: base + character.image, framing: Object.freeze(framing[character.id]), blinkEyes: Object.freeze(blinkEyes[character.id]) }));
-  const find = id => characters.find(character => character.id === id) || characters[1];
+  const find = id => characters.find(character => character.id === id) || characters.find(character => character.id === 'male_calm_v1');
   const gender = id => find(id).gender;
   function apply(id) {
     const character = find(id);

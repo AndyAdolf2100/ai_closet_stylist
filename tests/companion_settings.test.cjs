@@ -94,8 +94,8 @@ test('manual appearance switching persists names unchanged',async()=>{
 });
 test('persona selection previews theme immediately, preserves draft on back and restores on cancel',async()=>{
  const {w,dom,$,submit}=await setup();const writes=[];
- await w.CompanionSettings.setOwner('a',async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return {profile:writes.at(-1)};}return {profile:null};});
- submit();submit();submit();
+ await w.CompanionSettings.setOwner('a',async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return {profile:writes.at(-1)};}return {profile:{...profile(),assistant_persona:'female_warm_v1'}};});
+ await w.CompanionSettings.open();submit();submit();submit();
  const male=w.document.querySelector('[name=companion-persona][value=male_calm_v1]');
  choose(w,'male_calm_v1');assert.equal(w.document.documentElement.dataset.stylistGender,'male');assert.equal(writes.length,0);
  assert.equal(w.CompanionSettings.getProfile().assistant_persona,'female_warm_v1','draft preview does not change request profile');
@@ -111,8 +111,8 @@ test('persona selection previews theme immediately, preserves draft on back and 
 });
 test('failed preview save stays selected and account switch discards its theme',async()=>{
  const {w,dom,$,submit}=await setup();
- await w.CompanionSettings.setOwner('a',async(p,o={})=>{if(o.method==='PUT')throw Error('保存失败');return {profile:null};});
- submit();submit();submit();choose(w,'male_calm_v1');submit();await tick();
+ await w.CompanionSettings.setOwner('a',async(p,o={})=>{if(o.method==='PUT')throw Error('保存失败');return {profile:{...profile(),assistant_persona:'female_warm_v1'}};});
+ await w.CompanionSettings.open();submit();submit();submit();choose(w,'male_calm_v1');submit();await tick();
  assert.equal(w.document.documentElement.dataset.stylistGender,'male');assert($('companion-dialog').open);
  assert.equal(w.CompanionSettings.getProfile().assistant_persona,'female_warm_v1');
  await w.CompanionSettings.setOwner('b',async()=>({profile:{...profile('小林'),assistant_persona:'female_warm_v1'}}),false);
@@ -190,20 +190,20 @@ test('picture gender selection exposes three static characters and remembers eac
  await w.CompanionSettings.setOwner('six-a',async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return {profile:writes.at(-1)};}return {profile:null};});
  submit();submit();submit();
  const visible=()=>[...w.document.querySelectorAll('[data-character-gender]')].filter(card=>!card.hidden);
- assert.equal(visible().length,3);assert(visible().every(card=>card.dataset.characterGender==='female'));
+ assert.equal(visible().length,3);assert(visible().every(card=>card.dataset.characterGender==='male'));
  assert.equal(w.document.querySelectorAll('.companion-assistant-gender img').length,2);
  choose(w,'female_regal_v1');choose(w,'male_confident_v1');
  assert(visible().every(card=>card.dataset.characterGender==='male'));
  assert.equal(w.document.documentElement.dataset.companionPersona,'male_confident_v1');
- assert.equal(w.CompanionSettings.getProfile().assistant_persona,'female_warm_v1');
+ assert.equal(w.CompanionSettings.getProfile().assistant_persona,'male_calm_v1');
  w.document.querySelector('[name=companion-assistant-gender][value=female]').click();
  assert(w.document.querySelector('[name=companion-persona][value=female_regal_v1]').checked);
  assert.equal(writes.length,0);assert.equal(w.document.querySelectorAll('.companion-cast-step .companion-portrait').length,0);
  const snapshot=w.CompanionSettings.getProfile();$('companion-back').click();submit();
  assert(w.document.querySelector('[name=companion-persona][value=female_regal_v1]').checked);
  w.document.querySelector('.companion-close').click();
- assert.equal(w.document.documentElement.dataset.companionPersona,'female_warm_v1');
- assert.equal(snapshot.assistant_persona,'female_warm_v1');dom.window.close();
+ assert.equal(w.document.documentElement.dataset.companionPersona,'male_calm_v1');
+ assert.equal(snapshot.assistant_persona,'male_calm_v1');dom.window.close();
 });
 
 test('all six selected personas survive saving, reopen, preferences and independent request snapshots',async()=>{
@@ -263,5 +263,34 @@ test('the real send function keeps each full persona ID, ignores preview gender 
  context.pendingRun={owner:'request-a',request:{message:'先前请求',assistant_persona:'female_sweet_v1',companion_profile:{assistant_persona:'female_sweet_v1'}}};
  await assert.rejects(context.sendMessage(true),/captured-before-network/);
  assert.equal(captured.request.assistant_persona,'female_sweet_v1');
+ dom.window.close();
+});
+
+test('new accounts default to the left male group while saved female roles survive account switches',async()=>{
+ const {w,dom,$,submit}=await setup();const writes=[];
+ assert.equal(w.document.documentElement.dataset.stylistGender,'male');
+ const saved={...profile(),assistant_persona:'female_regal_v1'};
+ await w.CompanionSettings.setOwner('existing',async()=>({profile:saved}),false);
+ assert.equal(w.CompanionSettings.getProfile().assistant_persona,'female_regal_v1');
+ await w.CompanionSettings.setOwner('new',async(p,o={})=>{
+  if(o.method==='PUT'){writes.push(JSON.parse(o.body));return {profile:writes.at(-1)};}
+  return {profile:null};
+ });
+ assert.equal(w.CompanionSettings.getProfile().assistant_persona,'male_calm_v1');
+ assert.equal(w.document.documentElement.dataset.companionPersona,'male_calm_v1');
+ submit();w.document.querySelector('[name=companion-user-gender][value="女"]').checked=true;submit();submit();
+ assert.deepEqual(Array.from(w.document.querySelectorAll('[name=companion-assistant-gender]'),x=>x.value),['male','female']);
+ assert.equal(w.document.querySelector('[name=companion-assistant-gender]:checked').value,'male');
+ assert.equal(w.document.querySelector('[name=companion-persona]:checked').value,'male_calm_v1');
+ submit();await tick();assert.equal(writes[0].assistant_persona,'male_calm_v1');assert.equal(writes[0].user_gender,'女');
+ await w.CompanionSettings.setOwner('existing',async()=>({profile:saved}),false);
+ await w.CompanionSettings.open();submit();submit();submit();
+ assert.equal(w.document.querySelector('[name=companion-assistant-gender]:checked').value,'female');
+ assert.equal(w.document.querySelector('[name=companion-persona]:checked').value,'female_regal_v1');
+ w.document.querySelector('.companion-close').click();
+ assert.equal(w.CompanionSettings.getProfile().assistant_persona,'female_regal_v1');
+ await w.CompanionSettings.setOwner(null);
+ assert.equal(w.document.documentElement.dataset.stylistGender,'male');
+ assert.equal(w.document.documentElement.dataset.companionPersona,'male_calm_v1');
  dom.window.close();
 });

@@ -149,3 +149,13 @@ def test_optional_personal_preferences_validate_and_survive_account_scoped_stora
                    {"style_preferences": ["简约", "通勤", "优雅", "复古"]}]:
         with pytest.raises(ValidationError):
             CompanionProfile(**values)
+
+
+def test_new_profile_defaults_to_male_without_replacing_saved_roles():
+    profile = CompanionProfile()
+    assert profile.assistant_persona == "male_calm_v1"
+    assert profile.user_gender is None
+    request = ChatRequest(message="你好", request_id="new-male-profile", companion_profile=profile)
+    assert request.assistant_persona == "male_calm_v1"
+    saved = CompanionProfile(assistant_persona="female_regal_v1")
+    assert CompanionProfile.model_validate(saved.model_dump()).assistant_persona == "female_regal_v1"
