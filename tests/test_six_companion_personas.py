@@ -85,6 +85,8 @@ def test_six_character_art_and_skills_are_packaged_with_the_runtime():
     root = Path(__file__).parents[1]
     patterns = tomllib.loads((root / "pyproject.toml").read_text())["tool"]["setuptools"]["package-data"]["stylist"]
     assert "skills/*/SKILL.md" in patterns and "skills/*.md" in patterns
-    assert "static/assets/characters/candidates-v2/*" in patterns
+    packaged = {path for pattern in patterns for path in (root / "stylist").glob(pattern) if path.is_file()}
+    character_art = set((root / "stylist/static/assets/characters/candidates-v2").glob("*.png"))
+    assert character_art and character_art <= packaged
     for filename in ("companion-characters.js", "companion-characters.css"):
         assert not ORIGINAL_NAMES.search((root / "stylist" / "static" / filename).read_text())
