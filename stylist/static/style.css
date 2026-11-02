@@ -531,7 +531,7 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 #preferences-dialog #zodiac-clear[aria-pressed=true]{color:var(--accent);text-decoration:underline;text-underline-offset:5px}
 .zodiac-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 20px;margin:6px 0 20px}
 #preferences-dialog .zodiac-card{position:relative;min-width:0;overflow:visible;padding:0 0 8px;border:0;background:transparent;text-align:center;color:var(--ink);border-radius:14px;box-shadow:none}
-.zodiac-art{position:relative;display:block;width:100%;aspect-ratio:1;background-image:url('/static/assets/zodiac-palaces-v1.png');background-size:400% 300%;background-repeat:no-repeat;background-color:var(--soft);border-radius:50% 50% 12px 12px;box-shadow:inset 0 0 0 1px #ffffff80,0 5px 14px #71636a10;filter:saturate(.65);transition:filter .25s,box-shadow .25s,transform .25s;overflow:hidden}
+.zodiac-art{position:relative;display:block;width:100%;aspect-ratio:1;background-image:url('/static/assets/zodiac-illustrated-starfields-v3.png');background-size:400% 300%;background-repeat:no-repeat;background-color:var(--soft);border-radius:50% 50% 12px 12px;box-shadow:inset 0 0 0 1px #ffffff80,0 5px 14px #71636a10;filter:saturate(.9);transition:filter .25s,box-shadow .25s,transform .25s;overflow:hidden}
 .zodiac-art::before{content:'';position:absolute;inset:0;background:linear-gradient(150deg,#fff5eb30,transparent 55%,#fff5eb30);pointer-events:none}
 .zodiac-card strong{display:block;font:14px/1.5 Georgia,'Songti SC',serif;letter-spacing:1px;margin:10px 0 3px;font-weight:400}
 .zodiac-card small{display:block;font-size:9px;letter-spacing:.8px;color:var(--muted);opacity:.8}
