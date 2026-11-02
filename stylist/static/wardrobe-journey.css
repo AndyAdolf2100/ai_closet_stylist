@@ -1,0 +1,282 @@
+.journey-dialog{width:min(680px,calc(100% - 32px));max-height:calc(100dvh - 40px);padding:24px;overflow:auto;overscroll-behavior:contain}
+.journey-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.journey-heading h2{margin:0;font-size:25px}.journey-heading button{flex-shrink:0;background:transparent;border:0;min-height:44px}
+.journey-body{padding-top:18px}.journey-body p{line-height:1.8}.journey-body button{min-height:44px}.journey-intro{font-size:15px!important}.journey-note{color:var(--muted);font-size:12px}.journey-state{color:var(--accent)!important;font-weight:600}.journey-cost{font-size:20px!important;color:var(--accent)!important;font-weight:600}.journey-balance{padding:10px 14px;border-radius:12px;background:var(--soft);color:var(--accent)!important}
+.journey-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.journey-body>button{margin:8px 8px 8px 0}.journey-body textarea{min-height:80px;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:16px}.journey-body input[type=file]{font-size:16px;background:var(--soft);max-width:100%;padding:12px}
+.journey-upload-preview:empty{display:none}.journey-upload-preview{margin:18px 0;background:var(--soft);border-radius:14px;padding:12px;text-align:center}.journey-upload-preview img{max-width:100%;max-height:340px;object-fit:contain;border-radius:8px}
+.journey-image{display:block;width:100%;background:var(--soft);padding:12px;border:0;border-radius:14px;overflow:hidden}.journey-image img{display:block;max-width:100%;max-height:400px;width:100%;height:auto;object-fit:contain}.journey-portraits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.journey-portrait{padding:8px;display:flex;flex-direction:column;gap:8px;text-align:center;font-size:13px}.journey-portrait img{width:100%;height:180px;object-fit:contain;background:var(--soft);border-radius:8px}
+.journey-portrait[aria-pressed=true],.journey-actions [aria-pressed=true]{border-color:var(--accent);background:var(--soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.journey-record{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}.journey-record .journey-image{margin:12px 0}.journey-invite{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:15px;background:var(--soft);white-space:normal}.journey-invite p{font-size:13px;color:var(--muted);margin:8px 0 12px}.journey-invite button{min-height:44px}.journey-result{white-space:normal}.journey-result p{font-size:13px}.journey-result .journey-image{margin-bottom:12px}
+.journey-entry{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.journey-entry button{min-height:44px;background:var(--paper);font-size:13px}.journey-composer{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;background:var(--soft)}.journey-anchor{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--accent);padding:6px 0}.journey-anchor button{border:0;background:none;min-height:44px}
+@media(max-width:600px){.journey-dialog{width:100%;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;padding:max(16px,env(safe-area-inset-top)) 18px max(20px,env(safe-area-inset-bottom))}.journey-portraits{grid-template-columns:repeat(2,minmax(0,1fr))}.journey-body>.primary{display:block;width:100%;margin:12px 0}.journey-portrait img{height:170px}.journey-entry{gap:8px}.journey-entry button{padding:10px 12px}.journey-composer{padding:7px 9px}.journey-dialog input,.journey-dialog textarea{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.journey-dialog *{scroll-behavior:auto;animation:none;transition:none}}
+
+/* A shared journal for photos, portraits and fitting. */
+.journey-dialog{--journey-glow:color-mix(in srgb,var(--blush) 64%,transparent);width:min(740px,calc(100% - 48px));max-height:min(880px,calc(100dvh - 48px));padding:0;overflow:hidden;border-radius:26px;background:var(--paper);box-shadow:0 28px 100px #24352e30}
+.journey-dialog[open]{display:flex;flex-direction:column;animation:journey-arrive .28s ease-out}.journey-dialog::backdrop{background:color-mix(in srgb,var(--ink) 28%,transparent);backdrop-filter:blur(7px)}
+.journey-heading{padding:23px 30px 15px;flex-shrink:0}.journey-chapter{font-size:10px;letter-spacing:3px;color:var(--muted)}.journey-heading h2{margin:8px 0 0;font:25px/1.4 Georgia,"Songti SC",serif;letter-spacing:1px}
+.journey-heading>button{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;font-size:0;padding:0}.journey-heading>button::after{content:'×';font:25px/1 Georgia,serif;color:var(--muted)}
+.journey-scene{position:relative;display:flex;align-items:center;gap:17px;min-height:110px;margin:0 30px;padding:14px 24px 14px 14px;border-radius:16px;background:linear-gradient(115deg,var(--soft),var(--journey-glow));overflow:hidden;flex-shrink:0}
+.journey-companion{width:74px;height:88px;flex-shrink:0;object-fit:cover;object-position:50% 9%;border-radius:42px 42px 12px 12px;filter:saturate(.86)}.journey-scene-copy{position:relative;z-index:1;max-width:430px}.journey-speaker{font-size:11px;letter-spacing:1px;color:var(--accent)}.journey-scene-copy p{font:16px/1.8 Georgia,"Songti SC",serif;margin:7px 0 0;color:var(--ink)}.journey-scene-flower{position:absolute;right:11px;bottom:-37px;font:140px Georgia,serif;color:var(--accent);opacity:.08;pointer-events:none}
+.journey-steps{display:flex;justify-content:space-between;gap:8px;list-style:none;margin:0;padding:20px 30px 17px;border-bottom:1px solid var(--line);flex-shrink:0}.journey-steps[hidden]{display:none}.journey-steps li{display:flex;align-items:center;gap:7px;min-width:0;font-size:11px;color:var(--muted)}.journey-step-number{font:12px Georgia,serif;width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%}.journey-steps .is-current{color:var(--accent);font-weight:600}.journey-steps .is-current .journey-step-number{background:var(--accent);border-color:var(--accent);color:var(--paper)}.journey-steps .is-done .journey-step-number{background:var(--soft);color:var(--accent);border-color:transparent}
+.journey-body{flex:1;padding:12px 30px 24px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}.journey-intro{font-size:13px!important;margin:2px 0 18px}.journey-body>button{margin:8px 8px 0 0;border-radius:22px;font-size:12px;background:transparent}.journey-body button{transition:background .18s,border-color .18s,transform .18s}.journey-body button:hover:not(:disabled){background:var(--soft)}.journey-body textarea{padding:14px;background:var(--bg)}.journey-body textarea:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.journey-photo-pocket{position:relative;display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:10px;min-height:166px;margin:0!important;padding:24px;border:1px dashed color-mix(in srgb,var(--accent) 44%,var(--line));border-radius:17px;background:linear-gradient(140deg,var(--paper),var(--soft));cursor:pointer;text-align:center;transition:background .18s,border-color .18s}.journey-photo-pocket:hover,.journey-photo-pocket:focus-within{border-color:var(--accent);background:var(--soft)}.journey-photo-pocket:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+.journey-body .journey-file-input{position:absolute;width:1px;height:1px;padding:0;margin:0;opacity:0;overflow:hidden;clip-path:inset(50%)}.journey-pocket-icon{display:grid;place-items:center;width:42px;height:46px;font-size:27px;font-weight:200;color:var(--accent);border:1px solid var(--line);background:var(--paper);border-radius:9px;box-shadow:4px 4px 0 var(--journey-glow);transform:rotate(-6deg)}.journey-photo-pocket strong{font-size:14px;font-weight:500;overflow-wrap:anywhere}.journey-pocket-hint{font-size:11px;color:var(--muted);max-width:100%;overflow-wrap:anywhere}.journey-photo-pocket.has-photo{min-height:76px;padding:14px;gap:6px}.journey-photo-pocket.has-photo .journey-pocket-icon{display:none}
+.journey-upload-preview{position:relative;margin:18px 0;background:var(--bg);border:1px solid var(--line);border-radius:15px;padding:15px}.journey-upload-preview img{display:block;max-height:270px;margin:auto;border-radius:9px}.journey-preview-label{display:block;font-size:11px;color:var(--muted);margin-top:12px}
+.journey-footer{padding:16px 30px 22px;background:var(--paper);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;flex-shrink:0;box-shadow:0 -9px 22px color-mix(in srgb,var(--paper) 80%,transparent)}.journey-footer:empty{display:none}.journey-footer button{min-height:46px;border-radius:24px;font-size:13px;padding:12px 22px;transition:transform .18s,box-shadow .18s}.journey-footer>.primary,.journey-submitbar{flex:1}.journey-footer .primary{background:var(--accent);color:var(--paper);border-color:var(--accent);box-shadow:0 5px 15px color-mix(in srgb,var(--accent) 16%,transparent)}.journey-footer button:hover:not(:disabled){transform:translateY(-1px)}.journey-footer .journey-actions{margin:0}.journey-submitbar>.primary{width:100%}
+.journey-dialog .journey-footer button.primary{border-radius:24px}
+.journey-dialog .journey-body button.primary{min-height:44px;padding:11px 20px;border-radius:24px;border-color:var(--journey-action-bg,var(--accent));background:var(--journey-action-bg,var(--accent));color:var(--journey-action-ink,var(--paper));box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 13%,transparent)}
+.journey-dialog .journey-body button.primary:hover:not(:disabled){background:var(--journey-action-hover,var(--accent));color:var(--journey-action-ink,var(--paper));filter:brightness(.97)}
+.journey-dialog .journey-body button.primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.journey-dialog[data-flow=quote] .journey-image img{max-height:150px}
+.journey-card-label{display:block;font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:9px}.journey-card-steps{display:flex;gap:19px;flex-wrap:wrap;list-style:decimal-leading-zero;padding-left:24px;margin:16px 0 18px;color:var(--accent);font-size:11px}.journey-card-steps li{padding-left:2px;margin-right:8px}.journey-card-note{display:block;font-size:11px;color:var(--muted);margin-top:12px}.journey-invite>button{margin:0 8px 6px 0}.journey-invite>button.primary{background:var(--accent);color:var(--paper)}
+.journey-avatar-card{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--soft),var(--paper) 62%,var(--blush))}.journey-avatar-card>strong{display:block;line-height:1.6}.journey-avatar-content>button{border-radius:24px;margin:0 8px 9px 0;min-height:44px}.journey-avatar-content>button.primary{background:var(--accent);color:var(--paper)}
+.journey-companion-frame{display:block;position:relative;flex-shrink:0;width:74px;height:88px;border-radius:42px 42px 12px 12px;overflow:hidden;background:var(--paper)}.journey-companion-frame .journey-character-art{position:absolute;max-width:none;width:650%;height:auto;left:-94%;top:0;border-radius:0;object-fit:initial}
+.journey-inline-portraits{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:150px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;gap:12px;padding:4px 3px 14px;margin:12px 0 15px}.journey-inline-portraits .journey-portrait{scroll-snap-align:start;min-height:190px}.journey-inline-portraits .journey-portrait img{height:155px}.journey-portrait-missing{height:155px;display:grid;place-items:center;font-size:11px;color:var(--muted);padding:8px}
+.journey-progress{margin:12px 0 20px;padding:18px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(115deg,var(--soft),var(--paper))}.journey-progress p{margin:0 0 12px!important;font:15px/1.7 Georgia,"Songti SC",serif;color:var(--accent)}.journey-progress small{display:block;font-size:11px;line-height:1.8;color:var(--muted);margin-top:10px}.journey-progress-track{height:5px;background:var(--line);border-radius:8px;overflow:hidden}.journey-progress-track span{display:block;height:100%;border-radius:8px;background:var(--accent);transition:width .4s ease}.journey-progress-track.is-indeterminate span{width:35%;animation:journey-progress-drift 2s ease-in-out infinite alternate}
+@keyframes journey-progress-drift{from{transform:translateX(-20%);opacity:.45}to{transform:translateX(200%);opacity:.9}}
+@media(max-width:600px){.journey-inline-portraits{grid-auto-columns:136px}.journey-avatar-content>button{font-size:12px;padding:11px 13px}.journey-avatar-card{padding:19px}.journey-progress{padding:15px}}
+@media(max-width:760px){.journey-companion-frame{width:60px;height:76px}}
+@media(max-height:650px){.journey-companion-frame{width:44px;height:58px}}
+@media(prefers-reduced-motion:reduce){.journey-progress-track.is-indeterminate span{animation:none;transform:none}.journey-progress-track span{transition:none}}
+.journey-image{background:var(--bg);padding:14px;border:1px solid var(--line);border-radius:16px}.journey-image img{max-height:360px}.journey-state{display:flex;align-items:center;gap:10px;padding:14px 17px;border-radius:13px;background:var(--soft);font-size:14px!important;font-weight:500}.journey-state::before{content:'✧';font-size:19px}.journey-dialog[data-status=processing] .journey-state::before,.journey-dialog[data-status=executing] .journey-state::before{content:'';width:15px;height:15px;border:1px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:journey-turn 1.3s linear infinite}
+.journey-cost{padding:25px 20px;margin:14px 0 18px!important;border:1px solid var(--line);border-radius:16px;background:linear-gradient(125deg,var(--soft),var(--paper));font:22px/1.65 Georgia,"Songti SC",serif!important;text-align:center}.journey-balance{display:inline-block;font-size:11px!important;margin:3px 0 12px!important;background:none;padding:0}
+.journey-portraits{gap:13px;margin:8px 0 18px}.journey-portrait{position:relative;padding:8px 8px 15px;gap:12px;font-size:12px;border:1px solid var(--line);border-radius:48% 48% 15px 15px;background:var(--bg);overflow:hidden}.journey-portrait img{background:linear-gradient(150deg,var(--paper),var(--soft));border-radius:48% 48% 11px 11px}.journey-portrait[aria-pressed=true]{border-color:var(--accent);background:var(--soft);box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 10%,transparent)}.journey-portrait[aria-pressed=true]::after{content:'✓';position:absolute;right:10px;bottom:10px;background:var(--accent);color:var(--paper);border-radius:50%;width:19px;height:19px;line-height:19px;font-size:11px}
+.journey-record{position:relative;padding:20px;background:linear-gradient(115deg,var(--paper),var(--bg))}.journey-record::before{content:'';position:absolute;left:0;top:22px;bottom:22px;width:3px;background:var(--accent);opacity:.35;border-radius:2px}.journey-record strong,.journey-invite strong{font:18px Georgia,"Songti SC",serif}.journey-invite{padding:22px;background:linear-gradient(125deg,var(--soft),var(--paper))}.journey-invite button{border-radius:23px;background:var(--paper)}
+.journey-entry{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin:26px 0 18px;max-width:540px}.journey-entry button{min-height:72px;text-align:left;border-radius:15px;padding:16px 18px;background:var(--paper);font-size:13px;line-height:1.6;transition:transform .2s,box-shadow .2s}.journey-entry button:first-child{background:linear-gradient(120deg,var(--soft),var(--paper))}.journey-entry button:hover{transform:translateY(-2px);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 8%,transparent)}.journey-composer{background:transparent;border-color:transparent;border-radius:24px;color:var(--accent)}
+@keyframes journey-arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes journey-turn{to{transform:rotate(360deg)}}
+@media(max-width:760px){.journey-dialog{width:100%;height:100dvh;max-height:100dvh;max-width:100%;margin:0;border-radius:0;border:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}.journey-heading{padding:17px 20px 14px}.journey-heading h2{font-size:22px}.journey-scene{margin:0 20px;gap:13px;min-height:96px;padding:12px}.journey-companion{width:60px;height:76px}.journey-scene-copy p{font-size:14px}.journey-speaker{font-size:10px}.journey-steps{padding:16px 20px 14px;gap:5px}.journey-steps li{font-size:10px;gap:5px}.journey-step-number{width:21px;height:21px;font-size:10px}.journey-body{padding:12px 20px 20px}.journey-footer{padding:13px 20px max(17px,env(safe-area-inset-bottom))}.journey-footer button{padding:11px 16px;font-size:12px}.journey-footer .primary{width:100%}.journey-portraits{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.journey-portrait img{height:165px}.journey-cost{font-size:20px!important;padding:21px 12px}.journey-photo-pocket{min-height:150px;padding:19px}.journey-upload-preview img{max-height:240px}.journey-entry{gap:9px;margin-top:22px}.journey-entry button{padding:14px 12px;font-size:12px}}
+@media(max-height:650px){.journey-scene{min-height:72px}.journey-companion{width:44px;height:58px}.journey-scene-copy p{font-size:13px;margin-top:3px}.journey-steps{padding-top:10px;padding-bottom:10px}.journey-heading{padding-top:12px;padding-bottom:10px}}
+@media(prefers-reduced-motion:reduce){.journey-dialog,.journey-dialog *,.journey-entry button{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* The fitting quote is a compact letter, with the selected person beside the look. */
+.journey-dialog[data-quote-kind=tryon]{width:min(600px,calc(100% - 48px));max-height:calc(100dvh - 48px);border-radius:24px}
+.journey-dialog[data-quote-kind=tryon] .journey-heading{padding:23px 28px 16px}
+.journey-dialog[data-quote-kind=tryon] .journey-heading h2{font:24px/1.4 Georgia,"Songti SC",serif}
+.journey-dialog[data-quote-kind=tryon] .journey-scene{margin:0 28px;min-height:84px;padding:12px 16px;gap:13px;border-radius:14px}
+.journey-dialog[data-quote-kind=tryon] .journey-companion-frame{width:50px;height:62px}
+.journey-dialog[data-quote-kind=tryon] .journey-scene-copy p{font-size:14px;line-height:1.75;margin-top:5px}
+.journey-dialog[data-quote-kind=tryon] .journey-scene-flower{font-size:90px;right:8px;bottom:-25px;opacity:.06}
+.journey-dialog[data-quote-kind=tryon] .journey-steps{padding:18px 28px 16px}
+.journey-dialog[data-quote-kind=tryon] .journey-step-number{width:22px;height:22px}
+.journey-dialog[data-quote-kind=tryon] .journey-body{flex:0 1 auto;padding:20px 28px 22px}
+.journey-quote-summary{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);gap:22px;align-items:center;padding:21px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(125deg,var(--soft),var(--paper) 65%,color-mix(in srgb,var(--blush) 20%,var(--paper)));box-shadow:0 6px 24px color-mix(in srgb,var(--accent) 5%,transparent)}
+.journey-quote-figure{min-width:0;margin:0;text-align:center}
+.journey-quote-figure .journey-image,.journey-quote-missing{display:grid;place-items:center;width:100%;height:144px;min-height:0;margin:0;padding:5px;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:54px 54px 13px 13px;background:var(--paper);overflow:hidden}
+.journey-quote-figure .journey-image p{margin:0;font-size:11px;line-height:1.65;color:var(--muted)}
+.journey-dialog[data-quote-kind=tryon] .journey-quote-figure .journey-image img{width:100%;height:100%;max-height:none;object-fit:cover;object-position:50% 18%;border-radius:49px 49px 9px 9px}
+.journey-quote-figure figcaption{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px;overflow-wrap:anywhere}
+.journey-quote-missing{display:grid;place-items:center;font-size:11px;color:var(--muted);padding:14px}
+.journey-quote-copy{position:relative;min-width:0;z-index:1}
+.journey-quote-copy .journey-card-label{font-size:10px;letter-spacing:2px;margin:0 0 8px;color:var(--accent)}
+.journey-quote-copy h3{font:500 18px/1.65 Georgia,"Songti SC",serif;margin:0;overflow-wrap:anywhere}
+.journey-body .journey-quote-count{margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
+.journey-quote-seal{position:absolute;right:12px;top:9px;font-size:24px;color:var(--accent);opacity:.12;pointer-events:none}
+.journey-quote-fee{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:15px;padding-top:12px;border-top:1px solid var(--line);color:var(--accent)}
+.journey-quote-fee-label{font-size:11px;line-height:1.6}
+.journey-quote-amount{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+.journey-quote-amount strong{font:400 32px/1 Georgia,"Songti SC",serif;font-variant-numeric:tabular-nums}
+.journey-quote-amount>span{font-size:12px}
+.journey-quote-notes{margin-top:19px;padding:0 2px}
+.journey-quote-notes h3{margin:0 0 8px;font:14px/1.6 Georgia,"Songti SC",serif;color:var(--ink)}
+.journey-quote-notes ul{margin:0;padding-left:16px;font-size:12px;line-height:1.85;color:var(--muted)}
+.journey-quote-notes li{padding-left:2px;margin-top:5px;overflow-wrap:anywhere}
+.journey-dialog[data-quote-kind=tryon] .journey-footer{padding:15px 28px 21px;gap:10px}
+.journey-dialog[data-quote-kind=tryon] .journey-footer button{font-size:12px;min-height:46px;padding:12px 18px}
+@media(max-width:760px){
+  .journey-dialog[data-quote-kind=tryon]{width:calc(100% - 24px);height:fit-content;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;padding:0;border:1px solid var(--line);border-radius:22px}
+  .journey-dialog[data-quote-kind=tryon] .journey-heading{padding:18px 18px 14px}
+  .journey-dialog[data-quote-kind=tryon] .journey-heading h2{font-size:22px}
+  .journey-dialog[data-quote-kind=tryon] .journey-scene{margin:0 18px;padding:10px 12px;gap:11px;min-height:76px}
+  .journey-dialog[data-quote-kind=tryon] .journey-companion-frame{width:44px;height:56px}
+  .journey-dialog[data-quote-kind=tryon] .journey-scene-copy p{font-size:13px;line-height:1.65}
+  .journey-dialog[data-quote-kind=tryon] .journey-steps{padding:15px 18px 13px;gap:6px}
+  .journey-dialog[data-quote-kind=tryon] .journey-steps li{font-size:10px;gap:5px}
+  .journey-dialog[data-quote-kind=tryon] .journey-body{padding:16px 18px 20px;scrollbar-gutter:auto}
+  .journey-quote-summary{grid-template-columns:88px minmax(0,1fr);gap:15px;padding:16px;border-radius:16px}
+  .journey-quote-figure .journey-image,.journey-quote-missing{height:120px;border-radius:43px 43px 11px 11px}
+  .journey-quote-copy h3{font-size:16px;line-height:1.6}
+  .journey-quote-copy .journey-card-label{font-size:9px;letter-spacing:1px;margin-bottom:6px}
+  .journey-body .journey-quote-count{font-size:11px;margin-top:6px}
+  .journey-quote-fee{margin-top:12px;padding-top:10px;gap:7px}
+  .journey-quote-fee-label{font-size:10px}
+  .journey-quote-amount{gap:5px}.journey-quote-amount strong{font-size:29px}.journey-quote-amount>span{font-size:10px}
+  .journey-dialog[data-quote-kind=tryon] .journey-footer{padding:12px 18px max(14px,env(safe-area-inset-bottom));gap:8px}
+  .journey-dialog[data-quote-kind=tryon] .journey-footer button{padding:11px 13px}
+}
+@media(max-width:360px){
+  .journey-quote-summary{grid-template-columns:72px minmax(0,1fr);gap:12px;padding:13px}
+  .journey-quote-figure .journey-image,.journey-quote-missing{height:103px}
+  .journey-quote-fee{align-items:flex-end}.journey-quote-fee-label{max-width:55px}
+  .journey-dialog[data-quote-kind=tryon] .journey-footer{display:grid;grid-template-columns:1fr;gap:0}
+  .journey-dialog[data-quote-kind=tryon] .journey-footer>button:last-child{justify-self:center;min-height:40px;padding:7px 18px;border-color:transparent;background:transparent;color:var(--muted)}
+}
+@media(max-height:480px){
+  .journey-dialog[data-quote-kind=tryon]{max-height:calc(100dvh - 16px)}
+  .journey-dialog[data-quote-kind=tryon] .journey-heading{padding:11px 22px 9px}
+  .journey-dialog[data-quote-kind=tryon] .journey-heading h2{font-size:21px;margin-top:4px}
+  .journey-dialog[data-quote-kind=tryon] .journey-scene{margin:0 22px;min-height:58px;padding:8px 12px;gap:10px}
+  .journey-dialog[data-quote-kind=tryon] .journey-companion-frame{width:34px;height:42px}
+  .journey-dialog[data-quote-kind=tryon] .journey-scene-copy p{font-size:12px;margin-top:2px}
+  .journey-dialog[data-quote-kind=tryon] .journey-speaker{font-size:9px}
+  .journey-dialog[data-quote-kind=tryon] .journey-steps{padding:9px 22px}
+  .journey-dialog[data-quote-kind=tryon] .journey-body{padding:12px 22px 14px}
+  .journey-dialog[data-quote-kind=tryon] .journey-footer{padding:10px 22px 12px}
+}
+
+/* Portraits sit in a photo journal, with the same frame for every image ratio. */
+.journey-dialog[data-panel=portraits]{width:min(720px,calc(100% - 48px));height:fit-content;max-height:calc(100dvh - 48px);border-radius:24px}
+.journey-dialog[data-panel=portraits] .journey-heading{padding:22px 28px 14px}
+.journey-dialog[data-panel=portraits] .journey-scene{margin:0 28px;min-height:80px;padding:11px 16px;gap:13px}
+.journey-dialog[data-panel=portraits] .journey-companion-frame{width:50px;height:64px}
+.journey-dialog[data-panel=portraits] .journey-scene-copy p{font-size:14px;line-height:1.75;margin-top:4px}
+.journey-dialog[data-panel=portraits] .journey-scene-flower{font-size:94px;bottom:-24px}
+.journey-dialog[data-panel=portraits] .journey-steps{padding:17px 28px 15px}
+.journey-dialog[data-panel=portraits] .journey-body{flex:0 1 auto;padding:18px 28px 20px;scrollbar-gutter:auto}
+.journey-dialog[data-panel=portraits] .journey-intro{margin:0 0 17px;font:13px/1.8 Georgia,"Songti SC",serif}
+.journey-dialog[data-panel=portraits] .journey-portraits{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.journey-portrait{position:relative;min-width:0;padding:6px;gap:0;border:1px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:0 4px 14px color-mix(in srgb,var(--ink) 3%,transparent);text-align:left;transition:transform .2s,border-color .2s,box-shadow .2s}
+.journey-portrait .journey-portrait-photo{position:relative;display:block;flex-shrink:0;width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:11px;background:linear-gradient(145deg,var(--soft),var(--paper) 65%,var(--blush))}
+.journey-portrait .journey-portrait-photo img{display:block;width:100%;height:100%;max-height:none;object-fit:cover;object-position:50% 24%;border-radius:0;background:none}
+.journey-portrait-caption{display:flex;flex-direction:column;gap:4px;min-width:0;width:100%;padding:11px 6px 8px}
+.journey-portrait-name{font:14px/1.5 Georgia,"Songti SC",serif;overflow-wrap:anywhere;color:var(--ink)}
+.journey-portrait-source{font-size:10px;line-height:1.5;letter-spacing:.4px;color:var(--muted)}
+.journey-portrait-check{position:absolute;top:13px;right:13px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--paper);font-size:12px;border:2px solid var(--paper);opacity:0;transform:scale(.8);transition:opacity .18s,transform .18s}
+.journey-portrait[aria-pressed=true]{border-color:var(--accent);background:linear-gradient(150deg,var(--paper),var(--soft));box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 12%,transparent)}
+.journey-portrait[aria-pressed=true]::after{content:none}
+.journey-portrait[aria-pressed=true] .journey-portrait-name{color:var(--accent)}
+.journey-portrait[aria-pressed=true] .journey-portrait-check{opacity:1;transform:scale(1)}
+.journey-portrait .journey-portrait-missing{height:100%;min-height:0;padding:14px;line-height:1.7;text-align:center}
+.journey-portrait:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.journey-dialog .journey-body>.journey-portrait-upload{display:flex;align-items:center;gap:13px;width:100%;margin:0;padding:14px 16px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(115deg,var(--soft),var(--paper) 70%,color-mix(in srgb,var(--blush) 30%,var(--paper)));text-align:left}
+.journey-portrait-plus{display:grid;place-items:center;flex-shrink:0;width:35px;height:40px;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:9px;background:var(--paper);color:var(--accent);font-size:24px;font-weight:300;box-shadow:3px 3px 0 color-mix(in srgb,var(--accent) 6%,transparent);transform:rotate(-5deg)}
+.journey-portrait-upload-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;line-height:1.6}
+.journey-portrait-upload-copy strong{font-size:13px;font-weight:500;color:var(--ink)}
+.journey-portrait-upload-copy>span{font:12px/1.6 Georgia,"Songti SC",serif;color:var(--muted)}
+.journey-portrait-arrow{font-size:21px;color:var(--accent)}
+.journey-dialog[data-panel=portraits] .journey-note{font-size:11px;line-height:1.7;margin:10px 2px 0}
+.journey-identity-note{font-size:11px;margin:4px 2px 0;color:var(--muted);line-height:1.7}
+.journey-dialog[data-panel=portraits] .journey-footer{padding:13px 28px 20px;gap:10px}
+.journey-selection-info{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-basis:100%;min-width:0;font-size:11px;line-height:1.6}
+.journey-selection{min-width:0;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.journey-selection-balance{color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums}
+.journey-inline-portraits .journey-portrait{min-height:0}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.journey-portrait:hover:not(:disabled){transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 12%,transparent)}}
+@media(max-width:760px){
+  .journey-dialog[data-panel=portraits]{width:calc(100% - 24px);height:fit-content;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;padding:0;border:1px solid var(--line);border-radius:22px}
+  .journey-dialog[data-panel=portraits] .journey-heading{padding:17px 18px 13px}
+  .journey-dialog[data-panel=portraits] .journey-scene{margin:0 18px;min-height:70px;padding:10px 12px;gap:11px}
+  .journey-dialog[data-panel=portraits] .journey-companion-frame{width:42px;height:56px}
+  .journey-dialog[data-panel=portraits] .journey-scene-copy p{font-size:13px;line-height:1.65}
+  .journey-dialog[data-panel=portraits] .journey-steps{padding:14px 18px 12px}
+  .journey-dialog[data-panel=portraits] .journey-body{padding:15px 18px 18px}
+  .journey-dialog[data-panel=portraits] .journey-intro{font-size:12px!important;margin-bottom:14px}
+  .journey-dialog[data-panel=portraits] .journey-portraits{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:17px}
+  .journey-dialog[data-panel=portraits] .journey-footer{padding:11px 18px max(14px,env(safe-area-inset-bottom));gap:8px}
+  .journey-dialog .journey-body>.journey-portrait-upload{padding:12px;gap:11px}
+  .journey-portrait-upload-copy strong{font-size:12px}
+}
+@media(max-height:480px){
+  .journey-dialog[data-panel=portraits]{max-height:calc(100dvh - 16px)}
+  .journey-dialog[data-panel=portraits] .journey-heading{padding:10px 22px 8px}
+  .journey-dialog[data-panel=portraits] .journey-heading h2{margin-top:3px;font-size:21px}
+  .journey-dialog[data-panel=portraits] .journey-scene{margin:0 22px;min-height:55px;padding:7px 12px}
+  .journey-dialog[data-panel=portraits] .journey-companion-frame{width:32px;height:42px}
+  .journey-dialog[data-panel=portraits] .journey-scene-copy p{font-size:12px;margin-top:2px}
+  .journey-dialog[data-panel=portraits] .journey-steps{padding:9px 22px}
+  .journey-dialog[data-panel=portraits] .journey-footer{padding:9px 22px 12px}
+}
+@media(prefers-reduced-motion:reduce){.journey-portrait,.journey-portrait-check{transition:none}}
+
+/* Try-on letters share the same truthful state copy in chat, dialogs and records. */
+.journey-tryon-letter{position:relative;min-width:0;padding:23px;border:1px solid var(--line);border-radius:23px;background:radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--blush,var(--soft)) 30%,transparent),transparent 55%),linear-gradient(150deg,var(--paper),color-mix(in srgb,var(--soft) 24%,var(--paper)));box-shadow:0 9px 30px color-mix(in srgb,var(--accent) 5%,transparent);overflow:hidden;white-space:normal}
+.journey-result.journey-tryon-letter{max-width:480px;margin:20px 0}
+#feed > .journey-result{margin-bottom:28px}
+.journey-tryon-letter::before{content:'';position:absolute;top:14px;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);pointer-events:none}
+.journey-letter-sender{display:flex;align-items:center;gap:11px;margin:0 0 19px;min-width:0}
+.journey-tryon-letter .journey-letter-avatar{width:38px;height:47px;border-radius:22px 22px 12px 12px;border:1px solid color-mix(in srgb,var(--accent) 15%,var(--line));background:var(--soft)}
+.journey-letter-avatar>.journey-companion:not(.journey-character-art){width:100%;height:100%;border-radius:0;object-position:50% 8%}
+.journey-letter-signature{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0;line-height:1.5}
+.journey-letter-signature>span{color:var(--muted);font-size:9px;letter-spacing:2px}
+.journey-tryon-letter .journey-letter-signature>strong{color:var(--accent);font:12px/1.5 Georgia,"Songti SC",serif;font-weight:400;overflow-wrap:anywhere}
+.journey-letter-star{align-self:flex-start;margin:2px 2px 0 12px;color:color-mix(in srgb,var(--accent) 46%,var(--line));font:34px/1 Georgia,serif;transform:rotate(12deg)}
+:root .journey-tryon-letter h3.journey-letter-lead{margin:0 0 9px;color:var(--ink);font:20px/1.65 Georgia,"Songti SC",serif;letter-spacing:.5px;overflow-wrap:anywhere}
+.journey-tryon-letter p.journey-letter-outfit{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+.journey-tryon-letter p.journey-letter-note{margin:20px 0 24px;padding:16px 0 16px 15px;border-left:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));color:var(--ink);font:14px/1.95 Georgia,"Songti SC",serif;overflow-wrap:anywhere}
+.journey-letter-photo{margin:0 0 19px;padding:10px 10px 0;border:0;border-radius:13px;background:color-mix(in srgb,var(--paper) 74%,var(--soft));box-shadow:0 5px 13px color-mix(in srgb,var(--accent) 5%,transparent)}
+.journey-letter-photo .journey-image{display:flex;align-items:center;justify-content:center;width:100%;min-height:100px;margin:0;padding:0;border:0;border-radius:5px;background:transparent}
+.journey-letter-photo .journey-image img{display:block;width:auto;height:auto;max-width:100%;max-height:390px;margin:auto;border-radius:4px;object-fit:contain}
+.journey-letter-photo figcaption{padding:11px 2px 12px;color:var(--muted);font:10px/1.7 Georgia,"Songti SC",serif;letter-spacing:.5px;text-align:center}
+.journey-letter-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:6px}
+.journey-letter-actions button{min-height:44px;padding:11px 19px;border-radius:24px;font-size:12px;line-height:1.6;background:transparent;color:var(--accent);border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.journey-letter-actions button.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 15%,transparent)}
+.journey-letter-actions button:focus-visible,.journey-letter-photo button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.journey-tryon-letter .journey-progress{margin:0 0 20px;padding:0;border:0;background:transparent;box-shadow:none}
+.journey-tryon-letter .journey-progress>p{display:none}
+.journey-tryon-letter .journey-progress small{font-size:11px}
+.journey-record.journey-tryon-letter::before{left:14px;top:14px;bottom:auto;width:auto;background:linear-gradient(90deg,transparent,var(--line),transparent);opacity:1}
+.journey-dialog[data-panel=tryon-result]{width:560px}
+.journey-dialog[data-panel=tryon-result] .journey-scene,.journey-dialog[data-panel=tryon-result] .journey-steps{display:none}
+.journey-dialog[data-panel=tryon-result] .journey-body{padding-top:4px}
+.journey-dialog[data-panel=tryon-result] .journey-footer{padding-top:12px}
+@media(hover:hover){.journey-letter-actions button:hover:not(:disabled){border-color:var(--accent);background:var(--soft)}.journey-letter-actions button.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 90%,var(--ink));color:var(--paper)}}
+@media(max-width:760px){
+  .journey-tryon-letter{padding:19px;border-radius:20px}
+  :root .journey-tryon-letter h3.journey-letter-lead{font-size:18px}
+  .journey-letter-sender{margin-bottom:17px}
+  .journey-tryon-letter p.journey-letter-outfit{font-size:11px;margin-bottom:15px}
+  .journey-letter-photo{padding:8px 8px 0}
+  .journey-letter-photo .journey-image img{max-height:360px}
+  .journey-letter-actions{gap:8px}
+  .journey-letter-actions button{padding:10px 15px}
+  .journey-dialog[data-panel=tryon-result]{width:calc(100% - 24px);height:fit-content;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;border:1px solid var(--line);border-radius:22px}
+  .journey-dialog[data-panel=tryon-result] .journey-heading{padding:17px 18px 13px}
+  .journey-dialog[data-panel=tryon-result] .journey-body{padding:0 14px 16px}
+  .journey-dialog[data-panel=tryon-result] .journey-footer{padding:11px 18px max(14px,env(safe-area-inset-bottom))}
+}
+@media(max-width:350px){.journey-letter-photo .journey-image img{max-height:310px}.journey-tryon-letter{padding:17px}.journey-letter-actions button{padding:10px 13px}}
+
+/* Upload and portrait records read as compact companion letters. */
+.journey-record.journey-media-letter{padding:20px 22px;border-radius:20px;background:linear-gradient(130deg,var(--paper),color-mix(in srgb,var(--soft) 30%,var(--paper)))}
+.journey-media-letter::before{content:none}
+.journey-record-heading{display:flex;align-items:flex-start;gap:12px}
+.journey-record-mark{display:grid;place-items:center;flex:0 0 32px;width:32px;height:36px;border:1px solid color-mix(in srgb,var(--accent) 17%,var(--line));border-radius:18px 18px 11px 11px;background:var(--soft);color:var(--accent);font:23px/1 Georgia,serif}
+.journey-record-copy{min-width:0;flex:1}
+.journey-record-kicker{display:block;color:var(--accent);font-size:10px;line-height:1.6;letter-spacing:1.5px}
+.journey-media-letter h3{margin:5px 0 0;font:17px/1.6 Georgia,"Songti SC",serif;color:var(--ink);overflow-wrap:anywhere}
+.journey-media-letter .journey-record-note{margin:12px 0 14px;font-size:12px;line-height:1.8;color:var(--muted);overflow-wrap:anywhere}
+.journey-media-letter .journey-record-open{display:inline-flex;align-items:center;gap:13px;min-height:44px;padding:10px 16px;border-color:color-mix(in srgb,var(--accent) 27%,var(--line));border-radius:23px;background:var(--paper);color:var(--accent);font-size:12px;line-height:1.6}
+.journey-record-open>span{font-size:14px}
+.journey-media-letter .journey-record-open:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:760px){.journey-record.journey-media-letter{padding:17px}.journey-media-letter h3{font-size:16px}.journey-record-heading{gap:10px}}
+
+/* A new garment arrives as a companion's wardrobe note. */
+#feed > .journey-upload-letter{width:min(100%,480px);box-sizing:border-box}
+.journey-upload-letter .journey-upload-state{display:inline-flex;align-items:center;margin:0 0 18px;padding:5px 10px;border-radius:20px;background:var(--soft);color:var(--accent);font-size:11px;line-height:1.7}
+.journey-upload-letter .journey-letter-photo{position:relative;padding:16px 14px 0;background:linear-gradient(145deg,var(--paper),var(--soft))}
+.journey-upload-letter .journey-letter-photo::before{content:'';position:absolute;z-index:1;width:48px;height:13px;left:calc(50% - 24px);top:-7px;background:color-mix(in srgb,var(--accent) 12%,var(--paper));border:1px solid color-mix(in srgb,var(--accent) 12%,transparent);transform:rotate(-4deg);pointer-events:none}
+.journey-upload-letter .journey-letter-photo .journey-image{aspect-ratio:4/3;min-height:0}
+.journey-upload-letter .journey-letter-photo .journey-image img{width:100%;height:100%;max-height:300px;object-fit:contain}
+.journey-upload-letter p.journey-upload-note{color:var(--muted);font-size:12px;line-height:1.9;margin:0 0 16px}
+.journey-upload-letter .journey-letter-actions button.primary{display:block;width:100%}
+#upload-anchor.journey-anchor{display:inline-flex;max-width:100%;box-sizing:border-box;gap:8px;margin:3px 0 8px;padding:0 0 0 12px;min-height:36px;border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--soft) 65%,var(--paper));line-height:1.6}
+#upload-anchor[hidden]{display:none}
+.journey-anchor-mark{font-size:19px;flex-shrink:0}
+.journey-anchor-copy{font-size:12px;overflow-wrap:anywhere;min-width:0}
+#upload-anchor .journey-anchor-remove{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:13px;font-size:19px;color:var(--muted);background:transparent}
+#upload-anchor .journey-anchor-remove:hover{color:var(--accent);background:var(--soft)}
+#upload-anchor .journey-anchor-remove:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Pending portrait: a contained photograph with a separate, wrapping action area. */
+.journey-dialog[data-panel=portraits] :is(.journey-body,.journey-footer,.journey-pending-copy,.journey-portrait-upload-copy){min-width:0}
+.journey-pending-portrait{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);align-items:center;gap:22px;margin:20px 0;padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(130deg,var(--paper),color-mix(in srgb,var(--soft) 45%,var(--paper)));max-width:100%;min-width:0}
+.journey-pending-portrait.without-photo{grid-template-columns:minmax(0,1fr)}
+.journey-pending-photo{min-width:0;width:100%}
+.journey-pending-photo .journey-image{display:flex;justify-content:center;align-items:center;width:100%;aspect-ratio:4/5;margin:0;padding:8px;background:var(--paper);border-radius:14px}
+.journey-pending-photo .journey-image img{width:100%;height:100%;max-width:100%;max-height:250px;object-fit:contain;border-radius:8px}
+.journey-pending-copy h3{margin:8px 0 17px;font:19px/1.65 Georgia,"Songti SC",serif;color:var(--ink);overflow-wrap:anywhere}
+.journey-pending-copy p{font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+.journey-pending-actions{display:flex;flex-wrap:wrap;gap:10px;min-width:0}
+.journey-pending-actions button{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:10px 16px;border-radius:24px;line-height:1.7}
+.journey-dialog[data-panel=portraits] .journey-body>.journey-portrait-upload{margin-top:20px;min-width:0;max-width:100%;box-sizing:border-box}
+.journey-portrait-upload-copy :is(strong,span){overflow-wrap:anywhere}
+@media(max-width:480px){.journey-pending-portrait{grid-template-columns:minmax(0,1fr);gap:16px;padding:14px}.journey-pending-photo{max-width:200px;justify-self:center}.journey-pending-copy h3{font-size:17px;margin-bottom:13px}.journey-pending-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.journey-pending-actions button{width:100%}}

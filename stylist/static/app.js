@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const agentName = () => window.CompanionSettings?.agentName() || '衣衣';
 const agentText = text => text.replaceAll('衣衣', agentName());
 const KEY = 'ai-closet-stylist-session-v1';
-let session = null, conversation = null, version = 0, busy = false, imageAction = null;
+let session = null, conversation = null, version = 0, busy = false;
 let selectedLook = null;
 let outfitGroupSequence = 0;
 let selectedCity = null, forecastScope = 'day', forecastBusy = false, forecastSequence = 0;
@@ -16,7 +16,7 @@ const citiesReady = fetch('/static/china-cities.json').then(r => { if (!r.ok) th
   cityCatalog = data; cityPicker.setCatalog(data); return data;
 }).catch(err => { notifyIssue(err.message); return null; });
 const el = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text != null) node.textContent = text; return node; };
-let locationSequence = 0, locationSaving = false;
+let locationSequence = 0, locationSaving = false, locationContinuation = null, locationOpener = null;
 const cityPicker = new CityPicker($('city-picker'), { onChange: () => {
   locationSequence++; $('locate-me').disabled = locationSaving;
   $('location-status').textContent = ''; updateLocationSave();
@@ -28,6 +28,8 @@ const dailyCheckin = window.DailyCheckin.mount({
   onChat: () => { if (requireLogin()) { $('message').focus(); window.CompanionSettings.notify('聊聊今天的穿搭吧，收到回复后就可以领取签到奖励。'); } }
 });
 function loginStatus() {
+  window.WardrobeJourney?.setOwner(session?.user?.id ?? null);
+  if (!session || pendingAnchorOwner !== session.user.id) { pendingUploadAnchor = null; pendingAnchorOwner = null; updateUploadAnchor(); }
   window.LocalCutout?.setOwner(session?.user?.id ?? null);
   window.OutfitImages?.setOwner(session?.user?.id ?? null);
   $('login-label').textContent = session ? '衣橱已连接' : '登录衣橱';
@@ -35,6 +37,18 @@ function loginStatus() {
   $('login-open').setAttribute('aria-label', session ? '衣橱已连接，点击重新登录或切换账号' : '登录衣橱');
   $('login-open').title = session ? '重新登录或切换账号' : '连接你的个人衣橱';
   dailyCheckin.setOwner(session?.user?.id ?? null);
+}
+let pendingUploadAnchor = null, pendingAnchorOwner = null;
+function updateUploadAnchor() {
+  const row = $('upload-anchor'); if (!row) return;
+  row.hidden = !pendingUploadAnchor; row.replaceChildren();
+  if (pendingUploadAnchor) {
+    const cancel = el('button', 'journey-anchor-remove', '×'); cancel.type = 'button';
+    cancel.setAttribute('aria-label','取消以刚上传的衣物为搭配起点');cancel.title='取消这件衣物';
+    cancel.onclick = () => { pendingUploadAnchor = null; updateUploadAnchor(); };
+    const mark=el('span','journey-anchor-mark','✧');mark.setAttribute('aria-hidden','true');
+    row.append(mark,el('span', 'journey-anchor-copy', '从刚上传的这件开始搭'), cancel);
+  }
 }
 function notifyIssue(message) { window.CompanionSettings.notify(message || '操作未完成，请稍后再试。'); }
 function expireSession(message) {
@@ -59,11 +73,16 @@ window.LocalCutout?.setSourceLoader(async (item, signal, kind='original') => {
 });
 function requireLogin() { if (!session) { $('login-dialog').showModal(); return false; } return true; }
 async function api(path, options = {}) {
+  const requestOwner = session?.user?.id, requestToken = session?.access_token;
   const response = await fetch(path, { ...options, headers: headers() });
-  const data = await response.json();
-  if (!response.ok) {
-    if (response.status === 401) expireSession(data.message);
-    throw error(data.code, data.message || '服务暂时未完成请求，请稍后重试。');
+  const data = await response.json().catch(() => null);
+  if (requestOwner !== session?.user?.id || requestToken !== session?.access_token) {
+    throw error('stale_account', '账号已变化，已忽略上一账号的请求结果。');
+  }
+  if (!response.ok || data === null) {
+    if (response.status === 401) expireSession(data?.message);
+    throw error(data?.code || 'invalid_response', data?.message || (response.status === 413
+      ? '图片过大，请选择10MB以内的图片。' : '服务暂时未完成请求，请稍后重试。'));
   }
   return data;
 }
@@ -193,14 +212,13 @@ async function loadForecast(location = selectedCity) {
 }
 function pendingBubble(persona) {
   const node = bubble('assistant', ''); node.classList.add('pending');
-  const body = el('div', 'companion-wait'); const avatar = mascot('thinking'); const copy = el('div');
-  const male = persona === 'male_calm_v1';
-  const status = el('strong', '', male ? '收到，正在连接服务。' : '收到啦，正在连接服务。');
-  const extra = el('p', '', male ? '我会按你这次的要求处理。' : '我会照顾你这次提到的要求。');
-  copy.append(status, extra); body.append(avatar, copy); node.append(body);
-  const expressions = { connecting: ['greeting', '连接中'], understanding: ['thinking', '整理需求'], weather: ['weather', '核对天气'], wardrobe: ['wardrobe', '挑选衣物'], styling: ['thinking', '构思搭配'], checking: ['happy', '核对方案'] };
-  const timer = setInterval(() => { extra.textContent = male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'; }, 15000);
-  return { node, update(data) { const state = expressions[data.stage] || expressions.styling; avatar.dataset.mood = state[0]; avatar.setAttribute('aria-label', agentText('衣衣正在') + state[1]); status.textContent = data.message; }, stop() { clearInterval(timer); node.remove(); } };
+  const male = window.CompanionCharacters.gender(persona) === 'male';
+  const body = window.CompanionLoading.create({persona,
+    message:male ? '收到，正在连接服务。' : '收到啦，正在连接服务。',
+    detail:male ? '我会按你这次的要求处理。' : '我会照顾你这次提到的要求。'});
+  body.classList.add('companion-wait');node.append(body);
+  const timer = setTimeout(() => window.CompanionLoading.update(body,{detail:male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'}),15000);
+  return {node,update(data){body.dataset.stage=data.stage||'styling';window.CompanionLoading.update(body,{message:data.message});},stop(){clearTimeout(timer);node.remove();}};
 }
 function namedElement(tag, cls, template) {
   const node = el(tag, cls, agentText(template)); node.dataset.agentTemplate = template; return node;
@@ -242,7 +260,30 @@ function productGrid(items) {
   }
   return grid;
 }
-function showReply(reply) {
+function cityInvitation(reply, request) {
+  const owner = session?.user?.id;
+  const reference = {owner, conversation_id:reply.conversation_id, version:reply.version, request:request ? JSON.parse(JSON.stringify(request)) : null};
+  const card = el('section', 'city-invite'); card.setAttribute('aria-label', '穿搭天气城市引导');
+  const header = el('div', 'city-invite-heading'), portrait = el('span', 'city-invite-portrait'); portrait.setAttribute('aria-hidden', 'true');
+  const art = el('span', 'city-invite-character companion-dialogue-avatar'); art.setAttribute('aria-hidden','true');
+  portrait.append(art);
+  const copy = el('div', 'city-invite-copy');
+  copy.append(namedElement('span', 'city-invite-speaker', '衣衣的小笺'), el('h3', '', '让这套穿搭，也照顾天气'));
+  header.append(portrait, copy);
+  const body = el('p', '', '选一下你要穿这套衣服的城市，我看看那里的冷暖，再接着搭。');
+  const action = el('button', 'city-invite-action', '选择城市 / 定位'); action.type='button';action.setAttribute('aria-haspopup','dialog');
+  action.onclick = async () => {
+    if (busy) return;
+    if (!card.isConnected || session?.user?.id !== owner || conversation !== reference.conversation_id || version !== reference.version) {
+      notifyIssue('对话已有更新，请从最新的穿搭需求继续。'); return;
+    }
+    await openCityPicker(reference, action);
+  };
+  const star = el('span', 'city-invite-star', '✧');star.setAttribute('aria-hidden','true');
+  card.append(star,header,body,action,el('small','city-invite-note','可以搜索城市，也可以使用当前位置'));
+  return card;
+}
+function showReply(reply, request = null) {
   conversation = reply.conversation_id; version = reply.version;
   if (reply.looks?.length) selectedLook = { conversationId: conversation, lookVersion: reply.version, index: 0 };
   else if (selectedLook?.conversationId !== conversation) selectedLook = null;
@@ -250,6 +291,7 @@ function showReply(reply) {
   const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
   const label = { advice: '穿法建议', outfit: partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
   if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
+  if (reply.city_selection_required && !selectedCity) node.append(cityInvitation(reply, request));
   if (reply.weather?.source === 'itinerary_forecast') {
     const route = el('section', 'itinerary-weather');
     route.setAttribute('aria-label', '行程各地天气');
@@ -320,23 +362,28 @@ function showReply(reply) {
     bulletSection(card, '照着这样穿', look.how);
     bulletSection(card, '穿着提醒', look.notes);
     if (look.items?.length) {
-      const preview = el('button', 'subtle', look.wardrobe_complete === false ? '查看已选单品的试穿费用 ↗' : '查看这套的试穿费用 ↗');
+      const preview = el('button', 'subtle', look.wardrobe_complete === false ? '试穿衣橱中已有的单品 ↗' : '用数字人试穿这套 ↗');
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
         if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
         preview.disabled = true;
-        try {
-          const quote = await api('/stylist-api/images/quote', { method: 'POST', body: JSON.stringify({ conversation_id: conversation, version, look_index: lookIndex }) });
-          imageAction = quote.action_id; $('image-details').replaceChildren(el('p', '', quote.title), el('strong', '', `本次将消耗 ${quote.points_cost} 积分`));
-          for (const note of quote.notices) $('image-details').append(el('p', '', note));
-          $('image-status').textContent = ''; $('image-confirm').disabled = false; $('image-cancel').textContent = '暂不生成'; $('image-dialog').showModal();
-        } catch (err) { notifyIssue(err.message); } finally { preview.disabled = false; }
+        try { await window.WardrobeJourney.tryon({conversation_id:conversation,version,look_index:lookIndex}); }
+        catch(err) { notifyIssue(err.message); } finally { preview.disabled=false; }
       };
       card.append(preview);
+      const regenerate = el('button', 'subtle', '重新生成穿搭'); regenerate.type = 'button';
+      regenerate.onclick = async () => {
+        if (regenerate.disabled) return;
+        regenerate.disabled = true;
+        try { await regenerateOutfit({status:'completed',conversation_id:reply.conversation_id,version:reply.version,look_index:lookIndex}); }
+        finally { regenerate.disabled = false; }
+      };
+      card.append(regenerate);
     }
     options.append(card);
   }
   if (looks.length) node.append(options);
+  window.WardrobeJourney?.offer(reply, node);
   for (const warning of reply.warnings || []) node.append(el('div', 'warning', warning));
   if (reply.follow_ups?.length) {
     const actions = el('div', 'followups');
@@ -378,6 +425,7 @@ async function refreshHistory() {
             $('feed').replaceChildren();
             for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
             conversation = record.conversation_id; version = record.version;
+            window.WardrobeJourney?.restore(conversation).catch(err=>notifyIssue(err.message));
             for (const list of [$('history'), $('mobile-history-list')]) {
               list.querySelectorAll('[aria-current]').forEach(item => item.removeAttribute('aria-current'));
               list.children[rows.indexOf(row)]?.setAttribute('aria-current', 'true');
@@ -403,17 +451,26 @@ function savePending(value) {
   if (value) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
   else sessionStorage.removeItem(PENDING_KEY);
 }
-async function sendMessage(resuming = false) {
+async function sendMessage(resuming = false, outfitAction = null, cityAction = null) {
   const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
-  const text = saved?.request.message || $('message').value.trim();
+  const inputValue = $('message').value;
+  const text = saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : inputValue.trim());
   if (!text || busy || !requireLogin()) return;
   if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
-  const request = saved?.request || { message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: $('confirm-plan').checked };
-  if (!saved && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
-  if (!saved) request.assistant_persona = document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1';
+  if (outfitAction && (session.user.id !== outfitAction.owner || conversation !== outfitAction.conversation_id)) {
+    notifyIssue('账号或搭配已有更新，请从当前最新结果重新生成。'); return;
+  }
+  if (cityAction && (session.user.id !== cityAction.owner || conversation !== cityAction.conversation_id || version !== cityAction.version)) {
+    notifyIssue('对话已有更新，请从最新的穿搭需求继续。'); return;
+  }
+  const request = saved?.request || { ...(cityAction?.request || {}), message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: false };
+  if (!saved && !cityAction && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
+  if (!saved && !request.assistant_persona) request.assistant_persona = request.companion_profile?.assistant_persona || (document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1');
   // Clothing source selection is temporarily disabled; the server uses personal clothes only.
   if (!saved && selectedCity) request.location = selectedCity;
-  if (!saved && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
+  if (!saved && !cityAction && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
+  if (!saved && outfitAction) { request.regenerate_outfit = true; request.selected_look_index = outfitAction.look_index; request.regenerate_from_version = outfitAction.version; }
+  if (!saved && !cityAction && !request.regenerate_outfit && pendingUploadAnchor) { request.upload_action_id = pendingUploadAnchor; pendingUploadAnchor = null; updateUploadAnchor(); }
   const chatOwner = session.user.id;
   savePending({owner: chatOwner, request});
   bubble('user', text); const pending = pendingBubble(request.assistant_persona);
@@ -423,11 +480,14 @@ async function sendMessage(resuming = false) {
     while (!received) {
       try {
         const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
+        if (session?.user.id !== chatOwner) return;
         if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
         const reader = response.body.getReader(), decoder = new TextDecoder(); let buffer = '';
         try {
           while (!received) {
-            const { value, done } = await reader.read(); buffer += decoder.decode(value, { stream: !done });
+            const { value, done } = await reader.read();
+            if (session?.user.id !== chatOwner) return;
+            buffer += decoder.decode(value, { stream: !done });
             let cut;
             while ((cut = buffer.indexOf('\n\n')) >= 0) {
               const block = buffer.slice(0, cut); buffer = buffer.slice(cut + 2);
@@ -436,7 +496,7 @@ async function sendMessage(resuming = false) {
               if (kind === 'error') { const data = JSON.parse(raw); throw error(data.code, data.message); }
               if (kind === 'progress') pending.update(JSON.parse(raw));
               if (kind === 'result') {
-                const reply = JSON.parse(raw); pending.stop(); showReply(reply); received = true;
+                const reply = JSON.parse(raw); pending.stop(); showReply(reply, request); received = true;
                 if (reply.pending_confirmation) showPlanApproval(request);
                 else { savePending(null); dailyCheckin.completeChat(chatOwner); }
               }
@@ -452,15 +512,18 @@ async function sendMessage(resuming = false) {
         await new Promise(resolve => setTimeout(resolve, 2500));
       }
     }
-    $('message').value = ''; await refreshHistory();
+    if (!cityAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
+    await refreshHistory();
   } catch (err) {
+    if (session?.user.id !== chatOwner) return;
     if (err.code !== 'authentication_expired') savePending(null);
     pending.stop();
     if (err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
     if (err.code === 'authentication_expired') expireSession(err.message);
-  } finally { pending.stop(); setBusy(false); }
+  } finally { pending.stop(); if (!session || session.user.id === chatOwner) setBusy(false); }
 }
 function showPlanApproval(request) {
+  // Compatibility for requests already waiting before the composer option was removed.
   const actions = el('div', 'followups');
   for (const [approved, text] of [[true, '确认需求，继续搭配'], [false, '取消这次生成']]) {
     const button = el('button', '', text);
@@ -521,37 +584,23 @@ $('check-apis').onclick = async () => {
   catch (err) { $('service-results').textContent = ''; notifyIssue(err.message); }
 };
 $('service-close').onclick = () => $('service-dialog').close();
-$('image-cancel').onclick = async () => {
-  if ($('image-cancel').disabled) return;
-  if (imageAction && !$('image-confirm').disabled) {
-    try { await api('/stylist-api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: false }) }); }
-    catch (err) { notifyIssue(err.message); return; }
-  }
-  $('image-dialog').close(); imageAction = null;
-};
-$('image-confirm').onclick = async () => {
-  if (!imageAction || $('image-confirm').disabled) return;
-  $('image-confirm').disabled = true; $('image-cancel').disabled = true;
-  const waiting = el('div', 'companion-wait'); waiting.append(mascot('wardrobe'), el('p', '', '已确认本次费用，衣衣正在提交试穿。请稍等，不要重复生成。')); $('image-status').replaceChildren(waiting);
-  try {
-    const action = await api('/stylist-api/images/' + imageAction + '/confirm', { method: 'POST', body: JSON.stringify({ confirmed: true }) });
-    $('image-status').textContent = action.status === 'completed' ? '试穿完成' : '状态：' + action.status;
-    const image = (action.result?.result_image_url || action.result?.result_image || '').replace(/^http:/i, 'https:');
-    if (image && /^https:\/\//i.test(image)) { const img = el('img'); img.src = image; img.alt = '本次搭配的试穿预览'; img.style.width = '100%'; img.referrerPolicy = 'no-referrer'; $('image-details').append(img); }
-  } catch (err) { $('image-status').replaceChildren(); notifyIssue(err.message); }
-  finally { $('image-cancel').disabled = false; $('image-cancel').textContent = '关闭'; }
-};
-$('location-open').onclick = async () => {
+$('location-open').onclick = () => openCityPicker();
+async function openCityPicker(continuation = null, trigger = $('location-open')) {
   if (!requireLogin()) return;
   const owner = session.user.id;
   await citiesReady;
   if (!session || session.user.id !== owner) return;
+  if (continuation && (continuation.owner !== owner || continuation.conversation_id !== conversation || continuation.version !== version)) {
+    notifyIssue('对话已有更新，请从最新的穿搭需求继续。'); return;
+  }
   if (!cityCatalog) { notifyIssue('城市列表加载失败，请刷新后重试。'); return; }
+  locationContinuation = continuation; locationOpener = trigger;
+  $('location-save').textContent = continuation ? '确认城市，继续搭配' : '确认城市，看看天气';
   $('location-status').textContent = ''; updateLocationViewport(); $('location-dialog').showModal();
   cityPicker.setValue(selectedCity); updateLocationSave();
   // Keep the software keyboard closed until the user chooses to search.
   $('location-cancel').focus({ preventScroll: true });
-};
+}
 function updateLocationViewport() {
   const viewport = window.visualViewport;
   const height = viewport?.height || window.innerHeight;
@@ -564,7 +613,10 @@ window.visualViewport?.addEventListener('scroll', updateLocationViewport);
 window.addEventListener('resize', updateLocationViewport);
 $('location-cancel').onclick = () => $('location-dialog').close();
 $('location-dialog').addEventListener('close', () => {
+  locationContinuation = null;
   locationSequence++; $('locate-me').disabled = locationSaving; updateLocationSave();
+  if (locationOpener?.isConnected) locationOpener.focus({preventScroll:true});
+  locationOpener = null;
 });
 $('locate-me').onclick = async () => {
   if (!requireLogin()) return;
@@ -589,9 +641,19 @@ $('location-form').onsubmit = async event => {
   if (forecastBusy) { notifyIssue('天气正在更新，请稍后再确认。'); return; }
   const city = cityPicker.getValue();
   if (!city) { notifyIssue('请先从列表中选择一座城市。'); cityPicker.input.focus(); return; }
+  const continuation = locationContinuation;
+  if (continuation && (busy || session?.user?.id !== continuation.owner || conversation !== continuation.conversation_id || version !== continuation.version)) {
+    notifyIssue('对话已有更新，请从最新的穿搭需求继续。'); return;
+  }
   locationSequence++; locationSaving = true; $('city-picker').inert = true;
   $('locate-me').disabled = true; updateLocationSave(); $('location-save').textContent = '正在查询天气…';
-  try { if (await loadForecast(city)) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
+  try {
+    if (continuation) {
+      selectedCity = city; sessionStorage.setItem(CITY_KEY, JSON.stringify(city)); updateCityLabel();
+      $('location-dialog').close();
+      await sendMessage(false, null, continuation);
+    } else if (await loadForecast(city)) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  }
   finally {
     locationSaving = false; $('city-picker').inert = false; $('locate-me').disabled = false;
     $('location-save').textContent = '确认城市，看看天气'; updateLocationSave();
@@ -622,6 +684,25 @@ document.addEventListener('click', event => {
 settingsMenu.addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); closeSettingsMenu(true); }
 });
+async function regenerateOutfit(action) {
+  if (busy || !requireLogin()) return;
+  if (pendingRun) { notifyIssue('请先处理当前等待确认的穿搭，再重新生成。'); return; }
+  const index = action.look_index ?? 0;
+  if (!['completed','failed'].includes(action.status) || conversation !== action.conversation_id || !Number.isInteger(action.version) || action.version < 1 || action.version > version || !Number.isInteger(index) || index < 0 || index > 6) {
+    notifyIssue('请打开这套搭配所在的对话，再重新生成。'); return;
+  }
+  return sendMessage(false, {owner:session.user.id,conversation_id:conversation,version:action.version,look_index:index});
+}
+window.WardrobeJourney?.configure({api,notify:notifyIssue,getConversation:()=>conversation,getContext:()=>({conversation_id:conversation,version}),onNeedOutfit:()=>{
+  if(!$('message').value.trim())$('message').value='先从我的衣橱搭一套适合试穿的日常穿搭。';$('message').focus();
+},onRegenerate:regenerateOutfit,onStyle:action=>{
+  pendingUploadAnchor=action;pendingAnchorOwner=session?.user?.id;updateUploadAnchor();
+  const draft=$('message').value.trim();$('message').value=draft&&!draft.startsWith('用我刚上传')?'用我刚上传的这件衣服，'+draft:'用我刚上传的这件衣服，结合自己的衣橱搭一套。';$('message').focus();
+}});
+for (const id of ['upload-open','welcome-upload']) if ($(id)) $(id).onclick=()=>{if(requireLogin()) window.WardrobeJourney.upload('garment');};
+if ($('twin-open')) $('twin-open').onclick=()=>{if(requireLogin()) window.WardrobeJourney.twins().catch(err=>notifyIssue(err.message));};
+if ($('journey-records-open')) $('journey-records-open').onclick=()=>{if(requireLogin()) window.WardrobeJourney.history().catch(err=>notifyIssue(err.message));};
+
 if (session) window.CompanionSettings?.setOwner(session.user.id, api);
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
 
