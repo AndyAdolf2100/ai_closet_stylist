@@ -176,6 +176,7 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    city_selection_required: bool = False
     avatar_intent: Literal["upload", "view", "tryon"] | None = None
     tryon_context: TryonReference | None = None
     tryon_title: str | None = None

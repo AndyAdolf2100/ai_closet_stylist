@@ -24,6 +24,7 @@ from .grounding import (
     ground_attribute_fallback,
     normalize_draft,
 )
+from .layering import layering_problems, layering_requirements
 from .memory import (
     apply_memory,
     automatic_preference,
@@ -109,6 +110,14 @@ def last_business_intent(messages):
 def retryable(exc):
     return isinstance(exc, StylistError) and exc.code in {
         "model_timeout", "model_unavailable", "model_http_429", "model_http_502", "model_http_503", "model_http_504"}
+
+
+def needs_outfit_city(plan: Plan, task: Task) -> bool:
+    """Use the resolved destination, never the absence of browser geolocation alone."""
+    return (not plan.conversation_only and not plan.weather_only and not plan.technical_question
+            and not plan.location_limit_exceeded and not plan.upload_intent and not plan.avatar_intent
+            and (plan.mode != "consult" or plan.weather_scope != "none")
+            and task.weather_policy != "ignored" and not task.city and not task.itinerary)
 
 
 class Stylist:
@@ -482,6 +491,7 @@ class Stylist:
                 "weather_only": plan.weather_only,
                 "message": request.message,
                 "task": apply_memory(task, plan, data.get("long_term_memory", [])).model_dump(mode="json"),
+                "layering_requirements": layering_requirements(Task.model_validate(data["effective_task"]), plan, weather),
                 "mode": plan.mode,
                 "planning_dates": schedule_dates(plan, task),
                 "history": state.messages[-8:], "weather": weather,
@@ -537,6 +547,10 @@ class Stylist:
             if request.regenerate_outfit:
                 state = source_session(data)
                 problems.extend(regeneration_problems(Draft.model_validate(data["draft"]), selected_looks(state)[0]))
+            problems.extend(layering_problems(Draft.model_validate(data["draft"]),
+                {key: Product.model_validate(p) for key, p in data["pool"].items()},
+                Task.model_validate(data["effective_task"]), Plan.model_validate(data["plan"]),
+                data.get("weather"), schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
             problems.extend(schedule_problems(Draft.model_validate(data["draft"]),
                 schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
             return {"problems": problems}
@@ -587,6 +601,7 @@ class Stylist:
                 state = SessionState.model_validate(data["session"])
                 index = avatar_look(state, plan) if plan.avatar_intent else None
                 return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                    city_selection_required=needs_outfit_city(plan, task) and not data.get("cancelled", False),
                     avatar_intent=plan.avatar_intent,
                     tryon_context=({"conversation_id": data["session_id"], "version": request.expected_version + 1,
                                     "look_index": index} if index is not None else None),
@@ -621,6 +636,7 @@ class Stylist:
             if delivery == "concept":
                 warnings.append(service_notice(request.assistant_persona, "concept"))
             reply = Reply(conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
+                          city_selection_required=needs_outfit_city(plan, task),
                           delivery=delivery, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,
                           message=draft.message, task=task, looks=looks, weather=weather,
