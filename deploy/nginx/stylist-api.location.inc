@@ -1,7 +1,7 @@
 # Include INSIDE an existing HTTPS server {} after confirming the backend listens on 8466.
 # Preserve the /stylist-api/ prefix: proxy_pass must NOT end in a slash.
 location ^~ /stylist-api/ {
-    client_max_body_size 2m;
+    client_max_body_size 16m;
     proxy_pass http://127.0.0.1:8466;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
