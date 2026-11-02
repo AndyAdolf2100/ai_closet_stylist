@@ -1,5 +1,7 @@
 # 表结构与 API 映射
 
+2026-11-02对话回复新增 `city_selection_required: bool = false`，由程序根据已解析目的地及天气需求决定是否展示城市引导卡；不是定位授权或模型写权限。新网页请求固定 `confirm_plan=false`，旧待确认请求和审批接口保留恢复兼容。城市卡确认后使用原消息、新请求ID、当前会话版本及选定 `location` 继续对话；不调用收费图片接口。实现与边界见 [城市引导验收](CITY_INVITATION_QA.md)。
+
 依据：相邻 `aicloset-server/internal/biz`、`internal/controller/mcp/tools`、`internal/server/router.go`，以及旧 Agent 的迁移文件。此处确认的是代码模型与已验证接口；没有直接连接生产库执行 DDL 或检查线上每一列的实际迁移状态。
 
 2026-10-27补充只读核对：已直连当前配置的MySQL，`SELECT DATABASE()`返回`aicloset_dev`。以授权测试账号为范围，`user_product_base`正常状态记录共292条，与本次图库导出的292个个人单品ID及原图／抠图URL路径全部一致。图片字段为URL，文件内容来自对应OSS／CDN；本地`var/stylist.sqlite3`仅保存新Agent状态，不是原始衣橱图片来源。未执行业务数据写入或DDL。
@@ -47,7 +49,7 @@
 | `digital_twin_overview` | 无参数 | 只读检查默认形象，未准备好时引导回现有 App 完成 |
 | `digital_twin_tryon_quote` | 无参数 | 实时获取积分费用，不生成、不扣积分 |
 | `product_beautify_quote` | 本人上传的 user_product_id | 已做只读接口检查；本版 UI 不执行美化 |
-| `save_recommended_outfit` | selection_id、真实 items | 仅整套试穿确认后调用，事先告知保存与系统衣物归入个人衣橱的影响 |
+| `save_recommended_outfit` | sel_选择编号、真实 items | 仅试穿确认后调用，告知保存影响；当前只保存个人衣橱单品 |
 | `digital_twin_tryon` | 已保存 outfit_id、固定 idempotency_key、可选 scene | 仅独立费用确认后调用，不由文字模型授权 |
 
 特意避开 `user_all_list` 和旧商品 `detail` 作为常规读取入口：前者有清理新增提示、特定参数更新优先级的逻辑，后者会清除新增／美化角标。新 Agent 不为选衣服触发这些界面状态变更。
@@ -82,7 +84,7 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 | `POST /stylist-api/chat/stream` | SSE：progress、result、error；错误保留稳定 code，长请求发送心跳 |
 | `POST /stylist-api/location/resolve` | 用户点击授权后提交经纬度，降低精度并通过逆地理编码与业务城市目录确认；只返回城市，不持久化精确坐标 |
 | `POST /stylist-api/weather/forecast` | 当前用户选定城市与day/week/next7范围，返回逐日白天／夜间预报、数据缺口与穿搭提醒 |
-| `GET/PUT /stylist-api/companion-profile` | 当前账号称呼、角色及定制偏好 |
+| `GET/PUT /stylist-api/companion-profile` | 当前账号称呼、角色、配色及定制偏好；color_scheme为companion／system，默认companion |
 | `GET/PUT /stylist-api/memories` | 当前账号手记，保存校验版本 |
 | `GET /stylist-api/conversations` | 本账号最近对话 |
 | `GET /stylist-api/conversations/{id}` | 本账号历史及当前版本 |
@@ -107,3 +109,31 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 
 ## 部分衣橱选款（2026-10-31）
 LookDraft新增reference_pieces（最多10条，未匹配品类文字参考）和unmatched_reason（候选非空但一件不选时说明原因）；Look返回reference_pieces与wardrobe_complete（bool，旧记录缺省null）。items始终仅为已选择的当前账号个人衣物；图片绑定／合成仍只使用items。完整结构不再是展示真实单品的前提，单品硬限制、重复／层次冲突与冻结校验保留。
+
+
+### 对话上传引导（2026-11-02）
+
+当前触发边界：只有明确 `upload_intent=garment/unspecified` 才显示上传／用途步骤卡。普通搭配、空衣橱、部分匹配及已上传单品继续搭配均不自动置 `upload_suggestion`。该字段保留兼容；旧回复仅 `upload_suggestion=true` 而没有 `upload_intent` 时前端也不显示邀请，不改写历史记录。
+
+主模型Plan新增 `upload_intent`（garment／unspecified／null）、`upload_evidence`（当前消息逐字原话）及 `upload_declined`。拒绝优先；有效意图只返回问询，不读取衣橱或天气、不创建上传／计费任务，不覆盖已有搭配状态。Reply新增可选 `upload_intent` 并沿用 `upload_suggestion`：garment展示三步衣物上传卡片；unspecified展示衣物／本人形象两个用途入口。卡片按钮调用现有前端流程，仍须选图、预览并明确确认才执行上传。历史默认null兼容旧回复；对话回放只重现卡片，不自动上传。
+
+验证：全量Python580通过／85跳过，随后补充的拒绝用例与24项专项通过；73项前端通过，6组独立Chrome合成卡片视觉及点击检查。文字意图由模型识别，本轮模拟抽取不代表真实语义效果已验收；新增题库3组15轮。此前文字成本报告对应旧提示词与schema，本轮未重测费用。
+
+
+### 虚拟形象对话元数据（2026-11-02）
+
+Plan新增 `avatar_intent`（upload／view／tryon／null）、`avatar_evidence`（本轮逐字原话）、`avatar_declined` 及 `avatar_look_index`（0–6，可空）。拒绝优先；有效意图转只读问询，保留原任务及方案，不触发衣橱／天气或任何上传、生成。
+
+Reply新增可选 `avatar_intent`、`tryon_context:{conversation_id,version,look_index}` 与 `tryon_title`。引用绑定本账号当前已提交版本，仅真实衣物方案可生成；没有方案仍可查看／选择形象，但不能开始试穿。旧回复字段默认null。前端在更换默认形象及报价前校验会话版本，形象选择是草稿，明确确认形象后复用 `/twins/default` 和 `/images/quote`；另行点击积分确认才调用 `/images/{id}/confirm`。模型对话的确认不代替积分授权。
+
+处理中仅轮询 `GET /images/{id}`，恢复历史仅恢复已提交processing／executing任务的只读追踪；未知状态不自动重扣。显示上游真实progress或不定量进度，无有效结果图的completed不展示成功。账号／会话切换清理追踪，后续普通聊天不隐藏同会话已付费任务结果。个人形象仍走已有照片检查和独立创建报价，不新增任意插画导入或本人认证接口。
+
+### 重新生成所选穿搭（2026-11-02）
+
+复用 `POST /stylist-api/chat/stream`，按钮提交 `message="重新生成穿搭"`、`regenerate_outfit=true`、当前 `conversation_id`／`expected_version`／`selected_look_index` 与新request_id。该动作沿用当前已保存要求，固定文案避免把新增条件静默忽略；有新条件应使用普通对话，不能同时绑定upload_action_id。请求仍由认证账号、会话版本与幂等摘要校验；默认false从摘要排除，以兼容旧请求。
+
+服务端从本账号当前方案读取源衣物和要求，重新读取个人衣橱，只生成所选的一套；周计划保留该套标题中的已存ISO日期。手记默认条件仍走原话证据校验，不改写任务。新结果必须包含至少一件不同的合规个人单品；重复／多套进入修正，仍不能满足时返回outfit_regeneration_unavailable并保留原搭配，不能只改标题冒充成功。该动作不创建试穿报价或调用生成／确认接口，新搭配的试穿另行确认。
+
+## 历史搭配重新生成（2026-11-02）
+
+`POST /stylist-api/chat/stream`沿用原协议，`regenerate_outfit=true`时可选传`regenerate_from_version`（来源卡片回合，>=1且<=expected_version），`selected_look_index`指向该历史回合的方案。`expected_version`仍为当前会话版本，检查并发并控制新结果追加，不能拿旧版本覆盖新历史。来源只由服务端按认证账号和当前conversation_id读取，不信任客户端商品／任务快照；只聊天的旧试穿引用可回溯到此前最近有方案的回合。无来源版本时兼容旧客户端的当前搭配行为；空字段不进入旧幂等摘要，显式来源版本进入摘要。跨账号／来源缺失／索引无效拒绝，不调用模型；重复请求回放，不自动试穿。
