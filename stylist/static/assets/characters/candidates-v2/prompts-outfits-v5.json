@@ -1,0 +1,320 @@
+{
+  "version": 5,
+  "date": "2026-11-02",
+  "status": "generated_visually_reviewed_and_browser_verified_candidates",
+  "mode": "built-in image_gen",
+  "runtime_replacement": false,
+  "scope": "黎深、秦彻、全部三位女性各新增一套性格化日常穿搭；祁煜沿用v4。",
+  "invariants": "保留原有成年身份、面孔、发型、身高、女性自然窄胯及秦彻红瞳坏笑无胡须；正常成年二维画风，正侧背三视图。",
+  "history": "index-height-v4-history.html",
+  "layout_note": "沿用v4按正面头脚范围进行统一4.5px/cm、脚底950px等比展示；每张新图重新校准，不拉伸身体。身高为设计设定，非人体测量。",
+  "candidates": [
+    {
+      "key": "female-sweet-clever",
+      "label": "甜美机灵 · 梦梦方向",
+      "height_cm": 158,
+      "personality": "甜美、机灵、善于观察，主动体贴",
+      "outfit": "奶油白飘带衬衫＋莓粉短马甲＋深莓A字短裙＋酒红玛丽珍",
+      "rationale": "小巧短上装与轻盈A字裙突出甜美灵动，小飘带和珍珠扣体现机灵、细致。",
+      "file": "yiyi-female-sweet-clever-turnaround-v5.png",
+      "prompt": "Use case: identity-preserve.\nAsset type: alternative personality-led everyday OUTFIT for an existing original adult wardrobe-companion character, three-view model sheet.\nInput image 1 is the EDIT TARGET and the authority for IDENTITY, FACE, HAIR, eye color, adult body, illustration style, three-view layout and pose. Change ONLY THE CLOTHING, footwear and small fashion accessories according to the outfit brief. This is the SAME PERSON wearing a genuinely NEW OUTFIT, not a redesign of their face or body.\nInvariants: preserve facial structure, age, expression, exact hairstyle and hair color, eyes, skin tone, intended adult stature and natural proportions from image 1. Preserve the fine warm linework and luminous soft painterly 2D anime digital drawing. No photorealism, 3D, chibi or childlike anatomy. Preserve the plain warm ivory backdrop and subtle floor shadow. No extra people, objects held in hands, text, labels, ruler, inset portraits, logos or watermark. Do not use a franchise uniform or costume.\nComposition: landscape 1536x1024. Exactly THREE full-body depictions of ONE identical character: straight FRONT on the left, true 90-degree SIDE PROFILE in the middle facing the same direction as input, straight BACK on the right. Keep the same column centers as input, identical scale in all views, aligned feet and head level, complete head and shoes with margins. All garment details, colors, hemlines, accessories and shoes must match across front, profile and back. Sleeves reach and fit the same way in each view, arms remain naturally posed. Clothes must have plausible seams, folds and layering.\nAdult woman age 25, fictional intended height 158cm; keep her fully adult petite frame and naturally narrow hips, no exaggerated bust, pelvis or hourglass. Preserve rose-pink bob, green eyes and knowing sweet clever smile exactly. New outfit should read SWEET, CLEVER, PLAYFULLY SOCIABLE and attentively styled adult casual fashion: soft ivory long-sleeved blouse with a small neat ribbon tie at the collar and gently gathered cuffs; dusty berry-pink cropped tailored waistcoat with tiny pearl buttons; high-waisted deep-berry A-line skirt ending about 5cm above the knee, with subtle front pleats and a slim matching belt; burgundy low block-heel Mary Jane shoes with one strap. Tiny pearl earrings. Subtle charming details and compact layers flatter a petite adult. No school badges, school uniform styling, large childish bows or costume. The skirt flares from fabric while her actual hips remain narrow. Keep her existing relaxed hand position.",
+      "references": [
+        {
+          "file": "yiyi-female-sweet-clever-turnaround-v4.png",
+          "role": "edit_target_identity_body_style_and_layout"
+        }
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "4d084ecd4b517cad7603c486687a9c1b6d97e25c817cffebbe7ec083d4fa62f4",
+      "display": {
+        "source_front_top": 38,
+        "source_front_bottom": 976,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.75799574,
+        "top_percent": 20.526969,
+        "portrait_left_percent": -3.691365,
+        "sheet_left_percent": 12.100213
+      },
+      "visual_review": "已逐图目视检查：身份与发型延续、成年比例、全身正侧背、衣着主要结构连续；秦彻红瞳坏笑无胡须保留，女性自然胯部。",
+      "notes": ""
+    },
+    {
+      "key": "female-gentle-resolute",
+      "label": "温柔坚定 · 亚丝娜方向",
+      "height_cm": 163,
+      "personality": "温柔、可靠、坚定果断，有行动力",
+      "outfit": "浅驼短风衣＋象牙白针织＋雾蓝直筒裤＋焦糖短靴",
+      "rationale": "温和浅色搭配利落裤装，兼顾亲和感和行动力。",
+      "file": "yiyi-female-gentle-resolute-turnaround-v5.png",
+      "prompt": "Use case: identity-preserve.\nAsset type: alternative personality-led everyday OUTFIT for an existing original adult wardrobe-companion character, three-view model sheet.\nInput image 1 is the EDIT TARGET and the authority for IDENTITY, FACE, HAIR, eye color, adult body, illustration style, three-view layout and pose. Change ONLY THE CLOTHING, footwear and small fashion accessories according to the outfit brief. This is the SAME PERSON wearing a genuinely NEW OUTFIT, not a redesign of their face or body.\nInvariants: preserve facial structure, age, expression, exact hairstyle and hair color, eyes, skin tone, intended adult stature and natural proportions from image 1. Preserve the fine warm linework and luminous soft painterly 2D anime digital drawing. No photorealism, 3D, chibi or childlike anatomy. Preserve the plain warm ivory backdrop and subtle floor shadow. No extra people, objects held in hands, text, labels, ruler, inset portraits, logos or watermark. Do not use a franchise uniform or costume.\nComposition: landscape 1536x1024. Exactly THREE full-body depictions of ONE identical character: straight FRONT on the left, true 90-degree SIDE PROFILE in the middle facing the same direction as input, straight BACK on the right. Keep the same column centers as input, identical scale in all views, aligned feet and head level, complete head and shoes with margins. All garment details, colors, hemlines, accessories and shoes must match across front, profile and back. Sleeves reach and fit the same way in each view, arms remain naturally posed. Clothes must have plausible seams, folds and layering.\nAdult woman age 26, fictional intended height 163cm; preserve her natural balanced slender adult proportions, narrow hips, honey-chestnut long hair with narrow braid and half-up clasp, amber eyes and warm determined smile. New outfit reads GENTLE, DEPENDABLE, CAPABLE and DECISIVE: light camel cropped trench jacket to high hip with a soft structured collar, neat shoulder tabs and a loosely fastened narrow waist belt; ivory fine-gauge crew-neck knit underneath; mist-blue high-waisted STRAIGHT-LEG tailored ankle trousers; cognac low block-heel ankle boots, small pearl studs. Soft warm neutral tones communicate kindness while practical straight trousers and stable boots communicate ability to act. Subtle waist, not cinched or hourglass. No skirt, armor, sword, medical or fantasy uniform. Keep all exposed lengths, closures and belt consistent in three views.",
+      "references": [
+        {
+          "file": "yiyi-female-gentle-resolute-turnaround-v4.png",
+          "role": "edit_target_identity_body_style_and_layout"
+        }
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "6b4d39ac6d9bbbc987404dbdb90984221ea21f58b27cfad747f5c01f75156ce5",
+      "display": {
+        "source_front_top": 12,
+        "source_front_bottom": 987,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.75230769,
+        "top_percent": 20.260968,
+        "portrait_left_percent": -3.288462,
+        "sheet_left_percent": 12.384615
+      },
+      "visual_review": "已逐图目视检查：身份与发型延续、成年比例、全身正侧背、衣着主要结构连续；秦彻红瞳坏笑无胡须保留，女性自然胯部。",
+      "notes": "风衣腰带前面为松开状态，裤型与低跟靴仍符合利落日常穿搭。"
+    },
+    {
+      "key": "female-regal-confident",
+      "label": "高傲自信 · 女帝方向",
+      "height_cm": 175,
+      "personality": "高傲自信、审美鲜明，从容有主见",
+      "outfit": "象牙白长西装＋黑色方领直筒长裙＋几何金饰＋酒红尖头鞋",
+      "rationale": "黑白对比、修长直线条与克制金饰体现自信和主导感，自然窄胯。",
+      "file": "yiyi-female-regal-confident-turnaround-v5.png",
+      "prompt": "Use case: identity-preserve.\nAsset type: alternative personality-led everyday OUTFIT for an existing original adult wardrobe-companion character, three-view model sheet.\nInput image 1 is the EDIT TARGET and the authority for IDENTITY, FACE, HAIR, eye color, adult body, illustration style, three-view layout and pose. Change ONLY THE CLOTHING, footwear and small fashion accessories according to the outfit brief. This is the SAME PERSON wearing a genuinely NEW OUTFIT, not a redesign of their face or body.\nInvariants: preserve facial structure, age, expression, exact hairstyle and hair color, eyes, skin tone, intended adult stature and natural proportions from image 1. Preserve the fine warm linework and luminous soft painterly 2D anime digital drawing. No photorealism, 3D, chibi or childlike anatomy. Preserve the plain warm ivory backdrop and subtle floor shadow. No extra people, objects held in hands, text, labels, ruler, inset portraits, logos or watermark. Do not use a franchise uniform or costume.\nComposition: landscape 1536x1024. Exactly THREE full-body depictions of ONE identical character: straight FRONT on the left, true 90-degree SIDE PROFILE in the middle facing the same direction as input, straight BACK on the right. Keep the same column centers as input, identical scale in all views, aligned feet and head level, complete head and shoes with margins. All garment details, colors, hemlines, accessories and shoes must match across front, profile and back. Sleeves reach and fit the same way in each view, arms remain naturally posed. Clothes must have plausible seams, folds and layering.\nAdult woman age 29, fictional intended height 175cm; preserve her tall long-legged adult frame, naturally narrow hips and the SAME face, long blue-black straight hair, gray-violet eyes, raised chin and self-assured smile. NO broad pelvis, extreme hourglass, pinched tiny waist, amplified bust or buttocks. New outfit reads REGAL, PROUD, SELF-POSSESSED and STRONGLY TASTEFUL contemporary adult fashion: crisp ivory longline single-breasted blazer ending mid-thigh with refined slightly structured shoulders, worn normally on BOTH arms and OPEN in front; underneath, an elegant BLACK SQUARE-NECK STRAIGHT-COLUMN midi dress to mid-calf, a modest walking slit at the center back, natural relaxed waist; slim antique-gold waist belt with geometric buckle, small elongated geometric gold earrings; burgundy pointed-toe mid-heel pumps. Clear ivory-and-black contrast, long vertical tailoring and restrained gold accents communicate authority. Avoid tight bodycon hips, cape, off-shoulder jacket, snake/pirate motifs or franchise cosplay. The back must correctly show the blazer worn over the dress, not a different garment.",
+      "references": [
+        {
+          "file": "yiyi-female-regal-confident-turnaround-v4.png",
+          "role": "edit_target_identity_body_style_and_layout"
+        }
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "614c56c415b8b6b4f381615cd17b23a7bb8060da598937e6084c2ce8bc1b92ba",
+      "display": {
+        "source_front_top": 14,
+        "source_front_bottom": 974,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.8203125,
+        "top_percent": 14.74762,
+        "portrait_left_percent": -8.105469,
+        "sheet_left_percent": 8.984375
+      },
+      "visual_review": "已逐图目视检查：身份与发型延续、成年比例、全身正侧背、衣着主要结构连续；秦彻红瞳坏笑无胡须保留，女性自然胯部。",
+      "notes": ""
+    },
+    {
+      "key": "male-composed",
+      "label": "冷静可靠 · 黎深方向",
+      "height_cm": 184,
+      "personality": "克制理性、专业细致，沉稳可靠",
+      "outfit": "冷灰长大衣＋炭黑半高领＋浅灰西裤＋黑色德比鞋",
+      "rationale": "低饱和冷灰、整洁高领和严谨剪裁突出克制、专业与可靠。",
+      "file": "yiyi-male-composed-turnaround-v5.png",
+      "prompt": "Use case: identity-preserve.\nAsset type: alternative personality-led everyday OUTFIT for an existing original adult wardrobe-companion character, three-view model sheet.\nInput image 1 is the EDIT TARGET and the authority for IDENTITY, FACE, HAIR, eye color, adult body, illustration style, three-view layout and pose. Change ONLY THE CLOTHING, footwear and small fashion accessories according to the outfit brief. This is the SAME PERSON wearing a genuinely NEW OUTFIT, not a redesign of their face or body.\nInvariants: preserve facial structure, age, expression, exact hairstyle and hair color, eyes, skin tone, intended adult stature and natural proportions from image 1. Preserve the fine warm linework and luminous soft painterly 2D anime digital drawing. No photorealism, 3D, chibi or childlike anatomy. Preserve the plain warm ivory backdrop and subtle floor shadow. No extra people, objects held in hands, text, labels, ruler, inset portraits, logos or watermark. Do not use a franchise uniform or costume.\nComposition: landscape 1536x1024. Exactly THREE full-body depictions of ONE identical character: straight FRONT on the left, true 90-degree SIDE PROFILE in the middle facing the same direction as input, straight BACK on the right. Keep the same column centers as input, identical scale in all views, aligned feet and head level, complete head and shoes with margins. All garment details, colors, hemlines, accessories and shoes must match across front, profile and back. Sleeves reach and fit the same way in each view, arms remain naturally posed. Clothes must have plausible seams, folds and layering.\nAdult man age 30, fictional intended height 184cm. Preserve his SAME reserved refined face, neatly side-parted controlled ink-black short hair, dark brown eyes, calm quiet expression and tall lean balanced build. Completely clean-shaven. New outfit expresses RESERVED, RATIONAL, METICULOUS, PROFESSIONAL and QUIETLY RELIABLE: cool graphite-gray wool single-breasted OVERCOAT reaching just above the knee with precise notch lapels, worn open; charcoal-black fine-knit MOCK-NECK sweater; cool light-gray straight tailored trousers with a clean pressed crease; black leather DERBY shoes; understated stainless-steel wristwatch. No tie, cardigan, badges, glasses, briefcase, white medical coat or profession costume. Restrained cool tones, tidy neckline and careful tailoring convey calm reliability rather than flamboyance. Keep the same restrained posture with arms naturally down.",
+      "references": [
+        {
+          "file": "yiyi-male-composed-turnaround-v4.png",
+          "role": "edit_target_identity_body_style_and_layout"
+        }
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "99afdfec76eb7d6a86148ff8d61655a4cb237dfb2dbd0e54b7d0e0ef320c1c3d",
+      "display": {
+        "source_front_top": 15,
+        "source_front_bottom": 969,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.86792453,
+        "top_percent": 10.642689,
+        "portrait_left_percent": -11.477987,
+        "sheet_left_percent": 6.603774
+      },
+      "visual_review": "已逐图目视检查：身份与发型延续、成年比例、全身正侧背、衣着主要结构连续；秦彻红瞳坏笑无胡须保留，女性自然胯部。",
+      "notes": ""
+    },
+    {
+      "key": "male-confident",
+      "label": "笃定强势 · 秦彻方向",
+      "height_cm": 188,
+      "personality": "自信、不羁、直率果断，带玩味与力量感",
+      "outfit": "黑色短皮夹克＋黑色修身针织＋炭灰直筒裤＋黑色切尔西靴",
+      "rationale": "短皮衣、黑灰层次与少量银饰强化不羁和力量感，呼应红瞳坏笑。",
+      "file": "yiyi-male-confident-turnaround-v5.png",
+      "prompt": "Use case: identity-preserve.\nAsset type: alternative personality-led everyday OUTFIT for an existing original adult wardrobe-companion character, three-view model sheet.\nInput image 1 is the EDIT TARGET and the authority for IDENTITY, FACE, HAIR, eye color, adult body, illustration style, three-view layout and pose. Change ONLY THE CLOTHING, footwear and small fashion accessories according to the outfit brief. This is the SAME PERSON wearing a genuinely NEW OUTFIT, not a redesign of their face or body.\nInvariants: preserve facial structure, age, expression, exact hairstyle and hair color, eyes, skin tone, intended adult stature and natural proportions from image 1. Preserve the fine warm linework and luminous soft painterly 2D anime digital drawing. No photorealism, 3D, chibi or childlike anatomy. Preserve the plain warm ivory backdrop and subtle floor shadow. No extra people, objects held in hands, text, labels, ruler, inset portraits, logos or watermark. Do not use a franchise uniform or costume.\nComposition: landscape 1536x1024. Exactly THREE full-body depictions of ONE identical character: straight FRONT on the left, true 90-degree SIDE PROFILE in the middle facing the same direction as input, straight BACK on the right. Keep the same column centers as input, identical scale in all views, aligned feet and head level, complete head and shoes with margins. All garment details, colors, hemlines, accessories and shoes must match across front, profile and back. Sleeves reach and fit the same way in each view, arms remain naturally posed. Clothes must have plausible seams, folds and layering.\nAdult man age 28-30, fictional intended height 188cm. Preserve his SAME handsome angular face, dark espresso swept-back short hair, broad natural shoulders, long legs, playful roguish asymmetrical half-smirk and raised brow. CRITICAL: keep clearly visible DEEP CRIMSON RED IRISES with normal dark round pupils and white sclera in front AND profile. ABSOLUTELY NO moustache, beard, stubble, goatee, five-o-clock shadow or beard-shaped shading; face remains smooth and clean-shaven. New outfit expresses CHARISMATIC BAD-BOY, BOLD, SELF-ASSURED, DIRECT and RELAXED POWER: beautifully fitted matte BLACK short leather motorcycle-inspired jacket with a restrained asymmetrical silver zip and subtle dark oxblood lining, worn open; fitted black fine-ribbed crew-neck knit top tucked in; charcoal straight tailored trousers with a slim black leather belt and small silver buckle; black leather CHELSEA ankle boots; one understated silver ring and the existing simple watch. Tasteful adult everyday fashion, no excessive studs or chains. Clearly replace the old charcoal suit blazer and burgundy shirt. Avoid uniform, game cosplay, weapons, scars, horror, glowing eyes and huge bodybuilder muscles. Keep one hand casually pocketed in front, the other relaxed.",
+      "references": [
+        {
+          "file": "yiyi-male-confident-turnaround-v4.png",
+          "role": "edit_target_identity_body_style_and_layout"
+        }
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "604124d07a61fcb16e096872daad4df78c1c6ece37d5b67e5d028b4d350617b7",
+      "display": {
+        "source_front_top": 9,
+        "source_front_bottom": 976,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.87487073,
+        "top_percent": 9.387321,
+        "portrait_left_percent": -11.97001,
+        "sheet_left_percent": 6.256463
+      },
+      "visual_review": "已逐图目视检查：身份与发型延续、成年比例、全身正侧背、衣着主要结构连续；秦彻红瞳坏笑无胡须保留，女性自然胯部。",
+      "notes": "银戒指在全身图中不明显，未将小配饰完整度作为已验结论；红瞳与无胡须已目视核对。"
+    }
+  ],
+  "gallery": [
+    {
+      "key": "female-sweet-clever",
+      "label": "甜美机灵 · 梦梦方向",
+      "file": "yiyi-female-sweet-clever-turnaround-v5.png",
+      "height_cm": 158,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "4d084ecd4b517cad7603c486687a9c1b6d97e25c817cffebbe7ec083d4fa62f4",
+      "display": {
+        "source_front_top": 38,
+        "source_front_bottom": 976,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.75799574,
+        "top_percent": 20.526969,
+        "portrait_left_percent": -3.691365,
+        "sheet_left_percent": 12.100213
+      },
+      "version": 5
+    },
+    {
+      "key": "female-gentle-resolute",
+      "label": "温柔坚定 · 亚丝娜方向",
+      "file": "yiyi-female-gentle-resolute-turnaround-v5.png",
+      "height_cm": 163,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "6b4d39ac6d9bbbc987404dbdb90984221ea21f58b27cfad747f5c01f75156ce5",
+      "display": {
+        "source_front_top": 12,
+        "source_front_bottom": 987,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.75230769,
+        "top_percent": 20.260968,
+        "portrait_left_percent": -3.288462,
+        "sheet_left_percent": 12.384615
+      },
+      "version": 5
+    },
+    {
+      "key": "female-regal-confident",
+      "label": "高傲自信 · 女帝方向",
+      "file": "yiyi-female-regal-confident-turnaround-v5.png",
+      "height_cm": 175,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "614c56c415b8b6b4f381615cd17b23a7bb8060da598937e6084c2ce8bc1b92ba",
+      "display": {
+        "source_front_top": 14,
+        "source_front_bottom": 974,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.8203125,
+        "top_percent": 14.74762,
+        "portrait_left_percent": -8.105469,
+        "sheet_left_percent": 8.984375
+      },
+      "version": 5
+    },
+    {
+      "key": "male-artistic",
+      "label": "浪漫灵动 · 祁煜方向",
+      "file": "yiyi-male-artistic-turnaround-v4.png",
+      "height_cm": 180,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "14ee8cf90a2c75055ab1b667bd5f15e43d11ef0eca5daf5d34728c8f7323ff3f",
+      "display": {
+        "source_front_top": 15,
+        "source_front_bottom": 967,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.85084034,
+        "top_percent": 12.425527,
+        "portrait_left_percent": -10.267857,
+        "sheet_left_percent": 7.457983
+      },
+      "version": 4,
+      "retained": true
+    },
+    {
+      "key": "male-composed",
+      "label": "冷静可靠 · 黎深方向",
+      "file": "yiyi-male-composed-turnaround-v5.png",
+      "height_cm": 184,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "99afdfec76eb7d6a86148ff8d61655a4cb237dfb2dbd0e54b7d0e0ef320c1c3d",
+      "display": {
+        "source_front_top": 15,
+        "source_front_bottom": 969,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.86792453,
+        "top_percent": 10.642689,
+        "portrait_left_percent": -11.477987,
+        "sheet_left_percent": 6.603774
+      },
+      "version": 5
+    },
+    {
+      "key": "male-confident",
+      "label": "笃定强势 · 秦彻方向",
+      "file": "yiyi-male-confident-turnaround-v5.png",
+      "height_cm": 188,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "604124d07a61fcb16e096872daad4df78c1c6ece37d5b67e5d028b4d350617b7",
+      "display": {
+        "source_front_top": 9,
+        "source_front_bottom": 976,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.87487073,
+        "top_percent": 9.387321,
+        "portrait_left_percent": -11.97001,
+        "sheet_left_percent": 6.256463
+      },
+      "version": 5
+    }
+  ],
+  "verification": {
+    "date": "2026-11-02",
+    "http": "当前图集、v4历史图集及当前6张PNG均HTTP200，图片SHA256与本地一致。",
+    "browser": "Chromium1440/390/320px；12处图片、2列/1列、无整页横向溢出、手机对照横向滚动、大图链接指向与历史入口通过，无JS异常。桌面和390px截图已目视检查。",
+    "evidence": "../../../../../outputs/character-candidates-v5/verification.json",
+    "limitations": "手机真机未验；非精密三维转面或人体测量。"
+  }
+}

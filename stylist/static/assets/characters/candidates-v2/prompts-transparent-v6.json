@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-02",
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "prompt": "Use case: background-extraction. Edit the exact existing 1536x1024 landscape three-view character sheet. Remove only the cream background to true alpha transparency including limb/hair gaps. Keep identity, face, hairstyle, expression, outfit, colors, adult proportions, front/side/back order, poses, scale and placement. Preserve subtle neutral semitransparent shoe contact shadows, remove broad cream ground plane. No redesign, text, checkerboard, scenery or extra people. Entire landscape sheet, not a portrait crop.",
+  "runtime_replacement": true,
+  "assets": [
+    {
+      "source": "yiyi-female-sweet-clever-turnaround-v5.png",
+      "output": "yiyi-female-sweet-clever-turnaround-transparent-v6.png",
+      "sha256": "a95b42e118feb8b247a56e133f5a3e3ca16572bbe2b1cedba9e53aa1d1319b16"
+    },
+    {
+      "source": "yiyi-female-gentle-resolute-turnaround-v5.png",
+      "output": "yiyi-female-gentle-resolute-turnaround-transparent-v6.png",
+      "sha256": "a43ca8f0f3eb4ea4f4875243091df86e70855ac2073f14907697cefe8249f261"
+    },
+    {
+      "source": "yiyi-female-regal-confident-turnaround-v5.png",
+      "output": "yiyi-female-regal-confident-turnaround-transparent-v6.png",
+      "sha256": "54ed8728ae8b3ba402a7968d405250becf326746d5bfd4b9d0f38846a9153762"
+    },
+    {
+      "source": "yiyi-male-artistic-turnaround-v4.png",
+      "output": "yiyi-male-artistic-turnaround-transparent-v6.png",
+      "sha256": "62b4450bb62692d5392c88bb56c257f97137d7983a263b6bce2cb0edd6b3feea"
+    },
+    {
+      "source": "yiyi-male-composed-turnaround-v5.png",
+      "output": "yiyi-male-composed-turnaround-transparent-v6.png",
+      "sha256": "071ee7a9352729bc51207baa1a09cc84cb98a1c5699f8fbb9ef5920e54a5961c"
+    },
+    {
+      "source": "yiyi-male-confident-turnaround-v5.png",
+      "output": "yiyi-male-confident-turnaround-transparent-v6.png",
+      "sha256": "976f4d76b02af7c6417c67e4c898d82c024b779394ff0f871ac066aec6c60289"
+    }
+  ],
+  "notes": [
+    "Original files retained. No user images processed.",
+    "Alpha inspected; images remain1536x1024 RGBA.",
+    "CSS supplies theme background; existing equal-scale height framing retained and checked in browser."
+  ],
+  "verification": {
+    "frontend_tests_passed": 36,
+    "selection_widths": [
+      1440,
+      390,
+      320
+    ],
+    "selection_themes": [
+      "female",
+      "male"
+    ],
+    "gallery_theme_switch": true,
+    "visual_review": [
+      "female390",
+      "male390",
+      "male1440"
+    ],
+    "screenshots": "var/transparent-v6-visual",
+    "physical_device": false
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "version": 2,
+  "status": "generated_and_visually_reviewed_candidates",
+  "date": "2026-10-31",
+  "mode": "built-in image_gen",
+  "use_case": "stylized-concept",
+  "style_reference": "../sources/yiyi-female-blink-source-v2.png",
+  "counterpart_reference": "../sources/yiyi-male-blink-source-v2.png",
+  "runtime_replacement": false,
+  "personality_research_sources": [
+    "https://apps.apple.com/me/iphone/story/id1806358259",
+    "https://deepspace.papegames.com/news/3"
+  ],
+  "note": "男助理性格为原创角色设计提炼，非游戏人物完整官方性格定义，不复刻游戏人物造型。",
+  "candidates": [
+    {
+      "key": "female-lively",
+      "label": "女助理 · 活泼",
+      "personality": "开朗活泼、表达直接、富有感染力",
+      "inspiration": null,
+      "traits": [
+        "明亮笑容",
+        "高马尾",
+        "珊瑚桃色针织",
+        "轻快亲近"
+      ],
+      "file": "yiyi-female-lively-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An original lively, cheerful ADULT female wardrobe companion, about 24, with sparkling warm amber illustrated eyes, a bright open friendly smile, a slightly playful head tilt on the front view, chestnut hair in a high loose ponytail with airy face-framing bangs and a tiny warm coral ribbon. Clearly an adult, not a schoolgirl. Soft coral-peach cardigan with sleeves to wrists over an ivory blouse, muted warm beige knee-below A-line skirt, cream low-top sneakers with small coral accents. One front-view hand lightly lifted in a friendly relaxed greeting below shoulder level, the other naturally by her side; side and back views neutral for construction clarity. Her animated energy should read from facial expression and hair silhouette. Normal adult body, no chibi proportions, cute yet grown-up.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "3f53d4282873e250d2e137faf24d26d2c6469644a7963380776ae52eba80213b",
+      "refinement_prompts": [
+        "Use case: precise-object-edit. Edit target: the supplied three-view 2D illustrated female turnaround sheet. Make ONE targeted consistency correction: replace ONLY the HAIR on the LEFT FRONT-VIEW figure so it is clearly the same HIGH PONYTAIL as the middle profile and right back figure. Pull the sides of the front-view hair back cleanly above the ears, retain a few airy face-framing wisps, show the high ponytail emerging from the top/back of the crown with its coral ribbon and a portion of the long curled tail visible beside the neck/shoulder. It must NOT look like a loose chin-length bob. Keep the same chestnut color and lovely drawn face. Invariants: keep the entire middle profile and right back figure unchanged; keep the left figure's face, cheerful smile, adult proportions, waving hand, pose, coral cardigan, ivory blouse, beige skirt, sneakers, warm ivory background, 3-panel composition and soft 2D anime linework/painting unchanged. No new text, labels, props, photography, 3D or chibi. Deliver the full landscape three-view sheet at 1536x1024."
+      ]
+    },
+    {
+      "key": "female-mature",
+      "label": "女助理 · 御姐",
+      "personality": "成熟自信、从容利落、体贴有分寸",
+      "inspiration": null,
+      "traits": [
+        "从容目光",
+        "长卷发",
+        "烟紫衬衫",
+        "象牙白阔腿裤"
+      ],
+      "file": "yiyi-female-mature-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An original mature, confident and elegant ADULT female wardrobe companion, about 29, attractive poised big-sister energy (Chinese yujie archetype), visibly more mature than a cute young heroine but equally warm. Long dark chestnut softly wavy hair below the shoulder blades, a clean deep side part, slender expressive brown illustrated eyes, a composed slight smile and self-assured direct gaze, elegant upright posture. A flowing muted aubergine collared blouse tucked into high-waisted warm ivory tailored wide-leg ankle-length trousers, a narrow tan belt, refined low block-heeled brown pumps, tiny gold hoop earrings and a slim watch. Beautiful refined adult ANIME DRAWING, tasteful fashion professional. One front-view hand rests loosely on hip without exaggerated posing. Long hair, tucked blouse and trouser waistband consistent in all views.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "e790aafbb44988e0337b006579ca904eed945d164fd44665ddec2c25a25e4de8",
+      "refinement_prompts": []
+    },
+    {
+      "key": "female-introverted",
+      "label": "女助理 · 内向",
+      "personality": "安静内敛、细腻体贴、慢热温柔",
+      "inspiration": null,
+      "traits": [
+        "含蓄微笑",
+        "半扎肩发",
+        "鼠尾草绿开衫",
+        "安静柔和"
+      ],
+      "file": "yiyi-female-introverted-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An original quiet, introverted and tender ADULT female wardrobe companion, about 25, drawn in the same refined anime style as the reference. Soft straight medium chestnut shoulder-length hair with light curtain bangs, a small half-up section held by a pale sage ribbon; gentle warm brown illustrated eyes and a small shy closed-mouth smile, reserved but comfortable and attentive rather than sad or frightened. Soft sage-green long cardigan over an ivory fine-knit top, flowing warm taupe calf-length skirt, cream Mary Jane flats, tiny stud earrings. On the front view her hands gently meet at lower waist level and her shoulders are relaxed; true side and back views remain neutral. Natural adult proportions, no oversized childlike eyes or chibi head. Quietly cute, warm, bookish everyday fashion.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "5f6ae0e3488c388f8c8e874a9d0e54d69eb0181dd28418897f7cacef4b8786f4",
+      "refinement_prompts": [
+        "Use case: precise-object-edit. Edit target: the supplied three-view soft 2D illustrated female turnaround sheet. Make ONE targeted hair consistency correction ONLY to the LEFT FRONT-VIEW figure: match the HALF-UP SHOULDER-LENGTH hairstyle shown by the middle profile and right back views. Gently pull both temple sections backwards toward a small pale sage ribbon at the back, remove the small flower clip from the front figure, and show the loose lower hair reaching the shoulders. Keep a few soft curtain-bang strands framing the face; it must read as a tidy half-up style, not an all-loose wavy bob. If the ribbon is hidden from the front, do not add a new visible ornament. Invariants: keep the whole middle and back figures unchanged; keep the front face, shy small smile, hands gently together, sage cardigan, ivory top, taupe skirt, cream shoes, body proportions, three-view framing, ivory background and delicate drawn anime rendering unchanged. No text, labels, extra props, photographic textures, chibi or 3D. Full 1536x1024 landscape sheet."
+      ]
+    },
+    {
+      "key": "male-artistic",
+      "label": "男助理 · 浪漫灵动",
+      "personality": "参考祁煜：艺术气质、灵动健谈、细腻敏感",
+      "inspiration": "祁煜（仅性格气质）",
+      "traits": [
+        "轻松俏皮",
+        "栗色微卷发",
+        "雾紫衬衫",
+        "艺术气质"
+      ],
+      "file": "yiyi-male-artistic-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An ORIGINAL handsome ADULT male wardrobe companion, about 25. Personality-led visual design: artistic, imaginative, lively and talkative, playfully expressive with emotional sensitivity under the easy charm. Translate these qualities into a bright teasing smile and softly raised expressive brow, an easy relaxed stance and airy styling. Create an original face and outfit, NOT a depiction or cosplay of any existing game character. Softly tousled light chestnut wavy short hair, amber-brown illustrated eyes, refined attractive adult anime features. Pale dusty lavender loose open-collar shirt with sleeves casually rolled, ivory crew-neck inner shirt, warm ivory tailored trousers, tan suede loafers, a tiny simple gold necklace. Normal tall slender adult proportions. One front-view hand loosely near the pocket, the other relaxed. Beautiful soft 2D illustration in the reference's style, no real human or 3D rendering.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png",
+        "../sources/yiyi-male-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "82355f98bb574dcbfc9878fe9b36ae10736ff45a4d2d9daaa285c1d05f8890de",
+      "refinement_prompts": []
+    },
+    {
+      "key": "male-composed",
+      "label": "男助理 · 冷静可靠",
+      "personality": "参考黎深：克制理性、专业细致、沉稳可靠",
+      "inspiration": "黎深（仅性格气质）",
+      "traits": [
+        "沉静目光",
+        "整洁侧分",
+        "海军蓝针织",
+        "专业可靠"
+      ],
+      "file": "yiyi-male-composed-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An ORIGINAL very handsome ADULT male wardrobe companion, about 29. Personality-led visual design: reserved, rational, highly professional, meticulous, calm and dependable, with quiet warmth beneath the composed surface. Translate this into a steady attentive gaze, barely-there kind smile, neat hair and precise understated clothing. This is a new original character, NOT an existing game character or cosplay. Neatly side-parted ink-dark brown short hair, deep warm brown illustrated eyes, elegant adult anime face, tall lean build, natural shoulders. Navy fine-knit cardigan over a crisp ivory collared shirt with collar neatly arranged, charcoal-gray tailored trousers, brown belt and polished dark brown loafers, discreet silver watch. Upright relaxed posture, arms naturally lowered, subtle gentle smile. Drawn delicate linework and painterly anime shading like the reference; no photographic skin or 3D game render.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png",
+        "../sources/yiyi-male-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "667a414f680f982d2dfa68c82662c155cc8551f5dd2f7e65ac5dabb24273d385",
+      "refinement_prompts": [
+        "Use case: precise-object-edit. Input image is the EDIT TARGET, a three-view drawn male assistant sheet. Refine ONLY the HEAD/FACE/HAIR consistently in ALL THREE VIEWS to create a clearly distinct, calm, mature original male character rather than a boyish tousled-hair hero. New design: age around 29-31, straight INK-BLACK neatly combed 7:3 side-part hair with flat controlled volume and a clear part line, no fluffy chestnut curls and no messy bangs; long refined adult face with a slightly stronger jaw, straighter brows, narrower calm dark-brown illustrated eyes, quiet serious attentive gaze, closed relaxed mouth with only the faintest warmth (not a visible cheerful smile). He should read as rational, reserved, meticulous and dependable. Maintain exact matching hair construction and adult facial proportions between front, true profile and back. Keep the beautiful delicate 2D anime/otome linework and soft painted shading. The head must remain the same size and normal adult body ratio. Invariants: keep the ENTIRE BODY below the neck, navy cardigan, ivory collared shirt, taupe-gray trousers, watch, belt, loafers, all three poses, framing, ivory background and light unchanged. No glasses, new accessories, labels, fantasy, real human textures, 3D or chibi. This is an original companion, not a depiction of an existing game character. Full landscape 1536x1024."
+      ]
+    },
+    {
+      "key": "male-confident",
+      "label": "男助理 · 笃定强势",
+      "personality": "参考秦彻：自信笃定、直率果断、从容有力量",
+      "inspiration": "秦彻（仅性格气质）",
+      "traits": [
+        "自信浅笑",
+        "深棕后梳短发",
+        "炭灰西装",
+        "酒红衬衫"
+      ],
+      "file": "yiyi-male-confident-turnaround-v2.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original assistant character turnaround sheet for the Chinese wardrobe companion app.\nPrimary request: create a NEW full-body THREE-VIEW illustration sheet in the exact 2D illustrated visual family of the supplied reference images. The reference is a soft refined anime/otome-style DIGITAL DRAWING, with delicate brown linework, expressive illustrated eyes, simplified elegant nose and mouth, luminous painted hair strands and soft cel/painterly clothing shading. Preserve that unmistakably drawn character-art look. This is NOT a photograph, NOT a real human, NOT photorealistic, NOT a 3D render, and NOT chibi.\nReference roles: reference 1 (female) is the PRIMARY STYLE AUTHORITY; reference 2 (male, when supplied) establishes the matching male counterpart's drawing language. Do not copy the original two-panel blink layout or greenhouse scenery.\nComposition: landscape 1536x1024, exactly THREE depictions of ONE identical character, evenly spaced left to right: straight FRONT, true 90-degree right-facing SIDE PROFILE, straight BACK. All three are head-to-toe, shoes fully visible with margin, same scale, same top-of-head and ground line. Normal slender ADULT proportions about 7 to 7.5 heads tall, adult face and natural hands. Keep anatomy, hair, clothing construction, accessories and shoes consistent between all views. Relaxed neutral standing pose, arms slightly away from body, front face gently smiling with eyes open. Side face must show true profile; rear face must not turn toward viewer.\nBackdrop: plain warm ivory with only a subtle grounding shadow, generous clear space between figures. The focus is character design for a companion app.\nAvoid: live-action photography, realistic skin pores, real-person facial anatomy, fashion model photo, cinematic portrait, hyperrealism, plastic 3D skin, dolls, oversized chibi head, childlike body, tiny legs, cropped shoes, extra poses, close-ups, text, labels, grids, watermarks, props, busy scenery.\nSubject and wardrobe: An ORIGINAL extremely handsome mature ADULT male wardrobe companion, about 30. Personality-led visual design: self-assured, charismatic, bold, direct and decisive, relaxed strength and calm confidence, with a teasing hint of warmth. Translate this into assured upright shoulders, a relaxed half-smile and direct gaze; no aggression, weapons or fantasy elements. Original appearance and costume, NOT a replica/cosplay of an existing game character. Dark espresso brown short hair swept back with a few loose wavy strands, warm hazel-brown illustrated eyes (not red), defined but delicately DRAWN adult anime facial features. Slightly broader shoulders and tall normal adult physique, still matching the elegant reference. Charcoal tailored blazer over a muted deep burgundy open-collar shirt, black tailored trousers, dark brown leather loafers and simple metal wristwatch. Front-view one hand loosely in a trouser pocket, the other relaxed; exact side and back construction views. Refined 2D anime/otome illustration with soft linework and painting, never a real actor or realistic 3D model.",
+      "references": [
+        "../sources/yiyi-female-blink-source-v2.png",
+        "../sources/yiyi-male-blink-source-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "b0fd66459006f77480f4ec5a75c4d735c914b0f8c8dbf206b20fb286f64bb9e3",
+      "refinement_prompts": [
+        "Use case: precise-object-edit. Input image is the EDIT TARGET, a three-view drawn male assistant sheet. Change ONLY the head/face/hairstyle consistently across ALL THREE VIEWS to make a distinctly mature, charismatic, confident original male character. New design: age around 30-33, espresso DARK-BROWN SHORT HAIR COMBED BACK to expose the FOREHEAD, a subtle side fade above ears and a few restrained swept-back strands; remove the long fluffy brown fringe that currently falls over the forehead. Slightly wider adult jaw, sharper gently arched eyebrows, narrower hazel-brown illustrated eyes with a direct self-assured gaze, calm teasing one-corner half-smile. Express composed strength and bold confidence, no scowl. The front, true profile and back must show the SAME swept-back hairstyle and mature face. Keep the head's size, tall adult proportions, delicate 2D anime linework and soft illustrated shading. Invariants: keep the entire charcoal blazer, burgundy shirt, trousers, watch, belt, loafers, arms, body poses, three-view layout, scale, lighting and ivory background unchanged. NO silver hair, NO red eyes, NO game cosplay, NO photography/3D/chibi, NO text or extra props. This is an original wardrobe companion. Deliver the full 1536x1024 landscape sheet."
+      ]
+    }
+  ],
+  "review": [
+    "六位角色均为二维角色插画、正常成人比例、非Q版",
+    "每张包含完整正面、侧面及背面，头脚可见",
+    "活泼与内向女助理完成正面发型一致性修正",
+    "冷静与笃定男助理完成脸型、发型和神态区分",
+    "属于候选设定，不是精密三维建模校正转面，未替换运行时"
+  ]
+}

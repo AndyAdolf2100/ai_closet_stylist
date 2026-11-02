@@ -1,0 +1,221 @@
+{
+  "version": 4,
+  "date": "2026-11-02",
+  "status": "generated_visually_reviewed_and_browser_verified_candidates",
+  "mode": "built-in image_gen",
+  "runtime_replacement": false,
+  "requirements": {
+    "height_cm": {
+      "momo": 158,
+      "asuna": 163,
+      "hancock": 175,
+      "rafayel": 180,
+      "zayne": 184,
+      "sylus": 188
+    },
+    "female_proportions": "成年自然窄胯，不夸张宽胯或沙漏身材",
+    "male_confident": "红瞳、玩味坏笑，无胡子、胡茬及胡须阴影"
+  },
+  "layout_note": "生成器未按提示保留精确像素头顶留白。原始PNG保留完整分辨率；图集根据正面头脚范围用统一4.5 px/cm尺度等比缩放，脚底对齐950px，并提供六人身高对照。不拉伸身体，身高为角色设计值，不是人体测量。",
+  "candidates": [
+    {
+      "key": "female-sweet-clever",
+      "label": "甜美机灵 · 梦梦方向",
+      "height_cm": 158,
+      "traits": [
+        "158cm · 小巧成年比例",
+        "玫瑰粉短发",
+        "自然收窄胯部",
+        "莓粉开衫与奶油裙"
+      ],
+      "file": "yiyi-female-sweet-clever-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nAdult woman age 25, intended height 158cm, the SHORTEST of three women. Petite but fully adult, about 7.1 heads tall, naturally shorter limbs than a tall fashion model, elegant balanced small frame. Figure top near y=239 and shoe soles y=950, about 711 pixels tall (4.5 pixels per cm). Slim NATURAL NARROW HIPS, hip width close to shoulder width, no exaggerated pelvis, hourglass waist or amplified bust/buttocks. Do not make the head childlike. Preserve dusty rose-pink neck-length airy bob, sage eyes and sweet clever smile; berry-rose cardigan, ivory blouse, cream pleated midi skirt, mauve belt and cream low-heel Mary Janes. Keep the skirt's natural A-line drape without using a broad pelvic silhouette. Profile faces LEFT as in target.",
+      "references": [
+        "yiyi-female-sweet-clever-turnaround-v3.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "abfd8e2c73a007794a5b5d1787df8f2f33931f1972102df7cf251254a25e14df",
+      "display": {
+        "source_front_top": 38,
+        "source_front_bottom": 977,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.7571885,
+        "top_percent": 20.529965,
+        "portrait_left_percent": -3.634185,
+        "sheet_left_percent": 12.140575
+      },
+      "visual_review": "已目视检查二维成年比例、完整正侧背和主要衣着连续性；女性自然胯部轮廓。"
+    },
+    {
+      "key": "female-gentle-resolute",
+      "label": "温柔坚定 · 亚丝娜方向",
+      "height_cm": 163,
+      "traits": [
+        "163cm · 匀称成年比例",
+        "蜂蜜栗长发",
+        "自然收窄胯部",
+        "象牙外套与雾青裙"
+      ],
+      "file": "yiyi-female-gentle-resolute-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nAdult woman age 26, intended height 163cm, MEDIUM height among the three women, slightly taller and longer-limbed than a 158cm petite adult, about 7.3 heads tall. Figure top near y=216 and shoe soles y=950, about 734 pixels tall (4.5 pixels per cm). Slim NATURAL NARROW HIPS, balanced torso and hip width close to shoulder width; no exaggerated hourglass waist, broad pelvis or amplified bust/buttocks. Preserve honey-chestnut long hair with narrow side braid and half-up clasp, warm amber eyes and gentle determined smile. Ivory cropped tailored jacket, muted teal top and mist-teal pleated midi skirt, cognac belt and low-heel ankle boots. Natural softly flowing skirt, not broad pelvic anatomy. Profile faces LEFT.",
+      "references": [
+        "yiyi-female-gentle-resolute-turnaround-v3.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "da98dda09afdf9cc1957f9006527d02a1b5919449da001450a7c202672392d30",
+      "display": {
+        "source_front_top": 12,
+        "source_front_bottom": 989,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.75076766,
+        "top_percent": 20.262772,
+        "portrait_left_percent": -3.179376,
+        "sheet_left_percent": 12.461617
+      },
+      "visual_review": "已目视检查二维成年比例、完整正侧背和主要衣着连续性；女性自然胯部轮廓。"
+    },
+    {
+      "key": "female-regal-confident",
+      "label": "高傲自信 · 女帝方向",
+      "height_cm": 175,
+      "traits": [
+        "175cm · 修长成年比例",
+        "墨蓝黑长发",
+        "自然收窄胯部",
+        "酒红连衣裙"
+      ],
+      "file": "yiyi-female-regal-confident-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nAdult woman age 29, intended height 175cm, the TALLEST of the three women. Elegantly long-legged tall frame, balanced natural adult anatomy about 7.6 heads tall. Figure top near y=162 and shoe soles y=950, about 788 pixels tall (4.5 pixels per cm). SPECIFIC BODY CHANGE: slim down her wide pelvic/hip silhouette in front, side and back into NATURAL NARROW HIPS with hip width similar to shoulder width. Ease the extremely pinched waist and exaggerated bust-to-hip hourglass, make the side-view buttock modest and naturally aligned. Preserve feminine elegance and composed proud confidence without exaggerated One Piece anatomy. Preserve long blue-black hair, gray-violet eyes, slight raised chin, gold geometric earrings, burgundy long-sleeve midi wrap dress with gold belt and closed burgundy block-heel pumps. The skirt drapes close to the naturally slim figure without emphasizing hips. Profile faces RIGHT.",
+      "references": [
+        "yiyi-female-regal-confident-turnaround-v3.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "85ad0cf0561bc81e98fc96d42a787d72e9abf47a9ff4df487a037f42d116fcff",
+      "display": {
+        "source_front_top": 14,
+        "source_front_bottom": 974,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.8203125,
+        "top_percent": 14.74762,
+        "portrait_left_percent": -8.105469,
+        "sheet_left_percent": 8.984375
+      },
+      "visual_review": "已目视检查二维成年比例、完整正侧背和主要衣着连续性；女性自然胯部轮廓。"
+    },
+    {
+      "key": "male-artistic",
+      "label": "浪漫灵动 · 祁煜方向",
+      "height_cm": 180,
+      "traits": [
+        "180cm · 修长轻盈",
+        "栗色微卷发",
+        "灵动浅笑",
+        "雾紫衬衫"
+      ],
+      "file": "yiyi-male-artistic-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nAdult man age 27, intended height 180cm, the SHORTEST of the three men while still tall, slender light athletic frame, natural adult proportions about 7.6 heads tall. Figure top near y=140 and soles y=950, about 810 pixels tall (4.5 pixels per cm). Preserve chestnut softly tousled short hair, warm expressive brown eyes and playful artistic kind smile. Mist-lavender open shirt over ivory tee, ivory trousers, brown belt, pendant and tan loafers. Completely clean-shaven smooth face. Natural shoulders and slim waist, not exaggerated musculature. Profile faces LEFT.",
+      "references": [
+        "yiyi-male-artistic-turnaround-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "14ee8cf90a2c75055ab1b667bd5f15e43d11ef0eca5daf5d34728c8f7323ff3f",
+      "display": {
+        "source_front_top": 15,
+        "source_front_bottom": 967,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.85084034,
+        "top_percent": 12.425527,
+        "portrait_left_percent": -10.267857,
+        "sheet_left_percent": 7.457983
+      },
+      "visual_review": "已目视检查二维成年比例、完整正侧背和主要衣着连续性；女性自然胯部轮廓。"
+    },
+    {
+      "key": "male-composed",
+      "label": "冷静可靠 · 黎深方向",
+      "height_cm": 184,
+      "traits": [
+        "184cm · 挺拔匀称",
+        "整洁墨黑侧分",
+        "克制沉静",
+        "海军蓝针织"
+      ],
+      "file": "yiyi-male-composed-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nAdult man age 30, intended height 184cm, MEDIUM height among the men, upright lean athletic build, natural adult proportions about 7.7 heads tall. Figure top near y=122 and soles y=950, about 828 pixels tall (4.5 pixels per cm). Preserve the calm reserved refined slightly elongated face, composed dark brown eyes and black neatly controlled 7:3 side-part short hair. Navy cardigan over ivory collared shirt, taupe-gray tailored trousers, brown belt, silver watch and dark brown loafers. Completely clean-shaven smooth face. Keep quiet dependable expression distinct from the other men. Profile faces LEFT.",
+      "references": [
+        "yiyi-male-composed-turnaround-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "4ca98615380e81feb42f11df611f54e19e2bb0665c2289c6cc4e844d4eb4880e",
+      "display": {
+        "source_front_top": 15,
+        "source_front_bottom": 971,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.86610879,
+        "top_percent": 10.645348,
+        "portrait_left_percent": -11.349372,
+        "sheet_left_percent": 6.694561
+      },
+      "visual_review": "已目视检查二维成年比例、完整正侧背和主要衣着连续性；女性自然胯部轮廓。"
+    },
+    {
+      "key": "male-confident",
+      "label": "笃定强势 · 秦彻方向",
+      "height_cm": 188,
+      "traits": [
+        "188cm · 高大有力量",
+        "红瞳与玩味坏笑",
+        "无胡子／无胡茬",
+        "炭灰西装与酒红衬衫"
+      ],
+      "file": "yiyi-male-confident-turnaround-v4.png",
+      "prompt": "Use case: precise-object-edit.\nAsset type: updated original wardrobe-companion character THREE-VIEW height-design sheet, 1536x1024 landscape.\nInput image: EDIT TARGET and identity, clothing and drawing-style reference. Preserve the same character identity, colors, hairstyle construction, accessories and everyday outfit unless a specific change below is required. Match the existing refined warm fine linework, soft luminous painted hair and gentle painterly 2D anime shading. Clearly drawn digital illustration, normal ADULT anatomy, not photography, 3D or chibi.\nLayout: exactly THREE full-body depictions of the SAME ADULT: straight FRONT on the left at x=340, true SIDE PROFILE at x=768, straight BACK at x=1196. Consistent anatomy and clothing construction across views. Full head and shoes visible. Plain uniform warm ivory background and a very subtle floor shadow only. All shoes stand on a common baseline y=950. IMPORTANT: this sheet belongs to a height-comparison series. Use the exact designed figure height below; leave the requested extra headroom instead of enlarging the character to fill the canvas. Preserve horizontal and vertical proportions uniformly, do not stretch or squash. Design height is the fictional adult's intended barefoot stature; footwear and hair add a small visual allowance, not precise anthropometry.\nConstraints: no text, ruler, labels, grid, extra portraits, inset faces, extra people, props or watermark. Keep the front expression and poses natural and clothing consistent. Do not crop the figure.\nREMAKE THIS MAN'S FACE AND CHARACTER EXPRESSION: original adult man age 28-30, intended height 188cm, the TALLEST man, long legs, naturally broader shoulders and athletic powerful build, about 7.8 heads tall. Figure top near y=104 and soles y=950, about 846 pixels tall (4.5 pixels per cm). User explicitly wants him to look BAD-BOY, roguishly charismatic, teasing, dangerously self-assured in an attractive playful way. Give him clearly visible DEEP CRIMSON-RED IRISES with ordinary dark round pupils and white sclera in both front and profile, narrow slightly upturned eyes, one subtly raised brow and a distinctive cocky asymmetrical HALF-SMIRK, a direct knowing gaze. Confident arrogant charm instead of a polite sweet smile. A refined angular adult face and defined jaw, tousled swept-back deep espresso-brown hair with a few loose locks, exposed forehead. ABSOLUTELY NO BEARD OR FACIAL HAIR: completely clean-shaven smooth skin, no moustache, goatee, stubble, dots, chin hatching, facial-hair-shaped shadows, or thick dark marks under lower lip or along jaw. Maturity comes from eyes, bone structure and posture. Preserve charcoal blazer with rolled sleeves, open-collar deep burgundy shirt, dark trousers, brown belt, brown loafers and watch; one hand casually pocketed in front. No weapons, violence, scars, fantasy costume or horror, no glowing or monstrous eyes. Profile faces LEFT.",
+      "references": [
+        "yiyi-male-confident-turnaround-v2.png"
+      ],
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "f617a6cde71b927de30c490edbf97ba992e8df71d270e3a03c0465c8b0cf7a69",
+      "display": {
+        "source_front_top": 9,
+        "source_front_bottom": 976,
+        "stage_baseline": 950,
+        "pixels_per_cm": 4.5,
+        "scale": 0.87487073,
+        "top_percent": 9.387321,
+        "portrait_left_percent": -11.97001,
+        "sheet_left_percent": 6.256463
+      },
+      "visual_review": "已目视检查正侧面红瞳、玩味笑容、无胡须与头脚完整；正侧背衣着与发型主要结构一致。"
+    }
+  ],
+  "verification": {
+    "date": "2026-11-02",
+    "http": "页面及6张最终图HTTP200，PNG SHA256与本地一致",
+    "browser": "独立Chromium：1440px、390px、320px；图片加载、2列/1列、无整页横向溢出、手机对照横向滚动通过；无JS异常。桌面及390px截图目视检查。",
+    "evidence": "../../../../../outputs/character-candidates-v4/verification.json",
+    "limitations": "手机真机未验；仅候选；非精密人体测量或建模转面。"
+  }
+}

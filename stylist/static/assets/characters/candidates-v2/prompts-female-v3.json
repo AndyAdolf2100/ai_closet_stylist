@@ -1,0 +1,71 @@
+{
+  "version": 3,
+  "date": "2026-11-02",
+  "status": "generated_and_visually_reviewed_candidates",
+  "mode": "built-in image_gen",
+  "style_reference": "../sources/yiyi-female-blink-source-v2.png",
+  "runtime_replacement": false,
+  "note": "用户指定性格方向的设计提炼，非官方完整性格定义；成年原创外观及日常服装，男性v2保留。",
+  "candidates": [
+    {
+      "key": "female-sweet-clever",
+      "label": "女助理 · 甜美机灵",
+      "inspiration": "《出包王女》梦梦",
+      "personality": "甜美亲近、机灵俏皮、善于观察、主动体贴",
+      "traits": [
+        "玫瑰粉短发",
+        "机灵浅笑",
+        "莓粉短开衫",
+        "奶油白中长裙"
+      ],
+      "file": "yiyi-female-sweet-clever-turnaround-v3.png",
+      "prompt": "Use case: stylized-concept. Create ONE landscape 1536x1024 character turnaround sheet: exactly THREE full-body depictions of ONE identical ORIGINAL ADULT woman, left straight FRONT, center true 90-degree right-facing PROFILE, right straight BACK. Identical scale, head height, ground line, hair and outfit construction across views. Head and shoes fully visible, generous margins, relaxed standing poses. Normal adult proportions 7–7.5 heads, age 25–30, non-chibi. Supplied image is STYLE ONLY: match its refined soft 2D anime illustration, fine warm linework, expressive illustrated eyes, luminous painted hair and subtle painterly fabric shading. No photography or 3D. Plain warm ivory backdrop, subtle floor shadow, no text/labels/watermarks or props. User wants personality-inspired original designs, with broad visual affinity but different face, hairstyle details and original everyday clothing, not cosplay. Personality inspired by Momo from To Love-Ru: sweet, socially perceptive, playfully clever and proactively caring. Clearly ADULT age 25, no sexualized characterization. Soft heart-shaped face, sage-green eyes, affectionate knowing smile. Dusty rose-pink airy neck-length bob, off-center sweeping fringe and outward-curled tips, small plum geometric barrette. Broad pink-haired sweet-clever affinity, but distinct face and haircut from Momo. Berry-rose cropped fine-knit cardigan with pearl buttons over ivory square-neck blouse, high-waisted cream pleated MIDI skirt, slim mauve belt and cream low-heel Mary Jane shoes. Tasteful fully dressed adult casual fashion. No school uniform, horns, tail or franchise accessories. Same bob silhouette and skirt hem all three views.",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "98ad77509fda3cc71e59d4fe62d6c18cd72cdd848be2ade06eb8e0cc96f0c49c",
+      "visual_review": "已检查二维画风、成年比例、正侧背视角、头脚完整与主要发型服饰一致性；生成侧面朝左，与提示词朝右不同，不影响三视图用途。非精密建模转面。"
+    },
+    {
+      "key": "female-gentle-resolute",
+      "label": "女助理 · 温柔坚定",
+      "inspiration": "《刀剑神域》亚丝娜",
+      "personality": "温柔可靠、坚定果断、认真自律、有行动力",
+      "traits": [
+        "蜂蜜栗色长发",
+        "温柔坚定目光",
+        "象牙白短外套",
+        "雾青百褶裙"
+      ],
+      "file": "yiyi-female-gentle-resolute-turnaround-v3.png",
+      "prompt": "Use case: stylized-concept. Create ONE landscape 1536x1024 character turnaround sheet: exactly THREE full-body depictions of ONE identical ORIGINAL ADULT woman, left straight FRONT, center true 90-degree right-facing PROFILE, right straight BACK. Identical scale, head height, ground line, hair and outfit construction across views. Head and shoes fully visible, generous margins, relaxed standing poses. Normal adult proportions 7–7.5 heads, age 25–30, non-chibi. Supplied image is STYLE ONLY: match its refined soft 2D anime illustration, fine warm linework, expressive illustrated eyes, luminous painted hair and subtle painterly fabric shading. No photography or 3D. Plain warm ivory backdrop, subtle floor shadow, no text/labels/watermarks or props. User wants personality-inspired original designs, with broad visual affinity but different face, hairstyle details and original everyday clothing, not cosplay. Personality inspired by Asuna from Sword Art Online: warmly caring, dependable, determined, capable, decisive and quietly courageous. Original adult woman age 26, honey-chestnut long hair to mid-back, natural side part, ONE narrow braid sweeping from her LEFT temple into a low half-up clasp, loose lengths softly curved at tips. Warm amber-hazel eyes, gentle confident smile, oval face and upright posture. Broad chestnut-haired graceful heroine affinity, but distinct face, original asymmetrical hairstyle and contemporary clothing. Ivory collarless cropped tailored jacket over dusty teal fine-knit top, mist-teal mid-calf pleated skirt, slim cognac belt with round buckle, cognac low-heeled ankle boots, pearl studs. Practical elegant outfit conveying care and agency. No sword, armor, game uniform, crosses or franchise motifs. Braid remains on same anatomical side, connected to half-up clasp consistently.",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "49aaad7a14600b7b2af3c3482941cd09cfe8acc60657e47127e589f9ee8d796a",
+      "visual_review": "已检查二维画风、成年比例、正侧背视角、头脚完整与主要发型服饰一致性；生成侧面朝左，与提示词朝右不同，不影响三视图用途。非精密建模转面。"
+    },
+    {
+      "key": "female-regal-confident",
+      "label": "女助理 · 高傲自信",
+      "inspiration": "《海贼王》波雅·汉库克（女帝）",
+      "personality": "自信高傲、审美鲜明、从容有主见、对亲近者柔软",
+      "traits": [
+        "墨蓝黑长直发",
+        "从容微抬下颌",
+        "酒红修身连衣裙",
+        "金色几何耳饰"
+      ],
+      "file": "yiyi-female-regal-confident-turnaround-v3.png",
+      "prompt": "Use case: stylized-concept. Create ONE landscape 1536x1024 character turnaround sheet: exactly THREE full-body depictions of ONE identical ORIGINAL ADULT woman, left straight FRONT, center true 90-degree right-facing PROFILE, right straight BACK. Identical scale, head height, ground line, hair and outfit construction across views. Head and shoes fully visible, generous margins, relaxed standing poses. Normal adult proportions 7–7.5 heads, age 25–30, non-chibi. Supplied image is STYLE ONLY: match its refined soft 2D anime illustration, fine warm linework, expressive illustrated eyes, luminous painted hair and subtle painterly fabric shading. No photography or 3D. Plain warm ivory backdrop, subtle floor shadow, no text/labels/watermarks or props. User wants personality-inspired original designs, with broad visual affinity but different face, hairstyle details and original everyday clothing, not cosplay. Personality inspired by Boa Hancock from One Piece: commanding confidence, regal pride, distinct taste, softer toward trusted people. Original adult woman age 29, elegant natural adult anime anatomy, NOT exaggerated One Piece proportions. Long glossy blue-black straight hair to waist, deep off-center part, one side tucked behind ear. Narrow gray-violet almond eyes, softly angular face, slightly raised chin, restrained self-assured smile. Broad long-dark-haired regal beauty affinity but distinct face, parting and fashion silhouette. Contemporary burgundy long-sleeve fitted midi wrap dress with modest V-neck, asymmetrically folded collar, subtle side draping and narrow antique-gold buckle belt, closed-toe burgundy medium block-heel pumps, small elongated geometric gold earrings. Arms comfortably at sides, poised adult fashion professional. No snake jewelry, skulls, pirates, qipao cosplay, cape, extreme cleavage, exaggerated hourglass or high thigh slit. Hair length, wrap direction, belt and hem consistent across three views.",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "sha256": "7a4148f202facd8604378faee486b0ead17b8e86d1d3fef0e365f20102fa54d7",
+      "visual_review": "已检查二维画风、成年比例、正侧背视角、头脚完整与主要发型服饰一致性；侧面朝右。非精密建模转面。"
+    }
+  ]
+}
