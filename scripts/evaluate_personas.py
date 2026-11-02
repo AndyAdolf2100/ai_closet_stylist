@@ -12,13 +12,14 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from pathlib import Path
+from typing import get_args
 
 from stylist.config import Settings
 from stylist.engine import Stylist
+from stylist.grounding import attribute_context
 from stylist.llm import LanguageModel
-from stylist.memory import explicit_memory
 from stylist.models import ChatRequest, CompanionProfile, SessionState
-from stylist.personas import persona_instructions
+from stylist.personas import PersonaId, is_male_persona, persona_instructions
 from stylist.store import Store
 
 from .dialogue_validation import (
@@ -116,12 +117,13 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
     output.parent.mkdir(parents=True, exist_ok=True)
     results = []
     comparisons = []
+    selected_personas = getattr(args, "personas", None) or ["male_calm_v1", "female_warm_v1"]
     semaphore = asyncio.Semaphore(args.concurrency)
 
     def save():
         output.write_text(json.dumps({"kind": "live_text_model_synthetic_adapters", "model": settings.llm_model,
             "profile_sha256": {p: hashlib.sha256(persona_instructions(p).encode()).hexdigest()
-                               for p in ["male_calm_v1", "female_warm_v1"]},
+                               for p in selected_personas},
             "business_services": "synthetic_only", "paid_images": "not_executed",
             "preference_comparisons": comparisons, "cases": results, "automatic_passed": sum(not r["automatic_errors"] for r in results),
             "accepted": sum(not r["errors"] and r["persona_review"]["status"] == "passed" for r in results),
@@ -156,7 +158,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                     chosen = persona
                     if ((label == "sequence" and i >= 8) or (label == "persona_switch" and i >= 1)
                             or expected.get("switch_persona")):
-                        chosen = "female_warm_v1" if persona == "male_calm_v1" else "male_calm_v1"
+                        chosen = "female_warm_v1" if is_male_persona(persona) else "male_calm_v1"
                     profile = (CompanionProfile(**expected["companion_profile"], assistant_persona=chosen)
                                if "companion_profile" in expected else None)
                     record = {"case": f"{persona}/{label}/{name}", "persona": chosen, "message": message,
@@ -191,12 +193,11 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                         if expected.get("memory_contains") and not any(expected["memory_contains"] in text for text in contents):
                             record["errors"].append("expected_memory_missing")
 
-                        plans = [x["result"] for x in model.calls if x["name"] == "plan"]
-                        if (not plans and explicit_memory(message) is None) or (plans and plans[-1]["conversation_only"] != chat_only):
+                        if not expected.get("flexible_advice") and reply.conversation_only != chat_only:
                             record["errors"].append("conversation_routing")
                         if not reply.message.strip():
                             record["errors"].append("empty_reply")
-                        if chat_only and (reply.looks or reply.weather or reply.pending_confirmation):
+                        if chat_only and not expected.get("flexible_advice") and (reply.looks or reply.weather or reply.pending_confirmation):
                             record["errors"].append("chat_triggered_outfit_or_weather_or_approval")
                         if not chat_only and not reply.looks and not (
                                 expected.get("no_looks") or expected.get("allow_empty_looks")):
@@ -207,7 +208,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                                                            model.calls, previous))
                         if hasattr(upstream, "check"):
                             record["errors"].extend(upstream.check(reply, expected))
-                        if before and chat_only:
+                        if before and reply.conversation_only:
                             with store.connection() as conn:
                                 after = SessionState.model_validate_json(conn.execute(
                                     "SELECT state_json FROM stylist_sessions WHERE id=?", (reply.conversation_id,)).fetchone()[0])
@@ -225,6 +226,10 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                                 "visible_reply": visible_text(reply), "reply_parts": {k: reply.model_dump(mode="json")[k] for k in ["message", "looks", "warnings", "follow_ups"]}, "current_weather": reply.weather,
                                 "current_task": reply.task.model_dump(mode="json"),
                                 "business_evidence": record["business_calls"],
+                                "business_events": record["business_events"],
+                                "ui_cards": {k: reply.model_dump(mode="json")[k] for k in [
+                                    "avatar_intent", "tryon_context", "tryon_title", "upload_intent", "upload_suggestion"]},
+                                "attribute_context": attribute_context([p for look in reply.looks for p in look.items]),
                                 "memory_after": record["memory_after"],
                                 "selected_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
                                 "expected": expected, "evidence_kind": "synthetic_business_fixtures",
@@ -247,7 +252,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                                       "seconds": record["seconds"]}), flush=True)
 
     jobs = []
-    for persona in ["male_calm_v1", "female_warm_v1"]:
+    for persona in selected_personas:
         for case in CASES:
             if not args.only or case[0] in args.only:
                 jobs.append(session(persona, [case], "single"))
@@ -301,6 +306,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", default="var/persona-review/live.json")
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--only", nargs="+")
+    parser.add_argument("--personas", nargs="+", choices=get_args(PersonaId),
+                        help="选择要评测的人格；默认仍为两种兼容人格，不自动扩大真实调用范围")
     args = parser.parse_args()
     names = {case[0] for case in CASES} | {"sequence"} | set(SCENARIOS)
     if args.only and not set(args.only) <= names:
@@ -311,6 +318,6 @@ if __name__ == "__main__":
         for name, count in [(case[0], 1) for case in CASES] + [("sequence", len(SEQUENCE))] + [
                 (name, len(rows)) for name, rows in SCENARIOS.items()]:
             if not args.only or name in args.only:
-                print(f"{name}: {count} turns x 2 personas")
+                print(f"{name}: {count} turns x {len(args.personas or ['male_calm_v1', 'female_warm_v1'])} personas")
     else:
         raise SystemExit(asyncio.run(run(args)))

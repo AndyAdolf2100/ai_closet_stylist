@@ -3,19 +3,28 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import get_args
 from zoneinfo import ZoneInfo
 
+from stylist.personas import PersonaId, persona_instructions
+
+from .city_invitation_dialogues import PURPOSES as CITY_INVITATION_PURPOSES
 from .companion_dialogues import SCENARIOS as COMPANION
 from .dialogue_validation import EXPECTATIONS, SCENARIOS
 from .evaluate_personas import CASES, SEQUENCE
 from .exploratory_dialogues import EXPECTATIONS as EXP_EXPECTATIONS
 from .exploratory_dialogues import SCENARIOS as EXPLORATION
+from .journey_dialogues import EXPECTATIONS as JOURNEY_EXPECTATIONS
+from .journey_dialogues import PURPOSES as JOURNEY_PURPOSES
+from .journey_dialogues import SCENARIOS as JOURNEYS
 from .preference_dialogues import SCENARIOS as PREFERENCES
 
 
 def catalog():
     groups = []
     purposes = json.loads(Path(__file__).with_name("report_assets").joinpath("dialogue_purposes.json").read_text())
+    purposes.update(JOURNEY_PURPOSES)
+    purposes.update(CITY_INVITATION_PURPOSES)
 
     def add(name, rows, category, source, expectations):
         turns = []
@@ -45,11 +54,15 @@ def catalog():
         add(name, rows, category, source, EXPECTATIONS)
     for name, rows in EXPLORATION.items():
         add(name, rows, '天气与穿搭扩展', 'scripts/exploratory_dialogues.py', EXP_EXPECTATIONS)
+    for name, rows in JOURNEYS.items():
+        add(name, rows, '上传与数字人交互', 'scripts/journey_dialogues.py · API/UI专项，非普通文字模型评测', JOURNEY_EXPECTATIONS)
     return {'generated_at': datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M 上海时间'),
             'groups': groups, 'rounds': sum(len(g['turns']) for g in groups),
-            'rules': {name: Path('stylist/prompts', name).read_text() for name in [
-                'persona_male_v1.md', 'persona_female_v1.md', 'companion_identity.md',
-                'review_dialogue.md', 'review_preferences.md']}}
+            'rules': {
+                **{f'{persona} · runtime skill': persona_instructions(persona)
+                   for persona in get_args(PersonaId)},
+                **{name: Path('stylist/prompts', name).read_text() for name in [
+                    'companion_identity.md', 'review_dialogue.md', 'review_preferences.md']}}}
 
 
 def render(output):

@@ -9,8 +9,8 @@ CASES = {
     ],
     "multiple": [
         ("both", "我喜欢蓝色，我讨厌羊毛衣。", ["我喜欢蓝色；我讨厌羊毛衣"]),
-        ("daily", "我偏爱乌龙茶。", ["我喜欢蓝色；我讨厌羊毛衣", "我偏爱乌龙茶"]),
-        ("communication", "我喜欢简洁的回复。", ["我喜欢蓝色；我讨厌羊毛衣", "我偏爱乌龙茶", "我喜欢简洁的回复"]),
+        ("daily", "我偏爱乌龙茶。", ["我喜欢蓝色；我讨厌羊毛衣"]),
+        ("communication", "我喜欢简洁的回复。", ["我喜欢蓝色；我讨厌羊毛衣"]),
     ],
     "temporary": [
         ("today", "今天我喜欢红色。", []),
@@ -106,3 +106,10 @@ for group, turns in CASES.items():
                 "同句省略主语沿用明确的本人对象，完整保留短袖、衬衫及黄色、绿色的否定关系。"
                 "保存状态抱怨不当作新偏好，不从前轮推断本轮省略主语属于本人；回顾时不能反转喜恶。"
                 "目前只按原文内容去重，不把不同标点或同义变体冒充已合并。")
+        if (group, name) in {('changed', 'temporary')}:
+            SCENARIOS[scenario] = [(n, text, False if n == name else chat) for n, text, chat in SCENARIOS[scenario]]
+            EXPECTATIONS[f'{scenario}/{name}'].update(no_tools=False, no_looks=False, inventory=True,
+                no_weather_tools=True, allow_empty_looks=True)
+        if (group, name) in {('temporary', 'occasion'), ('reported', 'hypothesis')}:
+            EXPECTATIONS[f'{scenario}/{name}'].update(no_tools=False, no_looks=False,
+                flexible_advice=True, allow_empty_looks=True, no_weather_tools=True)

@@ -35,7 +35,8 @@ async def run(args):
     for index, row in enumerate(source["cases"]):
         prefix, group, _ = row["case"].split("/", 2)
         key = (prefix, group)
-        previous = histories.get(key) if group != "single" else None
+        previous = (histories.get(key) if group != "single"
+                    and not row.get("expected", {}).get("new_conversation") else None)
         if row.get("reply"):
             histories[key] = row["reply"]
         jobs.append((index, row, previous))
@@ -74,6 +75,9 @@ async def run(args):
                         "current_weather": reply.weather, "current_items": [p.model_dump(mode="json") for look in reply.looks for p in look.items],
                         "attribute_context": attribute_context([p for look in reply.looks for p in look.items]),
                         "current_task": reply.task.model_dump(mode="json"), "expected": row.get("expected", {}),
+                        "memory_after": row.get("memory_after"),
+                        "ui_cards": {k: row["reply"].get(k) for k in [
+                            "upload_intent", "upload_suggestion", "avatar_intent", "tryon_context", "tryon_title"]},
                         "business_events": row.get("business_events", []), "business_calls": row.get("business_calls", []),
                     }, PersonaReview)
                     status = review_status(review, visible_text(reply))

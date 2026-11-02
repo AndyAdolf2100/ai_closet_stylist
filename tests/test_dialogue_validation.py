@@ -33,6 +33,13 @@ def test_all_business_turns_have_acceptance_conditions():
                                  for name, _, _ in rows}
 
 
+def test_upload_card_requires_an_explicit_intent_even_when_inventory_is_partial():
+    old = reply().model_copy(update={'upload_suggestion': True, 'upload_intent': None})
+    assert 'unrequested_upload_invitation' in check_reply(old, {}, [])
+    explicit = old.model_copy(update={'upload_intent': 'garment'})
+    assert 'unrequested_upload_invitation' not in check_reply(explicit, {}, [])
+
+
 def test_tool_traces_and_body_are_both_checked_instead_of_only_delivery_labels():
     bad = reply().model_copy(update={"message": "天气接口尚未接入，超出支持范围。"})
     errors = check_reply(bad, {"no_tools": True, "no_weather_tools": True, "inventory": False},
@@ -153,11 +160,15 @@ async def test_runner_passes_current_profile_to_both_model_stages_and_reviewer(t
     assert await runner.run(Namespace(output=str(output), concurrency=1, only=[scenario], judge=True)) == 0
     report = json.loads(output.read_text())
     assert report["accepted"] == report["total"] == len(SCENARIOS[scenario]) * 2
-    assert len(observed) == report["total"] * 3
-    for offset in range(0, len(observed), 3):
-        stages = observed[offset:offset + 3]
-        assert [name for name, _ in stages] == ["plan", "style", "review_dialogue"]
-        assert stages[0][1] == stages[1][1] == stages[2][1]
+    assert len(observed) == sum(1 + len(row['model_calls']) for row in report['cases'])
+    cursor = 0
+    for row in report['cases']:
+        count = len(row['model_calls']) + 1
+        stages = observed[cursor:cursor + count]
+        cursor += count
+        assert stages[-1][0] == 'review_dialogue'
+        assert [name for name, _ in stages[:-1]] == ([] if count == 1 else ['plan', 'style'])
+        assert all(profile == stages[-1][1] for _, profile in stages)
     for row in report["cases"]:
         assert row["companion_profile"]["assistant_persona"] == row["persona"]
         if scenario == "companion_names" and row["case"].endswith("/rename"):

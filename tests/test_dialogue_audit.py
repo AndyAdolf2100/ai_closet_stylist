@@ -1,10 +1,41 @@
 import json
+import runpy
+from pathlib import Path
 
 import pytest
 
 from scripts.exploratory_dialogues import EXPECTATIONS, SCENARIOS, ExploratoryUpstream
 from scripts.render_dialogue_report import render
 from stylist.models import Reply, Task
+
+
+def test_skill_summary_counts_actual_and_starting_roles_and_retains_review_failures():
+    summarize = runpy.run_path(str(Path(__file__).parents[1] /
+        'skills/stylist-dialogue-qa/scripts/summarize_batch.py'))['summarize']
+    rows = [
+        {'case': 'female_sweet_v1/sequence/start', 'persona': 'female_sweet_v1', 'reply': {'message': '合成'},
+         'automatic_errors': [], 'errors': [], 'persona_review': {'status': 'passed'}, 'review_reused': True},
+        {'case': 'female_sweet_v1/sequence/switch', 'persona': 'male_calm_v1', 'reply': {'message': '合成'},
+         'automatic_errors': [], 'errors': ['persona_review_invalid_evidence'],
+         'persona_review': {'status': 'invalid_evidence'}, 'initial_persona_review': {'status': 'failed'}},
+        {'case': 'male_calm_v1/single/failed', 'persona': 'male_calm_v1',
+         'automatic_errors': ['llm_invalid_json'], 'errors': ['llm_invalid_json'],
+         'persona_review': {'status': 'not_reviewable'}, 'initial_persona_review': {'status': 'pending'}},
+    ]
+    batch = {'kind': 'live_text_model_synthetic_adapters', 'total': 99, 'cases': rows,
+             'preference_comparisons': [{'status': 'incomplete'}]}
+    report = summarize(batch)
+    assert report['counts']['total'] == 3 and report['reported_total_mismatch'] == 99
+    assert report['counts']['automatic_passed'] == 2 and report['counts']['accepted'] == 1
+    assert report['counts']['without_reply'] == 1 and report['switch_rounds'] == 1
+    assert report['by_starting_persona']['female_sweet_v1']['total'] == 2
+    assert report['by_actual_persona']['male_calm_v1']['total'] == 2
+    assert report['preference_comparison_status'] == {'incomplete': 1}
+    assert report['saved_reply_rereviews'] == report['reused_first_reviews'] == 1
+    with pytest.raises(ValueError, match='Duplicate'):
+        summarize({**batch, 'cases': rows + rows[:1]})
+    with pytest.raises(ValueError, match='synthetic'):
+        summarize({'kind': 'real_user_export', 'cases': []})
 
 
 def test_exploration_matrix_has_checks_for_every_turn():
@@ -60,15 +91,22 @@ async def test_targeted_rereview_retains_passed_rows_and_first_failed_score(tmp_
             calls.append(payload)
             assert payload['companion_profile']['zodiac'] == '天秤座'
             assert payload['reply_parts']['follow_ups'] == ['帮我调整鞋子']
+            assert payload['memory_after']['entries'][0]['content'] == '我喜欢乌龙茶'
+            assert payload['ui_cards']['avatar_intent'] == 'view'
+            assert payload['ui_cards']['upload_intent'] is None
+            assert payload['previous_reply'] is None  # A new conversation cannot inherit the old transcript.
             return PersonaReview(persona_fit=4, naturalness=4, relevance=4, factuality=4,
                                  evidence='合成回答', reason='结构化复审测试')
 
     monkeypatch.setattr(reviewer, 'LanguageModel', Model)
     monkeypatch.setattr(reviewer.Settings, 'load', lambda: Settings(llm_key='fake', llm_url='https://unused.invalid', llm_model='fake'))
     response = Reply(conversation_id='sty_' + '1' * 32, version=1, mode='consult', delivery='advice',
-                     message='合成回答', follow_ups=['帮我调整鞋子'], task=Task()).model_dump(mode='json')
+                     message='合成回答', follow_ups=['帮我调整鞋子'], avatar_intent='view',
+                     task=Task()).model_dump(mode='json')
     rows = [{'case': f'male_calm_v1/test/{i}', 'persona': 'male_calm_v1', 'message': '测试',
              'companion_profile': {'zodiac': '天秤座'}, 'reply': response,
+             'memory_after': {'entries': [{'content': '我喜欢乌龙茶'}]},
+             'expected': {'new_conversation': i == 1},
              'automatic_errors': [], 'errors': [] if i == 0 else ['persona_review_failed'],
              'persona_review': {'status': 'passed' if i == 0 else 'failed'}} for i in range(2)]
     src, out = tmp_path / 'source.json', tmp_path / 'reviewed.json'

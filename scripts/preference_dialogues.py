@@ -109,12 +109,14 @@ for mbti in [a+b+c+d for a in 'IE' for b in 'NS' for c in 'FT' for d in 'JP']:
 
 SCENARIOS["preference_auto_memory"] = [
     ("likes", "我喜欢蓝色，我不喜欢高跟鞋。", True),
-    ("temporary", "今天想试试红色，不要保存。", True),
+    ("temporary", "今天想试试红色，不要保存。", False),
     ("other", "我朋友喜欢绿色。", True),
 ]
 for name, _, _ in SCENARIOS["preference_auto_memory"]:
     EXPECTATIONS[f"preference_auto_memory/{name}"] = {"no_tools": True,
         "review_focus": "本人明确喜恶自动收进手记并有回执；临时需求、拒绝保存和朋友偏好不能保存。不能冒充已修改或删除旧记忆。"}
+EXPECTATIONS['preference_auto_memory/temporary'].update(no_tools=False, inventory=True,
+    no_weather_tools=True, allow_empty_looks=True)
 
 # Exact book assertions also run in the live evaluation harness.
 

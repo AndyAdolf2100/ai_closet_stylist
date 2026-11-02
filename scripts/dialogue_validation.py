@@ -8,6 +8,10 @@ from stylist.errors import StylistError
 from stylist.models import Model
 from stylist.weather import today
 
+from .avatar_dialogues import EXPECTATIONS as AVATAR_EXPECTATIONS
+from .avatar_dialogues import SCENARIOS as AVATAR_SCENARIOS
+from .city_invitation_dialogues import EXPECTATIONS as CITY_INVITATION_EXPECTATIONS
+from .city_invitation_dialogues import SCENARIOS as CITY_INVITATION_SCENARIOS
 from .companion_dialogues import EXPECTATIONS as COMPANION_EXPECTATIONS
 from .companion_dialogues import SCENARIOS as COMPANION_SCENARIOS
 from .memory_dialogues import EXPECTATIONS as MEMORY_EXPECTATIONS
@@ -15,6 +19,8 @@ from .memory_dialogues import SCENARIOS as MEMORY_SCENARIOS
 from .preference_dialogues import EXPECTATIONS as PREFERENCE_EXPECTATIONS
 from .preference_dialogues import PRODUCTS as PREFERENCE_PRODUCTS
 from .preference_dialogues import SCENARIOS as PREFERENCE_SCENARIOS
+from .upload_intent_dialogues import EXPECTATIONS as UPLOAD_EXPECTATIONS
+from .upload_intent_dialogues import SCENARIOS as UPLOAD_SCENARIOS
 
 SCENARIOS = {
     "weather_city_switch": [
@@ -49,10 +55,10 @@ EXPECTATIONS = {
     "weather_city_switch/sanya": {"inventory": True, "weather_city": "三亚市", "delivery": "outfit"},
     "weather_city_switch/auckland": {"city_contains": "奥克兰", "no_weather": True, "no_looks": True,
         "inventory": False, "delivery": "clarification", "forbid_text": ["三亚", "31度", "25度"],
-        "must_text": ["奥克兰", "查不到"], "no_style": True},
+        "must_text": ["奥克兰"], "must_text_any": [["查不到", "没查到", "还没消息", "暂时查不了"]], "no_style": True},
     "weather_city_switch/new_zealand": {"city_contains": "奥克兰", "no_weather": True, "no_looks": True,
         "inventory": False, "delivery": "clarification", "forbid_text": ["三亚", "31度", "25度"],
-        "must_text": ["奥克兰", "查不到"], "no_style": True},
+        "must_text": ["奥克兰"], "must_text_any": [["查不到", "没查到", "还没消息", "暂时查不了"]], "no_style": True},
     "weather_to_wardrobe/shanghai": {"weather_city": "上海市", "inventory": False, "no_looks": True},
     "weather_to_wardrobe/followup": {"inventory": True, "delivery": "outfit"},
     "wardrobe_local_change/setup": {"inventory": True, "delivery": "outfit", "no_weather_tools": True},
@@ -112,11 +118,17 @@ EXPECTATIONS["partial_wardrobe/five_pieces"] = {
     "review_focus": "合成衣橱只有白衬衫，整套五件建议应保留这件真实衣物、四类列文字参考；不能因缺少鞋裤清空选款，也不能编造另四件已在衣橱。"}
 
 SCENARIOS.update(MEMORY_SCENARIOS)
+SCENARIOS.update(AVATAR_SCENARIOS)
+EXPECTATIONS.update(AVATAR_EXPECTATIONS)
+SCENARIOS.update(UPLOAD_SCENARIOS)
+EXPECTATIONS.update(UPLOAD_EXPECTATIONS)
 EXPECTATIONS.update(MEMORY_EXPECTATIONS)
 SCENARIOS.update(PREFERENCE_SCENARIOS)
 EXPECTATIONS.update(PREFERENCE_EXPECTATIONS)
 SCENARIOS.update(COMPANION_SCENARIOS)
 EXPECTATIONS.update(COMPANION_EXPECTATIONS)
+SCENARIOS.update(CITY_INVITATION_SCENARIOS)
+EXPECTATIONS.update(CITY_INVITATION_EXPECTATIONS)
 
 PRODUCTS = [
     {"product_id": "101", "class_name": "上衣", "title": "白色长袖衬衫", "color": "白色", "material": "棉"},
@@ -188,6 +200,23 @@ def visible_text(reply):
 
 def check_reply(reply, expected, calls, model_calls=(), previous=None):
     errors, text = [], visible_text(reply)
+    if 'city_selection_required' in expected and reply.city_selection_required != expected['city_selection_required']:
+        errors.append('city_invitation_mismatch')
+    if reply.upload_suggestion and reply.upload_intent is None:
+        errors.append('unrequested_upload_invitation')
+    if 'avatar_intent' in expected and reply.avatar_intent != expected['avatar_intent']:
+        errors.append('avatar_intent_mismatch')
+    if 'tryon_reference' in expected and bool(reply.tryon_context) != expected['tryon_reference']:
+        errors.append('avatar_outfit_reference')
+    if reply.tryon_context and (reply.tryon_context.conversation_id != reply.conversation_id
+                               or reply.tryon_context.version != reply.version):
+        errors.append('avatar_stale_reference')
+    if "upload_intent" in expected and reply.upload_intent != expected["upload_intent"]:
+        errors.append("upload_intent_mismatch")
+    if "upload_suggestion" in expected and reply.upload_suggestion != expected["upload_suggestion"]:
+        errors.append("upload_card_mismatch")
+    if expected.get("upload_question") and "？" not in reply.message and "?" not in reply.message:
+        errors.append("missing_upload_question")
     inventory = "/api/user_product/quick_edit_list" in calls
     if "inventory" in expected and inventory != expected["inventory"]:
         errors.append("inventory_access")
@@ -226,6 +255,8 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
         errors.append("stale_or_unsupported_claim")
     if any(token not in text for token in expected.get("must_text", [])):
         errors.append("missing_answer")
+    if any(not any(phrase in text for phrase in alternatives) for alternatives in expected.get("must_text_any", [])):
+        errors.append("missing_answer")
     if expected.get("no_style") and any(x["name"] == "style" for x in model_calls):
         errors.append("unsupported_city_reached_styling")
     if expected.get("freeze_except") and previous and previous.looks:
@@ -245,10 +276,15 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
             "forecast_unavailable", "forecast_date_unavailable", "city_needs_selection", "inventory_read_failed", "saved_outfits_failed"]):
         errors.append("internal_error_code_visible")
     if not expected.get("technical_question") and any(token in text for token in
-            ["接入", "支持范围", "接口", "数据源", "降级", "结构校验", "selected_keys", "use_inventory"]):
+            ["接入", "支持范围", "接口", "降级", "结构校验", "selected_keys", "use_inventory"]):
         errors.append("stiff_technical_language")
-    if any(token in follow for follow in reply.follow_ups for token in ["我可以", "要不要我"]):
+    if any(token in follow for follow in reply.follow_ups for token in ["我可以", "要不要我", "我帮你", "告诉我你"]):
         errors.append("assistant_voice_followup")
+    for look in reply.looks:
+        if len(set(look.pieces)) != len(look.pieces) or len(set(look.reference_pieces)) != len(look.reference_pieces):
+            errors.append("duplicate_outfit_labels")
+        if any(line.rstrip().endswith(("，", ",", "“")) for line in [*look.why, *look.how, *look.notes]):
+            errors.append("unfinished_outfit_sentence")
     if expected.get("mentioned_zodiac") and expected["mentioned_zodiac"] not in visible_text(reply):
         errors.append("missing_expected_zodiac")
     if expected.get("selected_style"):
