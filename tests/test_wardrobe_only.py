@@ -29,6 +29,8 @@ async def test_clothing_preferences_used_as_outfit_conditions_return_personal_it
     upstream = DialogueUpstream('wardrobe_only')
     upstream.products = [{**p, 'original_image': 'https://example.invalid/wardrobe-test.jpg'} for p in PRODUCTS]
     message = '我喜欢穿短袖，衬衫，不喜欢黄色、绿色'
+    if not chat_only:
+        message += '，按这些喜好帮我搭一套'
     if text_only:
         message += '，只给文字穿法，不查衣橱。'
     store = Store(str(tmp_path / 'preferences-outfit.db'))

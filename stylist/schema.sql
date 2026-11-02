@@ -1,4 +1,10 @@
 PRAGMA journal_mode=WAL;
+CREATE TABLE IF NOT EXISTS stylist_media_actions (
+  id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, kind TEXT NOT NULL, digest TEXT NOT NULL,
+  status TEXT NOT NULL, snapshot_json TEXT NOT NULL, result_json TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS stylist_media_owner ON stylist_media_actions(owner_id,created_at);
 CREATE TABLE IF NOT EXISTS stylist_companion_profiles (
   owner_id TEXT PRIMARY KEY, profile_json TEXT NOT NULL,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

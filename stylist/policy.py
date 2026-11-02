@@ -94,6 +94,28 @@ async def interpret_task(llm, payload, state, message):
         if "我可以把鞋子和层次" in message and "走很多路" in message:
             previous = previous.model_copy(update={"mode": "recommend", "conversation_only": False,
                 "use_inventory": True, "weather_only": False, "weather_scope": "none", "clarification": None})
+        if previous.avatar_declined:
+            previous = previous.model_copy(update={"avatar_intent": None, "avatar_evidence": ""})
+        if previous.avatar_intent:
+            if previous.avatar_evidence.strip() and previous.avatar_evidence in message:
+                return previous.model_copy(update={"mode": "consult", "conversation_only": True,
+                    "use_inventory": False, "weather_scope": "none", "weather_only": False,
+                    "technical_question": False, "changes": {}, "new_task": False,
+                    "replace_slots": [], "memory_save": None, "memory_changes": {},
+                    "upload_intent": None, "upload_evidence": "",
+                    "clarification": None, "location_limit_exceeded": False}), state.task.model_copy(deep=True)
+            previous = previous.model_copy(update={"avatar_intent": None, "avatar_evidence": ""})
+        if previous.upload_declined:
+            previous = previous.model_copy(update={"upload_intent": None, "upload_evidence": ""})
+        if previous.upload_intent:
+            # An invitation is read-only and cannot mutate the existing outfit task.
+            if previous.upload_evidence.strip() and previous.upload_evidence in message:
+                return previous.model_copy(update={"mode": "consult", "conversation_only": True,
+                    "use_inventory": False, "weather_scope": "none", "weather_only": False,
+                    "technical_question": False, "changes": {}, "new_task": False,
+                    "replace_slots": [], "memory_save": None, "memory_changes": {},
+                    "clarification": None, "location_limit_exceeded": False}), state.task.model_copy(deep=True)
+            previous = previous.model_copy(update={"upload_intent": None, "upload_evidence": ""})
         selected = payload.get("selected_location")
         city_change = previous.changes.get("city")
         if selected and city_change and isinstance(city_change.value, str):

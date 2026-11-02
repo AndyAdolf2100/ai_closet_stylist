@@ -76,6 +76,13 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    avatar_intent: Literal["upload", "view", "tryon"] | None = None
+    avatar_evidence: str = Field(default="", max_length=6000)
+    avatar_declined: bool = False
+    avatar_look_index: int | None = Field(default=None, ge=0, le=6)
+    upload_intent: Literal["garment", "unspecified"] | None = None
+    upload_evidence: str = Field(default="", max_length=6000)
+    upload_declined: bool = False
     mode: Literal["consult", "recommend", "modify", "weekly"]
     technical_question: bool = False
     use_profile_gender: bool = True
@@ -162,7 +169,18 @@ class Look(Model):
     notes: list[str] = Field(default_factory=list)
 
 
+class TryonReference(Model):
+    conversation_id: str = Field(pattern=r"^sty_[a-f0-9]{32}$")
+    version: int = Field(ge=1)
+    look_index: int = Field(ge=0, le=6)
+
+
 class Reply(Model):
+    avatar_intent: Literal["upload", "view", "tryon"] | None = None
+    tryon_context: TryonReference | None = None
+    tryon_title: str | None = None
+    upload_intent: Literal["garment", "unspecified"] | None = None
+    upload_suggestion: bool = False
     conversation_only: bool = False
     weather_only: bool = False
     conversation_id: str
@@ -211,6 +229,7 @@ class CompanionProfile(Model):
 
 
 class ChatRequest(Model):
+    upload_action_id: str | None = Field(default=None, pattern=r"^med_[a-f0-9]{32}$")
     message: str = Field(min_length=1, max_length=6000)
     conversation_id: str | None = Field(default=None, pattern=r"^sty_[a-f0-9]{32}$")
     expected_version: int = Field(default=0, ge=0)

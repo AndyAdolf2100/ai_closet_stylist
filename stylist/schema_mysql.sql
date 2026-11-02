@@ -1,3 +1,10 @@
+CREATE TABLE IF NOT EXISTS stylist_media_actions (
+  id VARCHAR(64) NOT NULL PRIMARY KEY, owner_id VARCHAR(191) NOT NULL,
+  kind VARCHAR(32) NOT NULL, digest VARCHAR(64) NOT NULL, status VARCHAR(32) NOT NULL,
+  snapshot_json LONGTEXT NOT NULL, result_json LONGTEXT,
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  INDEX stylist_media_owner(owner_id,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 CREATE TABLE IF NOT EXISTS stylist_companion_profiles (
   owner_id VARCHAR(191) NOT NULL PRIMARY KEY,
   profile_json LONGTEXT NOT NULL,

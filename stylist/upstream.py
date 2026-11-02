@@ -14,7 +14,12 @@ from .errors import AuthenticationExpired, StylistError
 
 READ_TOOLS = {"city.resolve", "weather.get", "product.resolve", "outfit.search-saved", "outfit.resolve", "kb_search"}
 IMAGE_READ_TOOLS = {"digital_twin_overview", "digital_twin_tryon_quote", "product_beautify_quote"}
+MEDIA_READ_TOOLS = {"product_upload_status", "product_upload_receipt", "digital_twin_photo_check_status",
+                    "digital_twin_generation_status", "digital_twin_tryon_status"}
+MEDIA_WRITE_TOOLS = {"product_add", "digital_twin_photo_check", "digital_twin_generate",
+                     "digital_twin_set_default", "digital_twin_confirm"}
 READ_TOOLS |= IMAGE_READ_TOOLS
+READ_TOOLS |= MEDIA_READ_TOOLS
 AUTH_CODES = {401, 403, 43100, 43101, 43102, 43103}
 
 
@@ -47,7 +52,8 @@ class Upstream:
         self.transport = transport
 
     async def get(self, path: str, params=None):
-        allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories"}
+        allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories",
+                   "/api/digital_twin/overview"}
         if path not in allowed:
             raise StylistError("endpoint_not_allowed", "该接口未接入。", 400)
         try:
@@ -66,6 +72,19 @@ class Upstream:
         if not owner.isdecimal() or int(owner) < 1:
             raise StylistError("identity_contract_error", "无法确认当前账号，请重新登录。", 401)
         return owner
+
+    async def set_twin_gender(self, gender, version):
+        """Explicit profile choice, independent of the assistant's appearance."""
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout, trust_env=False,
+                                         transport=self.transport) as client:
+                response = await client.post(self.settings.server_url + "/api/digital_twin/profile/update",
+                    json={"gender": {"男": "male", "女": "female"}[gender], "expected_version": version},
+                    headers={"Authorization": self.authorization, "version": self.settings.login_app_version,
+                             "device": "PC"})
+                return _business_payload(response)
+        except (httpx.HTTPError, ValueError) as exc:
+            raise StylistError("upstream_unavailable", "人物资料暂时没有保存成功，请稍后重试。") from exc
 
     async def upload_outfit_image(self, image_data):
         """Store the final client-composed PNG using the existing authenticated upload API."""
@@ -151,6 +170,12 @@ class MCPReads:
             raise StylistError("tool_not_allowed", "该图像操作未接入。", 400)
         return await self._validated_call(name, arguments, timeout=self.image_timeout)
 
+    async def commit_media(self, name, arguments):
+        # MediaActions calls this only from explicit, authenticated UI actions.
+        if name not in MEDIA_WRITE_TOOLS:
+            raise StylistError("tool_not_allowed", "该上传或形象操作未接入。", 400)
+        return await self._validated_call(name, arguments, timeout=self.image_timeout)
+
     async def _validated_call(self, name, arguments, timeout=None):
         tool = (await self.discover()).get(name)
         if tool is None:
@@ -171,7 +196,14 @@ class MCPReads:
             code = value.get("code", "tool_error") if isinstance(value, dict) else "tool_error"
             if code in {"unauthenticated", "unauthorized", "authentication_expired"}:
                 raise AuthenticationExpired()
-            raise StylistError(code, "该服务暂时无法完成请求。")
+            message = {"product_upload_capacity_exhausted": "衣橱容量不足，请先在App整理衣橱或查看扩容方案。",
+                       "digital_twin_points_insufficient": "账户积分不足，可在App查看积分和充值方案。",
+                       "digital_twin_price_changed": "人物生成费用已变化，请重新查看费用并确认。",
+                       "digital_twin_check_expired": "照片检查已过期，请重新检查后再生成。",
+                       "tryon_points_insufficient": "账户积分不足，可在App查看积分和充值方案。",
+                       "tryon_quota_exhausted": "当前试穿额度不足，可在App查看可用权益。"}.get(code,
+                       "该服务暂时无法完成请求。")
+            raise StylistError(code, message)
         if not isinstance(value, dict):
             raise StylistError("tool_result_invalid", "工具返回结果不完整。")
         if tool.outputSchema and list(Draft202012Validator(tool.outputSchema).iter_errors(value)):

@@ -20,6 +20,15 @@ from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
+from .media import (
+    ConfirmInput,
+    GenerationInput,
+    MediaActions,
+    TwinCandidate,
+    TwinGender,
+    TwinSelection,
+    UploadInput,
+)
 from .memory import MemoryBook, MemoryBookWrite
 from .models import ChatRequest, CompanionProfile, ForecastRequest, LocateRequest, Model
 from .personas import progress_message
@@ -51,6 +60,8 @@ def create_app(settings=None):
     model = LanguageModel(settings)
     engine = Stylist(settings, store, model)
     images = ImageService(store)
+    media = MediaActions(store)
+    app.state.media = media
     compositions = Compositions(store)
     app.state.compositions = compositions
     alerts = engine.alerts
@@ -273,6 +284,50 @@ def create_app(settings=None):
     async def image_quote(request: ImageQuoteRequest, authorization: str | None = Header(default=None)):
         return await images.quote(Upstream(settings, require_token(authorization)), request)
 
+    @app.post("/stylist-api/media/uploads")
+    async def upload_media(request: UploadInput, authorization: str | None = Header(default=None)):
+        return await media.upload(Upstream(settings, require_token(authorization)), request)
+
+    @app.get("/stylist-api/media")
+    async def media_history(authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return media.list(owner)
+
+    @app.get("/stylist-api/media/{action_id}")
+    async def media_status(action_id: str, authorization: str | None = Header(default=None)):
+        return await media.refresh(Upstream(settings, require_token(authorization)), action_id)
+
+    @app.post("/stylist-api/media/{action_id}/generation-quote")
+    async def generation_quote(action_id: str, request: GenerationInput, authorization: str | None = Header(default=None)):
+        return await media.generation_quote(Upstream(settings, require_token(authorization)), action_id, request)
+
+    @app.post("/stylist-api/media/{action_id}/confirm")
+    async def generation_confirm(action_id: str, request: ConfirmInput, authorization: str | None = Header(default=None)):
+        return await media.confirm_generation(Upstream(settings, require_token(authorization)), action_id, request.confirmed)
+
+    @app.get("/stylist-api/twins")
+    async def twin_overview(authorization: str | None = Header(default=None)):
+        return await media.overview(Upstream(settings, require_token(authorization)))
+
+    @app.post("/stylist-api/twins/default")
+    async def twin_default(request: TwinSelection, authorization: str | None = Header(default=None)):
+        return await media.select(Upstream(settings, require_token(authorization)), request)
+
+    @app.post("/stylist-api/twins/use-candidate")
+    async def twin_use_candidate(request: TwinCandidate, authorization: str | None = Header(default=None)):
+        return await media.use_candidate(Upstream(settings, require_token(authorization)), request)
+
+    @app.post("/stylist-api/twins/gender")
+    async def twin_gender(request: TwinGender, authorization: str | None = Header(default=None)):
+        upstream = Upstream(settings, require_token(authorization))
+        await upstream.identity()
+        return await upstream.set_twin_gender(request.gender, request.expected_version)
+
+    @app.get("/stylist-api/images")
+    async def image_history(conversation_id: str | None = None, authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return images.list(owner, conversation_id)
+
     @app.post("/stylist-api/images/{action_id}/confirm")
     async def image_confirm(action_id: str, request: ImageConfirmRequest,
                             authorization: str | None = Header(default=None)):
@@ -280,8 +335,7 @@ def create_app(settings=None):
 
     @app.get("/stylist-api/images/{action_id}")
     async def image_status(action_id: str, authorization: str | None = Header(default=None)):
-        owner = await Upstream(settings, require_token(authorization)).identity()
-        return images.status(owner, action_id)
+        return await images.refresh(Upstream(settings, require_token(authorization)), action_id)
 
     @app.get("/")
     @app.get("/mobile/")

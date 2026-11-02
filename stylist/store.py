@@ -112,6 +112,8 @@ class Store:
         excluded = {"assistant_persona"} if request.assistant_persona is None else set()
         if request.companion_profile is None:
             excluded.add("companion_profile")
+        if request.upload_action_id is None:
+            excluded.add("upload_action_id")
         digest = hashlib.sha256(request.model_dump_json(exclude=excluded).encode()).hexdigest()
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")

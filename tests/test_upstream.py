@@ -30,6 +30,18 @@ async def test_rest_sends_required_version_and_does_not_trust_client_user_id():
     assert await Upstream(Settings(), "Bearer test", httpx.MockTransport(handler)).identity() == "7"
 
 
+@pytest.mark.parametrize('label,code', [('男', 'male'), ('女', 'female')])
+async def test_twin_gender_uses_server_codes_and_only_explicit_profile_fields(label, code):
+    import json
+    def handler(request):
+        assert request.url.path == '/api/digital_twin/profile/update'
+        assert json.loads(request.content) == {'gender': code, 'expected_version': 4}
+        assert request.headers['authorization'] == 'Bearer synthetic'
+        return httpx.Response(200, json={'code': 0, 'data': {'profile_version': 5}})
+    upstream = Upstream(Settings(), 'Bearer synthetic', httpx.MockTransport(handler))
+    assert (await upstream.set_twin_gender(label, 4))['profile_version'] == 5
+
+
 @pytest.mark.asyncio
 async def test_version_configuration_error_is_not_reported_as_login_expiry():
     upstream = Upstream(Settings(), "Bearer test", httpx.MockTransport(

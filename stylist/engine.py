@@ -37,6 +37,7 @@ from .memory import (
 )
 from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Task
 from .personas import (
+    avatar_invitation,
     boundary_reply,
     is_male_persona,
     itinerary_weather_message,
@@ -45,6 +46,7 @@ from .personas import (
     service_notice,
     technical_detail_message,
     unsupported_city_message,
+    upload_invitation,
 )
 from .planning_dates import explicit_scope, schedule_dates, schedule_problems
 from .policy import (
@@ -58,7 +60,7 @@ from .policy import (
 )
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .progress import report
-from .retrieval import retrieve, saved_candidates, weather_for
+from .retrieval import resolve_products, retrieve, saved_candidates, weather_for
 from .weather import WeatherService, apply_forecast
 
 logger = logging.getLogger(__name__)
@@ -148,6 +150,10 @@ class Stylist:
                 raise StylistError("look_not_found", "这套搭配暂时找不到了，请打开最新对话再选一下。", 409)
             return [state.looks[request.selected_look_index]]
 
+        def avatar_look(state, plan):
+            index = plan.avatar_look_index if plan.avatar_look_index is not None else (request.selected_look_index or 0)
+            return index if index < len(state.looks) and state.looks[index].items else None
+
         async def understand(data):
             state = SessionState.model_validate(data["session"])
             if boundary_only(request.message):
@@ -190,6 +196,17 @@ class Stylist:
                                    "items": [{"key": p.key, "slot": p.slot, "name": p.display_name} for p in x.items],
                                    "how": x.how} for x in state.looks],
             }, state, request.message)
+            if plan.avatar_intent:
+                plan.clarification = avatar_invitation(request.assistant_persona, plan.avatar_intent,
+                    request.companion_profile, has_outfit=avatar_look(state, plan) is not None)
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
+            if plan.upload_intent and not request.upload_action_id:
+                plan.clarification = upload_invitation(request.assistant_persona, request.companion_profile,
+                                                      unspecified=plan.upload_intent == "unspecified")
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
+            if (request.upload_action_id and not plan.technical_question and not plan.weather_only
+                    and wardrobe_allowed(request.message, state.messages)):
+                plan.mode, plan.use_inventory, plan.conversation_only = "recommend", True, False
             # Calendar scope is not a rolling seven-day window and survives weather opt-out.
             if not plan.conversation_only and not plan.weather_only:
                 scope = explicit_scope(request.message)
@@ -380,12 +397,32 @@ class Stylist:
             profile = request.companion_profile
             styles = [effective_task.style] if effective_task.style else (profile.style_preferences if profile and plan.use_profile_preferences else [])
             pool, missing = preferred_pool(pool, styles, frozen)
+            if request.upload_action_id and plan.mode != "consult" and plan.use_inventory:
+                from .media import MediaActions
+                from .models import ProductRef
+
+                owner = await upstream.identity()
+                upload = MediaActions(self.store).get(owner, request.upload_action_id)
+                result = json.loads(upload["result_json"] or "{}")
+                if upload["kind"] != "garment" or upload["status"] != "completed" or not result.get("user_product_id"):
+                    raise StylistError("upload_not_ready", "这件衣服还没有完成入柜，请先查看处理结果。", 409)
+                async with upstream.mcp() as mcp:
+                    anchors = await resolve_products(mcp, [ProductRef(source="user", product_id=str(result["user_product_id"]))])
+                if not anchors:
+                    raise StylistError("upload_product_unavailable", "刚上传的单品暂时无法读取，请先查看衣橱。", 409)
+                reasons, _ = suitability(anchors[0], effective_task)
+                if reasons:
+                    warnings.append("刚上传的单品与本轮要求冲突，本次先不强行选用：" + "；".join(reasons))
+                else:
+                    pool[anchors[0].key] = anchors[0]
+                    frozen.append(anchors[0])
             if pool and missing:
                 names = "、".join(missing)
                 warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
                                  if is_male_persona(request.assistant_persona) else
                                  f"这次候选里暂时没有明确标为{names}的衣物，我先用现有单品给你一点接近的搭配灵感。"))
             return {"pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
+                    "frozen": [p.model_dump(mode="json") for p in frozen],
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
 
         def draft_payload(data):
@@ -511,7 +548,15 @@ class Stylist:
         def deliver_node(data):
             plan, task = unpack(data)
             if plan.clarification or data.get("cancelled"):
+                state = SessionState.model_validate(data["session"])
+                index = avatar_look(state, plan) if plan.avatar_intent else None
                 return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                    avatar_intent=plan.avatar_intent,
+                    tryon_context=({"conversation_id": data["session_id"], "version": request.expected_version + 1,
+                                    "look_index": index} if index is not None else None),
+                    tryon_title=state.looks[index].title if index is not None else None,
+                    upload_intent=plan.upload_intent, upload_suggestion=plan.upload_intent == "garment",
+                    conversation_only=plan.conversation_only,
                     mode=plan.mode, delivery="clarification", message=plan.clarification or "已取消本次生成。",
                     weather_only=plan.weather_only, weather=data.get("weather"), task=task).model_dump(mode="json")}
             cid = data["session_id"]
@@ -668,4 +713,6 @@ class Stylist:
                                               require_complete=False))
             elif mode in {"recommend", "weekly"} and pool and not look.unmatched_reason:
                 problems.append("个人候选不为空，应保留适合的真实单品；全部未选时必须说明unmatched_reason")
+            if mode == "recommend" and frozen and not look.selected_keys:
+                problems.append("必须围绕用户指定保留的上传单品搭配，不能省略该单品")
         return list(dict.fromkeys(problems))

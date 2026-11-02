@@ -7,7 +7,7 @@ import json
 import time
 import uuid
 
-from pydantic import Field
+from pydantic import Field, StrictBool
 
 from .errors import StylistError
 from .models import Model, ProductRef, SessionState
@@ -21,7 +21,7 @@ class ImageQuoteRequest(Model):
 
 
 class ImageConfirmRequest(Model):
-    confirmed: bool
+    confirmed: StrictBool
 
 
 def fingerprint(value):
@@ -68,16 +68,23 @@ class ImageService:
             contract = fingerprint({name: tools[name].model_dump(mode="json") for name in names})
         action_id = "img_" + uuid.uuid4().hex
         snapshot = {"items": [r.model_dump() for r in refs], "points_cost": cost["points_cost"],
+                    "look_index": request.look_index,
                     "twin": twin_fingerprint(overview), "contract": contract,
                     "scene": {"occasion": state.task.occasion, "style": state.task.style},
                     "title": state.looks[request.look_index].title,
-                    "notices": ["确认后会将这套搭配保存到个人搭配库；系统商品会归入你的衣橱。",
+                    "notices": ["确认后会将所选个人衣橱单品保存到个人搭配库并生成试穿图。",
+                                "图片仅试穿已选衣橱单品，其余文字参考不参与生成。",
                                 "试穿图片用于视觉参考，不能保证实际尺码、面料和上身效果。"]}
+        portraits = list(overview.get("system_twins", []))
+        if overview.get("custom_twin"):
+            portraits.append({**overview["custom_twin"], "twin_key": "custom"})
+        snapshot["portrait"] = next((p for p in portraits if p.get("twin_key") == overview["default_twin_key"]), {})
         with self.store.connection() as conn:
             conn.execute("INSERT INTO stylist_image_actions(id,owner_id,conversation_id,version,quote_json,expires_at) VALUES(?,?,?,?,?,?)",
                          (action_id, owner, request.conversation_id, request.version,
                           json.dumps(snapshot, ensure_ascii=False), time.time() + 300))
         return {"action_id": action_id, "points_cost": cost["points_cost"], "title": snapshot["title"],
+                "portrait": snapshot["portrait"], "item_count": len(refs),
                 "notices": snapshot["notices"], "expires_in_seconds": 300, "status": "quoted"}
 
     def get(self, owner, action_id):
@@ -89,8 +96,39 @@ class ImageService:
 
     def status(self, owner, action_id):
         row = self.get(owner, action_id)
+        quote = json.loads(row["quote_json"])
         return {"action_id": action_id, "status": row["status"],
+                "conversation_id": row["conversation_id"], "version": row["version"],
+                "title": quote.get("title", "试穿结果"), "points_cost": quote.get("points_cost"),
+                "look_index": quote.get("look_index", 0),
                 "result": json.loads(row["result_json"]) if row["result_json"] else None}
+
+    def list(self, owner, conversation_id=None):
+        with self.store.connection() as conn:
+            rows = conn.execute("SELECT id FROM stylist_image_actions WHERE owner_id=? "
+                + ("AND conversation_id=? " if conversation_id else "")
+                + "ORDER BY created_at DESC,id DESC LIMIT 30",
+                (owner, conversation_id) if conversation_id else (owner,)).fetchall()
+        return [self.status(owner, row["id"]) for row in rows]
+
+    async def refresh(self, upstream, action_id):
+        owner = await upstream.identity()
+        current = self.status(owner, action_id)
+        # A failed image task can receive its refund after the generation failed.
+        image = current.get("result") or {}
+        missing_image = current["status"] == "completed" and not (image.get("result_image_url") or image.get("result_image"))
+        if current["status"] not in {"executing", "processing", "unknown", "failed"} and not missing_image:
+            return current
+        async with upstream.mcp() as mcp:
+            result = await mcp.call("digital_twin_tryon_status", {"client_request_id": action_id})
+        # Absence of an upstream record cannot prove a write was rejected.
+        if result.get("status") == "unknown":
+            return current
+        if result.get("status") == "completed" and not (result.get("result_image_url") or result.get("result_image")):
+            return current
+        if result.get("status") in {"processing", "completed", "failed"}:
+            self.mark(owner, action_id, result["status"], result)
+        return self.status(owner, action_id)
 
     def mark(self, owner, action_id, status, result=None):
         with self.store.connection() as conn:
@@ -134,12 +172,18 @@ class ImageService:
                 if changed.rowcount != 1:
                     raise StylistError("image_already_submitted", "这次试穿已经提交。", 409)
             try:
-                saved = await mcp.commit_image("save_recommended_outfit", {"selection_id": action_id,
+                saved = await mcp.commit_image("save_recommended_outfit", {"selection_id": "sel_" + action_id[4:],
                     "items": [{"source": x["source"], "product_id": int(x["product_id"])} for x in snapshot["items"]]})
                 result = await mcp.commit_image("digital_twin_tryon", {"outfit_id": saved["outfit_id"],
                     "idempotency_key": action_id, "scene": snapshot["scene"]})
-                self.mark(owner, action_id, "completed", result)
-            except BaseException:
+                image = result.get("result_image_url") or result.get("result_image")
+                status = "completed" if result.get("status") == "completed" and image else "processing"
+                self.mark(owner, action_id, status, result)
+            except BaseException as exc:
+                if isinstance(exc, StylistError) and exc.code in {"tryon_points_insufficient", "tryon_quota_exhausted"}:
+                    self.mark(owner, action_id, "failed", {"error_code": exc.code, "message": exc.message,
+                                                          "charged": False})
+                    raise
                 self.mark(owner, action_id, "unknown", {"message": "已尝试提交，上游最终状态需要核对。不会自动重复生成；请在现有 App 试穿记录中查看。"})
                 raise StylistError("image_result_unknown", "尚未确认试穿最终状态，不会自动重复扣费生成，请查看现有 App 的试穿记录。") from None
         return self.status(owner, action_id)

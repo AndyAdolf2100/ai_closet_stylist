@@ -45,6 +45,7 @@ async def test_five_suggestions_with_one_owned_piece_keep_one_photo_and_four_ref
     assert [p.key for p in look.items] == ['user:101']
     assert len(look.pieces) == 5 and len(look.reference_pieces) == 4
     assert look.wardrobe_complete is False
+    assert not reply.upload_suggestion and reply.upload_intent is None
     assert look.items[0].original_image == 'https://example.invalid/owned-shirt.jpg'
     # Persistence and the image binding accept this partial look; other accounts cannot access it.
     persisted = Store(store.path).history(await upstream.identity(), reply.conversation_id)['messages'][0]['reply']
@@ -68,6 +69,7 @@ async def test_empty_wardrobe_stays_text_only(tmp_path):
         message='帮我推荐一套，不考虑天气', request_id='empty-wardrobe-query', weather_policy='ignored'))
     assert '/api/user_product/quick_edit_list' in upstream.calls
     assert reply.delivery == 'concept' and not reply.looks[0].items
+    assert not reply.upload_suggestion and reply.upload_intent is None
 
 
 def test_partial_selection_keeps_hard_rules_and_frozen_pieces():
