@@ -199,7 +199,7 @@ class Stylist:
             planning_payload = {
                 "now": today.isoformat(), "message": request.message,
                 "assistant_persona": request.assistant_persona,
-                "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
+                "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
                                      if clothing_content(note["content"]) == note["content"]],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
@@ -477,7 +477,7 @@ class Stylist:
             draft_payload = {
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
-                "companion_profile": request.companion_profile.model_dump(mode="json") if request.companion_profile else None,
+                "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
                                      if clothing_content(note["content"]) == note["content"]],
                 "expression_guidance": ({

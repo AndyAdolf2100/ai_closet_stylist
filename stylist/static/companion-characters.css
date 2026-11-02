@@ -1,0 +1,68 @@
+/* Static character selection: crop the supplied front view without modifying art. */
+.companion-cast-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:600px;margin:0 auto 14px}
+#companion-color-label{flex-shrink:0;font-size:12px;color:var(--muted);letter-spacing:.5px}
+#companion-dialog .companion-color-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:0 1 236px;gap:2px;min-width:0;margin:0;padding:3px;border:1px solid var(--line);border-radius:26px;background:color-mix(in srgb,var(--paper) 65%,var(--soft))}
+#companion-dialog label.companion-color-option{position:relative;display:block;min-width:0;margin:0;cursor:pointer}
+#companion-dialog .companion-color-option input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
+.companion-color-option>span{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 10px;border:1px solid transparent;border-radius:22px;font-size:12px;line-height:1.5;white-space:nowrap;color:var(--muted);transition:background .18s,border-color .18s,color .18s}
+.companion-color-swatch{display:block;flex:0 0 6px;width:6px;height:6px;border-radius:50%}
+.companion-color-swatch-follow{background:#64775d}:root[data-stylist-gender=male] .companion-color-swatch-follow{background:#3c5b79}.companion-color-swatch-system{background:#fcda4f}
+.companion-color-option:has(input:checked)>span{background:var(--paper);border-color:color-mix(in srgb,var(--accent) 28%,var(--line));color:var(--ink);box-shadow:0 2px 7px color-mix(in srgb,var(--accent) 6%,transparent)}
+.companion-color-option:has(input:focus-visible)>span{outline:2px solid var(--accent);outline-offset:2px}
+.companion-color-switch:disabled{opacity:.55}.companion-color-switch:disabled label,.companion-color-switch:disabled input{cursor:wait}
+@media(hover:hover){.companion-color-option:hover>span{color:var(--ink)}}
+@media(prefers-reduced-motion:reduce){.companion-color-option>span{transition:none}}
+#companion-dialog .companion-assistant-gender{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0;padding:0;border:0;margin:0 auto 20px;max-width:600px;text-align:left}
+#companion-dialog .companion-gender-picture{display:grid;grid-template-columns:66px minmax(0,1fr) 18px;gap:12px;align-items:center;position:relative;min-width:0;min-height:86px;margin:0;padding:8px 12px 8px 8px;border:1px solid var(--line);border-radius:16px;background:var(--paper);color:var(--ink);cursor:pointer;overflow:hidden}
+.companion-gender-picture input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.companion-gender-thumb{display:block;position:relative;width:66px;height:66px;border-radius:12px;overflow:hidden;background:var(--soft)}
+#companion-dialog .companion-gender-thumb img{position:absolute;width:650%;max-width:none;height:auto;left:-94%;top:0}
+.companion-gender-picture strong{display:block;font-size:15px;font-weight:550}.companion-gender-picture small{display:block;font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.companion-gender-tick{color:var(--accent);opacity:0}.companion-gender-picture:has(input:checked){border-color:var(--accent)!important;background:var(--soft)!important}.companion-gender-picture:has(input:checked) .companion-gender-tick{opacity:1}
+.companion-gender-picture:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:3px}
+#companion-dialog .companion-character-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:760px}
+#companion-dialog .companion-character{height:auto;min-height:0;border:1px solid var(--line);background:var(--paper);border-radius:16px;box-shadow:none}
+#companion-dialog .companion-character:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 2px var(--soft)}
+.companion-character-art{display:block;position:relative;aspect-ratio:480/1024;overflow:hidden;background:radial-gradient(ellipse at 50% 27%,var(--paper) 5%,transparent 70%),linear-gradient(155deg,var(--soft),var(--blush));isolation:isolate}
+.companion-character-frame{display:block;position:relative;width:100%;height:100%;aspect-ratio:480/1024;margin:0 auto}
+#companion-dialog .companion-character-art img{display:block;position:absolute;width:calc(320% * var(--art-scale,1));max-width:none;height:auto;left:var(--portrait-left,-20%);top:var(--art-top,0%);object-fit:fill;clip-path:inset(0 62% 0 7%)}
+#companion-dialog .companion-character .companion-person-copy{position:static;inset:auto;padding:12px 10px;min-height:106px;gap:5px;background:var(--paper);color:var(--ink)}
+#companion-dialog .companion-character .companion-person-copy strong{font-size:19px;letter-spacing:1px;font-weight:500;line-height:1.5}
+#companion-dialog .companion-character .companion-person-copy>span{font-size:11px;letter-spacing:0;color:var(--muted);line-height:1.6}
+#companion-dialog .companion-character .companion-person-copy small{display:block;font-size:11px;line-height:1.5;color:var(--muted)}
+.companion-character .companion-selected{top:9px;right:9px;width:23px;height:23px;line-height:23px;background:var(--paper);color:var(--accent)}
+.companion-character-note{max-width:760px;margin:16px auto 0;padding:15px 18px;min-height:90px;border:1px solid var(--line);border-radius:16px;background:var(--paper);color:var(--ink);text-align:left}
+.companion-character-note strong{font-size:13px;font-weight:500;color:var(--accent)}
+#companion-dialog .companion-character-note p{font-size:13px;line-height:1.8;margin:6px 0 0;color:var(--muted)}
+.companion-character-art.image-unavailable::after{content:'图片暂不可用';position:absolute;inset:0;display:grid;place-items:center;padding:10px;color:var(--muted);font-size:12px;text-align:center}
+.companion-gender-thumb.image-unavailable::after{content:'✧';position:absolute;inset:0;display:grid;place-items:center;color:var(--accent)}
+
+/* Purpose-built portraits and 3x2 blink sprite sheets for the six companions. */
+:root[data-companion-persona] .mascot.companion-sprite{background-image:var(--companion-avatar-image)!important;background-size:cover!important;background-position:center!important;animation:none!important;background-color:var(--soft)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent),0 4px 12px color-mix(in srgb,var(--accent) 8%,transparent)}
+:root[data-companion-persona] .mascot.companion-sprite.weather-mascot{background-image:var(--companion-weather-image)!important}
+:root[data-companion-persona] .mascot.hero-mascot{background-image:var(--companion-hero-image)!important;background-size:300% 200%!important;background-position:0 0!important;animation:none!important;background-color:var(--soft)!important;border:1px solid var(--line)!important;border-radius:24px;box-shadow:none!important;transform:none}
+:root[data-companion-persona] .mascot::before,:root[data-companion-persona] .mascot::after{content:none!important;animation:none!important}
+/* Keep the master scene fixed. Only the two feathered eye sockets expose sprite frames. */
+:root[data-companion-persona] .mascot.hero-mascot::after{content:""!important;position:absolute;inset:0;background-image:var(--companion-hero-image)!important;background-size:300% 200%!important;background-position:0 0;background-repeat:no-repeat;clip-path:inset(12% 32% 64% 32%)!important;pointer-events:none;mask-image:radial-gradient(ellipse var(--blink-eye-rx) var(--blink-eye-ry) at var(--blink-eye-x1) var(--blink-eye-y1),#000 80%,transparent 100%),radial-gradient(ellipse var(--blink-eye-rx) var(--blink-eye-ry) at var(--blink-eye-x2) var(--blink-eye-y2),#000 80%,transparent 100%);animation:companion-scene-blink 5.4s steps(1,end) infinite!important}
+@keyframes companion-scene-blink{0%,90%,100%{background-position:0 0}92%,96%{background-position:50% 0}94%{background-position:100% 0}}
+@media(prefers-reduced-motion:reduce){:root[data-companion-persona] .mascot.hero-mascot::after{content:none!important;animation:none!important}}
+
+@media(min-width:761px){.companion-character-art{height:clamp(190px,26dvh,280px);aspect-ratio:auto}.companion-character-frame{width:auto}}
+
+@media(max-width:760px){
+  #companion-dialog .companion-assistant-gender{gap:9px;margin-bottom:15px}
+  #companion-dialog .companion-gender-picture{grid-template-columns:44px minmax(0,1fr) 13px;gap:7px;padding:7px;min-height:72px;border-radius:13px}
+  .companion-gender-thumb{width:44px;height:54px;border-radius:9px}.companion-gender-picture strong{font-size:13px}.companion-gender-picture small{font-size:9px;margin-top:3px}
+  #companion-dialog .companion-character-grid{gap:8px}
+  #companion-dialog .companion-character{height:auto;border-radius:12px}
+  #companion-dialog .companion-character .companion-person-copy{padding:9px 6px;min-height:95px;gap:4px}
+  #companion-dialog .companion-character .companion-person-copy strong{font-size:14px;letter-spacing:0}
+  #companion-dialog .companion-character .companion-person-copy>span{font-size:10px}
+  #companion-dialog .companion-character .companion-person-copy small{font-size:10px}
+  .companion-character .companion-selected{width:18px;height:18px;line-height:18px;top:5px;right:5px;font-size:11px}
+  .companion-character-note{padding:12px 14px;margin-top:12px;min-height:86px}
+}
+
+/* Letters, upload/try-on dialogs and city invitations share the dialogue portrait. */
+.companion-dialogue-avatar{display:block;background-image:var(--companion-avatar-image,url("/static/assets/characters/companion-scenes-v1/female_warm_v1-avatar.png"));background-size:cover;background-position:center;background-repeat:no-repeat}
+.journey-companion-frame>.journey-dialogue-avatar{position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;filter:none}

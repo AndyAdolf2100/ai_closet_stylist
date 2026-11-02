@@ -1,6 +1,8 @@
 'use strict';
 (() => {
-  const defaults = () => ({ user_name: '', user_gender: null, agent_name: '衣衣', assistant_persona: 'female_warm_v1' });
+  const characters = window.CompanionCharacters;
+  const personaGender = id => characters.gender(id);
+  const defaults = () => ({ user_name: '', user_gender: null, agent_name: '衣衣', assistant_persona: 'female_warm_v1', color_scheme:'companion' });
   const dialog = document.createElement('dialog');
   dialog.id = 'companion-dialog'; dialog.setAttribute('aria-labelledby', 'companion-title');
   dialog.innerHTML = `
@@ -15,16 +17,26 @@
         <div class="companion-field" data-step="0"><label for="companion-user-name">你喜欢的称呼</label><input id="companion-user-name" type="text" maxlength="24" autocomplete="nickname" placeholder="写下你喜欢的称呼" aria-describedby="companion-error"><button type="button" class="companion-soft-choice" id="companion-user-skip">先叫我“你”就好</button></div>
         <fieldset class="companion-gender" data-step="1"><legend class="sr-only">选择你的性别</legend><label><input type="radio" name="companion-user-gender" value="女"><span>女生<small>从你的喜好开始</small></span></label><label><input type="radio" name="companion-user-gender" value="男"><span>男生<small>找到自在的穿法</small></span></label><label><input type="radio" name="companion-user-gender" value=""><span>暂不设定<small>慢慢了解也很好</small></span></label><p>仅作为为你搭配时的默认参考，也可以先不选。</p></fieldset>
         <div class="companion-field" data-step="2"><label for="companion-agent-name">你想怎么叫我</label><input id="companion-agent-name" type="text" maxlength="24" autocomplete="off" placeholder="一个你喜欢的名字" aria-describedby="companion-error"><button type="button" class="companion-soft-choice" id="companion-agent-default">就叫“衣衣”吧</button></div>
-        <fieldset class="companion-cast" data-step="3"><legend class="sr-only">选择女助理或男助理</legend>
-          <label class="companion-person companion-person-female"><input type="radio" name="companion-persona" value="female_warm_v1"><img src="/static/assets/characters/yiyi-female-standing-v3.jpg" alt="女助理，棕色短卷发，米白衬衫与绿色马甲，正常比例上半身站立像" width="384" height="512"><span class="companion-portrait" data-portrait="female" aria-hidden="true"></span><span class="companion-person-copy"><strong>女助理</strong><span>温柔细腻 · 从容灵动</span><small>“你的喜欢，我会慢慢了解。”</small></span><span class="companion-selected" aria-hidden="true">✓</span></label>
-          <label class="companion-person companion-person-male"><input type="radio" name="companion-persona" value="male_calm_v1"><img src="/static/assets/characters/yiyi-male-standing-v3.jpg" alt="男助理，棕色短卷发，米白衬衫与藏蓝开衫，正常比例上半身站立像" width="384" height="512"><span class="companion-portrait" data-portrait="male" aria-hidden="true"></span><span class="companion-person-copy"><strong>男助理</strong><span>沉稳细致 · 克制温暖</span><small>“不必着急，我们一起选。”</small></span><span class="companion-selected" aria-hidden="true">✓</span></label>
-        </fieldset>
+        <div class="companion-cast-step" data-step="3">
+          <div class="companion-cast-tools"><span id="companion-color-label">界面配色</span><fieldset class="companion-color-switch" aria-labelledby="companion-color-label"><label class="companion-color-option"><input id="companion-color-companion" type="radio" name="companion-color-scheme" value="companion"><span><i class="companion-color-swatch companion-color-swatch-follow" aria-hidden="true"></i>跟随助理</span></label><label class="companion-color-option" title="与 App 保持一致"><input id="companion-system-color" type="radio" name="companion-color-scheme" value="system"><span><i class="companion-color-swatch companion-color-swatch-system" aria-hidden="true"></i>系统配色</span></label></fieldset></div>
+          <fieldset class="companion-assistant-gender"><legend class="sr-only">选择助理形象的性别，与用户性别独立</legend>
+            ${['female', 'male'].map(gender => { const representative = characters.find(gender === 'male' ? 'male_calm_v1' : 'female_warm_v1'); return `<label class="companion-gender-picture"><input type="radio" name="companion-assistant-gender" value="${gender}"><span class="companion-gender-thumb" aria-hidden="true"><img src="${representative.image}" alt="" width="1536" height="1024"></span><span><strong>${gender === 'female' ? '女助理' : '男助理'}</strong><small>三种性格，慢慢选</small></span><span class="companion-gender-tick" aria-hidden="true">✓</span></label>`; }).join('')}
+          </fieldset>
+          <fieldset class="companion-cast companion-character-grid"><legend class="sr-only">选择陪伴你的性格与模样</legend>
+            ${characters.all.map(character => `<label class="companion-person companion-character companion-person-${character.gender}" data-character-gender="${character.gender}"><input type="radio" name="companion-persona" value="${character.id}" aria-describedby="${character.id}-summary"><span class="companion-character-art" style="--art-scale:${character.framing.scale};--art-top:${character.framing.top}%;--portrait-left:${character.framing.left}%"><span class="companion-character-frame"><img src="${character.image}" alt="${character.label}助理的静态正面形象，设定身高${character.height}厘米" width="1536" height="1024" loading="lazy" decoding="async"></span></span><span class="companion-person-copy"><strong>${character.label}</strong><span id="${character.id}-summary">${character.summary}</span><small>${character.height} cm</small></span><span class="companion-selected" aria-hidden="true">✓</span></label>`).join('')}
+          </fieldset>
+          <div class="companion-character-note" aria-live="polite"><strong></strong><p></p></div>
+        </div>
         <p id="companion-error" role="status"></p>
       </div>
       <footer class="companion-footer"><div class="companion-buttons"><button type="button" id="companion-back">上一步</button><button type="submit" id="companion-next" class="primary">继续认识彼此</button></div><p>称呼和模样，以后都可以在这里慢慢调整。</p></footer>
     </form>`;
   document.body.append(dialog);
-  window.CompanionPortraits?.mount(dialog);
+  // The six selected designs use their original static images; no new atlases.
+  dialog.querySelectorAll('.companion-cast-step img').forEach(image => image.addEventListener('error', () => {
+    const frame = image.closest('.companion-character-art, .companion-gender-thumb');
+    frame.classList.add('image-unavailable'); image.hidden = true;
+  }));
   const notification = document.createElement('aside');
   notification.id = 'companion-notification'; notification.hidden = true;
   notification.setAttribute('aria-label', '助理消息');
@@ -109,7 +121,7 @@
   function feedbackText(saved, body) {
     const variants = feedbackCopy[body];
     if (!variants) return body;
-    const male = saved.assistant_persona === 'male_calm_v1';
+    const male = personaGender(saved.assistant_persona) === 'male';
     // Direct/brief settings trim the invitation, retaining the same factual next step.
     if (profile.conversation_style === '直接坦诚' || profile.reply_detail === '简洁重点') {
       return variants[male ? 1 : 0].replace(/再试一下吧。$/, '请重试。').replace(/也可以呀。$/, '也可以。');
@@ -142,10 +154,14 @@
   let owner = null, profile = defaults(), draft = defaults(), step = 0, sequence = 0;
   let client = null, loaded = false, saving = false, ready = Promise.resolve();
   let appearanceSave = Promise.resolve(), previewOriginal = null;
-  const previewAppearance = gender => window.dispatchEvent(new CustomEvent('stylist-appearance-preview', { detail: gender }));
+  let groupChoices = { female: 'female_warm_v1', male: 'male_calm_v1' };
+  const previewAppearance = (persona,colorScheme=draft.color_scheme) => {
+    characters.apply(persona);
+    window.dispatchEvent(new CustomEvent('stylist-appearance-preview', { detail:{gender:personaGender(persona),color_scheme:colorScheme} }));
+  };
   function restoreAppearance() {
     if (previewOriginal === null) return;
-    const original = previewOriginal; previewOriginal = null; previewAppearance(original);
+    const original = previewOriginal; previewOriginal = null; previewAppearance(original.assistant_persona,original.color_scheme);
   }
   const notify = () => {
     document.querySelectorAll('[data-agent-name]').forEach(node => { node.textContent = profile.agent_name; node.title = profile.agent_name; });
@@ -157,15 +173,32 @@
     if (step === 0) draft.user_name = $('companion-user-name').value.trim();
     if (step === 1) draft.user_gender = dialog.querySelector('[name=companion-user-gender]:checked')?.value || null;
     if (step === 2) draft.agent_name = $('companion-agent-name').value.trim();
-    if (step === 3) draft.assistant_persona = dialog.querySelector('[name=companion-persona]:checked')?.value || 'female_warm_v1';
+    if (step === 3) {
+      draft.assistant_persona = dialog.querySelector('[name=companion-persona]:checked')?.value || 'female_warm_v1';
+      draft.color_scheme = dialog.querySelector('[name=companion-color-scheme]:checked')?.value||'companion';
+    }
   };
+  function renderCast() {
+    const selected = characters.find(draft.assistant_persona);
+    dialog.querySelector('.companion-color-switch').disabled=saving;
+    for(const input of dialog.querySelectorAll('[name=companion-color-scheme]')){input.checked=input.value===draft.color_scheme;input.disabled=saving;}
+    for (const input of dialog.querySelectorAll('[name=companion-assistant-gender]')) input.checked = input.value === selected.gender;
+    for (const card of dialog.querySelectorAll('[data-character-gender]')) {
+      card.hidden = card.dataset.characterGender !== selected.gender;
+      const input = card.querySelector('input');
+      input.disabled = card.hidden || saving;
+      input.checked = input.value === draft.assistant_persona;
+    }
+    dialog.querySelector('.companion-character-note strong').textContent = `${selected.label} · ${draft.agent_name || '衣衣'}`;
+    dialog.querySelector('.companion-character-note p').textContent = selected.greeting;
+  }
   function render() {
     const name = draft.user_name || '你';
     const scenes = [
       ['初识 · 01 / 04', '在开始之前，想先认识你。', '我该怎样称呼你，才会让你觉得亲切？'],
       ['更懂你 · 02 / 04', '让每一份搭配，更贴近你。', `${name === '你' ? '' : name + '，'}再了解你一点，好让衣橱里的选择更合你的心意。`],
       ['一个名字 · 03 / 04', '也想把名字的选择，交给你。', '你愿意怎么叫我？衣衣也很好，你喜欢的另一个名字也很好。'],
-      ['陪伴的模样 · 04 / 04', `选一位，和${draft.agent_name}一起开始。`, '同一个名字，两种相处的节奏。哪一种更合你的心意？'],
+      ['陪伴的模样 · 04 / 04', `选一位，和${draft.agent_name}一起开始。`, '先选一种模样，再选更合拍的性格。你喜欢怎样的陪伴？'],
     ];
     const current = scenes[step]; dialog.dataset.step = String(step);
     dialog.querySelector('.companion-chapter').textContent = current[0];
@@ -181,7 +214,7 @@
     $('companion-user-name').value = draft.user_name;
     $('companion-agent-name').value = draft.agent_name;
     for (const input of dialog.querySelectorAll('[name=companion-user-gender]')) input.checked = input.value === (draft.user_gender || '');
-    for (const input of dialog.querySelectorAll('[name=companion-persona]')) input.checked = input.value === draft.assistant_persona;
+    renderCast();
     $('companion-back').hidden = step === 0;
     $('companion-next').textContent = step === 3 ? '就这样，开始我们的日常' : ['继续认识彼此', '再靠近一点', '看看陪伴的模样'][step];
     $('companion-error').textContent = '';
@@ -192,8 +225,9 @@
   function openLoaded() {
     if (!owner || !loaded || saving || dialog.open) return;
     hideNotification(); messageReturnFocus = null; clearMessage();
-    previewOriginal = document.documentElement.dataset.stylistGender === 'male' ? 'male' : 'female';
-    draft = { ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' }; step = 0;
+    previewOriginal = {assistant_persona:profile.assistant_persona,color_scheme:profile.color_scheme};
+    draft = JSON.parse(JSON.stringify(profile)); step = 0;
+    groupChoices = { female: 'female_warm_v1', male: 'male_calm_v1', [personaGender(draft.assistant_persona)]: draft.assistant_persona };
     if (!dialog.open) dialog.showModal();
     render();
   }
@@ -203,6 +237,7 @@
     const current = ++sequence; owner = id == null ? null : String(id); client = api;
     loaded = false; profile = defaults(); draft = defaults(); saving = false;
     $('companion-next').disabled = false; $('companion-back').disabled = false;
+    dialog.querySelector('.companion-assistant-gender').disabled = false;
     if (dialog.open) dialog.close(); notify();
     if (!owner) { ready = Promise.resolve(); return ready; }
     const expectedOwner = owner;
@@ -225,11 +260,21 @@
   }
   $('companion-user-skip').onclick = () => { $('companion-user-name').value = ''; rememberStep(); step = 1; render(); };
   $('companion-agent-default').onclick = () => { $('companion-agent-name').value = '衣衣'; };
+  dialog.querySelector('.companion-color-switch').addEventListener('change',event=>{
+    if(saving||!dialog.open||event.target.name!=='companion-color-scheme')return;
+    draft.color_scheme=event.target.value;previewAppearance(draft.assistant_persona);
+  });
   $('companion-back').onclick = () => { if (!saving) { rememberStep(); step = Math.max(0, step - 1); render(); } };
   dialog.querySelector('.companion-cast').addEventListener('change', event => {
     if (saving || !dialog.open || event.target.name !== 'companion-persona') return;
     draft.assistant_persona = event.target.value;
-    previewAppearance(draft.assistant_persona === 'male_calm_v1' ? 'male' : 'female');
+    groupChoices[personaGender(draft.assistant_persona)] = draft.assistant_persona;
+    renderCast(); previewAppearance(draft.assistant_persona);
+  });
+  dialog.querySelector('.companion-assistant-gender').addEventListener('change', event => {
+    if (saving || !dialog.open || event.target.name !== 'companion-assistant-gender') return;
+    draft.assistant_persona = groupChoices[event.target.value];
+    renderCast(); previewAppearance(draft.assistant_persona);
   });
   dialog.querySelector('.companion-close').onclick = () => { if (!saving) { restoreAppearance(); dialog.close(); } };
   dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); else restoreAppearance(); });
@@ -243,19 +288,21 @@
     if (step < 3) { step++; render(); return; }
     const current = sequence, expectedOwner = owner, saved = { ...draft };
     saving = true; $('companion-next').disabled = true; $('companion-back').disabled = true;
+    dialog.querySelector('.companion-assistant-gender').disabled = true; renderCast();
     try {
       await appearanceSave;
       if (sequence !== current || owner !== expectedOwner) return;
       const result = await client('/stylist-api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
       if (sequence !== current || owner !== expectedOwner) return;
-      profile = result.profile; loaded = true; previewOriginal = null; notify(); dialog.close();
+      profile = {...defaults(),...saved,...result.profile}; loaded = true; previewOriginal = null; notify(); dialog.close();
       showNotification(profile);
     } catch (err) { if (sequence === current) showNotification(profile, err.message || '这次还没保存好，你写下的名字还在，再试一下就好。'); }
-    finally { if (sequence === current) { saving = false; $('companion-next').disabled = false; $('companion-back').disabled = false; } }
+    finally { if (sequence === current) { saving = false; $('companion-next').disabled = false; $('companion-back').disabled = false; dialog.querySelector('.companion-assistant-gender').disabled = false; renderCast(); } }
   };
   window.addEventListener('stylist-appearance-selected', event => {
     if (!owner || !loaded || saving) return;
-    profile = { ...profile, assistant_persona: event.detail === 'male' ? 'male_calm_v1' : 'female_warm_v1' };
+    const nextPersona = personaGender(profile.assistant_persona) === event.detail ? profile.assistant_persona : event.detail === 'male' ? 'male_calm_v1' : 'female_warm_v1';
+    profile = { ...profile, assistant_persona: nextPersona };
     const current = sequence, expectedOwner = owner, saved = { ...profile }, api = client;
     appearanceSave = appearanceSave.catch(() => {}).then(async () => {
       if (current !== sequence || owner !== expectedOwner) return;
@@ -282,14 +329,14 @@
       if (sequence !== current || owner !== expectedOwner) return false;
       const result = await client('/stylist-api/companion-profile', { method: 'PUT', body: JSON.stringify(saved) });
       if (sequence !== current || owner !== expectedOwner) return false;
-      profile = result.profile; notify();
+      profile = {...defaults(),...saved,...result.profile}; notify();
       showNotification(profile, '你的偏好我记下了，之后会在原本的相处方式里，多照顾一点你的喜欢。');
       return true;
     } finally { if (sequence === current) saving = false; }
   }
   window.CompanionSettings = {
-    notify: body => showNotification({ ...profile, assistant_persona: document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1' }, body),
+    notify: body => showNotification(profile, body),
     savePreferences, setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
-    getProfile: () => owner && loaded ? { ...JSON.parse(JSON.stringify(profile)), assistant_persona: (previewOriginal ?? document.documentElement.dataset.stylistGender) === 'male' ? 'male_calm_v1' : 'female_warm_v1' } : null,
+    getProfile: () => owner && loaded ? JSON.parse(JSON.stringify(profile)) : null,
   };
 })();

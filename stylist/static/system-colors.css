@@ -1,0 +1,59 @@
+/* App brand colors are independent of the selected companion and its layout. */
+:root:is([data-color-scheme=system],[data-study-color=system]){--bg:#ffffff;--paper:#ffffff;--ink:#2d2f33;--muted:#73767d;--line:#e8e9ec;--accent:#85620f;--soft:#fff8df;--blush:#fffaf0;--rose:#967427;--danger:#b5443c;--system-brand:#fcda4f;--system-on-brand:#302b1f;--system-outline:#b48a14;--system-success:#3c7a57}
+:root:is([data-color-scheme=system],[data-study-color=system]) body{background-color:var(--bg);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.sidebar,#new-chat){background-color:var(--paper);color:var(--ink);border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.sidebar-bottom p,#history button,.section-label,.sidebar-bottom button){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .brand{color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(#history,#mobile-history-list) button:is(:hover,:active,[aria-current=true]){background-color:transparent;background-image:none;color:var(--ink);border-color:var(--line)}
+/* Layout wrappers reveal their surrounding surface; only controls receive a fill. */
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.sidebar-bottom,.journey-entry){background-color:transparent;background-image:none}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.brand span,.suggestion-arrow,.suggestions button small){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #welcome>.eyebrow{color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(#location-label,#location-status){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(header,.weather-toolbar,footer,#chat-form){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.header-brand,.header-subtitle,.eyebrow,.fine-print,.weather-toolbar>span){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.header-brand>[data-agent-name],h1,#welcome>p){color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .status-dot{background-color:var(--system-success)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.primary,#send,#new-chat,#companion-next,.journey-footer .primary,.journey-letter-actions .primary){background-color:var(--system-brand);border-color:var(--system-brand);color:var(--system-on-brand)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.primary,#send,#new-chat,#companion-next,.journey-footer .primary,.journey-letter-actions .primary):hover{background-color:#f2cd39;border-color:#f2cd39;color:var(--system-on-brand)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.suggestions button,.journey-entry button,.journey-home-card){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.suggestions button:first-child,.suggestions button:hover){background-color:var(--soft);border-color:#e6ce77;color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.suggestion-icon,.suggestions button:first-child .suggestion-icon){background-color:var(--soft);color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.welcome-copy,.welcome-links){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(input,textarea,select){background-color:var(--paper);border-color:var(--line);color:var(--ink);accent-color:var(--system-outline)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(input,textarea)::placeholder{color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.bubble.user,.checkin-entry){background-color:var(--soft);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .bubble.assistant{background-color:transparent;background-image:none;color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.forecast-card,.look){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.author,.look h3,.forecast-heading strong){color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .companion-wait{background-color:var(--soft);background-image:linear-gradient(120deg,var(--paper),var(--soft));border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .companion-wait strong{color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .companion-wait p{color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .companion-loading{--loading-accent:#85620f;--loading-paper:#fffaf0}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog{background-color:var(--paper);background-image:radial-gradient(ellipse at 15% 12%,#fff4c880,transparent 50%),radial-gradient(ellipse at 90% 70%,#fff8df70,transparent 48%);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog::backdrop{background-color:#2d2f3360}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog :is(.companion-top,.companion-footer){background-color:var(--paper);border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog :is(h2,.companion-line,.companion-speaker,.companion-recall){color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog :is(.companion-wordmark,.companion-chapter,.companion-progress,.companion-footer p,.companion-recall){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog:not([data-step="3"]) .companion-dialogue{background-color:#fffef8;border-color:#eee5cc}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog[data-step="3"] .companion-dialogue{background-color:transparent;background-image:none}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog[data-step="3"] .companion-line{color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog :is(.companion-progress li.is-current,.companion-scene-mark,.companion-character-note strong){color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog .companion-progress li{border-color:var(--line);color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog .companion-progress li.complete{border-color:#e5d19a;color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog .companion-progress li[aria-current=step]{border-color:var(--system-outline);color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog .companion-character-note{background-color:var(--paper);border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-dialog :is(.companion-close,#companion-back,.companion-soft-choice){background-color:var(--paper);border-color:var(--line);color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.journey-dialog,.journey-tryon-letter,.journey-record,#memory-dialog){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.journey-letter-lead,.journey-letter-note){color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.journey-letter-signature strong,.journey-letter-actions button,.journey-speaker){color:var(--accent)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .journey-letter-actions button.primary{background-color:var(--system-brand);border-color:var(--system-brand);color:var(--system-on-brand)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .journey-dialog{--journey-action-bg:#fcda4f;--journey-action-ink:#302b1f;--journey-action-hover:#f2cd39}
+:root:is([data-color-scheme=system],[data-study-color=system]) #preferences-dialog{--pref-tint:#fff6d4;--pref-paper:#fffefa;--pref-detail:#85620f}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-notification{background-color:#fffef8f5;border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #companion-message-dialog{--letter-ink:#2d2f33;--letter-accent:#85620f;--letter-line:#e8e9ec;--letter-paper:#fffefa;background-color:#fffefa;background-image:radial-gradient(ellipse at 5% 5%,#fff4c888,transparent 60%)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.companion-letter-done,.city-invite-action){background-color:var(--system-brand);border-color:var(--system-brand);color:var(--system-on-brand)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.settings-panel,.settings-panel button){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .settings-panel button:hover{background-color:var(--soft)}
+:root:is([data-color-scheme=system],[data-study-color=system]) :is(.weather-day,.weather-periods>div){background-color:var(--soft);border-color:var(--line);color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) dialog:not(#companion-dialog):not(#preferences-dialog):not(#companion-message-dialog){background-color:var(--paper);border-color:var(--line);color:var(--ink)}

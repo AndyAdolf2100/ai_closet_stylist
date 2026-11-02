@@ -118,6 +118,10 @@ class Store:
             excluded.add("regenerate_outfit")
         if request.regenerate_from_version is None:
             excluded.add("regenerate_from_version")
+        excluded = {key: True for key in excluded}
+        if request.companion_profile is not None:
+            # Visual preferences neither change the task nor invalidate old request receipts.
+            excluded["companion_profile"] = {"color_scheme"}
         digest = hashlib.sha256(request.model_dump_json(exclude=excluded).encode()).hexdigest()
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")

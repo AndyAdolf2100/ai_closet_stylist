@@ -211,6 +211,7 @@ class CompanionProfile(Model):
     user_gender: Literal["男", "女"] | None = None
     agent_name: str = Field(default="衣衣", min_length=1, max_length=24)
     assistant_persona: PersonaId = "female_warm_v1"
+    color_scheme: Literal["companion", "system"] = "companion"
 
     mbti: Literal['INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP', 'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'] | None = None
     zodiac: Literal["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"] | None = None
@@ -227,6 +228,9 @@ class CompanionProfile(Model):
         if any(unicodedata.category(c).startswith("C") or c in "<>" for c in self.user_name + self.agent_name):
             raise ValueError("称呼请使用普通文字，不包含换行或特殊控制符")
         return self
+
+    def dialogue_data(self):
+        return self.model_dump(mode="json", exclude={"color_scheme"})
 
 
 class ChatRequest(Model):

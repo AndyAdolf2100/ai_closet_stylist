@@ -1,0 +1,2 @@
+/* The read-only study reuses the runtime palette so color fixes stay consistent. */
+@import url("/static/system-colors.css?v=system-colors-v1");

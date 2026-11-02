@@ -34,7 +34,7 @@ def test_profile_api_requires_identity_and_rejects_owner_spoofing(tmp_path, monk
         return self.authorization.removeprefix("Bearer ")
     monkeypatch.setattr("stylist.main.Upstream.identity", identity)
     with TestClient(create_app(Settings(database=str(tmp_path / "state.db")))) as client:
-        data = CompanionProfile(user_name="小夏", agent_name="知秋").model_dump()
+        data = CompanionProfile(user_name="小夏", agent_name="知秋", color_scheme="system").model_dump()
         assert client.get("/stylist-api/companion-profile").status_code == 401
         assert client.put("/stylist-api/companion-profile", json=data).status_code == 401
         assert client.put("/stylist-api/companion-profile", json={**data, "owner_id": "b"}, headers={"Authorization": "Bearer a"}).status_code == 422
@@ -75,7 +75,7 @@ async def test_profile_reaches_planning_and_styling_without_mixing_user_and_agen
             yield
     class Model:
         async def generate(self, name, payload, result_type):
-            assert payload["companion_profile"] == profile.model_dump(mode="json")
+            assert payload["companion_profile"] == profile.dialogue_data()
             assert payload["assistant_persona"] == persona
             from datetime import datetime
             assert datetime.fromisoformat(payload["now"]).utcoffset().total_seconds() == 8 * 3600

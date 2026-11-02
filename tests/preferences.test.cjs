@@ -6,7 +6,7 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 async function setup(client){
  const dom=new JSDOM('<div id="notice"></div><button id="settings-open"></button><input id="message"><div id="appearance-status"></div>',{url:'http://synthetic.invalid',runScripts:'outside-only'}),w=dom.window;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
- for(const file of ['appearance.js','companion-settings.js','preferences.js'])w.eval(fs.readFileSync('stylist/static/'+file,'utf8'));
+ for(const file of ['appearance.js','companion-characters.js','companion-settings.js','preferences.js'])w.eval(fs.readFileSync('stylist/static/'+file,'utf8'));
  await w.CompanionSettings.setOwner('a',client,false);
  return {w,dom,$:id=>w.document.getElementById(id),submit:()=>w.document.getElementById('preferences-form').dispatchEvent(new w.Event('submit',{cancelable:true}))};
 }
