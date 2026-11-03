@@ -8,6 +8,8 @@ from typing import Literal
 
 from fastapi import FastAPI, Header, Request
 from fastapi import Path as ApiPath
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -69,6 +71,14 @@ def create_app(settings=None):
     app.state.runs = runs
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                        allow_methods=["GET", "POST", "PUT"], allow_headers=["Authorization", "Content-Type"])
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_handler(request, exc):
+        # Never echo attached photo bytes in a validation response.
+        if isinstance(exc.body, dict) and ("chat_image" in exc.body or request.url.path == "/stylist-api/app/avatar" or
+                isinstance(exc.body.get("request"), dict) and "chat_image" in exc.body["request"]):
+            return JSONResponse({"code": "invalid_chat_request", "message": "消息或附件格式不正确，请检查后再发送。"}, status_code=422)
+        return await request_validation_exception_handler(request, exc)
 
     @app.exception_handler(StylistError)
     async def error_handler(request, exc):

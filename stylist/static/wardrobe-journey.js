@@ -3,6 +3,7 @@
   let owner=null, epoch=0, api=null, notify=null, onStyle=null, getConversation=null, getContext=null, onRegenerate=null, onNeedOutfit=null, timer=null, previewURL=null, opener=null;
   let pendingLook=null, activeQuote=null, viewSequence=0;
   let activeTryon=null;
+  const points=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Number(value).toLocaleString('en-US',{maximumFractionDigits:20}):'—';
   const watchers=new Map(),finished=new Set();
   const $=id=>document.getElementById(id);
   const el=(tag,cls='',text='')=>{const n=document.createElement(tag);n.className=cls;n.textContent=text;return n;};
@@ -72,28 +73,44 @@
     return `data:${mime};base64,${encoded}`;
   }
   function upload(kind='garment'){
-    show(kind==='garment'?'把喜欢的衣服带进来':'创建我的数字人');const token=epoch,view=viewSequence;
+    show(kind==='garment'?'把喜欢的衣服带进来':'创建我的试穿形象');const token=epoch,view=viewSequence;
     atmosphere(kind);
     body.append(el('p','journey-intro',kind==='garment'?'先从常穿的一件开始。平铺、悬挂照片更清楚；整身照可能识别出多件衣物。':'选择本人的清晰正面照片，避免遮挡。照片检查后，会单独展示人物生成所需积分。'));
     const input=el('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';input.setAttribute('aria-label',kind==='garment'?'选择衣物照片':'选择本人照片');
     input.id='journey-photo-input';input.className='journey-file-input';
-    const pocket=el('label','journey-photo-pocket');pocket.htmlFor=input.id;
+    const pocket=el(kind==='garment'?'div':'label','journey-photo-pocket');if(kind!=='garment')pocket.htmlFor=input.id;
     const pocketIcon=el('span','journey-pocket-icon','＋'),pocketTitle=el('strong','',kind==='garment'?'选一张衣服的照片':'选一张自己的照片'),pocketHint=el('span','journey-pocket-hint','JPG / PNG / WebP · 10MB 以内');
     pocket.append(input,pocketIcon,pocketTitle,pocketHint);
+    const pickButtons=[];
+    if(kind==='garment'){
+      const choices=el('div','journey-photo-sources');choices.setAttribute('role','group');choices.setAttribute('aria-label','选择衣物照片来源');
+      for(const [label,camera] of [['照片',false],['拍摄',true]]){
+        const pick=button(label,()=>{
+          // iOS: use the existing native photo picker / camera permission flow.
+          // Web capture is only a browser hint; desktop may open a file picker.
+          if(camera)input.setAttribute('capture','environment');else input.removeAttribute('capture');
+          input.value='';input.click();
+        });
+        pick.dataset.photoSource=camera?'camera':'photo';
+        const icon=el('span');icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24">'+(camera?'<path d="M8 6 9 3h6l1 3h4v14H4V6Z"/><circle cx="12" cy="12" r="4"/>':'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/>')+'</svg>';
+        pick.prepend(icon);pickButtons.push(pick);choices.append(pick);
+      }
+      pocketIcon.remove();pocket.append(choices);
+    }
     const preview=el('div','journey-upload-preview'),actions=el('div','journey-actions journey-submitbar');
     let data=null,requestID=null,fileSequence=0;
     const submit=button(kind==='garment'?'确认上传并抠图入柜':'确认上传并检查照片',async()=>{
       if(!data||!current(token))return;
-      input.disabled=true;submit.disabled=true;
+      input.disabled=true;submit.disabled=true;pickButtons.forEach(b=>b.disabled=true);
       try{const action=await api('/stylist-api/media/uploads',{method:'POST',body:JSON.stringify({request_id:requestID,kind,image_data:data,confirmed:true})});
         if(current(token)){renderUpload(action);if(dialog.open&&view===viewSequence){data=null;renderMedia(action);}}
-      }finally{if(current(token))input.disabled=false;}
+      }finally{if(current(token)){input.disabled=false;pickButtons.forEach(b=>b.disabled=false);}}
     },true);submit.disabled=true;
     input.onchange=async()=>{
+      const file=input.files?.[0];if(!file||!current(token)||!dialog.open||view!==viewSequence)return;
       const selectedFile=++fileSequence;releasePhoto();data=null;submit.disabled=true;requestID=crypto.randomUUID();preview.replaceChildren();pocket.classList.remove('has-photo');pocketTitle.textContent=kind==='garment'?'选一张衣服的照片':'选一张自己的照片';pocketHint.textContent='JPG / PNG / WebP · 10MB 以内';
-      const file=input.files?.[0];if(!file)return;
       if(file.size<16||file.size>10*1024*1024){notify?.('请选择10MB以内的有效JPG、PNG或WebP图片。');return;}
-      previewURL=URL.createObjectURL(file);const img=el('img');img.src=previewURL;img.alt='仅在本地预览的待上传照片';preview.append(img,el('span','journey-preview-label','这张照片，还只在你的设备上'));pocket.classList.add('has-photo');pocketTitle.textContent='照片选好了，点这里可以换一张';pocketHint.textContent=file.name;
+      previewURL=URL.createObjectURL(file);const img=el('img');img.src=previewURL;img.alt='仅在本地预览的待上传照片';preview.append(img,el('span','journey-preview-label','这张照片，还只在你的设备上'));pocket.classList.add('has-photo');pocketTitle.textContent=kind==='garment'?'照片选好了，也可以重新选择':'照片选好了，点这里可以换一张';pocketHint.textContent=file.name;
       try{
         const read=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('照片读取失败，请重新选择。'));reader.readAsDataURL(file);});
         if(current(token)&&dialog.open&&view===viewSequence&&selectedFile===fileSequence){data=photoDataURL(read);submit.disabled=false;}
@@ -157,10 +174,10 @@
       },true));
     }
     if(action.kind==='generation'&&action.status==='completed'&&result.can_confirm){
-      body.append(button('确认使用这个数字人',async()=>{
+      body.append(button('确认使用这个试穿形象',async()=>{
         const overview=await api('/stylist-api/twins');if(!current(token))return;
         await api('/stylist-api/twins/use-candidate',{method:'POST',body:JSON.stringify({task_id:String(result.task_id),expected_version:overview.selection_version})});
-        if(current(token)&&dialog.open){notify?.('已确认使用这个数字人。');await twins();}
+        if(current(token)&&dialog.open){notify?.('已确认使用这个试穿形象。');await twins();}
       },true));
     }
     if(['processing','executing','unknown'].includes(action.status))body.append(button('查看当前处理结果',async()=>{
@@ -173,8 +190,8 @@
   function generationQuote(q){
     show('确认人物生成费用');const token=epoch;activeQuote={id:q.action_id,kind:'generation'};
     atmosphere('quote',1);
-    body.append(el('p','journey-cost',`本次生成人物形象：${q.points_cost} 积分`),el('p','','此费用仅包含人物形象生成。之后选择搭配试穿时，会另行报价。'));
-    dock(button(`确认消耗 ${q.points_cost} 积分并生成`,async()=>{
+    body.append(el('p','journey-cost',`本次生成人物形象：${points(q.points_cost)} 积分`),el('p','','此费用仅包含人物形象生成。之后选择搭配试穿时，会另行报价。'));
+    dock(button(`确认消耗 ${points(q.points_cost)} 积分并生成`,async()=>{
       const quote=activeQuote;activeQuote=null;
       const result=await api('/stylist-api/media/'+quote.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:true})});
       if(current(token)&&dialog.open)renderMedia(result);
@@ -206,7 +223,7 @@
         await api('/stylist-api/twins/gender',{method:'POST',body:JSON.stringify({gender,expected_version:overview.profile_version})});if(current(token)&&dialog.open)await twins();
       }));return;
     }
-    const portraits=[...(overview.custom_twin?[{...overview.custom_twin,twin_key:'custom',name:'我的数字人'}]:[]),...(overview.system_twins||[])];
+    const portraits=[...(overview.custom_twin?[{...overview.custom_twin,twin_key:'custom',name:'我的试穿形象'}]:[]),...(overview.system_twins||[])];
     const grid=el('div','journey-portraits');grid.setAttribute('aria-label','试穿形象选择');let selected=overview.default_twin_key;
     const selection=el('span','journey-selection');selection.setAttribute('aria-live','polite');
     const updateSelection=()=>{const chosen=portraits.find(p=>p.twin_key===selected);selection.textContent=chosen?'已选 · '+(chosen.name||'试穿形象'):'选一个喜欢的形象';};updateSelection();
@@ -215,7 +232,7 @@
     }
     body.append(grid);
     const selectionInfo=el('div','journey-selection-info');selectionInfo.append(selection);
-    if(Number.isInteger(overview.available_points))selectionInfo.append(el('span','journey-selection-balance',`可用 ${overview.available_points} 积分`));
+    if(Number.isInteger(overview.available_points))selectionInfo.append(el('span','journey-selection-balance',`可用 ${points(overview.available_points)} 积分`));
     if(portraits.length)dock(selectionInfo,button(pendingLook?'确认形象，继续查看试穿费用':'确认使用所选形象',async()=>{
       if(!selected){notify?.('请先选一个试穿形象。');return;}
       await api('/stylist-api/twins/default',{method:'POST',body:JSON.stringify({twin_key:selected,expected_version:overview.selection_version})});
@@ -237,7 +254,7 @@
     if(!portraits.length&&!pending)body.append(el('p','journey-note','这一页还没有形象，先用一张自己的照片开始吧。'));
     const uploadEntry=button('',()=>upload('person'));uploadEntry.className='journey-portrait-upload';
     const plus=el('span','journey-portrait-plus','＋');plus.setAttribute('aria-hidden','true');
-    const uploadCopy=el('span','journey-portrait-upload-copy');uploadCopy.append(el('strong','','上传本人照片，创建我的数字人'),el('span','','从一张照片，遇见新的自己'));
+    const uploadCopy=el('span','journey-portrait-upload-copy');uploadCopy.append(el('strong','','上传本人照片，创建我的试穿形象'),el('span','','从一张照片，遇见新的自己'));
     const arrow=el('span','journey-portrait-arrow','↗');arrow.setAttribute('aria-hidden','true');uploadEntry.append(plus,uploadCopy,arrow);
     body.append(uploadEntry);
   }
@@ -265,14 +282,14 @@
     copy.append(el('span','journey-card-label','为这一次的新模样'),el('h3','',q.title||'本次衣橱搭配'),
       el('p','journey-quote-count',Number.isInteger(q.item_count)?`${q.item_count} 件真实衣橱单品`:'当前已选的真实衣橱单品'));
     const fee=el('div','journey-quote-fee'),amount=el('span','journey-quote-amount');
-    amount.append(el('strong','',String(q.points_cost)),el('span','','积分'));
+    amount.append(el('strong','',points(q.points_cost)),el('span','','积分'));
     fee.append(el('span','journey-quote-fee-label','本次搭配试穿'),amount);copy.append(fee);
     summary.append(figure,copy,seal);body.replaceChildren(summary);
     if(q.notices?.length){
       const notes=el('section','journey-quote-notes'),list=el('ul');notes.append(el('h3','','在开始之前'));
       for(const note of q.notices)list.append(el('li','',note));notes.append(list);body.append(notes);
     }
-    dock(button(`确认消耗 ${q.points_cost} 积分并试穿`,async()=>{
+    dock(button(`确认消耗 ${points(q.points_cost)} 积分并试穿`,async()=>{
       const quote=activeQuote;activeQuote=null;
       requireContext(ref);
       const waiting={...ref,action_id:quote.id,title:q.title,status:'executing',result:{}};

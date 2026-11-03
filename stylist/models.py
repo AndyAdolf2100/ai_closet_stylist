@@ -252,6 +252,16 @@ class CompanionProfile(Model):
 
 
 class ChatRequest(Model):
+    chat_image: str | None = Field(default=None, max_length=13981039, repr=False)
+
+    @field_validator("chat_image")
+    @classmethod
+    def validate_chat_image(cls, value):
+        if value is not None:
+            from .media import image_digest
+            image_digest(value)
+        return value
+
     new_clothes: bool | None = None
     regenerate_outfit: bool = False
     regenerate_from_version: int | None = Field(default=None, ge=1)
@@ -278,7 +288,7 @@ class ChatRequest(Model):
         if self.regenerate_outfit:
             if not self.conversation_id or self.expected_version < 1:
                 raise ValueError("请先打开已有穿搭，再重新生成")
-            if self.message != "重新生成穿搭" or self.upload_action_id:
+            if self.message != "重新生成穿搭" or self.upload_action_id or self.chat_image:
                 raise ValueError("重新生成会沿用当前要求；新增条件请直接在对话里说明")
         if self.companion_profile:
             if self.assistant_persona is None:

@@ -202,6 +202,7 @@ class Stylist:
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             planning_payload = {
+                "chat_image": request.chat_image,
                 "now": today.isoformat(), "message": request.message,
                 "new_clothes": request.new_clothes,
                 "assistant_persona": request.assistant_persona,
@@ -498,6 +499,7 @@ class Stylist:
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
             draft_payload = {
+                "chat_image": request.chat_image,
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,

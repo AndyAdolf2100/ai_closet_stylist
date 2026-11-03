@@ -288,3 +288,8 @@
 .journey-history-empty{margin:24px 0;color:var(--muted);font-size:13px;line-height:1.8}
 .journey-body>.journey-record[hidden],.journey-history-empty[hidden]{display:none}
 @media(max-width:480px){.journey-history-filters{gap:5px}.journey-history-filters button{padding:8px 11px}}
+
+.journey-photo-sources{display:flex;justify-content:center;gap:14px;margin-top:6px;width:100%}
+.journey-photo-sources button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:100px;padding:10px 18px;background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:12px;font:inherit}
+.journey-photo-sources svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5}
+.journey-photo-pocket:has(.journey-photo-sources){cursor:default}

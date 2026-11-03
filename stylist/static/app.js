@@ -53,6 +53,7 @@ $('new-clothes')?.addEventListener('change', event => {
   if (!busy && event.target.checked && !event.target.disabled) setNewClothes(true, {explain:true});
 });
 function loginStatus() {
+  window.ChatAttachments?.clear();
   const owner = session?.user?.id ?? null;
   if (owner !== newClothesOwner) { setNewClothes(false); newClothesNotices.clear(); newClothesOwner = owner; }
   window.WardrobeJourney?.setOwner(session?.user?.id ?? null);
@@ -458,6 +459,7 @@ function showReply(reply, request = null) {
 }
 function setBusy(value) {
   busy = value;
+  window.ChatAttachments?.setBusy(value);
   for (const id of ['personal-clothes', 'new-clothes']) if ($(id)) $(id).disabled = value;
   $('send').disabled = value;
   $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
@@ -490,6 +492,7 @@ async function refreshHistory() {
             if (session?.user.id !== owner) return;
             $('feed').replaceChildren();
             for (const turn of record.messages) { bubble('user', turn.user); showReply(turn.reply); }
+            window.ChatAttachments?.clear();
             conversation = record.conversation_id; version = record.version;
             window.WardrobeJourney?.restore(conversation).catch(err=>notifyIssue(err.message));
             for (const list of [$('history'), $('mobile-history-list')]) {
@@ -514,15 +517,18 @@ let pendingRun = null;
 try { pendingRun = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); } catch { pendingRun = null; }
 function savePending(value) {
   pendingRun = value;
-  if (value) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
+  if (value && !value.request?.chat_image) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
   else sessionStorage.removeItem(PENDING_KEY);
 }
 async function sendMessage(resuming = false, outfitAction = null, cityAction = null, explorationAction = null) {
   const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
+  const attachmentOwner = session?.access_token;
   const inputValue = $('message').value;
-  const text = (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : inputValue.trim());
+  const draftImage = !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
+  const text = (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
   if (!text || busy || !requireLogin()) return;
   if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
+  if (draftImage && (attachmentOwner !== session?.access_token || draftImage !== window.ChatAttachments?.get())) return;
   if (outfitAction && (session.user.id !== outfitAction.owner || conversation !== outfitAction.conversation_id)) {
     notifyIssue('账号或搭配已有更新，请从当前最新结果重新生成。'); return;
   }
@@ -540,9 +546,12 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   if (!saved && !cityAction && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
   if (!saved && outfitAction) { request.regenerate_outfit = true; request.selected_look_index = outfitAction.look_index; request.regenerate_from_version = outfitAction.version; }
   if (!saved && !cityAction && !explorationAction && !request.regenerate_outfit && pendingUploadAnchor) { request.upload_action_id = pendingUploadAnchor; pendingUploadAnchor = null; updateUploadAnchor(); }
+  if (!saved && draftImage) request.chat_image = draftImage;
   const chatOwner = session.user.id;
   savePending({owner: chatOwner, request});
-  bubble('user', text); const pending = pendingBubble(request.assistant_persona);
+  const userBubble = bubble('user', text);
+  if(request.chat_image){const image=document.createElement('img');image.src=request.chat_image;image.alt='本轮图片附件';image.style.cssText='display:block;max-width:180px;max-height:180px;object-fit:contain;border-radius:12px;margin-top:8px';userBubble.append(image);}
+  const pending = pendingBubble(request.assistant_persona);
   setBusy(true); $('notice').textContent = '';
   try {
     let received = false;
@@ -588,6 +597,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
       }
     }
     if (!cityAction && !explorationAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
+    if(request.chat_image) window.ChatAttachments?.ack(request.chat_image);
     await refreshHistory();
   } catch (err) {
     if (session?.user.id !== chatOwner) return;
@@ -628,6 +638,8 @@ function resetChat() {
   savePending(null);
   window.location.reload();
 }
+$('new-chat').addEventListener('click',()=>window.ChatAttachments?.clear());
+$('mobile-new').addEventListener('click',()=>window.ChatAttachments?.clear());
 $('new-chat').onclick = resetChat; $('mobile-new').onclick = resetChat;
 $('mobile-history').onclick = async () => {
   if (busy || !requireLogin()) return;
@@ -782,3 +794,12 @@ if (session) window.CompanionSettings?.setOwner(session.user.id, api);
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
 
 if (pendingRun && session && pendingRun.owner === session.user.id) sendMessage(true);
+// Shared Stylist attachment flow. Wardrobe ingestion remains in its dedicated entry.
+if (!document.getElementById('yijian-agent-root')) {
+  $('upload-open').textContent='＋';
+  $('upload-open').onclick=()=>notifyIssue('附件入口正在准备，请稍等一下。');
+  import('/static/closet-app/chat-attachments.js').then(({mountChatAttachments})=>{
+    const trigger=$('upload-open');trigger.textContent='＋';
+    mountChatAttachments(document,trigger);
+  }).catch(()=>notifyIssue('附件入口暂时没能加载，请稍后重新打开页面。'));
+}

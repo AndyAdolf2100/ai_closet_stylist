@@ -21,7 +21,7 @@ test('media history uses kind-specific letters and opens only the original read-
  assert.equal(t.w.document.querySelector('.journey-body').textContent.includes('查看处理结果'),false);assert.equal(t.w.document.querySelector('.journey-body').textContent.includes('已完成'),false);
  assert.ok(t.w.document.querySelector('[aria-label="打开衣橱来信"]'));assert.ok(t.w.document.querySelector('[aria-label="读读照片回信"]'));
  t.w.document.querySelector('[aria-label="看看新的模样"]').click();await flush();assert.match(t.w.document.querySelector('.journey-body .journey-image img').src,/portrait.png/);
- assert(byText(t.w,'确认使用这个数字人'));assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);assert.equal(calls.at(-1)[0],'/stylist-api/media/med_portrait');t.close();
+ assert(byText(t.w,'确认使用这个试穿形象'));assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);assert.equal(calls.at(-1)[0],'/stylist-api/media/med_portrait');t.close();
 });
 test('media letters distinguish missing images, unconfirmed outcomes and strict refund evidence',async()=>{
  const actions=[{action_id:'med_missing',kind:'generation',status:'completed',result:{}},{action_id:'med_unknown',kind:'generation',status:'unknown',result:{}},{action_id:'med_failed',kind:'generation',status:'failed',result:{refunded:'true'}},{action_id:'med_refunded',kind:'generation',status:'failed',result:{refunded:true}}];
@@ -32,7 +32,7 @@ test('media letters distinguish missing images, unconfirmed outcomes and strict 
 test('late media-letter reads cannot replace a newer upload panel',async()=>{
  let done;const t=setup(async path=>path.endsWith('/media')?[{action_id:'med_late_letter',kind:'generation',status:'completed',result:{}}]:path.endsWith('/images')?[]:new Promise(r=>done=r));
  await t.w.WardrobeJourney.history();t.w.document.querySelector('[aria-label="打开形象来信"]').click();await flush();t.w.WardrobeJourney.upload('person');done({action_id:'med_late_letter',kind:'generation',status:'completed',result:{result_image_url:'https://example.test/old.png'}});await flush();
- assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的数字人');assert(t.w.document.querySelector('#journey-photo-input'));t.close();
+ assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的试穿形象');assert(t.w.document.querySelector('#journey-photo-input'));t.close();
 });
 test('shared gallery loading ends on failure rather than continuing to animate indefinitely',async()=>{
  let reject;const t=setup(()=>new Promise((resolve,fail)=>reject=fail));const reading=t.w.WardrobeJourney.twins();
@@ -42,7 +42,7 @@ test('shared gallery loading ends on failure rather than continuing to animate i
 test('a late loader cleanup cannot remove a newer flow after the old read fails',async()=>{
  let reject;const t=setup(()=>new Promise((resolve,fail)=>reject=fail));const reading=t.w.WardrobeJourney.twins();
  t.w.WardrobeJourney.upload('person');reject(Error('旧查询失败'));await assert.rejects(reading,/旧查询失败/);
- assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的数字人');assert(t.w.document.querySelector('#journey-photo-input'));t.close();
+ assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的试穿形象');assert(t.w.document.querySelector('#journey-photo-input'));t.close();
 });
 test('completed try-on offers one explicit regeneration action and waits for it before re-enabling',async()=>{
  let finish;const received=[];const action={action_id:'img_regenerate',conversation_id:'current',version:2,look_index:1,status:'completed',result:{result_image_url:'https://example.test/result.png'}};
@@ -172,7 +172,7 @@ test('a late upload cannot replace a newly opened person-photo flow for the same
  let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传并抠图入柜').click();
  byText(t.w,'关闭 ×').click();t.w.WardrobeJourney.upload('person');
  done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:17}});await flush();
- assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的数字人');assert.ok(byText(t.w,'确认上传并检查照片'));t.close();
+ assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的试穿形象');assert.ok(byText(t.w,'确认上传并检查照片'));t.close();
 });
 test('portrait selection is a draft; only confirmation changes default and no generation is charged',async()=>{
  const calls=[];const overview={default_twin_key:'base-a',default_confirmed:true,selection_version:3,available_points:80,system_twins:[{twin_key:'base-a',name:'基础形象A',image_url:'https://example.test/a.png'},{twin_key:'base-b',name:'基础形象B',image_url:'https://example.test/b.png'}]};
