@@ -75,7 +75,8 @@ def test_release_archive_excludes_local_config_databases_and_unlisted_deployment
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("fixture")
     for name in ["config/deploy.env", "var/stylist.sqlite3", "deploy/docker/credentials.env",
-                 "stylist/.env", "stylist/__pycache__/main.pyc"]:
+                 "stylist/.env", "stylist/__pycache__/main.pyc",
+                 "stylist/static/closet-app/comparison/evolution/screenshots/private/account.png"]:
         path = source / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("must-not-archive-secret")
@@ -87,7 +88,7 @@ def test_release_archive_excludes_local_config_databases_and_unlisted_deployment
         assert "aicloset-assistant/stylist/main.py" in names
         assert "aicloset-assistant/compose.yaml" in names
         assert not any("config/deploy.env" in n or "credentials.env" in n or "sqlite3" in n or "__pycache__" in n
-                       or n.endswith("/.env") for n in names)
+                       or "/screenshots/private/" in n or n.endswith("/.env") for n in names)
     assert output.with_name(output.name + ".sha256").exists()
 
 

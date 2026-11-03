@@ -17,3 +17,6 @@ scripts
 skills
 *.tar
 *.tar.gz
+
+# Local authenticated screenshot evidence is never distributable.
+stylist/static/closet-app/comparison/evolution/screenshots/private

@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ["Dockerfile", ".dockerignore", "compose.yaml", "install.sh", "pyproject.toml", "uv.lock", "README.md",
          "docs/DOCKER_UBUNTU_DEPLOYMENT.md", "docs/CENTOS7_DEPLOYMENT.md", "scripts/prepare_docker_config.py",
-         "docs/SIMPLE_DEPLOYMENT.md", "docs/POSTGRES_LOCAL.md",
+         "docs/SIMPLE_DEPLOYMENT.md", "docs/POSTGRES_LOCAL.md", "docs/YIJIAN_RELEASE_2026-11-04.md",
          "docs/TEST_SERVER_DEPLOYMENT.md", "docs/NGINX_SHARED_ROUTING.md",
          "docs/NGINX_API_LOCATION.md", "scripts/inspect_nginx_routes.sh",
          "deploy/nginx/stylist-api.location.inc",
@@ -28,7 +28,8 @@ ASSET_SUFFIXES = {".py", ".sql", ".md", ".css", ".js", ".json", ".html", ".svg",
 def release_files(root):
     paths = [root / name for name in FILES]
     paths.extend(path for path in (root / "stylist").rglob("*") if path.is_file()
-                 and "__pycache__" not in path.parts and path.suffix in ASSET_SUFFIXES)
+                 and "__pycache__" not in path.parts and "private" not in path.relative_to(root / "stylist").parts
+                 and path.suffix in ASSET_SUFFIXES)
     for path in paths:
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root.resolve()):
             raise ValueError("Release input is missing or a symlink: " + str(path.relative_to(root)))
