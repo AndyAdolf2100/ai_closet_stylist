@@ -4,7 +4,7 @@ import logging
 from .errors import AuthenticationExpired, StylistError
 from .models import Product, ProductRef, Task
 from .personas import service_notice
-from .policy import infer_slot, suitability
+from .policy import GENDER_PREFIX, infer_slot, product_gender_problems, suitability
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def from_row(row, source, extra=None):
     raw_id = row.get("product_id") if source == "system" else row.get("user_product_id", row.get("product_id"))
     ref = ProductRef(source=source, product_id=str(raw_id))
     colors = data.get("colors") or []
-    return Product(**ref.model_dump(), slot=slot, title=data.get("title") or "",
+    return Product(**ref.model_dump(), slot=slot, gender=data.get("gender"), title=data.get("title") or "",
                    class_name=category, secondary_class_name=secondary,
                    color=data.get("color") or "、".join(x["name"] for x in colors if x.get("name")),
                    material=data.get("material") or data.get("material_name") or "",
@@ -125,8 +125,12 @@ async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None):
     for p in frozen:
         extras.setdefault(p.key, p.model_dump())
     products = await resolve_products(mcp, refs, extras)
+    frozen_keys = {p.key for p in frozen}
     valid, excluded = [], {}
     for product in products:
+        if product.key in frozen_keys and product_gender_problems(product, task):
+            raise StylistError("frozen_gender_conflict",
+                "原搭配中要求保留的单品与本轮穿衣性别要求冲突，无法只改其他部分。请重新生成整套，或明确调整这些单品。", 409)
         reasons, caution = suitability(product, task)
         if reasons:
             for reason in reasons:
@@ -134,13 +138,15 @@ async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None):
         else:
             product.warnings = caution
             valid.append(product)
+    if not valid and any(reason.startswith(GENDER_PREFIX) for reason in excluded):
+        warnings.append("本次查到的候选未找到同时符合穿衣性别和其他要求的单品，先给文字参考；不代表整个衣橱为空。")
     def score(p):
-        return (10 if p.source == "user" else 0) + sum(
-            3 for token in [task.style, task.target_description] if token and token in p.evidence_text)
+        return (int(bool(task.gender) and p.gender in {task.gender, "男女同款"}),
+                (10 if p.source == "user" else 0) + sum(
+                    3 for token in [task.style, task.target_description] if token and token in p.evidence_text))
     valid.sort(key=score, reverse=True)
     # Balance slots before applying the bounded LLM context budget.
     pool, per_slot = {}, {}
-    frozen_keys = {p.key for p in frozen}
     for p in valid:
         if p.key in frozen_keys or per_slot.get(p.slot, 0) < 10:
             pool[p.key] = p

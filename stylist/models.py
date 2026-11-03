@@ -3,7 +3,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .personas import PersonaId
 
@@ -111,6 +111,7 @@ class ProductRef(Model):
 
 
 class Product(ProductRef):
+    gender: Literal["男", "女", "男女同款"] | None = None
     title: str = ""
     class_name: str = ""
     secondary_class_name: str = ""
@@ -125,6 +126,16 @@ class Product(ProductRef):
     incremental_price_yuan: float | None = None
     slot: Slot
     warnings: list[str] = Field(default_factory=list)
+
+    @field_validator("gender", mode="before")
+    @classmethod
+    def normalize_gender(cls, value):
+        if value is None or isinstance(value, bool):
+            return None
+        return {"1": "男", "男": "男", "男装": "男", "male": "男",
+                "2": "女", "女": "女", "女装": "女", "female": "女",
+                "3": "男女同款", "男女同款": "男女同款", "男女通用": "男女同款",
+                "通用": "男女同款", "中性": "男女同款", "unisex": "男女同款"}.get(str(value).strip().lower())
 
     @property
     def display_name(self):

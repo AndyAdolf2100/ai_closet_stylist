@@ -27,6 +27,8 @@ description: 为衣间穿搭 Agent 维护对话预期并执行回归，审核六
 
 ## 昵称、性别与角色设置回归
 
+衣物性别导致实际选款错误时，读取[衣物性别专项](references/garment-gender.md)，用`tests/test_product_gender.py`及四组`garment_gender_*`多轮题库核对真实items／retained_items.gender；Task.gender正确或回复自称男装不能替代商品校验。仅调整共用程序先跑必要模拟回归，真实文字仍须显式--live，不为性别修复执行付费图片或改写原衣橱标签。
+
 新增设置相关测试时读取 `scripts/companion_dialogues.py`，场景与逐轮判据见 `docs/DIALOGUE_QA.md` 的“称呼与角色对话矩阵”。用 `evaluate_personas --list --only <场景名>` 核对轮次；此清单检查不等于执行对话。
 
 - `companion_names` / `companion_defaults`：自我介绍使用自定义助理名、用户称呼；同会话更新两者后不串旧名；本轮拒绝称呼优先；空昵称、默认衣衣与临时叫法不冒充已保存设置。

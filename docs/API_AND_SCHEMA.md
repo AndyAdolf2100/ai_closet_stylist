@@ -137,3 +137,11 @@ Reply新增可选 `avatar_intent`、`tryon_context:{conversation_id,version,look
 ## 历史搭配重新生成（2026-11-02）
 
 `POST /stylist-api/chat/stream`沿用原协议，`regenerate_outfit=true`时可选传`regenerate_from_version`（来源卡片回合，>=1且<=expected_version），`selected_look_index`指向该历史回合的方案。`expected_version`仍为当前会话版本，检查并发并控制新结果追加，不能拿旧版本覆盖新历史。来源只由服务端按认证账号和当前conversation_id读取，不信任客户端商品／任务快照；只聊天的旧试穿引用可回溯到此前最近有方案的回合。无来源版本时兼容旧客户端的当前搭配行为；空字段不进入旧幂等摘要，显式来源版本进入摘要。跨账号／来源缺失／索引无效拒绝，不调用模型；重复请求回放，不自动试穿。
+
+## 衣物性别接入（2026-11-03）
+
+Product新增可空gender，归一为男／女／男女同款／null。读取兼容Server底层1／2／3和product.resolve文本值，0／空／未识别值保留null；权威行有空值时不沿用旧extras性别。旧结果缺字段可正常读取，不批量回填或改写历史。
+
+本轮对象由Task.gender决定，不由助理性别决定。候选读取、保存搭配、上传锚点和最终校验排除明确相反性别及标签／标题冲突；未知且无明确冲突仅作带版型提示的备选，优先已确认匹配或通用项。局部修改的冻结单品按原账号重新读取，性别冲突返回frozen_gender_conflict（409），不转成衣橱服务失败、不偷偷替换或重复收费。
+
+无匹配只说明本次候选不符合条件，不宣称整个衣橱为空。字段进入style候选及选中商品，无新增写入旧衣橱的接口；商品原标签质量仍需单独带身份验收。实现与验证见[CLOTHING_GENDER_ANALYSIS_2026-11-03.md](CLOTHING_GENDER_ANALYSIS_2026-11-03.md)。

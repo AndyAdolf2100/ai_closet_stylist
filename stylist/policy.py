@@ -207,9 +207,35 @@ def infer_slot(class_name, secondary=""):
     return None
 
 
+GENDER_PREFIX = "衣物性别不符："
+
+
+def product_gender_problems(product: Product, task: Task):
+    """Use garment labels and explicit title wording, never body shape or category stereotypes."""
+    if not task.gender:
+        return []
+    text = " ".join([product.title, product.class_name, product.secondary_class_name])
+    title_gender = None
+    if not re.search(r"男女|中性|\bunisex\b", text, re.I):
+        found = [gender for gender, english in (("男", r"men(?:['’]s|s)?|male"), ("女", r"women(?:['’]s|s)?|female"))
+                 if re.search(gender + r"(?:装|款|式|士|性|生|童|包)|" + gender +
+                              r"(?=\d|\s|春|夏|秋|冬|长|短|薄|厚|懒|修|宽|纯|新|衬衫|毛衣|外套|卫衣|裤|鞋|$)|\b(?:" + english + r")\b", text, re.I)]
+        if len(found) == 1:
+            title_gender = found[0]
+    if product.gender in {"男", "女"} and title_gender and product.gender != title_gender:
+        return [GENDER_PREFIX + "性别标签与商品标题冲突，暂不选用，请核对原衣物标签"]
+    if product.gender in {"男", "女"} and product.gender != task.gender:
+        return [GENDER_PREFIX + f"标注为{product.gender}款，本轮要求{task.gender}装"]
+    if title_gender and title_gender != task.gender:
+        return [GENDER_PREFIX + f"商品标题明确为{title_gender}款，本轮要求{task.gender}装"]
+    return []
+
+
 def suitability(product: Product, task: Task):
     text = product.evidence_text
-    reasons, warnings = [], []
+    reasons, warnings = product_gender_problems(product, task), []
+    if task.gender and product.gender is None and not reasons:
+        warnings.append("部分单品未标注衣物性别，不能确认适用版型，请结合尺码与实物核对。")
     if task.no_heels and product.slot == Slot.SHOES:
         if re.search(r"高跟|中跟|猫跟|细跟|粗跟|坡跟", text):
             reasons.append("鞋跟与不穿高跟要求冲突")

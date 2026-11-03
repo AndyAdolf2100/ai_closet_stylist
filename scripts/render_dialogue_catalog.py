@@ -14,6 +14,8 @@ from .dialogue_validation import EXPECTATIONS, SCENARIOS
 from .evaluate_personas import CASES, SEQUENCE
 from .exploratory_dialogues import EXPECTATIONS as EXP_EXPECTATIONS
 from .exploratory_dialogues import SCENARIOS as EXPLORATION
+from .garment_gender_dialogues import PURPOSES as GARMENT_GENDER_PURPOSES
+from .garment_gender_dialogues import SCENARIOS as GARMENT_GENDER
 from .journey_dialogues import EXPECTATIONS as JOURNEY_EXPECTATIONS
 from .journey_dialogues import PURPOSES as JOURNEY_PURPOSES
 from .journey_dialogues import SCENARIOS as JOURNEYS
@@ -25,6 +27,7 @@ def catalog():
     purposes = json.loads(Path(__file__).with_name("report_assets").joinpath("dialogue_purposes.json").read_text())
     purposes.update(JOURNEY_PURPOSES)
     purposes.update(CITY_INVITATION_PURPOSES)
+    purposes.update(GARMENT_GENDER_PURPOSES)
 
     def add(name, rows, category, source, expectations):
         turns = []
@@ -48,6 +51,9 @@ def catalog():
         add(case[0], [case], '日常与人设', 'scripts/evaluate_personas.py · CASES', {})
     add('sequence', SEQUENCE, '连续对话', 'scripts/evaluate_personas.py · SEQUENCE', {})
     for name, rows in SCENARIOS.items():
+        if name in GARMENT_GENDER:
+            add(name, rows, '衣物性别与选款', 'scripts/garment_gender_dialogues.py', EXPECTATIONS)
+            continue
         category = '偏好与星座' if name in PREFERENCES else '称呼与角色' if name in COMPANION else '业务回归'
         source = {'偏好与星座': 'scripts/preference_dialogues.py / preference_coverage.py',
                   '称呼与角色': 'scripts/companion_dialogues.py', '业务回归': 'scripts/dialogue_validation.py'}[category]

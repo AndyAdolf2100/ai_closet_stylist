@@ -14,6 +14,9 @@ from .city_invitation_dialogues import EXPECTATIONS as CITY_INVITATION_EXPECTATI
 from .city_invitation_dialogues import SCENARIOS as CITY_INVITATION_SCENARIOS
 from .companion_dialogues import EXPECTATIONS as COMPANION_EXPECTATIONS
 from .companion_dialogues import SCENARIOS as COMPANION_SCENARIOS
+from .garment_gender_dialogues import EXPECTATIONS as GARMENT_GENDER_EXPECTATIONS
+from .garment_gender_dialogues import PRODUCTS as GARMENT_GENDER_PRODUCTS
+from .garment_gender_dialogues import SCENARIOS as GARMENT_GENDER_SCENARIOS
 from .memory_dialogues import EXPECTATIONS as MEMORY_EXPECTATIONS
 from .memory_dialogues import SCENARIOS as MEMORY_SCENARIOS
 from .preference_dialogues import EXPECTATIONS as PREFERENCE_EXPECTATIONS
@@ -129,6 +132,8 @@ SCENARIOS.update(COMPANION_SCENARIOS)
 EXPECTATIONS.update(COMPANION_EXPECTATIONS)
 SCENARIOS.update(CITY_INVITATION_SCENARIOS)
 EXPECTATIONS.update(CITY_INVITATION_EXPECTATIONS)
+SCENARIOS.update(GARMENT_GENDER_SCENARIOS)
+EXPECTATIONS.update(GARMENT_GENDER_EXPECTATIONS)
 
 PRODUCTS = [
     {"product_id": "101", "class_name": "上衣", "title": "白色长袖衬衫", "color": "白色", "material": "棉"},
@@ -143,6 +148,10 @@ class DialogueUpstream:
     def __init__(self, scenario):
         self.scenario, self.calls = scenario, []
         self.products = PREFERENCE_PRODUCTS if scenario in PREFERENCE_SCENARIOS else PRODUCTS
+        if scenario in GARMENT_GENDER_SCENARIOS:
+            self.products = GARMENT_GENDER_PRODUCTS
+            if scenario == 'garment_gender_no_match':
+                self.products = [p for p in self.products if p['product_id'] in {'201','208','209'}]
         if scenario == "preference_no_matching_style":
             self.products = [p for p in self.products if {"name": "复古"} not in p.get("styles", [])]
         if scenario == "partial_wardrobe":
@@ -200,6 +209,16 @@ def visible_text(reply):
 
 def check_reply(reply, expected, calls, model_calls=(), previous=None):
     errors, text = [], visible_text(reply)
+    items = [item for look in reply.looks for item in look.items] + reply.retained_items
+    target = expected.get('garment_gender')
+    if target and any(item.gender not in {None, target, '男女同款'} for item in items):
+        errors.append('garment_gender_mismatch')
+    if expected.get('require_gender_labels') and any(item.gender is None for item in items):
+        errors.append('garment_gender_unknown')
+    if expected.get('unisex_items_only') and any(item.gender != '男女同款' for item in items):
+        errors.append('garment_not_unisex')
+    if expected.get('no_owned_items') and items:
+        errors.append('unexpected_gendered_selection')
     if 'city_selection_required' in expected and reply.city_selection_required != expected['city_selection_required']:
         errors.append('city_invitation_mismatch')
     if reply.upload_suggestion and reply.upload_intent is None:

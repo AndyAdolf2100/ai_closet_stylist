@@ -414,6 +414,7 @@ class Stylist:
                     async with upstream.mcp() as mcp:
                         pool, cautions, rejected = await retrieve(upstream, mcp, effective_task,
                                                                  plan.search_query, frozen, request.assistant_persona)
+                        frozen = [pool.get(p.key, p) for p in frozen]
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
                             try:
@@ -427,6 +428,8 @@ class Stylist:
                 except AuthenticationExpired:
                     raise
                 except StylistError as exc:
+                    if exc.code == "frozen_gender_conflict":
+                        raise
                     pool, service_gap = {}, True
                     logger.warning("Wardrobe read failed (%s)", exc.code)
                     warnings.append(service_notice(request.assistant_persona, "inventory"))
