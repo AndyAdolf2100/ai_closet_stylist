@@ -354,6 +354,15 @@ def create_app(settings=None):
     async def image_status(action_id: str, authorization: str | None = Header(default=None)):
         return await images.refresh(Upstream(settings, require_token(authorization)), action_id)
 
+    from .closet_app import router as closet_router
+    app.include_router(closet_router(settings))
+
+    @app.get("/app/")
+    async def closet_app(design: str | None = None):
+        if design not in {None, "ios", "yijian"}:
+            return Response("页面不存在", status_code=404, media_type="text/plain")
+        return FileResponse(Path(__file__).with_name("static") / "closet-app" / "index.html")
+
     @app.get("/")
     @app.get("/mobile/")
     async def index():

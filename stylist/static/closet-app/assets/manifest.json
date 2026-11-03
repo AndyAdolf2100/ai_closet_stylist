@@ -1,0 +1,222 @@
+{
+  "navigation_home_normal": {
+    "file": "navigation_home_normal.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_home_normal.imageset/navigation_home_normal@3x.png",
+    "sha256": "43a5e8a6855e306267a097e5e71d3a0d7b2da87e560d0d7cdca782da3ff15e76"
+  },
+  "navigation_home_selected": {
+    "file": "navigation_home_selected.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_home_selected.imageset/navigation_home_selected@3x.png",
+    "sha256": "34410f546422eb3c67cc101b0460648dd2478c2f0c26d4b32a65ec80416b046e"
+  },
+  "navigation_wardrobe_normal": {
+    "file": "navigation_wardrobe_normal.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_wardrobe_normal.imageset/navigation_wardrobe_normal@3x.png",
+    "sha256": "099b9a431178a16b2442a847d8022798aa1319c895e56cede9c4ddf257d61738"
+  },
+  "navigation_wardrobe_selected": {
+    "file": "navigation_wardrobe_selected.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_wardrobe_selected.imageset/navigation_wardrobe_selected@3x.png",
+    "sha256": "daf6dcc1ffd60d911b5604e321a0a716b738cd288d61edd1e06895b21cd6b79e"
+  },
+  "navigation_profile_normal": {
+    "file": "navigation_profile_normal.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_profile_normal.imageset/navigation_profile_normal@3x.png",
+    "sha256": "c7d69371ab4695488a43854eb9518df7bb747fe7ad724e44aeb30553ac096afd"
+  },
+  "navigation_profile_selected": {
+    "file": "navigation_profile_selected.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_profile_selected.imageset/navigation_profile_selected@3x.png",
+    "sha256": "7282e11f47dd06d788d03d50aaef70f1ddf750f2b10aa5ee307227e8e1120267"
+  },
+  "navigation_add_open": {
+    "file": "navigation_add_open.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/navigation_add_open.imageset/navigation_add_open@3x.png",
+    "sha256": "1a46020661373e63410eaa736acdb2bb3bc273c5049cdae8860cc65a8be1f539"
+  },
+  "home_album_empty": {
+    "file": "home_album_empty.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_empty.imageset/home_album_empty@3x.png",
+    "sha256": "a4c8c1fd8ce979fe93381e1b76b80a29759740489d49d5ba497e8e13b2de4aab"
+  },
+  "home_agent_card_orb": {
+    "file": "home_agent_card_orb.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_agent_card_orb.imageset/home_agent_card_orb.png",
+    "sha256": "09b52f0cfd67dd088fdc95c12caf2b8d16639c75edf108a12e965f9fa46d8e1c"
+  },
+  "profile_background_glow": {
+    "file": "profile_background_glow.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_background_glow.imageset/profile_background_glow.png",
+    "sha256": "994e46ede1a680ccba27038eae05b106dcc622b9c6f3ea833bba80ce4d277102"
+  },
+  "profile_records_icon": {
+    "file": "profile_records_icon.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_records_icon.imageset/profile_records_icon.svg",
+    "sha256": "b2a28a716abceefff2094f3d0f2dcfc671187d6d62dd1e41b9b5edcc62ab1344"
+  },
+  "profile_outfits_icon": {
+    "file": "profile_outfits_icon.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_outfits_icon.imageset/profile_outfits_icon.svg",
+    "sha256": "d73fccf23bb4468035d3537e64f913cd4058b5d25f3199181fa5e8fc9ca2c0e1"
+  },
+  "profile_records_halo": {
+    "file": "profile_records_halo.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_records_halo.imageset/profile_records_halo.svg",
+    "sha256": "2dc45fd0858f9ead5cbbdfd2418404e69e8866632f3fbec4a575f2e97b9067fa"
+  },
+  "profile_outfits_halo": {
+    "file": "profile_outfits_halo.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_outfits_halo.imageset/profile_outfits_halo.svg",
+    "sha256": "be6bd904770f5c33f73a91b577620c70f132dd749121b24e7f821edd1bcf411b"
+  },
+  "profile_message": {
+    "file": "profile_message.png",
+    "source": "Resources/Assets.xcassets/profile/profile_message.imageset/profile_message@3x.png",
+    "sha256": "d9d9e4519e6472852a7d9c291118c1e0f6d9da077db2e5256ca5365694b44e00"
+  },
+  "profile_order": {
+    "file": "profile_order.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_order.imageset/profile_order.svg",
+    "sha256": "1a0131c9888f4091e90cdad89873d45f6aafae5ca312db4d7a77d342c97f1bbf"
+  },
+  "profile2_feedback": {
+    "file": "profile2_feedback.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile2_feedback.imageset/profile_feedback.svg",
+    "sha256": "426735c3dd8d1e338dbb0990c83041d2af21e99fcee325a4a62a31678ee2ea15"
+  },
+  "profile2_contact": {
+    "file": "profile2_contact.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile2_contact.imageset/profile_contact.svg",
+    "sha256": "41919f4016bec0a10ec0c7b7b6bbb65b0a39e4a4b9cdc4937685a99462ca3a04"
+  },
+  "profile_settings": {
+    "file": "profile_settings.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_settings.imageset/profile_settings.svg",
+    "sha256": "20f5e2a773c6faea3d057ce81d64a3e97fb93080083ce1f1805cdcb8af692018"
+  },
+  "profile_top_statistics": {
+    "file": "profile_top_statistics.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_top_statistics.imageset/profile_top_statistics.png",
+    "sha256": "e74eae984a71b1fd992af5f6eaa46965f1ccf03997ed6ef9daee5b5edd76afc7"
+  },
+  "profile_top_points": {
+    "file": "profile_top_points.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_top_points.imageset/profile_top_points.png",
+    "sha256": "943d839c453bcc4323d46645781d8d95bf105bc5bc7009b5d334b582aa96bbfe"
+  },
+  "profile_edit_badge": {
+    "file": "profile_edit_badge.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_edit_badge.imageset/profile_edit_badge@3x.png",
+    "sha256": "a8ead185f7a66ff0cb600bf9a442270a13f448ef6043a8b84311f3e5f4caa1b0"
+  },
+  "profile_outfit_empty": {
+    "file": "profile_outfit_empty.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_outfit_empty.imageset/profile_outfit_empty.png",
+    "sha256": "3a32754514fda2d62377943449369012581de0ad3b2b221c1c2020f4a0445e6e"
+  },
+  "wardrobe_title_bg": {
+    "file": "wardrobe_title_bg.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/wardrobe_title_bg.imageset/wardrobe_title_bg@3x.png",
+    "sha256": "146579660adba32fb6ae31b74f46d59db29c6e0d075f3845de777a9fd15f330f"
+  },
+  "wardrobe_action_stats": {
+    "file": "wardrobe_action_stats.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/wardrobe_action_stats.imageset/wardrobe_action_stats@3x.png",
+    "sha256": "16d3c568da15869ed288f277d0c842e65b6bc947eff2613d36ec8723efeb53af"
+  },
+  "wardrobe_action_ootd": {
+    "file": "wardrobe_action_ootd.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/wardrobe_action_ootd.imageset/wardrobe_action_ootd@3x.png",
+    "sha256": "14814e21f9c9a42f41aa2e079c1fc09abed252bf54752b31cef79db56d1eb84a"
+  },
+  "wardrobe_action_diy": {
+    "file": "wardrobe_action_diy.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/wardrobe_action_diy.imageset/wardrobe_action_diy@3x.png",
+    "sha256": "d1a6ecb4fb0251bd03084c9a5e7f46a7d9e10754fb5b88ccb4f8c23699cab91a"
+  },
+  "wardrobe_action_products": {
+    "file": "wardrobe_action_products.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/wardrobe_action_products.imageset/wardrobe_action_products@3x.png",
+    "sha256": "4e4b02ba96c64fed7a600cb8769f016f5d000360d5239fa873e9590dc6e48e0b"
+  },
+  "closet_recent_empty": {
+    "file": "closet_recent_empty.svg",
+    "source": "Resources/Assets.xcassets/closet/closet_recent_empty.imageset/closet_recent_empty.svg",
+    "sha256": "c763133998ce49429e61e7867ceefa5ba2dcf5c69554f4d26999d82392adb785"
+  },
+  "create2_orb": {
+    "file": "create2_orb.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_orb.imageset/create2_orb.png",
+    "sha256": "a97390ce45da0c834e2cb13cce394a859625f92db9576b6df9f9406d20a41a31"
+  },
+  "create2_garment": {
+    "file": "create2_garment.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_garment.imageset/create2_garment.svg",
+    "sha256": "deeddc543b3f9d9f31a2d2f009947e8be37fec1143023d6d919e8f97565ef473"
+  },
+  "create2_import": {
+    "file": "create2_import.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_import.imageset/create2_import.svg",
+    "sha256": "56433461ae3154c722d30fd848c9eb7b2dbacb42ecaa2c6ad74dae4931bf2283"
+  },
+  "create2_outfit": {
+    "file": "create2_outfit.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_outfit.imageset/create2_outfit.svg",
+    "sha256": "16c6c450a0e7f889a0419159c2fbc392e9cf66fdabb5fb443bbd26b8768346a9"
+  },
+  "create2_ootd": {
+    "file": "create2_ootd.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_ootd.imageset/create2_ootd.svg",
+    "sha256": "ecec0ed03bab0a6d0320dee8694a0ab0332c2b9f6fb0c26ad330af7bddee1e22"
+  },
+  "user_avatar_default_icon": {
+    "file": "user_avatar_default_icon.png",
+    "source": "Resources/Assets.xcassets/user/user_avatar_default_icon.imageset/user_avatar_default_icon@3x.png",
+    "sha256": "b26737856a4e4f9370edd82112d13069c06cbfd9a8f85a7d80898dc914db31b4"
+  },
+  "profile_memory_art": {
+    "file": "profile_memory_art.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_memory_art.imageset/profile_memory_art.png",
+    "sha256": "674345d88661db3568f09e10d99d632a244faed33cdd583a60251e5770ab693b"
+  },
+  "home_album_glow_pink": {
+    "file": "home_album_glow_pink.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_glow_pink.imageset/home_album_glow_pink.svg",
+    "sha256": "71f2ee07f1ee31b38c3f1afa2194aca1816448eb6529f8b00b65448c90bd3152"
+  },
+  "home_album_glow_blue": {
+    "file": "home_album_glow_blue.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_glow_blue.imageset/home_album_glow_blue.svg",
+    "sha256": "ea141f23102608545877ae54b1f4564b52b3e2f01cd8418211608159dcdad33e"
+  },
+  "home_album_glow_purple": {
+    "file": "home_album_glow_purple.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_glow_purple.imageset/home_album_glow_purple.svg",
+    "sha256": "ddc40b59c52bedcd7ea231b665e4a368d71c7a8a16b0e7c7f39b26bb947d9134"
+  },
+  "home_album_context": {
+    "file": "home_album_context.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_context.imageset/home_album_context.svg",
+    "sha256": "533d71b53a1769c81f05668ed7ad543f19c85bc90a52accfd6a1e802804659a9"
+  },
+  "home_album_source": {
+    "file": "home_album_source.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/home_album_source.imageset/home_album_source.svg",
+    "sha256": "fab0e4a247bd89b3ffcf960a810ab33af7d5082b9faf4266281c0481515d596d"
+  },
+  "create2_close": {
+    "file": "create2_close.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_close.imageset/create2_close.png",
+    "sha256": "b3417ba22f023def8bab15802f30bfa03df6b89cb2acdb51dc4e83e550d6a4ce"
+  },
+  "create2_ai_arrow": {
+    "file": "create2_ai_arrow.png",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/create2_ai_arrow.imageset/create2_ai_arrow@3x.png",
+    "sha256": "ede91cf5013a079e29d346468e172f1c2d4c574fea10a870bebd7155c164e101"
+  },
+  "profile_chevron": {
+    "file": "profile_chevron.svg",
+    "source": "Sources/Module2.0/Resources/DesignAssets.xcassets/profile_chevron.imageset/profile_chevron.svg",
+    "sha256": "5c058edeb1e806ccea9cffd1c547ce0f1e6715661c71a415324ee86746099777"
+  }
+}

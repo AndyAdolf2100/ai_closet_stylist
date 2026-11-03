@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>AI Closet</title><script src="/static/closet-app/design-bootstrap.js?v=supported-designs-v2"></script><link rel="stylesheet" href="/static/closet-app/app.css"><link rel="stylesheet" href="/static/closet-app/parity.css"><link rel="stylesheet" href="/static/closet-app/yijian.css"></head>
+<body>
+<div id="app" class="closet-app">
+  <main id="pages">
+    <section id="home" class="page" aria-label="首页">
+      <header class="home-tabs"><nav aria-label="首页分类"><button data-feed="album" aria-selected="true">造型册</button><button data-feed="inspiration" aria-selected="false">发现灵感</button><button data-feed="activity" aria-selected="false">潮流玩法</button></nav><button class="agent-orb" data-agent="history" aria-label="打开衣间历史对话">聊天记录 ›</button></header>
+      <div id="home-feed" class="feed" aria-live="polite"></div>
+    </section>
+    <section id="wardrobe" class="page wardrobe" aria-label="衣橱" hidden>
+      <header class="wardrobe-scene"><h1>衣橱</h1><div class="quick-actions"><button data-detail="statistics"><img src="/static/closet-app/assets/wardrobe_action_stats.png" alt="">衣橱统计</button><button data-detail="ootd"><img src="/static/closet-app/assets/wardrobe_action_ootd.png" alt="">OOTD</button><button data-detail="diy"><img src="/static/closet-app/assets/wardrobe_action_diy.png" alt="">DIY搭配</button><button data-detail="products"><img src="/static/closet-app/assets/wardrobe_action_products.png" alt="">逛逛新品</button></div></header>
+      <div id="wardrobe-sections" aria-live="polite"></div>
+    </section>
+    <section id="profile" class="page profile" aria-label="我的" hidden>
+      <div class="profile-content"><header class="profile-top"><h1>我的</h1><button class="pill" data-detail="statistics"><img src="/static/closet-app/assets/profile_top_statistics.png" alt="">统计 ›</button><button class="pill" data-agent="checkin"><img src="/static/closet-app/assets/profile_top_points.png" alt="">领积分 ›</button></header>
+      <div class="identity"><button class="avatar" data-agent="twins" aria-label="编辑数字分身"><img id="account-avatar" src="/static/closet-app/assets/user_avatar_default_icon.png" alt=""><img class="pencil" src="/static/closet-app/assets/profile_edit_badge.png" alt=""></button><div><h2 id="account-name">未登录</h2><button class="pill identity-edit" data-agent="twins">编辑数字分身</button></div></div>
+      <div class="points-card"><span>积分余额</span><strong id="balance">–</strong><button data-detail="membership">会员与积分 ›</button></div>
+      <button class="memory-card" data-agent="memory"><span class="memory-title">Memory</span><span class="memory-copy">对齐审美偏好，让她比上一秒更懂你<br>在这里，塑造一个比谁都懂你的私人造型师。</span><span class="pill">开始进化</span><span class="memory-orb" aria-hidden="true"></span></button>
+      <div class="feature-cards"><button data-detail="generation-records"><img src="/static/closet-app/assets/profile_records_icon.svg" alt=""><span><strong>生成记录 ›</strong><small>试衣与潮流玩法</small></span></button><button data-detail="my-outfits"><img src="/static/closet-app/assets/profile_outfits_icon.svg" alt=""><span><strong>我的搭配 ›</strong><small>查看搭配</small></span></button></div>
+      <nav class="profile-menu" aria-label="个人服务"><button data-detail="orders"><img src="/static/closet-app/assets/profile_order.svg" alt="">订单记录<span>›</span></button><button data-detail="messages"><img src="/static/closet-app/assets/profile_message.png" alt="">我的消息<span>›</span></button><button data-detail="feedback"><img src="/static/closet-app/assets/profile2_feedback.svg" alt="">意见反馈<span>›</span></button><button data-detail="contact"><img src="/static/closet-app/assets/profile2_contact.svg" alt="">联系我们<span>›</span></button><button data-detail="settings"><img src="/static/closet-app/assets/profile_settings.svg" alt="">设置<span>›</span></button></nav>
+      </div>
+    </section>
+  </main>
+  <div id="create-overlay" class="create-overlay" hidden><button class="shade" aria-label="关闭创建面板" data-close-create></button><section class="create-sheet" role="dialog" aria-modal="true" aria-labelledby="create-title"><div class="handle"></div><div class="create-scroll"><header><h2 id="create-title">创建</h2><button class="close" data-close-create aria-label="关闭">×</button></header><p>最懂你的专属造型师</p><button class="create-ai" data-agent="chat"><img src="/static/closet-app/assets/create2_orb.png" alt="">AI搭配助手<span>›</span></button><h3>直接创建</h3><div class="create-row"><button data-agent="upload"><img src="/static/closet-app/assets/create2_garment.svg" alt="">添加单品<span>›</span></button><button data-detail="import"><img src="/static/closet-app/assets/create2_import.svg" alt="">电商导入<span>›</span></button></div><button class="create-wide" data-detail="diy"><img src="/static/closet-app/assets/create2_outfit.svg" alt="">创建搭配<span>›</span></button><button class="create-wide" data-detail="ootd"><img src="/static/closet-app/assets/create2_ootd.svg" alt="">记录OOTD<span>›</span></button></div></section></div>
+  <nav class="floating-bar" aria-label="主导航"><div class="nav-capsule"><button data-tab="home" aria-current="page"><img src="/static/closet-app/assets/navigation_home_selected.png" alt=""><span>首页</span></button><button data-tab="wardrobe"><img src="/static/closet-app/assets/navigation_wardrobe_normal.png" alt=""><span>衣橱</span></button><button data-tab="profile"><img src="/static/closet-app/assets/navigation_profile_normal.png" alt=""><span>我的</span></button></div><button id="create-toggle" aria-label="添加" aria-expanded="false"><img src="/static/closet-app/assets/navigation_add_open.png" alt=""></button></nav>
+  <section id="detail-page" class="detail-page" hidden><header class="detail-header"><button id="detail-back" aria-label="返回">‹</button><h2 id="detail-title"></h2></header><div id="detail-content"></div></section>
+  <section id="agent-page" class="agent-page" hidden><header><button id="agent-back">‹ 返回</button><span>衣间</span><button id="agent-account" aria-label="登录或切换账号">账号</button></header><iframe id="agent-frame" title="衣间穿搭助理"></iframe></section>
+  <p id="app-notice" class="toast" role="status" hidden></p>
+</div>
+<script type="module" src="/static/closet-app/app.js"></script>
+<script type="module" src="/static/closet-app/yijian.js"></script>
+
+<link rel="stylesheet" href="/static/closet-app/message.css"><script src="/static/closet-app/message.js"></script><link rel="stylesheet" href="/static/closet-app/activity-app.css"><link rel="stylesheet" href="/static/closet-app/profile-pages.css"><link rel="stylesheet" href="/static/closet-app/native-polish.css"></body></html>

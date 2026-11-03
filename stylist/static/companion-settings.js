@@ -3,7 +3,9 @@
   const characters = window.CompanionCharacters;
   const personaGender = id => characters.gender(id);
   const defaults = () => ({ user_name: '', user_gender: null, agent_name: '衣衣', assistant_persona: 'male_calm_v1', color_scheme:'companion' });
+  const editPage = document.documentElement.dataset.appDesign === 'yijian';
   const dialog = document.createElement('dialog');
+  if (editPage) dialog.dataset.editPage = 'true';
   dialog.id = 'companion-dialog'; dialog.setAttribute('aria-labelledby', 'companion-title');
   dialog.innerHTML = `
     <form id="companion-form" novalidate>
@@ -31,6 +33,12 @@
       </div>
       <footer class="companion-footer"><div class="companion-buttons"><button type="button" id="companion-back">上一步</button><button type="submit" id="companion-next" class="primary">继续认识彼此</button></div><p>称呼和模样，以后都可以在这里慢慢调整。</p></footer>
     </form>`;
+  if (editPage) {
+    const colors = dialog.querySelector('.companion-cast-tools');
+    dialog.querySelector('.companion-recall').after(colors);
+    const label = colors.querySelector('#companion-color-companion + span');
+    label.lastChild.textContent = '随角色变动';
+  }
   document.body.append(dialog);
   // The six selected designs use their original static images; no new atlases.
   dialog.querySelectorAll('.companion-cast-step img').forEach(image => image.addEventListener('error', () => {
@@ -157,11 +165,13 @@
   let groupChoices = { female: 'female_warm_v1', male: 'male_calm_v1' };
   const previewAppearance = (persona,colorScheme=draft.color_scheme) => {
     characters.apply(persona);
+    if (editPage) document.documentElement.dataset.appPalette = colorScheme === 'system' ? 'system' : personaGender(persona);
     window.dispatchEvent(new CustomEvent('stylist-appearance-preview', { detail:{gender:personaGender(persona),color_scheme:colorScheme} }));
   };
   function restoreAppearance() {
     if (previewOriginal === null) return;
     const original = previewOriginal; previewOriginal = null; previewAppearance(original.assistant_persona,original.color_scheme);
+    if (editPage && original.appPalette) document.documentElement.dataset.appPalette = original.appPalette;
   }
   const notify = () => {
     document.querySelectorAll('[data-agent-name]').forEach(node => { node.textContent = profile.agent_name; node.title = profile.agent_name; });
@@ -170,10 +180,10 @@
     window.dispatchEvent(new CustomEvent('companion-profile-change', { detail: owner ? { ...profile } : null }));
   };
   const rememberStep = () => {
-    if (step === 0) draft.user_name = $('companion-user-name').value.trim();
-    if (step === 1) draft.user_gender = dialog.querySelector('[name=companion-user-gender]:checked')?.value || null;
-    if (step === 2) draft.agent_name = $('companion-agent-name').value.trim();
-    if (step === 3) {
+    if (editPage || step === 0) draft.user_name = $('companion-user-name').value.trim();
+    if (editPage || step === 1) draft.user_gender = dialog.querySelector('[name=companion-user-gender]:checked')?.value || null;
+    if (editPage || step === 2) draft.agent_name = $('companion-agent-name').value.trim();
+    if (editPage || step === 3) {
       draft.assistant_persona = dialog.querySelector('[name=companion-persona]:checked')?.value || 'male_calm_v1';
       draft.color_scheme = dialog.querySelector('[name=companion-color-scheme]:checked')?.value||'companion';
     }
@@ -206,7 +216,7 @@
     dialog.querySelector('.companion-speaker').textContent = draft.agent_name || '衣衣';
     dialog.querySelector('.companion-line').textContent = current[2];
     dialog.querySelector('.companion-recall').textContent = step === 0 ? '从一个喜欢的称呼，开始我们的日常。' : `${draft.user_name ? '想被称作 ' + draft.user_name : '先自然地称呼你'}${step > 1 && draft.user_gender ? ' · ' + (draft.user_gender === '女' ? '女生' : '男生') : ''}`;
-    dialog.querySelectorAll('[data-step]').forEach(node => { node.hidden = Number(node.dataset.step) !== step; });
+    dialog.querySelectorAll('[data-step]').forEach(node => { node.hidden = !editPage && Number(node.dataset.step) !== step; });
     dialog.querySelectorAll('.companion-progress li').forEach((node, index) => {
       node.classList.toggle('complete', index < step);
       if (index === step) node.setAttribute('aria-current', 'step'); else node.removeAttribute('aria-current');
@@ -217,6 +227,13 @@
     renderCast();
     $('companion-back').hidden = step === 0;
     $('companion-next').textContent = step === 3 ? '就这样，开始我们的日常' : ['继续认识彼此', '再靠近一点', '看看陪伴的模样'][step];
+    if (editPage) {
+      $('companion-title').textContent = '称呼与陪伴';
+      dialog.querySelector('.companion-chapter').textContent = 'ABOUT YOU & YOUR COMPANION';
+      dialog.querySelector('.companion-recall').textContent = '你的称呼，伙伴的模样，都由你来决定。';
+      $('companion-back').hidden = true;
+      $('companion-next').textContent = '保存修改';
+    }
     $('companion-error').textContent = '';
     dialog.querySelector('.companion-body').scrollTop = 0;
     // Do not force the mobile keyboard open between dialogue steps.
@@ -225,7 +242,7 @@
   function openLoaded() {
     if (!owner || !loaded || saving || dialog.open) return;
     hideNotification(); messageReturnFocus = null; clearMessage();
-    previewOriginal = {assistant_persona:profile.assistant_persona,color_scheme:profile.color_scheme};
+    previewOriginal = {assistant_persona:profile.assistant_persona,color_scheme:profile.color_scheme,appPalette:document.documentElement.dataset.appPalette};
     draft = JSON.parse(JSON.stringify(profile)); step = 0;
     groupChoices = { female: 'female_warm_v1', male: 'male_calm_v1', [personaGender(draft.assistant_persona)]: draft.assistant_persona };
     if (!dialog.open) dialog.showModal();
@@ -281,11 +298,15 @@
   dialog.addEventListener('close', () => { if (!dialog.open) restoreAppearance(); });
   $('companion-form').onsubmit = async event => {
     event.preventDefault(); if (saving) return; rememberStep();
+    if (editPage) {
+      if (!draft.user_name || !draft.user_gender || !draft.agent_name || !draft.assistant_persona) { showNotification(profile, '请填写你的称呼、性别和伙伴名字，并选好陪伴的模样。'); return; }
+      if ([draft.user_name, draft.agent_name].some(value => /[\u0000-\u001f\u007f<>]/u.test(value) || [...value].length > 24)) { showNotification(profile, '称呼请使用24字以内的普通文字。'); return; }
+    }
     const value = step === 0 ? draft.user_name : step === 2 ? draft.agent_name : '';
     if (/[\u0000-\u001f\u007f<>]/u.test(value) || [...value].length > 24 || (step === 2 && !value)) {
       showNotification(profile, step === 2 && !value ? '给我留一个名字吧，衣衣也很好。' : '用24字以内的普通文字就好。'); return;
     }
-    if (step < 3) { step++; render(); return; }
+    if (!editPage && step < 3) { step++; render(); return; }
     const current = sequence, expectedOwner = owner, saved = { ...draft };
     saving = true; $('companion-next').disabled = true; $('companion-back').disabled = true;
     dialog.querySelector('.companion-assistant-gender').disabled = true; renderCast();

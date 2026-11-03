@@ -1,0 +1,70 @@
+/* Second parity pass. Geometry comes from the current iOS Module2.0 views. */
+.home-tabs nav { overflow-x: auto; scrollbar-width: none; gap: 0; }
+.home-tabs nav button { flex-shrink: 0; padding-inline: 16px; }
+.agent-orb {
+  width: auto; height: 35px; min-width: 80px; padding: 9px 8px;
+  border-radius: 20px; font-size: 12px; font-weight: 500; color: #111522;
+  background: linear-gradient(90deg, #fce1f1, #e4d6ff, #cdefff);
+}
+.album-card {
+  padding: 0; position: relative; background: white; text-align: left;
+  border-color: #ffe5f5f0; box-shadow: 0 7px 11px #1f21381a;
+}
+.album-tap { text-align: left; position: relative; }
+.album-stage { position: relative; aspect-ratio: 367 / 396.63; }
+.album-card .album-result {
+  position: absolute; inset: 0; width: 100%; height: calc(100% + 92px);
+  object-fit: cover; border-radius: 0; max-height: none;
+}
+.album-garments {
+  position: absolute; left: 4px; bottom: 0; width: calc(100% * 107 / 367);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  max-height: calc(100% - 8px);
+}
+.album-tile {
+  width: 100%; aspect-ratio: 107 / 92; flex-shrink: 1; min-height: 0;
+  background: #fbf9f9; border-radius: 14px; padding: 2px; overflow: hidden;
+}
+.album-card .album-tile img {
+  display: block; width: 100%; height: 100%; object-fit: contain;
+  border-radius: 0; max-height: none;
+}
+.album-multiple {
+  background: url('./assets/home_album_glow_pink.svg') -90px -60px / 278px 278px no-repeat,
+    url('./assets/home_album_glow_blue.svg') 196px -89px / 281px 326px no-repeat,
+    url('./assets/home_album_glow_purple.svg') -141px 142px / 310px 305px no-repeat, white;
+}
+.album-multiple .album-stage { aspect-ratio: 367 / 388; }
+.album-multiple .album-garments { left: 7px; top: 8px; bottom: auto; }
+.album-multiple .album-result {
+  left: calc(12px + 100% * 107 / 367); top: 8px; right: 9px;
+  width: calc(100% - 21px - 100% * 107 / 367); height: calc(100% - 8px);
+  border-radius: 14px;
+}
+.album-copy { position: relative; padding: 10px 17px 18px; display: flex; flex-direction: column; gap: 8px; }
+.album-single .album-copy::before {
+  content: ''; position: absolute; inset: -9px 0 0; z-index: 0;
+  background: linear-gradient(transparent, white 44%, white);
+}
+.album-copy > * { position: relative; }
+.album-card h2 { margin: 0; font-size: 25px; font-weight: 400; color: #373c4f; }
+.album-card p { margin: 0; font-size: 12px; line-height: 18px; color: #737887; }
+.album-metadata { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 11px; color: #737887; }
+.album-single .album-metadata { color: #373c4f; }
+.album-metadata > span { display: flex; align-items: flex-start; gap: 4px; }
+.album-meta-source { margin-left: auto; flex-shrink: 0; max-width: 45%; }
+.album-card .album-metadata img { width: 15px; height: 15px; border-radius: 0; flex-shrink: 0; }
+.album-card .album-meta-source img { width: 14px; height: 14px; }
+.inspiration-grid { display: block; position: relative; }
+.inspiration-grid .inspiration-card {
+  position: absolute; top: 0; left: 0; overflow: hidden; border-radius: 16px;
+  background: white; box-shadow: 0 3px 8px #0000000b;
+}
+.inspiration-card > img { display: block; border-radius: 0; object-fit: cover; }
+.inspiration-copy { padding: 10px 10px 12px; }
+.inspiration-copy h2 { font-size: 13px; font-weight: 600; color: #333847; }
+.inspiration-copy p { font-size: 11px; color: #7d8291; margin-top: 5px; }
+.create-scroll .close { font-size: 0; background: url('./assets/create2_close.png') center / 20px 20px no-repeat; }
+.create-scroll button > span { font-size: 0; width: 14px; height: 14px; flex-shrink: 0; background: url('./assets/create2_ai_arrow.png') center / contain no-repeat; }
+.create-scroll .create-ai > span { width: 16px; height: 16px; }
+.profile-menu button > span { font-size: 0; width: 14px; height: 14px; background: url('./assets/profile_chevron.svg') center / contain no-repeat; }

@@ -1,0 +1,276 @@
+/* The proposal is opt-in. /app/ continues to render the native parity baseline. */
+html[data-app-design=yijian] {
+  --y-bg:#f4f6f8; --y-paper:#fdfefd; --y-ink:#293a4c; --y-muted:#73818e;
+  --y-line:#dce3e8; --y-accent:#3c5b79; --y-soft:#e8eff5; --y-button:#3c5b79; --y-button-ink:#fff;
+  --y-serif:Georgia,"Songti SC","STSong",serif;
+  background:var(--y-bg); color:var(--y-ink);
+}
+html[data-app-design=yijian][data-app-palette=female] {
+  --y-bg:#fbf7f2; --y-paper:#fffdfa; --y-ink:#42483c; --y-muted:#8b8175;
+  --y-line:#e9ddd2; --y-accent:#63775b; --y-soft:#edf0e7; --y-button:#63775b; --y-button-ink:#fff;
+}
+html[data-app-design=yijian][data-app-palette=system] {
+  --y-bg:#fff; --y-paper:#fff; --y-ink:#302f29; --y-muted:#858174;
+  --y-line:#eee6d2; --y-accent:#8a6915; --y-soft:#fff9e6; --y-button:#fcda4f; --y-button-ink:#302a18;
+}
+html[data-app-design=yijian] :is(button,a,input):focus-visible { outline:2px solid var(--y-accent); outline-offset:3px; }
+html[data-app-design=yijian] .y-icon { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.45; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+html[data-app-design=yijian] .y-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:780px; margin:auto; padding:calc(18px + env(safe-area-inset-top)) 22px 16px; border-bottom:1px solid var(--y-line); }
+html[data-app-design=yijian] .y-brand { text-decoration:none; color:var(--y-ink); font:26px var(--y-serif); letter-spacing:5px; flex-shrink:0; }
+html[data-app-design=yijian] .y-brand small { display:block; font:7px/1.6 sans-serif; letter-spacing:1.4px; margin-top:4px; color:var(--y-muted); }
+html[data-app-design=yijian] .y-palettes { display:flex; align-items:center; gap:3px; }
+html[data-app-design=yijian] .y-palette { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-width:44px; min-height:48px; padding:4px; border:1px solid transparent; border-radius:14px; color:var(--y-muted); }
+html[data-app-design=yijian] .y-palette[aria-pressed=true] { border-color:var(--y-line); background:var(--y-paper); color:var(--y-ink); }
+html[data-app-design=yijian] .y-swatch { width:13px; height:13px; border-radius:50%; background:#63775b; box-shadow:inset 0 0 0 1px #0000000c; }
+html[data-app-design=yijian] .y-palette-male .y-swatch { background:#3c5b79; }
+html[data-app-design=yijian] .y-palette-system .y-swatch { background:#fcda4f; }
+html[data-app-design=yijian] .y-palette-name { font-size:9px; white-space:nowrap; }
+html[data-app-design=yijian] .page { background:var(--y-bg); min-height:calc(100dvh - 90px); padding-top:0; padding-bottom:120px; }
+html[data-app-design=yijian] .y-welcome { margin:24px 22px 22px; display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:14px; align-items:center; }
+html[data-app-design=yijian] .y-eyebrow { font-size:8px; letter-spacing:1.5px; line-height:1.8; color:var(--y-muted); }
+html[data-app-design=yijian] .y-welcome h1 { font:28px/1.5 var(--y-serif); letter-spacing:.5px; margin:10px 0; }
+html[data-app-design=yijian] .y-welcome p { font-size:12px; line-height:1.85; color:var(--y-muted); max-width:230px; }
+html[data-app-design=yijian] .y-talk { display:inline-flex; align-items:center; gap:15px; min-height:44px; margin-top:17px; padding:10px 17px; border-radius:24px; background:var(--y-button); color:var(--y-button-ink); font-size:12px; }
+html[data-app-design=yijian] .y-talk .y-icon { width:16px; height:16px; }
+html[data-app-design=yijian] .y-portrait { width:112px; text-align:center; align-self:center; }
+html[data-app-design=yijian] .y-companion-photo { display:block; width:112px; height:145px; object-fit:cover; object-position:center; border-radius:62px 62px 14px 14px; border:4px solid var(--y-paper); box-shadow:0 8px 22px #303c4310; }
+html[data-app-design=yijian] .y-portrait-caption { display:block; margin-top:9px; font-size:9px; color:var(--y-muted); overflow-wrap:anywhere; }
+html[data-app-design=yijian] .home-tabs { background:var(--y-bg); height:52px; border-block:1px solid var(--y-line); padding:0 20px; }
+html[data-app-design=yijian] .home-tabs nav button { font-size:12px; height:51px; border-radius:0; color:var(--y-muted); padding:0 11px; position:relative; background:transparent; }
+html[data-app-design=yijian] .home-tabs nav button[aria-selected=true] { color:var(--y-accent); }
+html[data-app-design=yijian] .home-tabs nav button[aria-selected=true]::after { content:''; position:absolute; height:2px; bottom:0; left:11px; right:11px; background:var(--y-accent); }
+html[data-app-design=yijian] .agent-orb { background:transparent; color:var(--y-accent); min-width:72px; font-size:11px; padding:8px 0 8px 6px; }
+html[data-app-design=yijian] .y-section-title { padding:22px 22px 14px; }
+html[data-app-design=yijian] .y-section-title h2 { font:17px/1.6 var(--y-serif); margin-top:4px; }
+html[data-app-design=yijian] .feed { min-height:260px; padding:2px 20px 16px; }
+html[data-app-design=yijian] .empty { min-height:250px; padding:15px 0 32px; color:var(--y-muted); }
+html[data-app-design=yijian] .empty > img { width:130px; height:130px; }
+html[data-app-design=yijian] .state { padding:35px 18px; margin:8px 0; background:var(--y-paper); border:1px solid var(--y-line); border-radius:20px; color:var(--y-muted); font-size:13px; }
+html[data-app-design=yijian] :is(.pill,.section-heading button) { border-color:var(--y-line); background:var(--y-paper); color:var(--y-accent); }
+html[data-app-design=yijian] .floating-bar { gap:10px; }
+html[data-app-design=yijian] .nav-capsule { background:var(--y-paper); border-color:var(--y-line); box-shadow:0 5px 20px #3040320c; }
+html[data-app-design=yijian] .nav-capsule button { color:var(--y-muted); }
+html[data-app-design=yijian] .nav-capsule button[aria-current] { color:var(--y-accent); }
+html[data-app-design=yijian] .nav-capsule img { display:none; }
+html[data-app-design=yijian] .nav-capsule .y-icon { width:24px; height:24px; }
+html[data-app-design=yijian] #create-toggle { width:54px; height:54px; flex-basis:54px; border-radius:50%; background:var(--y-button); color:var(--y-button-ink); box-shadow:0 5px 14px #30403215; }
+html[data-app-design=yijian] #create-toggle .y-icon { width:24px; height:24px; vertical-align:middle; transition:transform .2s; }
+html[data-app-design=yijian] #create-toggle[aria-expanded=true] .y-icon { transform:rotate(45deg); }
+html[data-app-design=yijian] :is(.album-card,.inspiration-card) { border:1px solid var(--y-line); background:var(--y-paper); box-shadow:0 4px 14px #303c4308; }
+html[data-app-design=yijian] .album-card h2 { font-family:var(--y-serif); color:var(--y-ink); font-size:24px; }
+html[data-app-design=yijian] :is(.album-card p,.album-metadata,.inspiration-copy p) { color:var(--y-muted); }
+html[data-app-design=yijian] .inspiration-copy h2 { color:var(--y-ink); font-weight:500; }
+html[data-app-design=yijian] .album-single .album-copy::before { background:linear-gradient(transparent,var(--y-paper) 44%,var(--y-paper)); }
+html[data-app-design=yijian] .album-tile { background:var(--y-soft); }
+html[data-app-design=yijian] .wardrobe-scene { background:none; aspect-ratio:auto; padding:24px 20px 18px; height:auto; gap:0; }
+html[data-app-design=yijian] .wardrobe-scene h1 { text-align:left; font:30px/1.4 var(--y-serif); color:var(--y-ink); }
+html[data-app-design=yijian] .y-page-intro { margin:7px 0 24px; }
+html[data-app-design=yijian] .y-page-intro p { color:var(--y-muted); font-size:12px; margin-top:8px; }
+html[data-app-design=yijian] .quick-actions { background:var(--y-paper); border:1px solid var(--y-line); box-shadow:none; height:70px; border-radius:16px; }
+html[data-app-design=yijian] .quick-actions button { color:var(--y-accent); justify-content:center; gap:8px; }
+html[data-app-design=yijian] .quick-actions button+button::before { background:var(--y-line); }
+html[data-app-design=yijian] .wardrobe-section { margin-inline:20px; padding-inline:0; border-color:var(--y-line); }
+html[data-app-design=yijian] .section-heading { min-height:56px; }
+html[data-app-design=yijian] .section-heading strong { font:18px var(--y-serif); }
+html[data-app-design=yijian] :is(.section-heading span,.section-empty) { color:var(--y-muted); }
+html[data-app-design=yijian] .product img { background:var(--y-paper); border:1px solid var(--y-line); }
+html[data-app-design=yijian] .profile-content { padding:24px 20px 0; gap:16px; }
+html[data-app-design=yijian] .profile-top { padding:0; }
+html[data-app-design=yijian] .profile-top h1 { font:28px var(--y-serif); }
+html[data-app-design=yijian] .profile-top .y-icon { width:13px; height:13px; }
+html[data-app-design=yijian] .identity { padding:8px 0 14px; gap:18px; }
+html[data-app-design=yijian] .avatar { width:78px; height:78px; }
+html[data-app-design=yijian] .avatar > img:first-child { width:78px; height:78px; border:3px solid var(--y-paper); }
+html[data-app-design=yijian] .identity h2 { font:22px var(--y-serif); margin-bottom:9px; }
+html[data-app-design=yijian] .points-card { padding:12px 14px; background:var(--y-paper); border-color:var(--y-line); border-radius:14px; }
+html[data-app-design=yijian] .points-card button { background:var(--y-button); color:var(--y-button-ink); }
+html[data-app-design=yijian] .memory-card { background:linear-gradient(110deg,var(--y-soft),var(--y-paper)); border:1px solid var(--y-line); box-shadow:none; padding:18px 20px; border-radius:18px; }
+html[data-app-design=yijian] .memory-title { font:22px var(--y-serif); }
+html[data-app-design=yijian] .memory-copy { color:var(--y-muted); }
+html[data-app-design=yijian] .memory-orb { background:none; width:90px; height:90px; border:1px solid var(--y-line); border-radius:50%; right:-22px; bottom:-25px; opacity:1; }
+html[data-app-design=yijian] .feature-cards { padding:0; gap:10px; }
+html[data-app-design=yijian] .feature-cards button { background:var(--y-paper); border:1px solid var(--y-line); box-shadow:none; border-radius:16px; padding:16px 12px; display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+html[data-app-design=yijian] .feature-cards button::before { display:none; }
+html[data-app-design=yijian] .feature-cards .y-icon { color:var(--y-accent); }
+html[data-app-design=yijian] .feature-cards small { color:var(--y-muted); margin-top:7px; }
+html[data-app-design=yijian] .profile-menu { border-color:var(--y-line); background:var(--y-paper); }
+html[data-app-design=yijian] .profile-menu button { border-color:var(--y-line); padding-inline:16px; gap:14px; }
+html[data-app-design=yijian] .profile-menu .y-icon { width:18px; height:18px; color:var(--y-accent); }
+html[data-app-design=yijian] :is(.create-sheet,.detail-page,.detail-header,.agent-page>header,.agent-page) { background:var(--y-bg); color:var(--y-ink); border-color:var(--y-line); }
+html[data-app-design=yijian] .create-scroll h2 { font:27px var(--y-serif); color:var(--y-ink); }
+html[data-app-design=yijian] :is(.create-scroll>p,.offline-note) { color:var(--y-muted); }
+html[data-app-design=yijian] .create-scroll h3 { color:var(--y-ink); font:17px var(--y-serif); }
+html[data-app-design=yijian] :is(.create-scroll>button,.create-row button,.create-scroll .create-ai,.create-row button:first-child) { background:var(--y-paper); border:1px solid var(--y-line); color:var(--y-ink); box-shadow:none; }
+html[data-app-design=yijian] .create-scroll .create-ai { background:var(--y-soft); }
+html[data-app-design=yijian] .create-scroll .y-icon { color:var(--y-accent); }
+html[data-app-design=yijian] .create-ai .y-icon { width:38px; height:38px; margin:0 12px; }
+html[data-app-design=yijian] .detail-header h2 { font-family:var(--y-serif); }
+html[data-app-design=yijian] .detail-menu button { border-color:var(--y-line); }
+html[data-app-design=yijian] .search { background:var(--y-paper); border-color:var(--y-line); color:var(--y-ink); }
+html[data-app-design=yijian] .image-failed { background:var(--y-soft); color:var(--y-muted); }
+html[data-app-design=yijian] .toast { background:var(--y-ink); }
+@media(min-width:700px) {
+  html[data-app-design=yijian] .y-toolbar { padding-inline:30px; }
+  html[data-app-design=yijian] .y-welcome { max-width:640px; margin:35px auto; grid-template-columns:1fr 145px; padding-inline:15px; }
+  html[data-app-design=yijian] .y-welcome h1 { font-size:36px; }
+  html[data-app-design=yijian] .y-portrait { width:145px; }
+  html[data-app-design=yijian] .y-companion-photo { width:145px; height:170px; border-radius:80px 80px 16px 16px; }
+  html[data-app-design=yijian] .y-section-title { max-width:640px; margin:auto; }
+}
+@media(max-width:360px) {
+  html[data-app-design=yijian] .y-toolbar { padding-inline:16px; gap:8px; }
+  html[data-app-design=yijian] .y-brand { font-size:24px; }
+  html[data-app-design=yijian] .y-brand small { font-size:6px; letter-spacing:1px; }
+  html[data-app-design=yijian] .y-welcome { margin-inline:16px; grid-template-columns:minmax(0,1fr) 92px; gap:10px; }
+  html[data-app-design=yijian] .y-welcome h1 { font-size:24px; }
+  html[data-app-design=yijian] .y-portrait { width:92px; }
+  html[data-app-design=yijian] .y-companion-photo { width:92px; height:130px; }
+  html[data-app-design=yijian] .profile-content { padding-inline:16px; }
+  html[data-app-design=yijian] .profile-top h1 { font-size:24px; }
+  html[data-app-design=yijian] .profile-top .pill { padding-inline:6px; font-size:11px; }
+  html[data-app-design=yijian] .home-tabs { padding-inline:10px; gap:3px; }
+}
+@media(orientation:landscape) and (max-height:500px) {
+  html[data-app-design=yijian] .y-welcome { margin-block:18px; }
+  html[data-app-design=yijian] .y-companion-photo { height:130px; }
+}
+html[data-app-design=yijian] .y-welcome h1 > span { display:block; white-space:nowrap; }
+/* Companion edition: diary spreads and a personal letter, without fictitious affinity. */
+html[data-app-design=yijian] .album-card {
+  border-radius:22px 22px 22px 6px;
+  border-color:var(--y-line);
+  box-shadow:3px 4px 0 var(--y-bg),4px 5px 0 var(--y-line),0 9px 24px #303c4309;
+  margin-bottom:26px;
+}
+html[data-app-design=yijian] .album-tap { overflow:hidden; border-radius:inherit; }
+html[data-app-design=yijian] .y-diary-heading {
+  display:flex; align-items:center; gap:8px; padding:14px 16px 12px;
+  position:relative; z-index:2; background:var(--y-paper); border-bottom:1px solid var(--y-line);
+}
+html[data-app-design=yijian] .y-diary-mark { font-size:22px; line-height:20px; color:var(--y-accent); }
+html[data-app-design=yijian] .y-diary-label { font-size:8px; letter-spacing:1.2px; color:var(--y-muted); }
+html[data-app-design=yijian] .y-diary-date { margin-left:auto; font:italic 17px Georgia,serif; color:var(--y-accent); }
+html[data-app-design=yijian] .album-stage { margin:12px 12px 0; }
+html[data-app-design=yijian] .album-stage::after { content:''; position:absolute; inset:0; pointer-events:none; border:1px solid var(--y-line); border-radius:12px; opacity:.7; }
+html[data-app-design=yijian] .album-result { border-radius:12px; }
+html[data-app-design=yijian] .album-tile { border:1px solid var(--y-line); background:var(--y-paper); border-radius:10px; }
+html[data-app-design=yijian] .album-copy { padding:16px 18px 18px; gap:11px; }
+html[data-app-design=yijian] .album-copy h2 { font-size:25px; line-height:1.5; letter-spacing:.6px; }
+html[data-app-design=yijian] .album-copy p { line-height:1.9; }
+html[data-app-design=yijian] .y-diary-ending { position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 18px; border-top:1px dashed var(--y-line); background:var(--y-paper); color:var(--y-muted); font-size:10px; line-height:1.6; }
+html[data-app-design=yijian] .y-diary-open { color:var(--y-accent); white-space:nowrap; font-size:11px; }
+html[data-app-design=yijian] .album-card:focus-within { outline:2px solid var(--y-accent); outline-offset:3px; }
+html[data-app-design=yijian] .y-room-intro { margin-top:-8px; margin-bottom:2px; }
+html[data-app-design=yijian] .y-room-intro p { font-size:12px; line-height:1.8; color:var(--y-muted); margin-top:5px; }
+html[data-app-design=yijian] .identity { position:relative; margin:0; padding:12px 4px 16px; border-bottom:1px solid var(--y-line); }
+html[data-app-design=yijian] .identity::after { content:'MY STORY'; position:absolute; right:0; bottom:12px; font:8px Georgia,serif; letter-spacing:2px; color:var(--y-muted); opacity:.6; pointer-events:none; }
+html[data-app-design=yijian] .y-companion-letter { position:relative; isolation:isolate; display:grid; grid-template-columns:96px minmax(0,1fr); gap:16px; align-items:center; padding:22px 18px; margin:3px 0 6px; border:1px solid var(--y-line); border-radius:72px 18px 18px 18px; background:linear-gradient(135deg,var(--y-soft),var(--y-paper) 65%); box-shadow:0 8px 25px #303c4309; }
+html[data-app-design=yijian] .y-companion-letter::before { content:''; position:absolute; inset:6px; border:1px solid var(--y-line); border-radius:66px 13px 13px 13px; pointer-events:none; z-index:-1; }
+html[data-app-design=yijian] .y-letter-photo { width:96px; height:145px; object-fit:cover; border-radius:52px 52px 8px 8px; border:4px solid var(--y-paper); box-shadow:0 4px 14px #303c4310; }
+html[data-app-design=yijian] .y-letter-by { display:block; font-size:10px; color:var(--y-accent); letter-spacing:.5px; overflow-wrap:anywhere; }
+html[data-app-design=yijian] .y-letter-body h2 { font:21px/1.6 var(--y-serif); margin:8px 0; text-wrap:balance; }
+html[data-app-design=yijian] .y-letter-body p { color:var(--y-muted); font-size:11px; line-height:1.9; }
+html[data-app-design=yijian] .y-letter-action { display:flex; align-items:center; gap:12px; min-height:44px; color:var(--y-accent); padding:10px 0 0; font-size:12px; }
+html[data-app-design=yijian] .y-letter-action .y-icon { width:16px; height:16px; }
+html[data-app-design=yijian] .y-letter-seal { position:absolute; bottom:-13px; right:18px; width:29px; height:29px; display:grid; place-items:center; color:var(--y-accent); background:var(--y-paper); border:1px solid var(--y-line); border-radius:50%; font-size:19px; }
+html[data-app-design=yijian] .memory-card { border-radius:5px 20px 20px 5px; padding:19px 22px 20px 28px; background:linear-gradient(90deg,var(--y-soft) 0 7px,transparent 7px),var(--y-paper); }
+html[data-app-design=yijian] .memory-card::before { content:''; position:absolute; left:16px; top:16px; bottom:16px; width:1px; background:var(--y-line); }
+html[data-app-design=yijian] .y-memory-kicker { color:var(--y-muted); letter-spacing:1.5px; font-size:7px; margin-bottom:4px; }
+html[data-app-design=yijian] .memory-title { font-size:23px; margin-bottom:6px; }
+html[data-app-design=yijian] .memory-copy { width:100%; line-height:28px; background:repeating-linear-gradient(transparent 0 27px,var(--y-line) 27px 28px); }
+html[data-app-design=yijian] .memory-orb { display:none; }
+html[data-app-design=yijian] .memory-card .pill { align-self:flex-end; background:transparent; border:0; padding:4px 0; min-height:36px; }
+html[data-app-design=yijian] .feature-cards button { position:relative; border-radius:16px 16px 5px 16px; background:linear-gradient(135deg,var(--y-paper),var(--y-soft)); padding:18px 15px; }
+html[data-app-design=yijian] .feature-cards button::after { content:'✧'; position:absolute; top:14px; right:15px; color:var(--y-line); font-size:30px; }
+html[data-app-design=yijian] .feature-cards strong { font:17px var(--y-serif); }
+html[data-app-design=yijian] .feature-cards small { font-size:11px; }
+html[data-app-design=yijian] .y-menu-heading { font-size:10px; letter-spacing:1.5px; color:var(--y-muted); margin:10px 0 -5px 2px; }
+@media(max-width:360px) {
+  html[data-app-design=yijian] .y-companion-letter { grid-template-columns:76px minmax(0,1fr); gap:12px; padding:20px 13px; }
+  html[data-app-design=yijian] .y-letter-photo { width:76px; height:128px; }
+  html[data-app-design=yijian] .y-letter-body h2 { font-size:19px; }
+  html[data-app-design=yijian] .y-diary-label { font-size:7px; letter-spacing:.6px; }
+  html[data-app-design=yijian] .y-diary-ending { padding-inline:14px; gap:8px; }
+}
+html[data-app-design=yijian] .album-metadata img { display:none; }
+html[data-app-design=yijian] .album-metadata > span::before { content:''; width:15px; height:15px; flex-shrink:0; background:var(--y-accent); mask:url('./assets/home_album_context.svg') center/contain no-repeat; -webkit-mask:url('./assets/home_album_context.svg') center/contain no-repeat; }
+html[data-app-design=yijian] .album-metadata > .album-meta-source::before { width:14px; height:14px; mask-image:url('./assets/home_album_source.svg'); -webkit-mask-image:url('./assets/home_album_source.svg'); }
+html[data-app-design=yijian] .feed > p.state { padding:18px 0; margin:0; background:none; border:0; font-size:11px; }
+
+.activity-list{display:grid;gap:16px;padding:16px 0 30px}.activity-card{display:flex;align-items:center;gap:16px;width:100%;min-height:120px;padding:18px;text-align:left;border:1px solid var(--line,#eae2db);border-radius:20px;background:var(--paper,#fffdfb);color:inherit;cursor:pointer}.activity-card>img{width:76px;height:86px;object-fit:contain;flex-shrink:0}.activity-copy{flex:1;min-width:0}.activity-copy strong{display:block;font:20px/1.6 'Songti SC',serif}.activity-copy small{display:block;font-size:12px;line-height:1.8;opacity:.65;margin-top:6px}.activity-arrow{font-size:24px;opacity:.6}.activity-card:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* Companion welcome: one personal note, with a quieter portrait and shared closing line. */
+html[data-app-design=yijian] .y-welcome{position:relative;margin:22px 18px 18px;padding:23px 20px 0;grid-template-columns:minmax(0,1fr) 118px;gap:18px 12px;align-items:center;border:1px solid var(--y-line);border-radius:24px 24px 8px 24px;background:var(--y-paper);box-shadow:0 7px 24px #303c4305}
+html[data-app-design=yijian] .y-welcome .y-eyebrow{font-size:7px;letter-spacing:1.6px}
+html[data-app-design=yijian] .y-welcome h1{font-size:27px;line-height:1.5;margin:12px 0 10px;letter-spacing:1px}
+html[data-app-design=yijian] .y-welcome-copy>p{font-size:11px;line-height:1.9;margin:0;max-width:180px}
+html[data-app-design=yijian] .y-portrait{width:118px;align-self:center}
+html[data-app-design=yijian] .y-companion-photo{width:118px;height:160px;border-radius:60px 60px 12px 12px;border:3px solid var(--y-bg);box-shadow:0 6px 18px #303c4310}
+html[data-app-design=yijian] .y-portrait-caption{font-size:9px;line-height:1.7;margin-top:8px}
+html[data-app-design=yijian] .y-talk{margin-top:16px;min-height:44px;padding:10px 15px;gap:12px;font-size:11px}
+html[data-app-design=yijian] .y-daily-invitation{grid-column:1/-1;display:flex;align-items:center;gap:10px;border-top:1px solid var(--y-line);padding:13px 0 15px}
+html[data-app-design=yijian] .y-daily-invitation p{margin:0;font:12px/1.8 var(--y-serif);color:var(--y-muted)}
+html[data-app-design=yijian] .y-daily-mark{color:var(--y-accent);font-size:20px}
+@media(min-width:760px){html[data-app-design=yijian] .y-welcome{max-width:640px;margin:28px auto;grid-template-columns:1fr 145px;padding:26px 28px 0}html[data-app-design=yijian] .y-welcome h1{font-size:34px}html[data-app-design=yijian] .y-portrait,html[data-app-design=yijian] .y-companion-photo{width:145px}html[data-app-design=yijian] .y-companion-photo{height:184px}}
+@media(max-width:360px){html[data-app-design=yijian] .y-welcome{margin-inline:12px;padding-inline:15px;grid-template-columns:minmax(0,1fr) 96px;gap:15px 9px}html[data-app-design=yijian] .y-welcome h1{font-size:23px}html[data-app-design=yijian] .y-portrait,html[data-app-design=yijian] .y-companion-photo{width:96px}html[data-app-design=yijian] .y-companion-photo{height:142px}html[data-app-design=yijian] .y-welcome .y-eyebrow{letter-spacing:.8px;font-size:6px}}
+html[data-app-design=yijian] .y-welcome h1>span{white-space:normal;overflow-wrap:normal;word-break:normal;text-wrap:balance}
+
+html[data-app-design=yijian] .detail-page:has(.settings-notebook) .detail-header{padding:12px 20px;border-bottom:0;gap:12px}
+html[data-app-design=yijian] .detail-page:has(.settings-notebook) .detail-header button{display:grid;place-items:center;width:44px;height:44px;min-width:44px;padding:0;border:1px solid var(--y-line);border-radius:50%;background:var(--y-paper);font:28px/1 sans-serif}
+html[data-app-design=yijian] .detail-page:has(.settings-notebook) .detail-header button:focus:not(:focus-visible){outline:none}
+html[data-app-design=yijian] .settings-notebook{max-width:600px;margin:auto;padding:12px 20px max(32px,env(safe-area-inset-bottom))}
+html[data-app-design=yijian] .settings-intro{padding:10px 2px 22px}.settings-eyebrow{font:8px/1.7 Georgia,serif;letter-spacing:2px;color:var(--y-muted)}
+html[data-app-design=yijian] .settings-intro h3{font:25px/1.5 var(--y-serif);margin:12px 0 8px}
+html[data-app-design=yijian] .settings-intro p{font-size:12px;line-height:1.8;color:var(--y-muted);margin:0}
+html[data-app-design=yijian] .settings-group{margin-bottom:24px}.settings-group h4{font-size:11px;font-weight:400;color:var(--y-muted);letter-spacing:1px;margin:0 2px 10px}
+html[data-app-design=yijian] .settings-card{background:var(--y-paper);border:1px solid var(--y-line);border-radius:20px;overflow:hidden}
+html[data-app-design=yijian] .settings-notebook .settings-row{display:flex;align-items:center;gap:13px;width:100%;min-height:88px;padding:18px 16px;text-align:left;border:0;border-bottom:1px solid var(--y-line)}
+html[data-app-design=yijian] .settings-row:last-child{border-bottom:0}.settings-icon{display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:13px;background:var(--y-bg);color:var(--y-accent)}.settings-icon svg{width:22px;height:22px}.settings-row-copy{flex:1;min-width:0}.settings-row-copy strong{display:block;font-size:15px;line-height:1.6;font-weight:500}.settings-row-copy small{display:block;font-size:11px;line-height:1.7;color:var(--y-muted);margin-top:4px}.settings-chevron{font:22px/1 sans-serif;color:var(--y-muted)}
+html[data-app-design=yijian] .settings-notebook .settings-logout{width:100%;min-height:48px;text-align:center;padding:12px;border:1px solid var(--y-line);border-radius:24px;font-size:13px;background:transparent;color:var(--y-muted)}
+html[data-app-design=yijian] .settings-footnote{text-align:center;font-size:10px;line-height:1.8;color:var(--y-muted);margin-top:18px}
+@media(max-width:360px){html[data-app-design=yijian] .settings-notebook{padding-inline:16px}html[data-app-design=yijian] .settings-intro h3{font-size:22px}html[data-app-design=yijian] .settings-notebook .settings-row{padding-inline:13px;gap:10px}}
+html[data-app-design=yijian] .y-daily-invitation p{flex:1;min-width:0}
+html[data-app-design=yijian] .y-home-checkin{flex-shrink:0;min-height:44px;padding:7px 0 7px 8px;color:var(--y-muted);font-size:10px;background:transparent;border:0;white-space:nowrap}
+/* Personal profile: account portrait and a distinct fitting action. */
+html[data-app-design=yijian] .identity{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:19px;margin:8px 0 15px;padding:22px 20px;border:1px solid var(--y-line);border-radius:22px 22px 8px 22px;background:var(--y-paper);box-shadow:0 6px 20px #293a4c05}
+html[data-app-design=yijian] .identity::after{content:none}
+html[data-app-design=yijian] .y-identity-photo{width:84px;height:112px;overflow:hidden;border-radius:14px;background:var(--y-bg);border:1px solid var(--y-line)}
+html[data-app-design=yijian] .y-identity-photo img{display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:0}
+html[data-app-design=yijian] .y-identity-photo img[src*="user_avatar_default"]{object-fit:contain;padding:16px;opacity:.7}
+html[data-app-design=yijian] .y-identity-copy{min-width:0}
+html[data-app-design=yijian] .y-identity-eyebrow{display:block;font-size:9px;letter-spacing:2px;color:var(--y-muted);line-height:1.7}
+html[data-app-design=yijian] .identity h2{font:23px/1.5 var(--y-serif);margin:7px 0 6px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html[data-app-design=yijian] .y-identity-description{font-size:11px;line-height:1.9;color:var(--y-muted);margin:0 0 9px}
+html[data-app-design=yijian] .identity .identity-edit{display:inline-flex;align-items:center;gap:10px;border:0;border-radius:0;padding:3px 0;min-height:44px;color:var(--y-accent);background:transparent;font-size:12px;line-height:1.7}
+html[data-app-design=yijian] .identity-edit .y-icon{width:15px;height:15px;flex-shrink:0}
+@media(max-width:360px){html[data-app-design=yijian] .identity{grid-template-columns:70px minmax(0,1fr);gap:14px;padding:18px 15px}html[data-app-design=yijian] .y-identity-photo{width:70px;height:104px}html[data-app-design=yijian] .identity h2{font-size:21px}}
+html[data-app-design=yijian] .y-identity-photo{position:relative;display:grid;place-items:center}
+html[data-app-design=yijian] .y-identity-photo>.y-icon{position:absolute;width:36px;height:36px;opacity:.45;color:var(--y-accent)}
+html[data-app-design=yijian] .y-identity-photo img{position:relative;z-index:1}
+html[data-app-design=yijian] .y-identity-photo img[src*="user_avatar_default"]{opacity:0}
+html[data-app-design=yijian] .identity #account-name,html[data-app-design=yijian] .identity #account-avatar{display:none!important}
+html[data-app-design=yijian] .y-own-twin-title{font:22px/1.6 var(--y-serif);margin:6px 0 3px}
+html[data-app-design=yijian] .y-own-twin-status{display:inline-block;font-size:9px;color:var(--y-muted);margin:0 0 7px}
+html[data-app-design=yijian] .y-own-twin-image[hidden]{display:none!important}
+html[data-app-design=yijian] .identity .y-identity-description{font-size:11px;line-height:1.8}
+html[data-app-design=yijian] .memory-card .memory-line{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+/* Keep diary decorations below the sticky category bar while scrolling. */
+html[data-app-design=yijian] .home-tabs{z-index:5}
+html[data-app-design=yijian] #home-feed{isolation:isolate;z-index:0}
+html[data-app-design=yijian] .album-card{isolation:isolate}
+
+html[data-app-design=yijian] .y-home-checkin.is-signed{background:var(--y-soft);color:var(--y-accent);border:1px solid var(--y-line);border-radius:14px;padding:5px 10px}
+
+/* Square sprite frames stay proportional inside the existing portrait window. */
+html[data-app-design=yijian] .y-companion-photo{position:relative;overflow:hidden}
+.y-companion-scene{position:absolute;height:100%;aspect-ratio:1;left:50%;top:0;transform:translateX(-50%);background:var(--scene-image) 0 0 / 300% 200% no-repeat}
+.y-companion-scene::after{content:'';position:absolute;inset:0;background:var(--scene-image) 0 0 / 300% 200% no-repeat;clip-path:inset(12% 32% 64% 32%);mask-image:radial-gradient(ellipse var(--eye-rx) var(--eye-ry) at var(--eye-x1) var(--eye-y1),#000 80%,transparent 100%),radial-gradient(ellipse var(--eye-rx) var(--eye-ry) at var(--eye-x2) var(--eye-y2),#000 80%,transparent 100%);animation:y-home-blink 5.4s steps(1,end) infinite}
+@keyframes y-home-blink{0%,90%,100%{background-position:0 0}92%,96%{background-position:50% 0}94%{background-position:100% 0}}
+@media(prefers-reduced-motion:reduce){.y-companion-scene::after{content:none;animation:none}}
+
+html[data-app-design=yijian] .y-wardrobe-note{display:flex;align-items:center;gap:12px;width:100%;margin:0;padding:13px 2px 17px;min-height:58px;text-align:left;border:0;border-bottom:1px solid var(--y-line);border-radius:0;background:transparent;box-shadow:none;color:var(--y-accent)}
+html[data-app-design=yijian] .y-wardrobe-note>.y-icon{width:18px;height:18px}
+html[data-app-design=yijian] .y-wardrobe-note-copy{display:flex;flex:1;min-width:0;align-items:center;justify-content:space-between;gap:12px}
+html[data-app-design=yijian] .y-wardrobe-note-copy strong{font:16px/1.5 var(--y-serif);color:var(--y-ink);white-space:nowrap}
+html[data-app-design=yijian] .y-wardrobe-note-copy small{font-size:10px;line-height:1.7;color:var(--y-muted)}
+html[data-app-design=yijian] .y-wardrobe-note-arrow{font-size:18px;color:var(--y-muted)}

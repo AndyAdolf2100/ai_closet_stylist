@@ -1,0 +1,169 @@
+html[data-app-design=yijian] #agent-frame{display:none}
+html[data-app-design=yijian] #agent-page{height:100dvh;overflow:hidden;background:var(--y-bg);color:var(--y-ink)}
+html[data-app-design=yijian] #agent-page>header{height:58px;padding:7px 18px;border-bottom:1px solid var(--y-line);background:var(--y-paper);gap:12px}
+html[data-app-design=yijian] #agent-page>header>span{font:17px/1.5 var(--y-serif)}
+html[data-app-design=yijian] #agent-page>header button{font-size:12px;color:var(--y-muted);padding:6px 8px;border:0;background:transparent}
+#yijian-agent-root{--bg:var(--y-bg)!important;--paper:var(--y-paper)!important;--ink:var(--y-ink)!important;--muted:var(--y-muted)!important;--line:var(--y-line)!important;--accent:var(--y-button)!important;--soft:var(--y-soft,var(--y-bg))!important;--blush:var(--y-bg)!important;--rose:var(--y-muted)!important;display:block;flex:1;min-height:0;width:100%;background:var(--bg);color:var(--ink);font:14px/1.7 -apple-system,'PingFang SC',sans-serif;overflow:hidden;position:relative}
+#yijian-agent-root>.sidebar{display:none}
+#yijian-agent-root>main{margin:0;width:100%;height:100%;max-width:900px;display:flex;flex-direction:column;margin-inline:auto;min-height:0;background:transparent}
+#yijian-agent-root main>header{height:auto;min-height:58px;padding:7px 18px;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--paper)}
+#yijian-agent-root .header-brand{display:none}
+#yijian-agent-root #mobile-history{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
+#yijian-agent-root #login-open{margin-left:auto;min-height:44px}
+#yijian-agent-root .settings-menu{margin-right:auto}
+#yijian-agent-root main>header::after{content:none}
+#yijian-agent-root #feed{padding:22px 20px;flex:1;min-height:0;overflow:auto}
+#yijian-agent-root #welcome{margin:20px auto;max-width:650px}
+#yijian-agent-root #welcome h1{font:28px/1.6 var(--y-serif);max-width:100%;letter-spacing:0}
+#yijian-agent-root #welcome>p{font-size:13px;line-height:1.9}
+#yijian-agent-root .welcome-character{display:none}
+#yijian-agent-root .suggestions{margin-top:25px;gap:10px}
+#yijian-agent-root .suggestions button{background:var(--paper);border:1px solid var(--line);border-radius:16px;min-height:64px}
+#yijian-agent-root .weather-toolbar{padding:10px 18px;gap:8px;flex-wrap:wrap;background:transparent;border-color:var(--line);flex-shrink:0}
+#yijian-agent-root .weather-toolbar #location-label{font-size:10px}
+#yijian-agent-root #composer{margin:0;padding:12px 18px max(12px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);position:relative;bottom:auto;flex-shrink:0}
+#yijian-agent-root textarea,#yijian-agent-root input[type=text],#yijian-agent-root input[type=tel],#yijian-agent-root input[type=search]{font-size:16px}
+#yijian-agent-root #message{font-size:16px;background:var(--paper)}
+#yijian-agent-root .bubble{border-radius:4px 19px 19px 19px;background:var(--paper);border-color:var(--line);font-size:14px;line-height:1.9}
+#yijian-agent-root .bubble.user{background:var(--soft);border-radius:19px 4px 19px 19px}
+#yijian-agent-root .primary{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
+#yijian-agent-root .fine-print{font-size:9px;color:var(--muted)}
+#yijian-agent-root dialog{background:var(--paper);color:var(--ink);border-color:var(--line);font-family:-apple-system,'PingFang SC',sans-serif}
+#yijian-agent-root dialog h2{font-family:var(--y-serif);font-weight:400}
+#yijian-agent-root #mobile-new{display:block}
+#yijian-agent-root #companion-notification{background:var(--paper);color:var(--ink);border-color:var(--line)}
+#yijian-agent-root .checkin-stats,#yijian-agent-root .checkin-calendar,#yijian-agent-root .journey-scene{background:var(--bg)}
+@media(max-width:360px){#yijian-agent-root main>header{padding-inline:10px}#yijian-agent-root #feed{padding:16px 12px}#yijian-agent-root .weather-toolbar{padding-inline:12px}#yijian-agent-root #composer{padding-inline:12px}#yijian-agent-root #location-label{display:none}}
+@media(orientation:landscape) and (max-height:500px){html[data-app-design=yijian] #agent-page>header{height:46px;min-height:46px}#yijian-agent-root main>header{min-height:48px}#yijian-agent-root .weather-toolbar{padding-block:4px}#yijian-agent-root #composer{padding-block:6px}#yijian-agent-root .fine-print{display:none}}
+#yijian-agent-root main>footer{padding:12px 16px max(12px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);flex-shrink:0}
+#yijian-agent-root .checkin-week-title{font:15px/1.8 var(--y-serif);font-weight:400;margin:24px 0 12px;text-align:center}
+#yijian-agent-root #checkin-reload{display:block;margin:10px auto;min-height:44px}
+#yijian-agent-root #checkin-rules{white-space:pre-wrap}
+#yijian-agent-root [hidden]{display:none!important}
+#yijian-agent-root #login-dialog{border-radius:22px;padding:28px 24px;border:1px solid var(--line)}
+#yijian-agent-root #login-dialog input{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;min-height:48px;font-size:16px}
+#yijian-agent-root #login-dialog .primary{border-radius:24px;min-height:44px}
+/* Non-chat actions stay on their source page; dialogs share the scoped component host. */
+#yijian-agent-root[data-surface=overlay]{display:contents}
+#yijian-agent-root[data-surface=overlay]>main,#yijian-agent-root[data-surface=overlay]>.sidebar{display:none!important}
+#yijian-agent-root main>header,#yijian-agent-root .weather-toolbar{display:none!important}
+#yijian-agent-root #feed{padding-top:24px}
+html[data-app-design=yijian] #agent-account{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;color:var(--y-accent)}
+#yijian-agent-root .journey-entry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:22px}
+#yijian-agent-root .journey-entry button{font-size:11px;line-height:1.7;min-height:52px;white-space:normal;text-align:center;border-radius:14px;padding:10px 8px;background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+#yijian-agent-root #checkin-dialog{width:min(400px,calc(100vw - 28px));max-height:calc(100dvh - 32px);padding:22px 22px 18px;border:1px solid var(--line);border-radius:24px;overflow-y:auto;background:var(--paper);box-shadow:0 18px 70px #293a4c25}
+#yijian-agent-root #checkin-dialog .checkin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0;height:auto}
+#yijian-agent-root #checkin-close{width:44px;height:44px;font-size:23px;padding:0;flex-shrink:0}
+#yijian-agent-root #checkin-dialog .eyebrow{font-size:7px;letter-spacing:1.6px}
+#yijian-agent-root #checkin-dialog .checkin-hero{padding:8px 0 20px;text-align:center}
+#yijian-agent-root .checkin-chapter{font-size:9px;letter-spacing:3px;color:var(--muted)}
+#yijian-agent-root #checkin-title{font:25px/1.6 var(--y-serif);letter-spacing:0;margin:12px 0 8px}
+#yijian-agent-root #checkin-state{font-size:11px;line-height:1.9;margin:0;color:var(--muted)}
+#yijian-agent-root .checkin-companion-note{display:flex;align-items:center;gap:11px;background:var(--bg);border-radius:4px 18px 18px 18px;border:1px solid var(--line);padding:14px;margin:0 0 20px}
+#yijian-agent-root .checkin-companion-note img{width:42px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0}
+#yijian-agent-root .checkin-companion-note>div{min-width:0;flex:1}
+#yijian-agent-root .checkin-companion-note strong{font-size:10px;font-weight:500;color:var(--accent)}
+#yijian-agent-root .checkin-companion-note p{font:12px/1.9 var(--y-serif);margin:5px 0 0}
+#yijian-agent-root .checkin-companion-note>span{color:var(--muted);font-size:20px}
+#yijian-agent-root #checkin-dialog .checkin-stats{display:grid;grid-template-columns:1fr 1fr;background:transparent;border:0;border-radius:0;margin:0 0 22px;padding:0}
+#yijian-agent-root #checkin-dialog .checkin-stats>div{padding:6px 8px;border-color:var(--line)}
+#yijian-agent-root #checkin-dialog .checkin-stats strong{font:500 30px/1.5 Georgia,serif;color:var(--accent)}
+#yijian-agent-root #checkin-dialog .checkin-stats small{font-size:10px;line-height:1.7}
+#yijian-agent-root .checkin-week-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:17px;border-top:1px solid var(--line);margin-bottom:12px}
+#yijian-agent-root .checkin-week-heading h3{font:14px/1.7 var(--y-serif);margin:0}
+#yijian-agent-root .checkin-week-heading>span{font-size:9px;color:var(--muted)}
+#yijian-agent-root #checkin-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;background:transparent;margin:0 0 23px;padding:0}
+#yijian-agent-root #checkin-calendar .checkin-date{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:76px;padding:8px 0;border:1px solid var(--line);border-radius:15px;background:var(--bg);color:var(--muted)}
+#yijian-agent-root #checkin-calendar .checkin-date>span{font-size:10px}
+#yijian-agent-root #checkin-calendar .checkin-date>small{font:16px/1.1 sans-serif}
+#yijian-agent-root #checkin-calendar .checkin-date>em{font:8px/1.4 sans-serif}
+#yijian-agent-root #checkin-calendar .is-signed{color:var(--paper);background:var(--accent);border-color:var(--accent)}
+#yijian-agent-root #checkin-action{width:100%;min-height:47px;border-radius:25px;font-size:12px;font-weight:500;margin:0;padding:10px 14px}
+#yijian-agent-root #checkin-reload{font-size:10px;min-height:44px;margin:5px auto}
+#yijian-agent-root #checkin-rules{font-size:9px;line-height:1.8;color:var(--muted);margin:0;text-align:center}
+@media(max-width:360px){#yijian-agent-root #checkin-dialog{padding-inline:16px}#yijian-agent-root #checkin-title{font-size:22px}#yijian-agent-root #checkin-calendar{gap:4px}}
+#yijian-agent-root .journey-entry{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:none;margin:24px 0 16px}
+#yijian-agent-root .journey-entry button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:0;min-height:120px;padding:16px 5px 14px;border:1px solid var(--line);border-radius:18px;background:var(--paper);color:var(--ink);text-align:center;box-shadow:0 3px 12px #293a4c04;transition:border-color .18s,background .18s}
+#yijian-agent-root .y-entry-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;background:var(--soft);color:var(--accent);margin-bottom:11px}
+#yijian-agent-root .y-entry-icon svg{width:21px;height:21px}
+#yijian-agent-root .y-entry-title{display:block;font:500 13px/1.6 -apple-system,'PingFang SC',sans-serif;white-space:nowrap}
+#yijian-agent-root .y-entry-description{display:block;font-size:9px;line-height:1.7;color:var(--muted);margin-top:4px;white-space:nowrap}
+#yijian-agent-root .journey-entry button:hover{transform:none;border-color:var(--accent);background:var(--bg);box-shadow:none}
+#yijian-agent-root .journey-entry button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:360px){#yijian-agent-root .journey-entry{gap:7px}#yijian-agent-root .y-entry-title{font-size:12px}#yijian-agent-root .y-entry-description{font-size:8px}}
+/* App settings share the active palette, including locally defined notebook tokens. */
+#yijian-agent-root #preferences-dialog{--pref-tint:var(--y-soft);--pref-paper:var(--y-paper);--pref-detail:var(--y-accent);--accent:var(--y-accent);background:var(--y-bg);color:var(--y-ink)}
+#yijian-agent-root #preferences-save{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
+#yijian-agent-root #preferences-dialog .preference-chip{background:var(--y-paper)}
+#yijian-agent-root #preferences-dialog .preference-chip[aria-pressed=true]{background:var(--y-soft);color:var(--y-accent);border-color:var(--y-accent)}
+#yijian-agent-root #companion-dialog[data-edit-page]{background:var(--y-bg);background-image:none;color:var(--y-ink)}
+#yijian-agent-root [data-edit-page] :is(.companion-progress,.companion-scene-mark,.companion-dialogue,.companion-soft-choice,.companion-gender>p,.companion-gender label:has(input[value=""])){display:none}
+#yijian-agent-root [data-edit-page] .companion-body{text-align:left;padding:22px 24px 30px}
+#yijian-agent-root [data-edit-page] :is(.companion-top,.companion-footer){background:var(--y-paper);border-color:var(--y-line)}
+#yijian-agent-root [data-edit-page] #companion-title{font:26px/1.5 var(--y-serif);color:var(--y-ink);margin:10px 0}
+#yijian-agent-root [data-edit-page] :is(.companion-chapter,.companion-recall,.companion-field>label){color:var(--y-muted)}
+#yijian-agent-root [data-edit-page] .companion-recall{text-align:left;margin:0 0 28px}
+#yijian-agent-root [data-edit-page] .companion-field{max-width:none;margin:0 0 20px}
+#yijian-agent-root #companion-dialog[data-edit-page] .companion-field input{border:0;border-bottom:1px solid var(--y-line);border-radius:0;background:transparent;color:var(--y-ink);padding:12px 0;box-shadow:none}
+#yijian-agent-root [data-edit-page] .companion-gender{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none;margin:0 0 30px;text-align:center}
+#yijian-agent-root [data-edit-page] .companion-gender label>span{min-height:72px;background:var(--y-paper);border-color:var(--y-line);color:var(--y-ink)}
+#yijian-agent-root [data-edit-page] .companion-gender input:checked+span{background:var(--y-soft);border-color:var(--y-accent);color:var(--y-accent)}
+#yijian-agent-root [data-edit-page] .companion-gender small{color:var(--y-muted)}
+#yijian-agent-root [data-edit-page] .companion-field[data-step="2"]{padding-top:24px;border-top:1px solid var(--y-line)}
+#yijian-agent-root [data-edit-page] .companion-selected{display:none;place-items:center;padding:0;line-height:1}
+#yijian-agent-root [data-edit-page] .companion-person:has(input:checked){outline:none;box-shadow:none;border-color:var(--y-accent)}
+#yijian-agent-root [data-edit-page] #companion-next{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
+
+#yijian-agent-root [data-edit-page] .companion-person:has(input:checked) .companion-selected{display:grid}
+
+#yijian-agent-root [data-edit-page] .companion-cast-tools{display:flex;max-width:none;margin:0 0 28px;gap:10px}
+#yijian-agent-root [data-edit-page] #companion-color-label{color:var(--y-muted);font-size:12px;white-space:nowrap}
+#yijian-agent-root [data-edit-page] .companion-color-switch{background:var(--y-soft);border-color:var(--y-line)}
+#yijian-agent-root [data-edit-page] .companion-color-option input:checked+span{background:var(--y-paper);color:var(--y-accent);border-color:var(--y-accent)}
+@media(max-width:360px){#yijian-agent-root [data-edit-page] .companion-cast-tools{flex-wrap:wrap}#yijian-agent-root [data-edit-page] .companion-color-switch{flex-basis:100%}}
+/* Keep the greeting and current companion in separate columns. */
+#yijian-agent-root #welcome{display:grid;grid-template-columns:minmax(0,1fr) 128px;column-gap:18px;align-items:start}
+#yijian-agent-root #welcome>.eyebrow{grid-column:1/-1}
+#yijian-agent-root #welcome>h1{grid-column:1;grid-row:2;max-width:none!important;margin:16px 0 10px!important;font-size:26px!important}
+#yijian-agent-root #welcome>p{grid-column:1;grid-row:3;max-width:none!important;margin:0;overflow-wrap:anywhere}
+#yijian-agent-root #welcome>.welcome-character{display:block;position:relative;grid-column:2;grid-row:2/4;inset:auto!important;align-self:center}
+#yijian-agent-root #welcome .hero-mascot{position:relative;width:128px!important;height:128px!important;inset:auto!important}
+#yijian-agent-root #welcome>:is(.suggestions,.journey-entry){grid-column:1/-1}
+@media(max-width:380px){#yijian-agent-root #welcome{grid-template-columns:minmax(0,1fr) 92px;column-gap:12px}#yijian-agent-root #welcome .hero-mascot{width:92px!important;height:92px!important}#yijian-agent-root #welcome>h1{font-size:23px!important}}
+/* Preserve the complete greeting on phone widths without squeezing the text column. */
+#yijian-agent-root #welcome>h1{white-space:nowrap;letter-spacing:0!important}
+@media(max-width:760px){
+  #yijian-agent-root #welcome{grid-template-columns:minmax(0,1fr) 96px;column-gap:12px}
+  #yijian-agent-root #welcome .hero-mascot{width:96px!important;height:96px!important}
+  #yijian-agent-root #welcome>h1{font-size:clamp(18px,5.6vw,22px)!important}
+}
+
+#yijian-agent-root .clothing-source-option:has(input:checked){color:var(--y-accent)}
+#yijian-agent-root .clothing-source-option::after{background:var(--y-accent)}
+#yijian-agent-root .new-clothes-invite{background:var(--y-paper);border-color:var(--y-line);color:var(--y-ink)}
+
+#yijian-agent-root .y-history-refresh-fallback{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#yijian-agent-root .y-history-refresh-fallback:focus-visible{position:relative;width:auto;height:44px;clip-path:none}
+#yijian-agent-root .y-state-update{display:grid;place-items:center;width:44px;height:44px;padding:0;font:24px/1 sans-serif;border:0;background:transparent;color:var(--y-accent)}
+#yijian-agent-root .y-twin-empty{grid-column:1/-1;text-align:center;color:var(--y-muted);font-size:13px;padding:12px 0}
+#yijian-agent-root .y-twin-empty p{margin:10px 0 0}
+#yijian-agent-root #welcome{margin-top:4px}
+#yijian-agent-root #login-dialog input:focus:not(:focus-visible){outline:none}
+#yijian-agent-root #login-dialog input:focus{outline:none;border-bottom-color:var(--y-accent);box-shadow:0 1px 0 var(--y-accent)}
+#yijian-agent-root #companion-dialog[data-edit-page] .companion-chapter{display:none}
+#yijian-agent-root #companion-dialog[data-edit-page] #companion-title{margin-top:0;font-size:23px}
+#yijian-agent-root #companion-dialog[data-edit-page] .companion-recall{margin-bottom:20px}
+#yijian-agent-root .journey-history-filters{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:8px;scrollbar-width:none}
+#yijian-agent-root .journey-history-filters button{flex:0 0 auto;min-height:44px;white-space:nowrap;font-size:12px;padding-inline:12px}
+#yijian-agent-root .journey-history-empty{padding:26px 0;line-height:1.8;color:var(--y-muted)}
+/* Clear is a quiet text action, not a filled preference choice. */
+#yijian-agent-root #preferences-dialog #zodiac-clear,
+#yijian-agent-root #preferences-dialog #zodiac-clear:is(:hover,:active,[aria-pressed=true]){display:inline-flex;align-items:center;justify-content:flex-end;flex-shrink:0;min-width:64px;min-height:44px;margin:0;padding:8px 0 8px 12px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;color:var(--y-muted);font-size:12px;white-space:nowrap;text-decoration:none}
+#yijian-agent-root #preferences-dialog #zodiac-clear[aria-pressed=true]{color:var(--y-accent)}
+#yijian-agent-root #preferences-dialog #zodiac-clear:focus:not(:focus-visible){outline:none}
+
+html[data-app-design=yijian] #agent-page>.y-agent-city{display:flex;justify-content:flex-end;align-items:center;padding:0 20px;min-height:36px;flex-shrink:0;background:var(--y-bg)}
+html[data-app-design=yijian] .y-agent-city-button{display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;min-height:44px;max-width:100%;padding:0;border:0;background:transparent;color:var(--y-accent);font-size:12px}
+html[data-app-design=yijian] .y-agent-city-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+html[data-app-design=yijian] .y-agent-city-button:disabled{opacity:.55}
+#agent-page:has(>.y-agent-city) #yijian-agent-root #feed{padding-top:8px}

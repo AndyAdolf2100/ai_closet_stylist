@@ -1,0 +1,59 @@
+/* Shared App chrome. Keep the companion's expressive type inside editorial cards. */
+html[data-app-design=yijian]{-webkit-tap-highlight-color:transparent}
+html[data-app-design=yijian] body{overscroll-behavior-y:none}
+html[data-app-design=yijian] body:has(#home[hidden]) .y-toolbar{display:none}
+html[data-app-design=yijian] .y-toolbar{padding-block:calc(10px + env(safe-area-inset-top)) 10px;border:0}
+html[data-app-design=yijian] .y-brand{font-size:23px}
+html[data-app-design=yijian] .y-brand small{display:none}
+html[data-app-design=yijian] #detail-page .detail-header,
+html[data-app-design=yijian] #agent-page>header{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;height:52px;min-height:52px;padding:4px 12px;border-bottom:1px solid var(--y-line);background:var(--y-bg)}
+html[data-app-design=yijian] #detail-page .detail-header h2,
+html[data-app-design=yijian] #agent-page>header>span{font:500 17px/1.4 -apple-system,'PingFang SC',sans-serif;text-align:center;margin:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html[data-app-design=yijian] #detail-page .detail-header button,
+html[data-app-design=yijian] #agent-page>header>#agent-back{display:grid;place-items:center;width:44px;height:44px;min-width:44px;border:0;border-radius:0;padding:0;background:transparent;box-shadow:none;color:var(--y-ink);font:30px/1 sans-serif}
+html[data-app-design=yijian] .y-service-page{padding:18px 20px max(28px,env(safe-area-inset-bottom))}
+html[data-app-design=yijian] .y-service-page>.y-service-intro{display:none}
+html[data-app-design=yijian] .y-service-tabs{border:0;background:var(--y-soft);padding:3px;border-radius:10px;margin-bottom:18px;gap:3px}
+html[data-app-design=yijian] .y-service-tabs button{min-height:44px;border-radius:8px;font-size:14px;color:var(--y-muted)}
+html[data-app-design=yijian] .y-service-tabs [aria-selected=true]{background:var(--y-paper);color:var(--y-accent);box-shadow:0 1px 3px #0000000c}
+html[data-app-design=yijian] .y-service-empty{padding:38px 10px 28px;text-align:center;border:0;background:transparent}
+html[data-app-design=yijian] .y-service-empty strong{display:block;font:500 16px/1.6 -apple-system,'PingFang SC',sans-serif;margin:15px 0 6px}
+html[data-app-design=yijian] .y-service-empty p{font-size:13px;line-height:1.8;max-width:270px;margin:auto;color:var(--y-muted)}
+.y-empty-art{display:block;flex-shrink:0;width:144px;height:144px;margin:0 auto;background-image:url('./assets/empty-stationery-v1.png');background-size:200% 200%;background-repeat:no-repeat}
+.y-empty-wardrobe{background-position:0 0}.y-empty-journal{background-position:100% 0}.y-empty-letters{background-position:0 100%}.y-empty-orders{background-position:100% 100%}
+html[data-app-design=yijian] .section-empty .y-empty-art{width:108px;height:108px}
+html[data-app-design=yijian] .empty .y-empty-art{width:160px;height:160px}
+html[data-app-design=yijian] .y-service-card{border-radius:14px;padding:18px;box-shadow:none}
+html[data-app-design=yijian] .y-message-row{border:0;border-bottom:1px solid var(--y-line);border-radius:0;background:transparent;padding:18px 0;margin:0}
+html[data-app-design=yijian] .y-message-heading strong{font:500 16px/1.6 -apple-system,'PingFang SC',sans-serif}
+html[data-app-design=yijian] .y-feedback-form{border:0;background:transparent;padding:0}
+html[data-app-design=yijian] .y-feedback-form textarea{background:var(--y-paper);border:1px solid var(--y-line);border-radius:12px;padding:14px;min-height:180px;resize:none}
+html[data-app-design=yijian] .y-feedback-form>.y-service-primary{display:flex;width:100%;margin-top:24px;border-radius:12px;font-size:15px}
+html[data-app-design=yijian] .y-contact-card{margin-top:40px;text-align:center;padding:28px 14px}
+html[data-app-design=yijian] .y-contact-card .y-service-actions{justify-content:center}
+html[data-app-design=yijian] .settings-intro{padding:4px 0 18px}
+html[data-app-design=yijian] .settings-intro :is(.settings-eyebrow,h3){display:none}
+html[data-app-design=yijian] .settings-intro p{font-size:13px}
+html[data-app-design=yijian] .settings-notebook .settings-row{min-height:76px}
+html[data-app-design=yijian] .settings-row-copy strong{font-weight:500;font-size:16px}
+html[data-app-design=yijian] .settings-footnote{display:none}
+html[data-app-design=yijian] .y-unavailable{padding:90px 26px 40px;text-align:center}
+html[data-app-design=yijian] .y-unavailable-mark{font-size:35px;color:var(--y-muted)}
+html[data-app-design=yijian] .y-unavailable h3{font:500 17px/1.6 -apple-system,'PingFang SC',sans-serif;margin:18px 0 8px}
+html[data-app-design=yijian] .y-unavailable p{font-size:13px;line-height:1.8;color:var(--y-muted);max-width:270px;margin:0 auto 24px}
+html[data-app-design=yijian] .y-pull-refresh{display:block;position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden;border:0;color:var(--y-muted);background:transparent;font-size:12px}
+html[data-app-design=yijian] .y-pull-refresh:is(.is-active,:focus-visible){position:relative;clip-path:none;width:100%;height:44px;padding:8px}
+html[data-app-design=yijian] #detail-page{overscroll-behavior-y:contain}
+html[data-app-design=yijian] .y-service-more{display:flex;margin:20px auto;border:0;color:var(--y-muted)}
+html[data-app-design=yijian] .profile-top{padding-top:env(safe-area-inset-top);min-height:44px}
+html[data-app-design=yijian] .y-room-intro .y-eyebrow{display:none}
+html[data-app-design=yijian] .y-room-intro{margin-top:-6px}
+html[data-app-design=yijian] .wardrobe-scene{padding-top:calc(16px + env(safe-area-inset-top))}
+@media(orientation:landscape) and (max-height:500px){html[data-app-design=yijian] .y-service-empty{padding-top:14px}.y-empty-art{width:100px;height:100px}html[data-app-design=yijian] .y-unavailable{padding-top:30px}}
+html[data-app-design=yijian] .y-companion-letter{padding:16px;gap:14px;min-height:0;border-radius:18px}
+html[data-app-design=yijian] .y-letter-photo{width:76px;height:108px;border-radius:38px 38px 10px 10px}
+html[data-app-design=yijian] .y-letter-body h2{font-size:20px;line-height:1.5;margin:6px 0}
+html[data-app-design=yijian] .y-letter-body p{font-size:12px;line-height:1.8}
+html[data-app-design=yijian] .y-companion-letter{grid-template-columns:76px minmax(0,1fr)}
+html[data-app-design=yijian] .y-companion-letter::before{border-radius:12px}
+html[data-app-design=yijian] .create-scroll .close{display:grid;place-items:center;min-width:44px;width:44px;height:44px;background:transparent;border:0;color:var(--y-muted);font:26px/1 sans-serif}
