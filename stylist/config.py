@@ -5,9 +5,12 @@ from urllib.parse import urlsplit
 
 import yaml
 
+from .catalog_config import CatalogConfig
+
 
 @dataclass(frozen=True)
 class Settings:
+    catalog: CatalogConfig = field(default_factory=CatalogConfig, repr=False)
     server_url: str = "http://127.0.0.1:8080"
     mcp_url: str = "http://127.0.0.1:8080/mcp"
     llm_url: str = ""
@@ -46,6 +49,7 @@ class Settings:
         origin = urlsplit(mcp_url)
         server_url = os.getenv("STYLIST_SERVER_URL", f"{origin.scheme}://{origin.netloc}")
         return cls(
+            catalog=CatalogConfig.load({**raw, **({"db_knowledge": local["db_knowledge"]} if "db_knowledge" in local else {})}),
             server_url=server_url.rstrip("/"), mcp_url=mcp_url,
             llm_url=os.getenv("STYLIST_LLM_URL", llm.get("base_url") or "").rstrip("/"),
             llm_model=os.getenv("STYLIST_LLM_MODEL", llm.get("model") or ""),

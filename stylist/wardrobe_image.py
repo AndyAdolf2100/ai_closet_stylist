@@ -10,12 +10,14 @@ IMAGE_TYPES = frozenset({"image/png", "image/jpeg", "image/webp", "image/gif"})
 MAX_IMAGE_BYTES = 12 * 1024 * 1024
 
 
-async def read_wardrobe_image(upstream, product_id: str, transport=None, kind="original"):
+async def read_wardrobe_image(upstream, product_id: str, transport=None, kind="original", *, source="user"):
+    if source not in {"user", "system"}:
+        raise StylistError("wardrobe_image_not_found", "这件衣物暂时无法读取。", 404)
     await upstream.identity()
     async with upstream.mcp() as mcp:
-        result = await mcp.call("product.resolve", {"items": [{"source": "user", "product_id": product_id}]})
+        result = await mcp.call("product.resolve", {"items": [{"source": source, "product_id": product_id}]})
     rows = result.get("items") or []
-    if len(rows) != 1 or rows[0].get("source") != "user" or str(rows[0].get("product_id")) != product_id:
+    if len(rows) != 1 or rows[0].get("source") != source or str(rows[0].get("product_id")) != product_id:
         raise StylistError("wardrobe_image_not_found", "这件衣物暂时无法读取。", 404)
     url = str(rows[0].get("cutout_image" if kind == "cutout" else "original_image") or "")
     try:

@@ -37,6 +37,9 @@ from .memory import (
     verified_memory_save,
 )
 from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Task
+from .new_clothes import enabled as new_clothes_enabled
+from .new_clothes import explicit_new_clothes, previous_enabled
+from .new_clothes import invitation as new_clothes_invitation
 from .personas import (
     avatar_invitation,
     boundary_reply,
@@ -70,6 +73,9 @@ logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
+    retrieval_diagnostics: dict
+    new_clothes: bool
+    new_clothes_auto_enabled: bool
     regeneration_source: dict | None
     long_term_memory: list[dict]
     completed_nodes: Annotated[list[str], operator.add]
@@ -197,6 +203,7 @@ class Stylist:
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             planning_payload = {
                 "now": today.isoformat(), "message": request.message,
+                "new_clothes": request.new_clothes,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
@@ -230,6 +237,10 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            if (explicit_new_clothes(request.message, plan.new_clothes_intent, plan.new_clothes_evidence)
+                    and not plan.upload_intent and not plan.avatar_intent and not plan.technical_question):
+                plan.mode = plan.mode if plan.mode in {"modify", "weekly"} else "recommend"
+                plan.conversation_only, plan.weather_only, plan.use_inventory = False, False, True
             if plan.avatar_intent:
                 plan.clarification = avatar_invitation(request.assistant_persona, plan.avatar_intent,
                     request.companion_profile, has_outfit=avatar_look(state, plan) is not None)
@@ -277,9 +288,11 @@ class Stylist:
                 task.gender = request.companion_profile.user_gender
             if plan.location_limit_exceeded:
                 return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"), "frozen": []}
-            # System catalog selection is temporarily disabled, including legacy requests/history.
-            if not plan.conversation_only:
-                task.source = "wardrobe"
+            # Only the new switch or verified original wording permits system retrieval.
+            explore, automatic = new_clothes_enabled(request, plan, previous_enabled(state))
+            task.source = "hybrid" if explore else "wardrobe"
+            if automatic:
+                report("new_clothes", new_clothes_invitation(request.assistant_persona))
             explicit_city = plan.changes.get("city")
             explicit_route = plan.changes.get("itinerary")
             if (request.location and (not request.regenerate_outfit or not task.city and not task.itinerary)
@@ -306,7 +319,10 @@ class Stylist:
                     plan.clarification = "你想调整哪一部分？我会保留其余衣物。"
                 else:
                     frozen = frozen_products(current, plan.replace_slots)
+                    if not explore and any(p.source == "system" for p in frozen):
+                        raise StylistError("frozen_source_conflict", "原搭配中需要保留的参考款不在个人衣橱里。请开启邂逅新衣继续，或重新选择整套搭配。", 409)
             return {"plan": plan.model_dump(mode="json"), "task": task.model_dump(mode="json"),
+                    "new_clothes": explore, "new_clothes_auto_enabled": automatic,
                     "frozen": [p.model_dump(mode="json") for p in frozen]}
 
         def approval(data):
@@ -408,12 +424,14 @@ class Stylist:
             warnings = list(data["warnings"])
             frozen = [Product.model_validate(x) for x in data["frozen"]]
             pool, rejected, service_gap = {}, {}, data["service_gap"]
+            retrieval_diagnostics = {}
             if plan.mode != "consult" and plan.use_inventory:
                 report("wardrobe", progress_message(request.assistant_persona, "wardrobe"))
                 try:
                     async with upstream.mcp() as mcp:
                         pool, cautions, rejected = await retrieve(upstream, mcp, effective_task,
-                                                                 plan.search_query, frozen, request.assistant_persona)
+                                                                 plan.search_query, frozen, request.assistant_persona,
+                                                                 allow_system=data.get("new_clothes", False), diagnostics=retrieval_diagnostics)
                         frozen = [pool.get(p.key, p) for p in frozen]
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
@@ -428,7 +446,7 @@ class Stylist:
                 except AuthenticationExpired:
                     raise
                 except StylistError as exc:
-                    if exc.code == "frozen_gender_conflict":
+                    if exc.code in {"frozen_gender_conflict", "frozen_catalog_conflict"}:
                         raise
                     pool, service_gap = {}, True
                     logger.warning("Wardrobe read failed (%s)", exc.code)
@@ -460,7 +478,10 @@ class Stylist:
                 warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
                                  if is_male_persona(request.assistant_persona) else
                                  f"这次候选里暂时没有明确标为{names}的衣物，我先用现有单品给你一点接近的搭配灵感。"))
-            return {"pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
+            if retrieval_diagnostics.get("personal", {}).get("unavailable") and retrieval_diagnostics.get("catalog", {}).get("outcome") == "unavailable":
+                service_gap = True
+            return {"retrieval_diagnostics": retrieval_diagnostics,
+                    "pool": {key: p.model_dump(mode="json") for key, p in pool.items()},
                     "frozen": [p.model_dump(mode="json") for p in frozen],
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
 
@@ -497,6 +518,7 @@ class Stylist:
                 "mode": plan.mode,
                 "planning_dates": schedule_dates(plan, task),
                 "history": state.messages[-8:], "weather": weather,
+                "retrieval_diagnostics": data.get("retrieval_diagnostics", {}),
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
                                for p in pool.values() if p.key not in original_targets],
                 "replacement_options": replacement_options,
@@ -599,10 +621,14 @@ class Stylist:
 
         def deliver_node(data):
             plan, task = unpack(data)
+            explore = data.get("new_clothes", request.new_clothes is True)
+            automatic = data.get("new_clothes_auto_enabled", False)
+            exploration = dict(new_clothes=explore, new_clothes_auto_enabled=automatic,
+                               new_clothes_notice=new_clothes_invitation(request.assistant_persona) if automatic else None)
             if plan.clarification or data.get("cancelled"):
                 state = SessionState.model_validate(data["session"])
                 index = avatar_look(state, plan) if plan.avatar_intent else None
-                return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                return {"reply": Reply(**exploration, conversation_id=data["session_id"], version=request.expected_version + 1,
                     city_selection_required=needs_outfit_city(plan, task) and not data.get("cancelled", False),
                     avatar_intent=plan.avatar_intent,
                     tryon_context=({"conversation_id": data["session_id"], "version": request.expected_version + 1,
@@ -637,7 +663,11 @@ class Stylist:
             delivery = "advice" if plan.mode == "consult" or not plan.use_inventory else ("outfit" if selected else "concept")
             if delivery == "concept":
                 warnings.append(service_notice(request.assistant_persona, "concept"))
-            reply = Reply(conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
+            gap = (plan.mode != "consult" and plan.use_inventory and not plan.weather_only
+                   and not data.get("service_gap")
+                   and (not looks or any(not look.wardrobe_complete for look in looks)))
+            reply = Reply(**exploration, wardrobe_gap=gap, retrieval_diagnostics=data.get("retrieval_diagnostics", {}),
+                          conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
                           city_selection_required=needs_outfit_city(plan, task),
                           delivery=delivery, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,
@@ -712,6 +742,7 @@ class Stylist:
                 else:
                     value = Command(resume=decision) if paused else (None if snapshot.values else {
                         "session": state.model_dump(mode="json"), "session_id": cid,
+                        "new_clothes": request.new_clothes if request.new_clothes is not None else previous_enabled(state),
                         "regeneration_source": regeneration_source,
                         "long_term_memory": await self.memory_snapshot(owner)})
                     output = await graph.ainvoke(value, config, durability="sync")
@@ -742,6 +773,7 @@ class Stylist:
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
+                        "new_clothes": reply.new_clothes,
                         "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
                         "looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces, "how": x.how,

@@ -57,7 +57,7 @@ async def test_catalog_selection_from_legacy_request_history_or_model_uses_perso
     class Model:
         async def generate(self, name, payload, result_type):
             if name == "plan":
-                return Plan(mode="recommend", changes={"source": Change(value=source, evidence="系统衣橱")}
+                return Plan(mode="recommend", changes={"source": Change(value=source, evidence="帮我搭一套")}
                             if origin == "model" else {})
             assert payload["task"]["source"] == "wardrobe"
             return Draft(message="从个人衣橱选好了。", looks=[LookDraft(title="日常穿搭",
@@ -74,7 +74,7 @@ async def test_catalog_selection_from_legacy_request_history_or_model_uses_perso
                          message="旧范围", task=state.task)
         store.finish(await upstream.identity(), initial, claim, state, previous)
     result = await Stylist(Settings(), store, Model()).chat(upstream, ChatRequest(
-        message="从系统衣橱搭一套，不考虑天气", request_id="wardrobe-only-current",
+        message="帮我搭一套，不考虑天气", request_id="wardrobe-only-current",
         source=source if origin == "request" else None,
         conversation_id=previous.conversation_id if previous else None,
         expected_version=previous.version if previous else 0))

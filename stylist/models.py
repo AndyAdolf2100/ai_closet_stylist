@@ -76,6 +76,8 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    new_clothes_intent: bool = False
+    new_clothes_evidence: str = Field(default="", max_length=6000)
     avatar_intent: Literal["upload", "view", "tryon"] | None = None
     avatar_evidence: str = Field(default="", max_length=6000)
     avatar_declined: bool = False
@@ -187,6 +189,11 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    retrieval_diagnostics: dict = Field(default_factory=dict)
+    new_clothes: bool = False
+    new_clothes_auto_enabled: bool = False
+    new_clothes_notice: str | None = None
+    wardrobe_gap: bool = False
     city_selection_required: bool = False
     avatar_intent: Literal["upload", "view", "tryon"] | None = None
     tryon_context: TryonReference | None = None
@@ -245,6 +252,7 @@ class CompanionProfile(Model):
 
 
 class ChatRequest(Model):
+    new_clothes: bool | None = None
     regenerate_outfit: bool = False
     regenerate_from_version: int | None = Field(default=None, ge=1)
     upload_action_id: str | None = Field(default=None, pattern=r"^med_[a-f0-9]{32}$")

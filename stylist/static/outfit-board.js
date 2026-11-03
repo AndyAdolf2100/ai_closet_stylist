@@ -80,7 +80,7 @@
     opener = trigger; const dialog = make('dialog', 'outfit-detail'); modal = dialog;
     dialog.setAttribute('aria-label', `${look.title || '这套搭配'} · 单品详情`);
     const heading = make('div', 'outfit-detail-heading');
-    const title = make('div'); title.append(make('span', 'outfit-kicker', look.wardrobe_complete === false ? '这次选中的衣橱单品' : '衣橱里的这一套'), make('h2', '', look.title || '搭配详情'));
+    const title = make('div'); title.append(make('span', 'outfit-kicker', look.items.some(item => item.source === 'system') ? '邂逅新衣 · 含参考款' : look.wardrobe_complete === false ? '这次选中的衣橱单品' : '衣橱里的这一套'), make('h2', '', look.title || '搭配详情'));
     const close = make('button', 'subtle', '关闭 ×'); close.type = 'button'; close.setAttribute('aria-label', '关闭搭配详情'); close.onclick = () => dialog.close();
     heading.append(title, close);
     const content = make('div', 'outfit-detail-content'), overview = make('section', 'outfit-overview');
@@ -104,7 +104,7 @@
       imageStage.onclick = () => window.ProductPreview?.open(
         items.map(piece => ({src: safe(piece.original_image || piece.cutout_image), alt: name(piece)})), index, imageStage);
       const info = make('div', 'outfit-item-info');
-      info.append(make('span', 'outfit-kicker', `${index + 1} / ${items.length} · ${item.source === 'user' ? '个人衣橱' : '衣物单品'}`), make('h3', '', name(item)));
+      info.append(make('span', 'outfit-kicker', `${index + 1} / ${items.length} · ${item.source === 'user' ? '个人衣橱' : '参考款 · 未确认拥有'}`), make('h3', '', name(item)));
       const attrs = make('dl', 'outfit-attributes');
       for (const [label, value] of [['分类', item.secondary_class_name || item.class_name], ['颜色', item.color], ['材质', item.material]]) {
         if (value) attrs.append(make('dt', '', label), make('dd', '', value));
@@ -139,8 +139,9 @@
     const root=make('section','outfit-composition'),stage=make('div','outfit-board-stage');
     const footer=make('div','outfit-board-footer'),text=make('div');
     const partial = look.wardrobe_complete === false;
+    const system = look.items.some(item => item.source === 'system');
     text.append(make('span','outfit-kicker',`${look.items.length} 件${partial ? '衣橱单品 · 部分搭配' : '单品 · 一起穿'}`),
-      make('p','',partial ? '图片仅展示衣橱已选单品，其余为文字参考。' : '把喜欢的衣服，放在一起看看。'));
+      make('p','',system ? '含衣橱之外的参考款，尚未确认拥有；其余文字参考不在图中。' : partial ? '图片仅展示衣橱已选单品，其余为文字参考。' : '把喜欢的衣服，放在一起看看。'));
     const actions=make('div','outfit-board-actions');
     const expand=make('button','outfit-expand','展开看看 ↗'),download=make('button','subtle','下载');
     expand.type=download.type='button';actions.append(download,expand);footer.append(text,actions);root.append(stage,footer);

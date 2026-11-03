@@ -38,7 +38,7 @@ def test_changing_only_colors_does_not_invalidate_an_existing_request_receipt(tm
     store = Store(str(tmp_path / "requests.db"))
     request = ChatRequest(message="只聊聊穿法，不查衣橱", request_id="same-color-request", companion_profile=CompanionProfile())
     cid, claim, state, _ = store.reserve("color-a", request)
-    legacy = json.loads(request.model_dump_json(exclude={"upload_action_id", "regenerate_outfit", "regenerate_from_version"}))
+    legacy = json.loads(request.model_dump_json(exclude={"upload_action_id", "regenerate_outfit", "regenerate_from_version", "new_clothes"}))
     legacy["companion_profile"].pop("color_scheme")
     legacy_digest = hashlib.sha256(json.dumps(legacy, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
     with store.connection() as conn:

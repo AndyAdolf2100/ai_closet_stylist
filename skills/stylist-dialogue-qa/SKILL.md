@@ -5,6 +5,12 @@ description: 为衣间穿搭 Agent 维护对话预期并执行回归，审核六
 
 # 衣衣对话与人设验收
 
+## 邂逅新衣（2026-11-03）
+
+测试系统衣橱、自动开启或缺衣引导时，读取 [邂逅新衣专项](references/new-clothes.md)。覆盖手动允许个人＋系统、明确原话自动勾选与六人格message、候选不足双入口、否定／引用／纯文字、连续关闭与冻结、跨账号和旧卡片边界；系统召回另核对按分类／性别查询、8／8／16软扩大、系统窗口、商品ID／分类冲突及retrieval_diagnostics，见tests/test_catalog_retrieval.py。缺衣双入口是当前规则，替代下文历史「无明确上传意图不展示任何邀请卡」；明确上传步骤卡仍要求upload_intent，不把两类卡片混为一谈。
+
+用户只要求本功能时，只运行专项参考中的三个测试入口；不默认全量、真实模型、真实衣橱或收费试穿。模拟通过不代表真实系统库／真实语义通过，旧验收次数不能充当本轮结果。
+
 ## 穿搭城市引导卡（2026-11-02）
 
 读取 `scripts/city_invitation_dialogues.py` 的6组15轮与 `docs/CITY_INVITATION_QA.md`。分别检查用户原话／模型提取、后端 `city_selection_required`、前端卡片和弹窗续接；明确目的地、页面已选城市或上下文城市、多地行程不能因没有浏览器定位而弹卡。只有明确忽略天气才跳过穿搭天气，纯原理／闲聊／上传意图不询问城市；不查衣橱不等于忽略天气。新请求不再展示通用「先确认需求」，付费确认保留。
@@ -44,7 +50,7 @@ description: 为衣间穿搭 Agent 维护对话预期并执行回归，审核六
 
 验收实际效果：温柔／直接的回应组织、简洁／细致的有用信息、休闲／优雅的真实商品都要变化，复述偏好或改标题不算。核对 `preference_comparisons` 的状态、两侧原文引证及对应 case；单轮评分通过不能替代成对效果通过。自动检查选中商品风格标签和禁穿，模型检查正文与穿法是否兑现优先因素、是否保留基础人格；舒适等目标不能冒充已知商品性能。覆盖本轮要求优先、他人穿搭、更新后选款、局部冻结和星座不推断性格。
 
-每次增加偏好选项，按其实际影响补充问题、合成商品依据与失败判据；无需强求每轮体现所有偏好。没有合适候选时遵守库存并说明限制，不为满足风格编造单品。当前40组、男女共110轮覆盖所有已上线选项（12星座、4表达方式、3详略、8风格、5优先因素），不代表所有组合或真实衣橱覆盖。无费用回归只证明验收器能抓错及资料传递；未跑真实模型时明确效果待验证。
+每次增加偏好选项，按其实际影响补充问题、合成商品依据与失败判据；无需强求每轮体现所有偏好。没有合适候选时遵守库存并说明限制，不为满足风格编造单品。题库覆盖12星座、4表达方式、3详略、8风格及当前5项穿衣优先选择，并保留旧优先项兼容用例；新增合身自然／适合场合的试穿核对和场景证据判据，当前轮数以--list为准，不代表所有组合或真实衣橱覆盖。无费用回归只证明验收器能抓错及资料传递；未跑真实模型时明确效果待验证。
 
 ## 执行与证据
 
@@ -129,7 +135,7 @@ description: 为衣间穿搭 Agent 维护对话预期并执行回归，审核六
 
 新增 `scripts/upload_intent_dialogues.py`，4组22轮：`upload_words` 覆盖上传／增加／添加／录入及鞋包配饰，`upload_photo_purpose` 保留含糊照片→明确衣物→拒绝的上下文，`upload_boundaries` 覆盖否定／转述／假设／已上传／本人数字人／头像。男女分别执行，检查reply.upload_intent、upload_suggestion及问询正文；邀请不得读衣橱、天气或自动发起写入，不覆盖原任务和搭配。当前仅原话证据校验与模型提取字段，模拟通过不能宣称真实NLU通过，真实评测仍需显式 --live。
 
-前端 `tests/wardrobe_journey.test.cjs` 检查步骤卡片出现不打开选图；点击才打开本地预览，仍须确认才上传。用途不明显示分开的衣物／本人形象入口；普通搭配、空衣橱、部分匹配、用刚上传单品继续搭配，都不能自动推上传卡片。只有明确upload_intent才能显示；旧历史upload_suggestion=true但upload_intent为空也不能显示，拒绝上传优先。`tests/test_upload_intent.py` 验证任务保留、请求重放、原话缺失及人物表达，完整模拟回归见docs/DIALOGUE_QA.md。
+前端 `tests/wardrobe_journey.test.cjs` 检查步骤卡片出现不打开选图；点击才打开本地预览，仍须确认才上传。用途不明显示分开的衣物／本人形象入口；普通搭配不得误触发明确上传步骤卡，该卡仍仅在明确upload_intent时显示；2026-11-03缺衣时允许独立的添加衣物／邂逅新衣双入口卡，点击才执行选择，不自动上传或开启。旧历史upload_suggestion=true但upload_intent为空也不能显示，拒绝上传优先。`tests/test_upload_intent.py` 验证任务保留、请求重放、原话缺失及人物表达，完整模拟回归见docs/DIALOGUE_QA.md。
 
 
 2026-11-02补充用户原句 `upload_synonyms`：上传衣物／添加衣服／增加衣物、新鞋入柜及拍照录入外套；边界追加仅讨论搭配叠穿与上传文件。当前4组22轮、男女44轮。用以下命令执行用户明确要求的真实文字回归，保留同组多轮，不执行真实衣橱或付费图片：
@@ -165,7 +171,7 @@ UI回归 `tests/wardrobe_journey.test.cjs`：展开画廊仅GET，点人物只�
 
 本轮证据：2026-11-02，四组17轮男女真实文字34轮 automatic_passed=34，persona_review_pending=34（未执行--judge）；准备搭配使用合成衣橱，形象邀请不调用业务工具。`var/avatar-dialogue-live/round1.json` 和 `report.html` 保存原文与轨迹。全量Python616通过／85跳过、前端86通过，8组Chrome模拟视图检查通过；未执行真实照片、付费图片或原生iOS验收。
 
-2026-11-02上传邀请边界：`journey-invite`是步骤卡CSS类。检查最终Reply与页面，不能只核对有没有自动上传；无明确上传意图时连邀请卡也不展示。定向运行 `tests/test_partial_wardrobe.py`、`tests/test_uploaded_anchor.py`、`tests/test_upload_intent.py`、`tests/test_avatar_intent.py`、`tests/test_dialogue_validation.py` 与 `tests/wardrobe_journey.test.cjs`。保持明确上传／用途消歧／本人形象入口和点击确认流程，不因关闭自动建议而删除主动入口。
+2026-11-02上传邀请边界：`journey-invite`是步骤卡CSS类。检查最终Reply与页面，不能只核对有没有自动上传；无明确上传意图时不展示明确上传步骤卡；2026-11-03新增的缺衣双入口卡依据wardrobe_gap展示，与upload_intent分开验收，不能按CSS类名误判。定向运行 `tests/test_partial_wardrobe.py`、`tests/test_uploaded_anchor.py`、`tests/test_upload_intent.py`、`tests/test_avatar_intent.py`、`tests/test_dialogue_validation.py` 与 `tests/wardrobe_journey.test.cjs`。保持明确上传／用途消歧／本人形象入口和点击确认流程，不因关闭自动建议而删除主动入口。
 
 ## 重新生成穿搭入口
 

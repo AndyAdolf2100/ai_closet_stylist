@@ -92,7 +92,7 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  const app=fs.readFileSync('stylist/static/app.js','utf8');
  const el=(tag,cls,text)=>{const n=w.document.createElement(tag);n.className=cls||'';if(text)n.textContent=text;return n;};
  const bubble=(role,text)=>{const n=el('article',role,text);w.document.body.append(n);return n;};
- const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;'+
+ const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const setNewClothes=()=>{};'+
    app.slice(app.indexOf('function bulletSection('),app.indexOf('function productGrid('))+
    app.slice(app.indexOf('function showReply('),app.indexOf('function setBusy('))+';return showReply;';
  const show=new Function('window','el','bubble','scrollBottom',code)(w,el,bubble,()=>{});

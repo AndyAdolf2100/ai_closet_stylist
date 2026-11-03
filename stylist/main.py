@@ -87,6 +87,23 @@ def create_app(settings=None):
         return Response(body, media_type=media, headers={"Cache-Control": "private, no-store",
                         "X-Content-Type-Options": "nosniff", "Cross-Origin-Resource-Policy": "same-origin"})
 
+    @app.get("/stylist-api/conversations/{cid}/catalog/{product_id}/image-source")
+    async def catalog_image_source(cid: str, product_id: str = ApiPath(pattern=r"^[1-9][0-9]{0,19}$"),
+                                   version: int = 1, kind: Literal["original", "cutout"] = "original",
+                                   authorization: str | None = Header(default=None)):
+        upstream = Upstream(settings, require_token(authorization))
+        owner = await upstream.identity()
+        with store.connection() as conn:
+            row = conn.execute("SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?",
+                               (owner, cid, version)).fetchone()
+        reply = json.loads(row["reply_json"]) if row else {}
+        if not any(item.get("source") == "system" and str(item.get("product_id")) == product_id
+                   for look in reply.get("looks", []) for item in look.get("items", [])):
+            raise StylistError("wardrobe_image_not_found", "找不到当前账号搭配中的这件参考款。", 404)
+        body, media = await read_wardrobe_image(upstream, product_id, kind=kind, source="system")
+        return Response(body, media_type=media, headers={"Cache-Control": "private, no-store",
+                        "X-Content-Type-Options": "nosniff", "Cross-Origin-Resource-Policy": "same-origin"})
+
     @app.get("/health/ready")
     async def ready():
         try:

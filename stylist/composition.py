@@ -81,8 +81,8 @@ class Compositions:
         if not row:
             raise StylistError("composition_not_found", "找不到当前账号的这套搭配。", 404)
         reply = Reply.model_validate_json(row["reply_json"])
-        if index >= len(reply.looks) or not reply.looks[index].items or any(p.source != "user" for p in reply.looks[index].items):
-            raise StylistError("composition_not_found", "找不到可保存的个人衣橱搭配。", 404)
+        if index >= len(reply.looks) or not reply.looks[index].items:
+            raise StylistError("composition_not_found", "找不到可保存的搭配。", 404)
         # Theme is presentation only: both assistants reuse the same transparent image.
         return hashlib.sha256(json.dumps([owner, cid, version, index, RENDERER]).encode()).hexdigest()
 

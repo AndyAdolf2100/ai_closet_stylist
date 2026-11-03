@@ -72,7 +72,7 @@ class ImageService:
                     "twin": twin_fingerprint(overview), "contract": contract,
                     "scene": {"occasion": state.task.occasion, "style": state.task.style},
                     "title": state.looks[request.look_index].title,
-                    "notices": ["确认后会将所选个人衣橱单品保存到个人搭配库并生成试穿图。",
+                    "notices": ["确认后会将所选单品保存到个人搭配库并生成试穿图；参考款不代表已拥有，也不会录入个人衣橱。",
                                 "图片仅试穿已选衣橱单品，其余文字参考不参与生成。",
                                 "试穿图片用于视觉参考，不能保证实际尺码、面料和上身效果。"]}
         portraits = list(overview.get("system_twins", []))

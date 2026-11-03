@@ -9,6 +9,7 @@ from jsonschema import Draft202012Validator
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
+from .catalog import CatalogSearch
 from .config import Settings
 from .errors import AuthenticationExpired, StylistError
 
@@ -50,6 +51,7 @@ class Upstream:
         self.settings = settings
         self.authorization = authorization
         self.transport = transport
+        self._catalog_identity_lock = asyncio.Lock()
 
     async def get(self, path: str, params=None):
         allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories",
@@ -72,6 +74,17 @@ class Upstream:
         if not owner.isdecimal() or int(owner) < 1:
             raise StylistError("identity_contract_error", "无法确认当前账号，请重新登录。", 401)
         return owner
+
+    @property
+    def catalog_available(self):
+        return self.settings.catalog.available
+
+    async def search_catalog(self, **query):
+        async with self._catalog_identity_lock:
+            if not getattr(self, '_catalog_identity_checked', False):
+                await self.identity()
+                self._catalog_identity_checked = True
+        return await CatalogSearch(self.settings.catalog, self.transport).search(**query)
 
     async def set_twin_gender(self, gender, version):
         """Explicit profile choice, independent of the assistant's appearance."""

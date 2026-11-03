@@ -70,7 +70,7 @@
     return URL.createObjectURL(result);
   }
   function get(item,{onProgress,preferExisting=true}={}) {
-    const key=String(owner)+':'+item.product_id+':'+item.original_image+':'+(preferExisting?item.cutout_image||'':'original');
+    const key=String(owner)+':'+item.source+':'+item.product_id+':'+item.original_image+':'+(preferExisting?item.cutout_image||'':'original');
     if(cache.has(key))return Promise.resolve(cache.get(key));
     if(pending.has(key))return pending.get(key);
     const version=epoch;

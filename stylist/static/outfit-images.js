@@ -20,7 +20,7 @@
     return canvas.toDataURL('image/png');
   }
   function get(look,ref,retry=false){
-    const gender=theme(),key=JSON.stringify([owner,ref,look.items.map(p=>[p.product_id,p.original_image,p.cutout_image])]);
+    const gender=theme(),key=JSON.stringify([owner,ref,look.items.map(p=>[p.source,p.product_id,p.original_image,p.cutout_image])]);
     if(jobs.has(key))return jobs.get(key);
     const version=epoch;
     const current=()=>{if(version!==epoch)throw Error('cancelled');};

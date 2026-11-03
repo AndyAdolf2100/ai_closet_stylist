@@ -112,6 +112,8 @@ class Store:
         excluded = {"assistant_persona"} if request.assistant_persona is None else set()
         if request.companion_profile is None:
             excluded.add("companion_profile")
+        if request.new_clothes is None:
+            excluded.add("new_clothes")
         if request.upload_action_id is None:
             excluded.add("upload_action_id")
         if not request.regenerate_outfit:
