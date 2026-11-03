@@ -147,3 +147,6 @@ Product新增可空gender，归一为男／女／男女同款／null。读取兼
 无匹配只说明本次候选不符合条件，不宣称整个衣橱为空。字段进入style候选及选中商品，无新增写入旧衣橱的接口；商品原标签质量仍需单独带身份验收。实现与验证见[CLOTHING_GENDER_ANALYSIS_2026-11-03.md](CLOTHING_GENDER_ANALYSIS_2026-11-03.md)。
 
 2026-11-03：试穿状态及列表响应新增created_at，沿用stylist_image_actions原创建时间，供前端与media记录合并倒序。只增加响应字段，不改数据表、分页范围、任务状态或账号边界。
+
+
+2026-11-03系统参考库扩展：邂逅新衣开启后新增固定VikingDB系统文档只读适配，复用原Agent的legacy检索配置和签名，按分类／性别查询并用Server product.resolve重读；不依赖kb_search必须已部署。新增Reply.retrieval_diagnostics保存非敏感计数与阶段。具体边界、有限列表回退、配置及真实／模拟证据见docs/NEW_CLOTHES.md最新集成章节；原个人衣物、上传与独立费用确认接口保持。
