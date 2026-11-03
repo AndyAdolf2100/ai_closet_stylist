@@ -8,7 +8,7 @@
     conversation_style: ['自然相处','温柔鼓励','直接坦诚','轻松幽默'],
     reply_detail: ['适中','简洁重点','细致解释'],
     style_preferences: ['简约','休闲','通勤','温柔','复古','运动','街头','优雅'],
-    dressing_priorities: ['舒适自在','方便走动','容易打理','已有衣物优先','尝试新风格']
+    dressing_priorities: ['舒适自在','方便走动','容易打理','合身自然','适合场合']
   };
   // Concise Chinese paraphrases of the Foundation's descriptions; not official translations.
   const mbtiSummaries = {
@@ -132,6 +132,7 @@
       const index = values.indexOf(value) + (key === 'dressing_priorities' ? 8 : 0);
       const art = document.createElement('span'); art.className = 'style-sprite'; art.setAttribute('aria-hidden','true');
       art.style.backgroundPosition = (index % 4 * 100 / 3) + '% ' + (Math.floor(index / 4) * 100 / 3) + '%';
+      if (['合身自然','适合场合'].includes(value)) art.style.backgroundImage = "url('/static/assets/preference-fashion-priorities-v3.png')";
       button.classList.add('has-style-art'); button.append(art);
     }
     const label = document.createElement('strong'); label.textContent = value; button.append(label);
@@ -173,7 +174,7 @@
     await window.CompanionSettings.ready;
     if (current !== generation) return;
     const profile = window.CompanionSettings.getProfile(); if (!profile) return;
-    draft = {...defaults(),...profile,style_preferences:[...(profile.style_preferences || [])],dressing_priorities:[...(profile.dressing_priorities || [])]};
+    draft = {...defaults(),...profile,style_preferences:[...(profile.style_preferences || [])],dressing_priorities:(profile.dressing_priorities || []).filter(value => groups.dressing_priorities.includes(value))};
      render(); chapter('stars'); dialog.showModal();
   } };
   function viewport() {

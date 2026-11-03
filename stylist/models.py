@@ -229,7 +229,7 @@ class CompanionProfile(Model):
     conversation_style: Literal["自然相处", "温柔鼓励", "直接坦诚", "轻松幽默"] = "自然相处"
     reply_detail: Literal["适中", "简洁重点", "细致解释"] = "适中"
     style_preferences: list[Literal["简约", "休闲", "通勤", "温柔", "复古", "运动", "街头", "优雅"]] = Field(default_factory=list, max_length=3)
-    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "已有衣物优先", "尝试新风格"]] = Field(default_factory=list, max_length=3)
+    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "合身自然", "适合场合", "已有衣物优先", "尝试新风格"]] = Field(default_factory=list, max_length=3)
 
     @model_validator(mode="after")
     def validate_names(self):

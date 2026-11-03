@@ -56,3 +56,12 @@ def test_clothing_conditions_trigger_inventory_only_without_consultation_or_memo
         assert not wardrobe_requested(message + suffix, clothing_preferences=True)
     assert not wardrobe_requested(message, [{'role': 'user', 'content': '只给文字方案，不查衣橱。'}],
                                   clothing_preferences=True)
+
+
+def test_dressing_priorities_accept_new_choices_without_reinterpreting_history():
+    from stylist.models import CompanionProfile
+
+    current = CompanionProfile(dressing_priorities=['合身自然', '适合场合'])
+    assert current.dressing_priorities == ['合身自然', '适合场合']
+    legacy = CompanionProfile(dressing_priorities=['已有衣物优先', '尝试新风格'])
+    assert legacy.dressing_priorities == ['已有衣物优先', '尝试新风格']
