@@ -178,3 +178,15 @@ async def test_success_without_image_is_processing_and_points_rejection_is_not_u
         await service.confirm(upstream, q['action_id'], True)
     result = service.status('1', q['action_id'])
     assert result['status'] == 'failed' and result['result']['charged'] is False
+
+
+async def test_history_exposes_original_creation_time_for_cross_kind_sorting(tmp_path):
+    service, request, upstream = setup_service(tmp_path)
+    quote = await service.quote(upstream, request)
+    original = service.get('1', quote['action_id'])['created_at']
+    assert original
+    assert service.list('1')[0]['created_at'] == original
+    await service.confirm(upstream, quote['action_id'], False)
+    assert service.list('1')[0]['created_at'] == original
+    assert service.list('2') == []
+    assert upstream.commits == []

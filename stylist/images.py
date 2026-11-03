@@ -98,6 +98,7 @@ class ImageService:
         row = self.get(owner, action_id)
         quote = json.loads(row["quote_json"])
         return {"action_id": action_id, "status": row["status"],
+                "created_at": row["created_at"],
                 "conversation_id": row["conversation_id"], "version": row["version"],
                 "title": quote.get("title", "试穿结果"), "points_cost": quote.get("points_cost"),
                 "look_index": quote.get("look_index", 0),

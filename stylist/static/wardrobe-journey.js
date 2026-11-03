@@ -432,12 +432,21 @@
       }catch(e){if(current(token)&&card.isConnected){content.replaceChildren(el('p','journey-note','形象画廊暂时没展开，保留这张卡片，稍后再试。'),button('重新查看形象',load));notify?.(e.message||'暂时无法读取形象。');}}
     };load();
   }
+  function recordCreatedAt(action){
+    let value=String(action.created_at||'').trim().replace(' ','T');
+    // SQLite timestamps are UTC without a suffix; PostgreSQL may emit +00.
+    if(!/T.*(?:Z|[+-]\d{2}(?::?\d{2})?)$/i.test(value))value+='Z';
+    value=value.replace(/([+-]\d{2})$/, '$1:00');
+    const timestamp=Date.parse(value);return Number.isFinite(timestamp)?timestamp:-Infinity;
+  }
   async function history(){
     show('我的上传与生成记录');const token=epoch,view=viewSequence;
     atmosphere('history');
     const [uploads,images]=await readLoading(body,'正在读取你的记录…',()=>Promise.all([api('/stylist-api/media'),api('/stylist-api/images')]));if(!current(token)||!dialog.open||view!==viewSequence)return;
     body.replaceChildren();
-    if(!uploads.length&&!images.length)body.append(el('p','','还没有记录，可以先上传一件常穿的衣服。'));
+    const filters=el('div','journey-history-filters'),empty=el('p','journey-history-empty');
+    filters.setAttribute('role','group');filters.setAttribute('aria-label','记录分类');empty.setAttribute('role','status');
+    const records=[];
     for(const action of uploads){
       const copy=mediaRecordCopy(action),card=el('section','journey-record journey-media-letter'),head=el('div','journey-record-heading'),mark=el('span','journey-record-mark','✧'),text=el('div','journey-record-copy');
       mark.setAttribute('aria-hidden','true');text.append(el('span','journey-record-kicker',copy.kicker),el('h3','',copy.lead));head.append(mark,text);
@@ -447,12 +456,23 @@
         if(current(token)&&dialog.open&&view===viewSequence&&card.isConnected)renderMedia(next);
       });open.classList.add('journey-record-open');open.setAttribute('aria-label',copy.cta);
       const arrow=el('span','','↗');arrow.setAttribute('aria-hidden','true');open.append(arrow);
-      card.dataset.mediaAction=action.action_id;card.append(head,el('p','journey-record-note',copy.note),open);body.append(card);
+      card.dataset.mediaAction=action.action_id;card.append(head,el('p','journey-record-note',copy.note),open);records.push({card,action,kind:action.kind});
     }
     for(const action of images){
       const card=el('section','journey-record');fillTryonLetter(card,action);
-      body.append(card);
+      card.dataset.imageAction=action.action_id;records.push({card,action,kind:'tryon'});
     }
+    records.sort((a,b)=>recordCreatedAt(b.action)-recordCreatedAt(a.action));
+    const select=(kind,label)=>{
+      if(!current(token)||!dialog.open||view!==viewSequence)return;
+      for(const tab of filters.children)tab.setAttribute('aria-pressed',String(tab.dataset.kind===kind));
+      let count=0;for(const record of records){record.card.hidden=kind!=='all'&&record.kind!==kind;if(!record.card.hidden)count++;}
+      empty.hidden=count>0;empty.textContent=kind==='all'?'还没有记录，可以先上传一件常穿的衣服。':`这一页还没有「${label}」记录。`;
+    };
+    for(const [kind,label] of [['all','全部'],['garment','衣物入柜'],['person','照片检查'],['generation','数字人生成'],['tryon','试穿']]){
+      const tab=button(label,()=>select(kind,label));tab.dataset.kind=kind;filters.append(tab);
+    }
+    body.append(filters,empty,...records.map(record=>record.card));select('all','全部');
     body.append(button('上传一件衣服',()=>upload('garment')),button('我的试穿形象',twins));
   }
   function mediaRecordCopy(action){

@@ -338,3 +338,43 @@ test('completion without a usable result image is not announced as successful',a
  assert.match(t.w.document.querySelector('.journey-body').textContent,/这次的试穿，还需要确认/);
  assert.equal(t.notices.filter(n=>n.includes('试穿照到了')).length,0);t.close();
 });
+
+test('history merges uploads, avatars and try-ons by creation time rather than kind or update time',async()=>{
+ const uploads=[
+  {action_id:'med_upload',kind:'garment',status:'completed',created_at:'2026-11-03 02:00:00',result:{}},
+  {action_id:'med_avatar',kind:'generation',status:'cancelled',created_at:'2026-11-03T09:00:00+08:00',result:{}},
+  {action_id:'med_photo',kind:'person',status:'completed',created_at:'2026-11-03T00:00:00+00',result:{}},
+ ];
+ const images=[
+  {action_id:'img_new',title:'最新试穿',status:'processing',created_at:'2026-11-03T03:00:00Z',result:{}},
+  {action_id:'img_old',title:'较早试穿',status:'failed',created_at:'2026-11-02T23:00:00Z',updated_at:'2026-11-04T00:00:00Z',result:{refunded:true}},
+ ];
+ const t=setup(async path=>path.endsWith('/media')?uploads:images);await t.w.WardrobeJourney.history();
+ const order=[...t.w.document.querySelectorAll('.journey-body>.journey-record')].map(c=>c.dataset.mediaAction||c.dataset.imageAction);
+ assert.deepEqual(order,['img_new','med_upload','med_avatar','med_photo','img_old']);t.close();
+});
+test('history preserves stable ties and places legacy undated records last',async()=>{
+ const uploads=[{action_id:'med_unknown',kind:'person',status:'completed',result:{}},
+  {action_id:'med_tie',kind:'garment',status:'completed',created_at:'2026-11-03 02:00:00',result:{}}];
+ const images=[{action_id:'img_tie',status:'failed',created_at:'2026-11-03T02:00:00Z',result:{refunded:true}},
+  {action_id:'img_invalid',status:'failed',created_at:'invalid',result:{refunded:true}}];
+ const t=setup(async path=>path.endsWith('/media')?uploads:images);await t.w.WardrobeJourney.history();
+ assert.deepEqual([...t.w.document.querySelectorAll('.journey-body>.journey-record')].map(c=>c.dataset.mediaAction||c.dataset.imageAction),['med_tie','img_tie','med_unknown','img_invalid']);t.close();
+});
+
+test('history filters keep each category descending, restore all records, and never refetch or write',async()=>{
+ const calls=[];const uploads=[
+  {action_id:'med_old',kind:'garment',status:'completed',created_at:'2026-11-01T01:00:00Z',result:{}},
+  {action_id:'med_new',kind:'garment',status:'completed',created_at:'2026-11-03T01:00:00Z',result:{}},
+  {action_id:'med_avatar',kind:'generation',status:'cancelled',created_at:'2026-11-02T01:00:00Z',result:{}},
+ ];const images=[{action_id:'img_latest',status:'failed',created_at:'2026-11-03T02:00:00Z',result:{refunded:true}}];
+ const t=setup(async path=>{calls.push(path);return path.endsWith('/media')?uploads:images;});await t.w.WardrobeJourney.history();
+ const shown=()=>[...t.w.document.querySelectorAll('.journey-body>.journey-record')].filter(c=>!c.hidden).map(c=>c.dataset.mediaAction||c.dataset.imageAction);
+ assert.deepEqual(shown(),['img_latest','med_new','med_avatar','med_old']);
+ for(const [kind,ids]of [['garment',['med_new','med_old']],['generation',['med_avatar']],['tryon',['img_latest']],['person',[]],['all',['img_latest','med_new','med_avatar','med_old']]]){
+  t.w.document.querySelector('.journey-history-filters [data-kind="'+kind+'"]').click();await flush();assert.deepEqual(shown(),ids);
+  assert.equal(t.w.document.querySelector('.journey-history-filters [aria-pressed=true]').dataset.kind,kind);
+  assert.equal(t.w.document.querySelector('.journey-history-empty').hidden,ids.length>0);
+ }
+ assert.equal(calls.length,2);t.close();
+});
