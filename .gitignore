@@ -19,3 +19,9 @@ outputs/
 docs/衣衣产品需求文档.docx
 
 config/postgres-local.env
+
+# Editor swap files.
+*.swp
+
+# Authenticated App comparison screenshots are local evidence only.
+stylist/static/closet-app/comparison/evolution/screenshots/private/
