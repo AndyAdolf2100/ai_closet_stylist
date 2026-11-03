@@ -167,3 +167,29 @@ html[data-app-design=yijian] .y-agent-city-button{display:inline-flex;align-item
 html[data-app-design=yijian] .y-agent-city-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 html[data-app-design=yijian] .y-agent-city-button:disabled{opacity:.55}
 #agent-page:has(>.y-agent-city) #yijian-agent-root #feed{padding-top:8px}
+/* Quiet native-sized composer tools. No outlined text pill around the attachment. */
+#yijian-agent-root #chat-form .controls{display:flex;align-items:center;gap:6px}
+#yijian-agent-root #chat-form .y-composer-icon{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:10px;border:0;border-radius:50%;background:var(--surface,var(--bg));color:var(--ink);box-shadow:0 1px 6px #24344508}
+#yijian-agent-root #chat-form .y-composer-icon svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#yijian-agent-root #chat-form .y-composer-icon:active{background:var(--soft);transform:scale(.96)}
+#yijian-agent-root #chat-form .y-composer-icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#yijian-agent-root #chat-form .controls{gap:0}
+#yijian-agent-root #chat-form .y-composer-icon{position:relative;background:transparent;box-shadow:none;padding:13px}
+#yijian-agent-root #chat-form .y-composer-icon::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--surface,var(--bg));pointer-events:none}
+#yijian-agent-root #chat-form .y-composer-icon svg{position:relative;width:18px;height:18px;stroke-width:1.6}
+#yijian-agent-root #chat-form .y-composer-icon:active{background:transparent}
+#yijian-agent-root #chat-form .y-composer-icon:active::before{background:var(--soft)}
+#yijian-agent-root .y-attachment-options{display:flex;gap:14px;padding:12px 0 2px;border-top:1px solid var(--line);margin-top:8px}
+#yijian-agent-root .y-attachment-options[hidden]{display:none}
+#yijian-agent-root #chat-form .y-attachment-choice{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:60px;min-height:64px;padding:8px;border:0;background:transparent;color:var(--ink);font-size:11px}
+#yijian-agent-root .y-attachment-choice svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#yijian-agent-root .y-attachment-choice[aria-disabled=true]{color:var(--muted)}
+#yijian-agent-root .chat-attachment-preview{position:relative;width:64px;height:64px;margin:4px 12px 10px}
+#yijian-agent-root .chat-attachment-preview[hidden]{display:none}
+#yijian-agent-root .chat-attachment-preview img{width:64px;height:64px;object-fit:cover;border-radius:12px}
+#yijian-agent-root .chat-attachment-preview button{position:absolute;right:-12px;top:-12px;width:32px;height:32px;min-height:32px;padding:0;border:0;border-radius:50%;background:var(--paper,#fff);font-size:20px;color:inherit}
+
+.journey-photo-sources{display:flex;justify-content:center;gap:14px;margin-top:6px;width:100%}
+.journey-photo-sources button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:100px;padding:10px 18px;background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:12px;font:inherit}
+.journey-photo-sources svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5}
+.journey-photo-pocket:has(.journey-photo-sources){cursor:default}

@@ -113,8 +113,8 @@ async function loadWardrobe() {
   });
 }
 async function loadProfile() {
-  try { const p = await api('profile'); $('account-name').textContent = p.nickname || p.nick_name || '我的账号'; const src = safeURL(p.image_url || p.avatar || ''); if (src && (p.image_url || p.avatar)) $('account-avatar').src = src; $('balance').textContent = p.vip_info?.total_points != null ? String(p.vip_info.total_points) : '–'; }
-  catch (e) { if (e.name !== 'AbortError' && !e.login) toast(e.message); }
+  try { const p = await api('profile'); $('account-name').textContent = p.nickname || p.nick_name || '我的账号'; const src = safeURL(p.image_url || p.avatar || ''); if (src && (p.image_url || p.avatar)) $('account-avatar').src = src; $('balance').textContent = p.vip_info?.total_points != null ? (Number.isFinite(Number(p.vip_info.total_points)) ? new Intl.NumberFormat('en-US',{maximumFractionDigits:20}).format(Number(p.vip_info.total_points)) : '–') : '–'; window.dispatchEvent(new CustomEvent('yijian-account-loaded',{detail:p})); }
+  catch (e) { if(e.name !== 'AbortError')window.dispatchEvent(new Event('yijian-account-error')); if (e.name !== 'AbortError' && !e.login) toast(e.message); }
 }
 async function loadMemories() {
   const card = document.querySelector('.memory-card'), copy = card.querySelector('.memory-copy'), pill = card.querySelector('.pill');
@@ -187,7 +187,7 @@ function closeAgent() { if(document.documentElement.dataset.appDesign==='yijian'
 function syncAccount() {
   const current = sessionStorage.getItem(KEY) || '';
   if (current === state.session) return;
-  state.session = current; detailHistory.clear(); state.epoch++; state.controller.abort(); state.controller = new AbortController(); state.rows = []; state.products = []; state.loading = false;
+  state.session = current; window.dispatchEvent(new Event('yijian-account-reset')); detailHistory.clear(); state.epoch++; state.controller.abort(); state.controller = new AbortController(); state.rows = []; state.products = []; state.loading = false;
   $('home-feed').replaceChildren(); $('wardrobe-sections').replaceChildren(); $('detail-content').replaceChildren(); $('account-name').textContent = '未登录'; $('account-avatar').src = ASSETS + 'user_avatar_default_icon.png'; $('balance').textContent = '–'; document.querySelector('.memory-copy').textContent = ''; document.querySelector('.memory-card').onclick = () => openAgent('login');
   if (state.tab === 'home') loadFeed(); else if (state.tab === 'wardrobe') loadWardrobe(); else { loadProfile(); loadMemories(); }
 }
@@ -222,3 +222,7 @@ document.addEventListener('keydown', e => {
 state.session = sessionStorage.getItem(KEY) || ''; selectTab(location.hash.slice(1).split('/')[0] || 'home', false);
 
 if(document.documentElement.dataset.appDesign==='yijian'&&location.hash.endsWith('/agent'))openAgent('chat');
+
+if(document.documentElement.dataset.appDesign==='yijian'&&new URLSearchParams(location.search).get('start')==='upload'){
+ const url=new URL(location.href);url.searchParams.delete('start');history.replaceState(history.state,'',url);openAgent('upload');
+}

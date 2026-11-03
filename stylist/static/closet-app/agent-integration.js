@@ -1,3 +1,4 @@
+import {ensureOnboarded,loginURL,sessionToken} from './first-run.js';
 import {listRefresh} from './list-refresh.js';
 import {emptyArt} from './empty-art.js';
 // Mount existing business controllers directly. No iframe or second document.
@@ -70,6 +71,22 @@ export function mountAgent(){
     document.getElementById('history-dialog').addEventListener('close',()=>{if(historyPick&&historyUpdated)window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'chat'}));historyPick=false;historyUpdated=false;});
     document.getElementById('message').addEventListener('focus',()=>{if(host.dataset.surface==='overlay')window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'chat'}));});
 
+    const attachment=host.querySelector('#upload-open');
+    attachment.classList.add('y-composer-icon');attachment.setAttribute('aria-label','添加附件');attachment.title='添加附件';
+    attachment.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+    const voice=document.createElement('button');voice.type='button';voice.id='y-voice-input';voice.className='y-composer-icon';voice.setAttribute('aria-label','语音输入');voice.title='语音输入';
+    voice.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11v2m4-5a6 6 0 0 1 0 8m4-11a10 10 0 0 1 0 14m4-17a14 14 0 0 1 0 20"/></svg>';
+    // iOS integration: replace this Web-only notice with native voice input.
+    // Request microphone permission only on user action (AVAudioSession); use the existing
+    // AgentVoiceInteraction recording/transcription flow, including cancel, interruption and
+    // permission denial. Transcription must populate the draft, never auto-send or spend points.
+    // Web deliberately does not call getUserMedia, SpeechRecognition or upload audio.
+    voice.onclick=()=>{const notify=window.CompanionSettings?.notify||window.PreviewMessage.notify;notify('语音输入将在 iOS App 中提供，当前网页可以先打字或添加图片。');};
+    attachment.before(voice);
+    const {mountChatAttachments}=await import('./chat-attachments.js');
+    mountChatAttachments(host, attachment);
+
+
     // Keep the existing authenticated submit handler while giving login its own two steps.
     const mobile=document.getElementById('mobile'),code=document.getElementById('code'),submit=document.getElementById('login-submit');
     const phoneLabel=mobile.closest('label'),codeLabel=code.closest('label'),actions=submit.parentElement;
@@ -89,6 +106,8 @@ export function mountAgent(){
   return ready;
 }
 export async function openIntegratedAgent(action){
+  if(action==='login'||(!sessionToken()&&action!=='logout')){location.assign(loginURL());return;}
+  if(action!=='logout'&&!await ensureOnboarded())return;
   const host=await mountAgent();
   let authenticated=false;try{authenticated=!!JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token;}catch{}
   if(action==='person-upload'){
@@ -100,6 +119,7 @@ export async function openIntegratedAgent(action){
     if(overview.need_gender)await window.WardrobeJourney.twins();else window.WardrobeJourney.upload('person');return;
   }
   if(action==='chat'&&!authenticated){host.dataset.resumeChat='true';host.querySelector('#login-open')?.click();return;}
+  if(action==='upload'){window.WardrobeJourney.upload('garment');return;}
   const trigger=ids[action];if(trigger)(triggers.get(trigger)||host.querySelector('#'+trigger))?.click();else host.querySelector('#message')?.focus();
 }
 export function closeIntegratedAgent(){

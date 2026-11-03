@@ -1,4 +1,6 @@
+import {needsOnboarding,onboardingURL} from './first-run.js';
 import '../companion-characters.js';
+import {accountHeader} from './account-header.js';
 import {ownTwinCard} from './own-twin.js';
 // Presentation only: theme changes never save account or assistant settings.
 if (document.documentElement.dataset.appDesign === 'yijian') {
@@ -65,9 +67,9 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const wardrobeTitle=make('div','y-page-intro'); wardrobeTitle.append(make('span','y-eyebrow','YOUR OWN WARDROBE'),make('p','','让已有的衣服，穿出新的心情。')); document.querySelector('.wardrobe-scene h1').after(wardrobeTitle);
   document.querySelector('.profile-top h1').textContent='我的日常';
   document.querySelector('.profile-top [data-agent=checkin]')?.remove();
-  const roomIntro = make('div','y-room-intro');
-  roomIntro.append(make('span','y-eyebrow','A ROOM FOR YOUR LITTLE STORIES'),make('p','','你的喜欢，值得在这里留一页。'));
-  document.querySelector('.profile-top').after(roomIntro);
+  const account=accountHeader({make,icon,forward});
+  const accountJournal=make('section','y-account-journal');accountJournal.setAttribute('aria-label','我的日常与伙伴小笺');
+  document.querySelector('.profile-top').after(accountJournal);accountJournal.append(account);
   const letter = make('section','y-companion-letter'); letter.setAttribute('aria-label','陪伴小笺');
   const letterPhoto = make('img','y-letter-photo');
   const letterBody = make('div','y-letter-body');
@@ -78,7 +80,8 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   letterBody.append(letterBy,letterTitle,letterCopy,letterAction);
   letter.append(letterPhoto,letterBody);
   const seal=make('span','y-letter-seal','✧');seal.setAttribute('aria-hidden','true');letter.append(seal);
-  document.querySelector('.identity').after(letter);
+  accountJournal.append(letter);
+  accountJournal.after(document.querySelector('.points-card'));
 
   document.querySelector('.memory-title').textContent='我们的手记';
   document.querySelector('.memory-card').prepend(make('span','y-memory-kicker','LITTLE THINGS ABOUT YOU'));
@@ -139,6 +142,9 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     avatar.setAttribute('aria-label',`${name}，日常搭配伙伴`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent=`和${name}聊聊`;
   }
   function applySavedProfile(profile) {
+    let ownerToken='';try{ownerToken=JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token||'';}catch{}
+    window.dispatchEvent(new CustomEvent('yijian-user-profile',{detail:{profile,ownerToken}}));
+    account.setDisplayName(profile?.user_name);
     renderCompanion(profile);
     applyPalette(profile?.color_scheme === 'system' ? 'system' : profile?.assistant_persona?.startsWith('female_') ? 'female' : 'male');
   }
@@ -150,7 +156,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     try {
       const response=await fetch('/stylist-api/companion-profile',{headers:{Authorization:`Bearer ${session.access_token}`},cache:'no-store'});
       if (!response.ok) return;
-      const body=await response.json(); if (request===version && JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1') || 'null')?.access_token === session.access_token) applySavedProfile(body.profile);
+      const body=await response.json(); if (request===version && JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1') || 'null')?.access_token === session.access_token) { if(needsOnboarding(body.profile)){location.assign(onboardingURL);return;} applySavedProfile(body.profile); }
     } catch {}
   }
   window.addEventListener('companion-profile-change',e=>{version++;applySavedProfile(e.detail);});

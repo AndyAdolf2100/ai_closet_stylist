@@ -118,6 +118,23 @@ def router(settings):
                                    json={"upload_type": "feedback", "image_url": body.image_url})
         return {"data": data}
 
+    @routes.post("/avatar")
+    async def replace_avatar(body: FeedbackImage, response: Response,
+                             authorization: str | None = Header(default=None)):
+        # Same multipart account endpoint as iOS; never a wardrobe/twin write.
+        from .media import image_digest
+        image_digest(body.image_url)
+        mime = body.image_url.split(";", 1)[0].removeprefix("data:")
+        raw = base64.b64decode(body.image_url.split(",", 1)[1], validate=True)
+        data = await fixed_request("POST", "/users/user/modify/avatar_url", authorization,
+                                   data={"upload_type": "personal"},
+                                   files={"file": ("avatar.png" if mime == "image/png" else "avatar.jpg", raw, mime)})
+        url = (data.get("url") or data.get("image_url")) if isinstance(data, dict) else None
+        if not isinstance(url, str) or not url.startswith(("https://", "http://")):
+            raise StylistError("avatar_unconfirmed", "头像保存结果暂未确认，请重新查看账号资料。", 502)
+        response.headers["Cache-Control"] = "no-store"
+        return {"data": {"image_url": url}}
+
     @routes.get("/message-detail/{message_id}")
     async def message_detail(message_id: int, response: Response,
                              authorization: str | None = Header(default=None)):

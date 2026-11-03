@@ -233,3 +233,26 @@ def test_app_runtime_resources_are_included_in_package_data():
     resources = {path for path in (root / 'stylist/static/closet-app').rglob('*') if path.is_file() and 'private' not in path.relative_to(root / 'stylist/static/closet-app').parts}
     assert resources and resources <= packaged
     assert not any('private' in path.relative_to(root / 'stylist').parts for path in packaged)
+
+
+def test_avatar_uses_native_account_upload_not_wardrobe(monkeypatch):
+    import base64
+    seen = []
+    image = 'data:image/png;base64,' + base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'fixture-image').decode()
+
+    def handler(request):
+        seen.append(request)
+        assert request.url.path == '/users/user/modify/avatar_url'
+        assert request.headers['authorization'] == 'Bearer avatar-owner'
+        assert 'multipart/form-data' in request.headers['content-type']
+        assert b'name="upload_type"' in request.content and b'personal' in request.content
+        assert b'name="file"' in request.content
+        return httpx.Response(200, json={'code': 0, 'data': {'url': 'https://example.invalid/new.jpg'}})
+
+    with client(monkeypatch, handler) as web:
+        assert web.post('/stylist-api/app/avatar', json={'image_url': image}).status_code == 401
+        response = web.post('/stylist-api/app/avatar', headers={'Authorization': 'Bearer avatar-owner'}, json={'image_url': image})
+        assert response.json()['data']['image_url'] == 'https://example.invalid/new.jpg'
+        assert response.headers['cache-control'] == 'no-store'
+        assert web.post('/stylist-api/app/avatar', headers={'Authorization': 'Bearer avatar-owner'}, json={'image_url': 'https://example.invalid/x.jpg'}).status_code == 422
+    assert len(seen) == 1

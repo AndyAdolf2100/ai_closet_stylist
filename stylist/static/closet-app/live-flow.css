@@ -1,0 +1,5 @@
+body[data-live=true] .studio,body[data-live=true] main>aside{display:none!important}
+body[data-live=true] main{display:block;margin:0 auto;padding:0;max-width:480px;width:100%;min-height:100dvh}
+body[data-live=true] .device,body[data-live=true] .login-page{width:100%;max-width:480px;margin:0;min-height:100dvh;height:100dvh;max-height:none;border:0;border-radius:0;box-shadow:none;padding-top:env(safe-area-inset-top)}
+body[data-live=true] .vendors{display:none}
+body[data-live=true] .login-page{overflow-y:auto}

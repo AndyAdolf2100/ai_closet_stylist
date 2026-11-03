@@ -35,7 +35,7 @@
       if (!month) month = state.today.slice(0, 7);
       $('checkin-entry-label').textContent = state.signed ? '今日已签到' : state.eligible ? '领取今日积分' : '对话签到';
       $('checkin-entry-meta').textContent = state.signed ? '明天继续见面' : '+10 体验积分';
-      $('checkin-total').textContent = state.points;
+      $('checkin-total').textContent = Number(state.points).toLocaleString('en-US');
       $('checkin-days').textContent = state.days.length;
       $('checkin-agent').textContent = root.CompanionSettings?.agentName() || '衣衣';
       $('checkin-state').textContent = state.signed ? '今天的陪伴，已经记下了' : state.eligible ? '聊过天了，收下今天的小奖励吧' : '聊聊今天，为自己攒一点小欢喜';
