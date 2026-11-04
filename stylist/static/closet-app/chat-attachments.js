@@ -46,6 +46,6 @@ export function mountChatAttachments(host, trigger) {
   trigger.setAttribute('aria-label','添加附件');trigger.setAttribute('aria-controls',menu.id);trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-haspopup');
   trigger.onclick=()=>{if(busy)return;menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden));};
   form.querySelector('textarea').addEventListener('focus',close);
-  menu.addEventListener('keydown',event=>{if(event.key==='Escape'){close();trigger.focus();}});
+  menu.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();trigger.focus();}});
   window.ChatAttachments={get:()=>draft,clear,ack:image=>{if(image===draft)clear();},setBusy:value=>{busy=value;if(value){epoch++;close();}controls.forEach(button=>button.disabled=value);}};
 }

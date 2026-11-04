@@ -112,7 +112,7 @@ def test_pre_persona_request_digest_still_replays_after_upgrade(tmp_path):
     cid, claim, state, _ = store.reserve("owner", request)
     reply = Reply(conversation_id=cid, version=1, mode="consult", delivery="advice", message="结果", task=Task())
     store.finish("owner", request, claim, state, reply)
-    legacy_digest = hashlib.sha256(request.model_dump_json(exclude={"assistant_persona", "companion_profile", "upload_action_id", "regenerate_outfit", "regenerate_from_version", "new_clothes"}).encode()).hexdigest()
+    legacy_digest = hashlib.sha256(request.model_dump_json(exclude={"assistant_persona", "companion_profile", "upload_action_id", "regenerate_outfit", "regenerate_from_version", "new_clothes", "chat_image"}).encode()).hexdigest()
     with store.connection() as conn:
         conn.execute("UPDATE stylist_requests SET digest=?", (legacy_digest,))
     assert store.reserve("owner", request)[3] == reply

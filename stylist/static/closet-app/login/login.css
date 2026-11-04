@@ -11,3 +11,6 @@ body{overflow-x:clip}.studio>span{font-size:11px;color:var(--muted)}main{margin-
   .login-scroll>#login-form{animation-delay:.2s}
   .login-scroll>.vendors,.login-footer{animation-delay:.25s}
 }
+
+/* One shared back entry for phone and verification steps. */
+.verification-page #back-phone{display:none}

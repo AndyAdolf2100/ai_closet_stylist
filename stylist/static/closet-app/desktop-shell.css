@@ -1,0 +1,21 @@
+/* Desktop presentation only; keep the actual phone viewport unchanged. */
+@media (min-width: 900px) and (pointer: fine) {
+  html[data-app-design] { background:#e9edf1; }
+  html[data-app-design] body { display:block; margin:0; height:100dvh; overflow:hidden; background:transparent; }
+  html[data-app-design] #app { position:relative; width:440px; height:calc(100dvh - 40px); max-height:920px; min-height:0; margin:20px auto; overflow:hidden; transform:translateZ(0); isolation:isolate; border:1px solid var(--y-line,#dce3e8); border-radius:24px; background:var(--y-bg,#fff); box-shadow:0 12px 48px #24374714; }
+  html[data-app-design] #pages { height:100%; overflow:auto; overscroll-behavior:contain; }
+  html[data-app-design] .page { min-height:100%; width:100%; }
+  html[data-app-design] .feed { min-height:0; }
+  html[data-app-design] .empty { min-height:520px; }
+  html[data-app-design] .floating-bar { left:20px; right:20px; max-width:none; }
+  html[data-app-design] .detail-page { padding-inline:0; }
+  html[data-app-design] #app #agent-page { height:100%; }
+  html[data-app-design] .product-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  html[data-app-design] .create-scroll { max-height:calc(100dvh - 170px); }
+  html[data-app-design=yijian] .y-toolbar { padding-inline:22px; }
+  html[data-app-design=yijian] .y-welcome { margin:22px 18px 18px; padding:23px 20px 0; grid-template-columns:minmax(0,1fr) 118px; }
+  html[data-app-design=yijian] .y-welcome h1 { font-size:28px; }
+  html[data-app-design=yijian] .y-portrait,html[data-app-design=yijian] .y-companion-photo { width:118px; }
+  html[data-app-design=yijian] .y-companion-photo { height:154px; }
+  html[data-app-design] #app dialog { max-width:412px; max-height:calc(100dvh - 72px); }
+}

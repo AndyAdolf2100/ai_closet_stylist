@@ -11,7 +11,12 @@ def test_health_does_not_claim_upstream_ready_and_assets_load(tmp_path):
     with TestClient(create_app(Settings(database=str(tmp_path / "state.db")))) as client:
         health = client.get("/health").json()
         assert health["integration_status"] == "unchecked_until_authenticated_probe"
-        assert client.get("/mobile/").status_code == 200
+        for entry in ["/", "/mobile/"]:
+            retired = client.get(entry, follow_redirects=False)
+            assert retired.status_code == 307
+            assert retired.headers["location"] == "/app/?design=yijian"
+        assert client.get("/app/?design=yijian").status_code == 200
+        assert client.get("/static/index.html").status_code == 200
         assert client.get("/static/app.js").status_code == 200
         assert client.get("/stylist-api/conversations").status_code == 401
         assert client.post("/stylist-api/integrations/check").status_code == 401
@@ -98,3 +103,17 @@ def test_alert_endpoint_reports_unavailable_feed_instead_of_fake_no_warning(tmp_
         assert response.status_code == 200
         assert response.json()["status"] == "unavailable"
         assert "不代表没有预警" in response.json()["message"]
+
+
+def test_app_hosts_login_and_onboarding_with_legacy_links(tmp_path):
+    with TestClient(create_app(Settings(database=str(tmp_path / "app-flow.db")))) as client:
+        for screen in ["login", "onboarding"]:
+            target = f"/app/?design=yijian&screen={screen}"
+            response = client.get(target)
+            assert response.status_code == 200
+            assert f'<base href="/static/closet-app/{screen}/">' in response.text
+            assert response.headers["cache-control"] == "no-store"
+            legacy = client.get(f"/static/closet-app/{screen}/index.html?live=1", follow_redirects=False)
+            assert legacy.headers["location"] == target
+            assert client.get(f"/static/closet-app/{screen}/index.html").status_code == 200
+        assert client.get('/app/?design=yijian&screen=unknown').status_code == 404

@@ -24,7 +24,8 @@ html[data-app-design=yijian] #agent-page>header button{font-size:12px;color:var(
 #yijian-agent-root #composer{margin:0;padding:12px 18px max(12px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);position:relative;bottom:auto;flex-shrink:0}
 #yijian-agent-root textarea,#yijian-agent-root input[type=text],#yijian-agent-root input[type=tel],#yijian-agent-root input[type=search]{font-size:16px}
 #yijian-agent-root #message{font-size:16px;background:var(--paper)}
-#yijian-agent-root .bubble{border-radius:4px 19px 19px 19px;background:var(--paper);border-color:var(--line);font-size:14px;line-height:1.9}
+/* Replies sit directly on the theme canvas; only user messages and functional cards have a surface. */
+#yijian-agent-root .bubble{border-radius:4px 19px 19px 19px;background:transparent;border-color:var(--line);font-size:14px;line-height:1.9}
 #yijian-agent-root .bubble.user{background:var(--soft);border-radius:19px 4px 19px 19px}
 #yijian-agent-root .primary{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
 #yijian-agent-root .fine-print{font-size:9px;color:var(--muted)}

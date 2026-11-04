@@ -187,7 +187,7 @@ async def test_ordinary_request_digest_remains_compatible_with_the_previous_sche
     original = ChatRequest(message='普通对话', request_id='legacy-schema-digest')
     store.reserve(await upstream.identity(), original)
     expected = hashlib.sha256(original.model_dump_json(exclude={
-        'assistant_persona', 'companion_profile', 'upload_action_id', 'regenerate_outfit', 'regenerate_from_version', 'new_clothes'}).encode()).hexdigest()
+        'assistant_persona', 'companion_profile', 'upload_action_id', 'regenerate_outfit', 'regenerate_from_version', 'new_clothes', 'chat_image'}).encode()).hexdigest()
     with store.connection() as conn:
         digest = conn.execute('SELECT digest FROM stylist_requests WHERE request_id=?', (original.request_id,)).fetchone()[0]
     assert digest == expected

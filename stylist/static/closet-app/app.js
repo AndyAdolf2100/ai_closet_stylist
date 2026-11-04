@@ -178,7 +178,7 @@ async function openAgent(action = 'chat') {
   }
   agentOpener = document.activeElement; setCreate(false); closeDetail(); $('agent-page').hidden = false; backgroundInert(true); document.querySelector('.floating-bar').inert = true; if (history.state?.view !== 'agent') history.pushState({tab: state.tab, view: 'agent'}, '', `#${state.tab}/agent`);
   const frame = $('agent-frame');
-  if (!agentReady) agentReady = new Promise(resolve => { frame.onload = resolve; frame.src = '/'; });
+  if (!agentReady) agentReady = new Promise(resolve => { frame.onload = resolve; frame.src = '/static/index.html'; });
   await agentReady;
   if ($('agent-page').hidden) return;
   const id = agentActions[action]; if (id) frame.contentDocument.getElementById(id)?.click(); else frame.contentDocument.getElementById('message')?.focus();

@@ -11,7 +11,14 @@ from fastapi import Path as ApiPath
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 
 from .auth import LoginRequest, login
@@ -368,15 +375,35 @@ def create_app(settings=None):
     app.include_router(closet_router(settings))
 
     @app.get("/app/")
-    async def closet_app(design: str | None = None):
-        if design not in {None, "ios", "yijian"}:
+    async def closet_app(design: str | None = None, screen: str | None = None):
+        if design not in {None, "ios", "yijian"} or screen not in {None, "login", "onboarding"}:
             return Response("页面不存在", status_code=404, media_type="text/plain")
-        return FileResponse(Path(__file__).with_name("static") / "closet-app" / "index.html")
+        base = Path(__file__).with_name("static") / "closet-app"
+        if screen:
+            # Reuse the maintained forms under the same App route, without an iframe.
+            html = (base / screen / "index.html").read_text()
+            html = html.replace('<html lang="zh-CN">',
+                                f'<html lang="zh-CN"><base href="/static/closet-app/{screen}/">', 1)
+            return HTMLResponse(html, headers={"Cache-Control": "no-store"})
+        return FileResponse(base / "index.html")
+
+    @app.get("/static/closet-app/login/index.html")
+    async def legacy_login(live: str | None = None):
+        if live == "1":
+            return RedirectResponse("/app/?design=yijian&screen=login", status_code=307)
+        return FileResponse(Path(__file__).with_name("static") / "closet-app/login/index.html")
+
+    @app.get("/static/closet-app/onboarding/index.html")
+    async def legacy_onboarding(live: str | None = None):
+        if live == "1":
+            return RedirectResponse("/app/?design=yijian&screen=onboarding", status_code=307)
+        return FileResponse(Path(__file__).with_name("static") / "closet-app/onboarding/index.html")
 
     @app.get("/")
     @app.get("/mobile/")
     async def index():
-        return FileResponse(Path(__file__).with_name("static") / "index.html")
+        # Legacy PC/mobile entry is retired; retain static source for compatibility.
+        return RedirectResponse("/app/?design=yijian", status_code=307)
 
     app.mount("/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static")
 
