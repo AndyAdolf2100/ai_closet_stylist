@@ -1259,3 +1259,5 @@
 | 2026-11-04 | PRD-09 用量上报仅model标识版 | 用户要求直接传model name，不加volcengine前缀，重新制作版本 | 新事件移除provider／actual_model及STYLIST_USAGE_PROVIDER，model原样使用实际请求模型名或接入点ID；保留旧事件原payload避免同ID内容变化。文档／Node同步，41项定向及10项Node端到端通过，amd64镜像／402运行文件哈希和6项精简包校验通过；V2更新包保留现有Nginx。固定回调地址仍需Server上线及服务密钥。 |
 
 | 2026-11-04 | PRD-09 用户token用量回调 | 用户要求改用登录用户token确定归属、不传user_id，并重出文档与包 | 已接入内存凭证、账号隔离及401/403后等待重新认证；历史JSON发送时去掉user_id并保留event_id，本地owner_id保留。token不落库；重启后需用户再次发对话并通过身份校验，无人操作则等待。文档已更新；定向64项及追加2项、Node本地HTTP10例通过，用量专项最终24项。amd64只读检查、402文件哈希及6项精简包校验通过，保留现有Nginx；未远端联调或真实扣费。 |
+
+| 2026-11-04 | PRD-09 用量回调上线注意事项 | 用户要求记录回调地址与环境配置 | 已在docs/SIMPLE_DEPLOYMENT.md补充STYLIST_USAGE_CALLBACK_URL启用条件、STYLIST_USAGE_ENVIRONMENT默认test及生产规则、配置路径与重建生效命令，并从测试部署文档链接；记录历史环境不变及重启等待用户认证补报。文档静态核对通过，未修改服务器配置或重新部署。 |

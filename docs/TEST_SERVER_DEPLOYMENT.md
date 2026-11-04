@@ -2,6 +2,8 @@
 
 更新日期：2026-10-30。当前采用前端与Agent同容器、远程PostgreSQL独立库和私密amd64离线包。打包、配置导入及安装命令统一见 [发布操作入口](SIMPLE_DEPLOYMENT.md)，本文件维护服务器环境、站点边界与验收记录。
 
+上线前核对Stylist用量上报的回调地址和环境标记，见 [上线注意事项](SIMPLE_DEPLOYMENT.md#上线注意事项模型用量上报2026-11-04)。测试机使用`STYLIST_USAGE_ENVIRONMENT=test`，Server接口就绪后再启用回调。
+
 ## 0. 当前已部署版本
 
 | 项目 | 已确认结果 |

@@ -6,6 +6,33 @@
 
 2026-10-31 当前工作区已通过两轮 Python 全量回归（每轮538通过／85跳过）、前端及Ruff回归、本地PostgreSQL临时库回归（39通过），以及新amd64镜像启动和旧结构升级冒烟。发布文件名为 `aicloset-assistant-private-amd64-20261031.tar.gz`，镜像为 `aicloset-stylist:release-20261031-4d42334-amd64`；本轮仅打包，未在服务器部署。今天没有SQL表结构变更，MBTI／自动记忆复用JSON字段。从旧v3升级时，会自动补建10月30日新增的 `stylist_outfit_images` 表，不需手工改表。
 
+## 上线注意事项：模型用量上报（2026-11-04）
+
+以下两项是 **Stylist Agent 配置**，填写在服务器现有 `/opt/aicloset-assistant/current/config/deploy.env`（沿用安装目录的共享配置），不是Server配置。当前用户token版接口详见 [后端接入契约](MODEL_USAGE_SERVER_CONTRACT.md)。
+
+| 配置项 | 上线时核对 |
+| --- | --- |
+| `STYLIST_USAGE_CALLBACK_URL` | 用量接收接口地址。默认空，仅本地留账、不发送；Server接口上线、用户token鉴权及event_id幂等回执就绪后启用。当前约定开发环境地址为 `https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage`；正式上线前核对生产Server地址，不直接沿用开发域名。 |
+| `STYLIST_USAGE_ENVIRONMENT` | 上报JSON的environment，默认`test`。测试服务器设`test`，正式生产设`production`，本地开发可设`development`。Server据此区分测试和正式数据；字段本身不会自动控制扣费，需Server实现计费规则。 |
+
+测试服务器在接口就绪后使用：
+
+```dotenv
+STYLIST_USAGE_CALLBACK_URL=https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
+STYLIST_USAGE_ENVIRONMENT=test
+```
+
+正式上线前设置正确环境；已生成记录保留产生时的environment，后续修改配置不会自动把历史test记录变为production。无需配置固定用户token或`STYLIST_USAGE_CALLBACK_KEY`，Authorization自动使用已通过身份校验的用户token。
+
+修改后重建容器读取环境配置，普通restart不会重新读取env_file：
+
+```bash
+cd /opt/aicloset-assistant/current &&
+sudo docker compose up -d --no-build --pull never --force-recreate stylist
+```
+
+此命令不修改Nginx。重建后内存token清空，历史未成功上报记录等待对应用户下次发对话并通过身份校验后补报；沿用原event_id，Server去重，不重跑模型。本文仅记录上线操作要求，不表示真实Server接口已联调或已执行部署。
+
 ## 1. 私密配置
 
 当前已准备的 `config/deploy.env` 包含模型和远程 PostgreSQL 连接，`config/login-public.pem` 为登录公钥。配置文件被 Git 忽略，`deploy.env` 权限为0600；不要输出完整内容。
