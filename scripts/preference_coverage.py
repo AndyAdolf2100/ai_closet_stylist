@@ -72,7 +72,7 @@ for i, (priority, focus) in enumerate([
     ('合身自然', '给肩线、腰头、袖长和活动余量的试穿核对建议；没有尺码和身体数据不保证合身，不推断用户身材。'),
     ('适合场合', '日常场景给可执行的正式程度与穿法建议；具体场合不明可必要澄清，不编造公司着装规范或保证适合所有场合。'),
 ]):
-    add(f'preference_priority_{i + 1:02}', [('answer', OUTFIT, {'dressing_priorities': [priority], 'style_preferences': ['休闲']},
+    add(f'preference_priority_{i + 1:02}', [('answer', OUTFIT, {'user_gender': '男', 'dressing_priorities': [priority], 'style_preferences': ['休闲']},
         focus, {'outfit': True})])
 
 add('preference_combined_reset', [
@@ -86,3 +86,17 @@ add('preference_combined_reset', [
 ])
 add('preference_no_matching_style', [('answer', OUTFIT, {'style_preferences': ['复古']},
     '夹具没有复古标签的衣物，可给现有衣物的近似灵感但如实说明限制，不编造复古单品。', {'outfit': True})])
+
+
+# Female-only preference labels are explicit optional choices, not body inferences.
+for name, label, focus in [
+    ('relaxed', '轻松舒适', '讲松紧与活动余量，不保证个人体感。'),
+    ('silhouette', '显瘦遮肉', '仅按用户主动选择讲视觉线条与覆盖度，不推断身材、体重，不承诺减重。'),
+    ('professional', '职业干练', '给利落层次与场合建议，不编造公司规范。'),
+    ('sweet', '温柔甜美', '可用柔和配色与细节，不幼态化用户或推断性格。'),
+    ('sunny', '活力阳光', '给轻快配色与活动穿法，不把视觉风格当健康或性格判断。'),
+]:
+    add(f'preference_female_{name}', [
+        ('self', '只讲我今天的日常穿法，不查衣橱和天气。', {'user_gender': '女', 'dressing_priorities': [label]}, focus, {'advice': True}),
+        ('male', '现在讲男装穿法，不套用我的女性专属偏好，不查衣橱和天气。', {'user_gender': '女', 'dressing_priorities': [label]}, '当轮明确男装优先，女性专属标签不生效。', {'advice': True}),
+    ])

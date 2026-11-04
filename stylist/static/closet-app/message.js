@@ -15,7 +15,7 @@
     const host=[...document.querySelectorAll('dialog[open]')].at(-1)||document.body;
     host.append(panel);panel.querySelector('img')?.remove();
     if(window.CompanionCharacters?.all.some(c=>c.id===options.role)){const avatar=document.createElement('img');avatar.alt='';avatar.src='/static/assets/characters/companion-scenes-v1/'+options.role+'-avatar.png';panel.prepend(avatar);}
-    panel.querySelector('strong').textContent=options.name||'衣间';panel.querySelector('p').textContent=body;
+    panel.querySelector('strong').textContent=options.name||'爱搭衣橱';panel.querySelector('p').textContent=body;
     panel.hidden=false;schedule();
   }};
 })();

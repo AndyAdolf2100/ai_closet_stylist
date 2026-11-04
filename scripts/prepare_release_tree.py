@@ -28,12 +28,12 @@ def prepare(destination, demos):
         page = destination / relative
         html = page.read_text().replace('screenshots/private/', 'screenshots/demo/')
         html = html.replace('iOS 2.0.0 · 原生截图', 'iOS风格HTML参考 · 非原生截图')
-        html = html.replace('当前衣间 · 登录后截图', '当前衣间 · 示例账号截图')
+        html = html.replace('当前爱搭衣橱 · 登录后截图', '当前爱搭衣橱 · 示例账号截图')
         html = html.replace('登录后首页搭配列表', '示例首页列表空态')
-        html = html.replace('展开查看衣间首页实际搭配内容', '展开查看衣间首页示例内容')
+        html = html.replace('展开查看爱搭衣橱首页实际搭配内容', '展开查看爱搭衣橱首页示例内容')
         html = html.replace('iOS 2.0.0保留原生对照截图。', '部署包中iOS栏改用HTML参考截图，不代表原生截图；功能对比仍以dev_2.0.0源码为准。')
         marker = '<section class="ev" id="app-evolution">'
-        html = html.replace(marker, marker + '<p class="ev-note">部署演示版：衣间使用独立示例账号截图；iOS栏为HTML样式参考，不是2.0.0原生截图。原生账号截图仅在本机核对，不随包分发。</p>')
+        html = html.replace(marker, marker + '<p class="ev-note">部署演示版：爱搭衣橱使用独立示例账号截图；iOS栏为HTML样式参考，不是2.0.0原生截图。原生账号截图仅在本机核对，不随包分发。</p>')
         html = html.replace('原生截图来自dev_2.0.0独立构建与iPhone 17模拟器；', '本机原生核对截图来自dev_2.0.0独立构建与iPhone 17模拟器，未随包分发；')
         html = html.replace('其他既有已登录截图保留本机证据', '本包所有演示截图均为合成数据；真实账号截图仅保留本机证据')
         page.write_text(html)

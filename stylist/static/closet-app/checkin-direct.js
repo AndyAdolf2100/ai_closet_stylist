@@ -2,7 +2,7 @@
 (()=>{
  const $=id=>document.getElementById(id), read=()=>{try{return JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1'));}catch{return null;}};
  window.DailyCheckin={mount({onLogin}){
-  const dialog=$('checkin-dialog');dialog.innerHTML='<div class="checkin-top"><span class="eyebrow">A LITTLE MOMENT FOR YOU</span><button id="checkin-close" class="subtle" aria-label="关闭签到">×</button></div><div class="checkin-hero"><span class="checkin-chapter">日常 · 小笺</span><h2 id="checkin-title">把今天，轻轻记下来。</h2><p id="checkin-state">给今天的你，一份小小的心意。</p></div><div class="checkin-companion-note"><img id="checkin-companion-avatar" alt="" hidden><div><strong id="checkin-companion-name">衣间的小笺</strong><p id="checkin-companion-copy">在这里停一会儿，看看今天的签到小礼。</p></div><span aria-hidden="true">✧</span></div><div class="checkin-stats"><div><strong id="checkin-daily-points">—</strong><small id="checkin-points-label">今日签到奖励</small></div><div><strong id="checkin-total-days">—</strong><small>累计留下的签到 · 天</small></div></div><div class="checkin-week-heading"><h3 class="checkin-week-title">这一周的小记号</h3><span>周一至周日</span></div><div id="checkin-calendar" class="checkin-calendar"></div><button id="checkin-action" class="primary">正在翻开小笺…</button><button id="checkin-reload" class="subtle">再看看签到状态</button><p id="checkin-rules" class="checkin-note"></p>';
+  const dialog=$('checkin-dialog');dialog.innerHTML='<div class="checkin-top"><span class="eyebrow">A LITTLE MOMENT FOR YOU</span><button id="checkin-close" class="subtle" aria-label="关闭签到">×</button></div><div class="checkin-hero"><span class="checkin-chapter">日常 · 小笺</span><h2 id="checkin-title">把今天，轻轻记下来。</h2><p id="checkin-state">给今天的你，一份小小的心意。</p></div><div class="checkin-companion-note"><img id="checkin-companion-avatar" alt="" hidden><div><strong id="checkin-companion-name">爱搭衣橱的小笺</strong><p id="checkin-companion-copy">在这里停一会儿，看看今天的签到小礼。</p></div><span aria-hidden="true">✧</span></div><div class="checkin-stats"><div><strong id="checkin-daily-points">—</strong><small id="checkin-points-label">今日签到奖励</small></div><div><strong id="checkin-total-days">—</strong><small>累计留下的签到 · 天</small></div></div><div class="checkin-week-heading"><h3 class="checkin-week-title">这一周的小记号</h3><span>周一至周日</span></div><div id="checkin-calendar" class="checkin-calendar"></div><button id="checkin-action" class="primary">正在翻开小笺…</button><button id="checkin-reload" class="subtle">再看看签到状态</button><p id="checkin-rules" class="checkin-note"></p>';
   let owner=null,token='',epoch=0,sequence=0,state=null,busy=false,claiming=false,unknown=false;
   const checkinLines={
     female_sweet_v1:'今天的小心意收好啦。也给自己留一点做喜欢的事的时间吧。',
@@ -12,13 +12,13 @@
     male_calm_v1:'接下来的安排，可以一件件慢慢理清。今天也记得照顾好自己。',
     male_confident_v1:'今天想穿什么，就大胆试试。搭配上的顾虑，我们一起想办法。'
   };
-  const notify=text=>{const profile=window.CompanionSettings?.getProfile();window.PreviewMessage.notify(text,{role:profile?.assistant_persona,name:window.CompanionSettings?.agentName?.()||'衣间'});};
+  const notify=text=>{const profile=window.CompanionSettings?.getProfile();window.PreviewMessage.notify(text,{role:profile?.assistant_persona,name:window.CompanionSettings?.agentName?.()||'爱搭衣橱'});};
   const signedGreeting=()=>checkinLines[window.CompanionSettings?.getProfile()?.assistant_persona]||'愿今天有一件让你喜欢的小事。';
   const valid=(e,t)=>epoch===e&&read()?.access_token===t;
   async function api(method,e,t){const r=await fetch('/stylist-api/app/checkin',{method,headers:{Authorization:'Bearer '+t},cache:'no-store'});const body=await r.json();if(!valid(e,t))throw new DOMException('账号已切换','AbortError');if(!r.ok)throw Error(body.message||'签到暂时没能完成，请稍后重试。');return body.data;}
   function render(){
     const signed=state?.signed===true,amount=state?.daily_points;
-    const profile=window.CompanionSettings?.getProfile(),name=window.CompanionSettings?.agentName()||'衣间';
+    const profile=window.CompanionSettings?.getProfile(),name=window.CompanionSettings?.agentName()||'爱搭衣橱';
     $('checkin-companion-name').textContent=name+'的小笺';
     const avatar=$('checkin-companion-avatar');avatar.hidden=!profile?.assistant_persona;if(profile?.assistant_persona)avatar.src='/static/assets/characters/companion-scenes-v1/'+profile.assistant_persona+'-avatar.png';
     $('checkin-companion-copy').textContent=signed?'今天的签到收好了，愿接下来的日常也有小小欢喜。':'很高兴今天在这里见到你。这份签到心意，记得收下。';

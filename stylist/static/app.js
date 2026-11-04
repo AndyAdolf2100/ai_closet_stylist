@@ -216,9 +216,10 @@ function forecastCard(data, compact = false) {
   if (compact) card.classList.add('compact');
   return card;
 }
-function updateCityLabel() { $('location-open').textContent = selectedCity ? '⌖ ' + selectedCity.city_name : '⌖ 选择城市 / 定位'; }
+function updateCityLabel(confirmed=false,forecast=null) { $('location-open').textContent = selectedCity ? '⌖ ' + selectedCity.city_name : '⌖ 选择城市 / 定位'; window.dispatchEvent(new CustomEvent('stylist-city-change',{detail:{confirmed,forecast}})); }
 // Official warning UI is paused until a verified provider and message delivery are ready (AGENTS.md TODO-01).
 async function loadForecast(location = selectedCity) {
+  const explicitlySelected=arguments.length>0;
   if (!location || !requireLogin()) return false;
   const sequence = ++forecastSequence;
   forecastBusy = true;
@@ -226,7 +227,7 @@ async function loadForecast(location = selectedCity) {
   try {
     const data = await api('/stylist-api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
     if (sequence !== forecastSequence) return false;
-    selectedCity = { city_name: data.city_name, province_name: data.province_name }; sessionStorage.setItem(CITY_KEY, JSON.stringify(selectedCity)); updateCityLabel();
+    selectedCity = { city_name: data.city_name, province_name: data.province_name }; sessionStorage.setItem(CITY_KEY, JSON.stringify(selectedCity)); updateCityLabel(explicitlySelected,data);
     let panel = $('weather-panel'); if (!panel) { panel = el('section'); panel.id = 'weather-panel'; $('feed').prepend(panel); }
     panel.hidden = false; panel.replaceChildren();
     const tabs = el('div', 'weather-tabs');
@@ -473,7 +474,7 @@ async function refreshHistory() {
   try {
     const rows = await api('/stylist-api/conversations');
     if (session?.user.id !== owner || sequence !== historySequence) return;
-    $('history-status').textContent = rows.length ? '' : '还没有历史对话，开始聊聊吧。';
+    $('history-status').textContent = rows.length ? '' : '还没有聊过的日常，开始聊聊吧。';
     for (const container of [$('history'), $('mobile-history-list')]) {
       container.replaceChildren();
       for (const row of rows) {
@@ -643,7 +644,7 @@ $('mobile-new').addEventListener('click',()=>window.ChatAttachments?.clear());
 $('new-chat').onclick = resetChat; $('mobile-new').onclick = resetChat;
 $('mobile-history').onclick = async () => {
   if (busy || !requireLogin()) return;
-  $('history-dialog').showModal(); $('history-status').textContent = '正在加载历史对话…';
+  $('history-dialog').showModal(); $('history-status').textContent = '正在加载聊过的日常…';
   await refreshHistory();
 };
 $('history-close').onclick = () => $('history-dialog').close();
@@ -736,7 +737,7 @@ $('location-form').onsubmit = async event => {
   $('locate-me').disabled = true; updateLocationSave(); $('location-save').textContent = '正在查询天气…';
   try {
     if (continuation) {
-      selectedCity = city; sessionStorage.setItem(CITY_KEY, JSON.stringify(city)); updateCityLabel();
+      selectedCity = city; sessionStorage.setItem(CITY_KEY, JSON.stringify(city)); updateCityLabel(true);
       $('location-dialog').close();
       await sendMessage(false, null, continuation);
     } else if (await loadForecast(city)) { $('location-dialog').close(); $('notice').textContent = ''; $('weather-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }

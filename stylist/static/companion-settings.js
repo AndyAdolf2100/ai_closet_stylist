@@ -230,7 +230,7 @@
     if (editPage) {
       $('companion-title').textContent = '称呼与陪伴';
       dialog.querySelector('.companion-chapter').textContent = 'ABOUT YOU & YOUR COMPANION';
-      dialog.querySelector('.companion-recall').textContent = '你的称呼，伙伴的模样，都由你来决定。';
+      dialog.querySelector('.companion-recall').textContent = '你的称呼，助理的模样，都由你来决定。';
       $('companion-back').hidden = true;
       $('companion-next').textContent = '保存修改';
     }
@@ -299,7 +299,7 @@
   $('companion-form').onsubmit = async event => {
     event.preventDefault(); if (saving) return; rememberStep();
     if (editPage) {
-      if (!draft.user_name || !draft.user_gender || !draft.agent_name || !draft.assistant_persona) { showNotification(profile, '请填写你的称呼、性别和伙伴名字，并选好陪伴的模样。'); return; }
+      if (!draft.user_name || !draft.user_gender || !draft.agent_name || !draft.assistant_persona) { showNotification(profile, '请填写你的称呼、性别和助理名字，并选好陪伴的模样。'); return; }
       if ([draft.user_name, draft.agent_name].some(value => /[\u0000-\u001f\u007f<>]/u.test(value) || [...value].length > 24)) { showNotification(profile, '称呼请使用24字以内的普通文字。'); return; }
     }
     const value = step === 0 ? draft.user_name : step === 2 ? draft.agent_name : '';

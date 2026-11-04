@@ -1,3 +1,4 @@
+import {mountHomeWeatherNote} from './home-weather-note.js';
 import {needsOnboarding,onboardingURL} from './first-run.js';
 import '../companion-characters.js';
 import {accountHeader} from './account-header.js';
@@ -5,7 +6,7 @@ import {ownTwinCard} from './own-twin.js';
 // Presentation only: theme changes never save account or assistant settings.
 if (document.documentElement.dataset.appDesign === 'yijian') {
   const root = document.documentElement;
-  document.title = '衣间 · 日常穿搭与陪伴';
+  document.title = '爱搭衣橱 · 日常穿搭与陪伴';
   const $ = id => document.getElementById(id);
   const make = (tag, cls, text) => { const el = document.createElement(tag); el.className = cls; if (text) el.textContent = text; return el; };
   const paths = {
@@ -31,18 +32,20 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   }
   function forward(action) { document.querySelector(`[data-agent="${action}"]`)?.click(); }
   const toolbar = make('header','y-toolbar');
-  const brand = make('a','y-brand','衣间'); brand.href = '/app/?design=yijian'; brand.append(make('small','','A LITTLE CARE, EVERY DAY'));
+  const brand = make('a','y-brand','爱搭衣橱'); brand.href = '/app/?design=yijian'; brand.append(make('small','','A LITTLE CARE, EVERY DAY'));
   function applyPalette(palette) {
     root.dataset.appPalette = palette;
     document.querySelector('meta[name="theme-color"]').content = palette === 'female' ? '#fbf7f2' : palette === 'system' ? '#ffffff' : '#f4f6f8';
   }
-  toolbar.append(brand); $('app').prepend(toolbar); applyPalette(root.dataset.appPalette);
-  const hero = make('section','y-welcome'); hero.setAttribute('aria-label','衣间日常');
+  const homeCity=make('button','y-home-city-button');homeCity.type='button';homeCity.setAttribute('aria-haspopup','dialog');homeCity.setAttribute('aria-controls','location-dialog');homeCity.setAttribute('aria-label','定位城市，点击定位，可手动选择城市');homeCity.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>定位城市</span>';homeCity.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'city'}));
+  const syncHomeCity=()=>{if(document.querySelector('#location-open'))return;let city;try{city=JSON.parse(sessionStorage.getItem('ai-closet-stylist-city-v1')||'null');}catch{}const name=city?.city_name||'定位城市';homeCity.querySelector('span').textContent=name;homeCity.setAttribute('aria-label',name+'，点击定位，可手动选择城市');};syncHomeCity();window.addEventListener('yijian-session-change',syncHomeCity);window.addEventListener('stylist-city-change',syncHomeCity);
+  toolbar.append(brand,homeCity); $('app').prepend(toolbar); applyPalette(root.dataset.appPalette);
+  const hero = make('section','y-welcome'); hero.setAttribute('aria-label','爱搭衣橱日常');
   const copy=make('div','y-welcome-copy'); copy.append(make('span','y-eyebrow','A LITTLE MOMENT WITH YOU'),make('h1','','今天，穿得像自己。'),make('p','','今天的心情，想用哪件衣服表达？'));
   const heading = copy.querySelector('h1'); heading.replaceChildren(make('span','','今天，'),make('span','','穿得像自己。'));
   const talk=make('button','y-talk','和衣衣聊聊'); talk.append(icon('arrow')); talk.onclick=()=>forward('chat'); copy.append(talk);
   const portrait=make('div','y-portrait'); const avatar=make('div','y-companion-photo'); avatar.setAttribute('role','img'); const scene=make('span','y-companion-scene'); avatar.append(scene); const caption=make('span','y-portrait-caption','衣衣 · 陪你慢慢挑'); portrait.append(avatar,caption);
-  const invitation=make('div','y-daily-invitation');invitation.append(make('span','y-daily-mark','✧'),make('p','','不急着决定，先说说今天想怎么过。'));const daily=make('button','y-home-checkin','每日签到');daily.type='button';daily.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'checkin'}));invitation.append(daily);hero.append(copy,portrait,invitation); $('home').prepend(hero);
+  const invitation=make('div','y-daily-invitation');invitation.append(make('span','y-daily-mark','✧'),make('p','','不急着决定，先说说今天想怎么过。'));const daily=make('button','y-home-checkin','每日签到');daily.type='button';daily.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'checkin'}));invitation.append(daily);hero.append(copy,portrait,invitation); $('home').prepend(hero);const homeWeatherNote=mountHomeWeatherNote(invitation.querySelector('p'));
   // Read-only homepage status; claiming still requires the check-in dialog.
   const checkinSession=()=>sessionStorage.getItem('ai-closet-stylist-session-v1') || '';
   const checkinDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -68,7 +71,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   document.querySelector('.profile-top h1').textContent='我的日常';
   document.querySelector('.profile-top [data-agent=checkin]')?.remove();
   const account=accountHeader({make,icon,forward});
-  const accountJournal=make('section','y-account-journal');accountJournal.setAttribute('aria-label','我的日常与伙伴小笺');
+  const accountJournal=make('section','y-account-journal');accountJournal.setAttribute('aria-label','我的日常与助理小笺');
   document.querySelector('.profile-top').after(accountJournal);accountJournal.append(account);
   const letter = make('section','y-companion-letter'); letter.setAttribute('aria-label','陪伴小笺');
   const letterPhoto = make('img','y-letter-photo');
@@ -106,7 +109,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const identity=document.querySelector('.identity'),identityCopy=identity.querySelector('div');
   document.querySelector('.memory-card').after(identity);
   const portraitButton=identity.querySelector('.avatar'),selfPortrait=make('div','y-identity-photo');selfPortrait.append(icon('profile'),$('account-avatar'));portraitButton.replaceWith(selfPortrait);
-  identityCopy.classList.add('y-identity-copy');identityCopy.prepend(make('span','y-identity-eyebrow','衣间 · 我的日常'));
+  identityCopy.classList.add('y-identity-copy');identityCopy.prepend(make('span','y-identity-eyebrow','爱搭衣橱 · 我的日常'));
   const shapeLink=identityCopy.querySelector('.identity-edit');shapeLink.textContent='挑选试穿模样';shapeLink.setAttribute('aria-label','挑选我的试穿形象');shapeLink.append(icon('arrow'));
   const identityDescription=make('p','y-identity-description','喜欢的衣服，也想看看穿上的样子。');shapeLink.before(identityDescription);
   ownTwinCard({card:identity,photo:selfPortrait,copy:identityCopy,action:shapeLink,make});
@@ -119,7 +122,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   fetch('/static/closet-app/welcome-copy.json').then(r=>{if(!r.ok)throw new Error('copy');return r.json();}).then(bank=>{welcomeBank=bank;renderCompanion(latestWelcomeProfile);}).catch(()=>{});
   function renderCompanion(profile) {
     latestWelcomeProfile=profile;
-    const persona=personas.has(profile?.assistant_persona)?profile.assistant_persona:'male_calm_v1';
+    const persona=personas.has(profile?.assistant_persona)?profile.assistant_persona:'male_calm_v1';homeWeatherNote.setPersona(persona);
     const name=profile?.agent_name || '衣衣';
     const variants=welcomeBank?.[persona];
     if(variants?.length){
@@ -132,14 +135,14 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
       const selected=variants[welcomePicks.get(persona)];
       const comma=selected.title.indexOf('，');
       heading.replaceChildren(...(comma>=0?[selected.title.slice(0,comma+1),selected.title.slice(comma+1)]:[selected.title]).map(line=>make('span','',line)));
-      copy.querySelector('p').textContent=selected.description;invitation.querySelector('p').textContent=selected.invitation;
+      copy.querySelector('p').textContent=selected.description;
     }
 
     const character=window.CompanionCharacters.find(persona);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
-    letterPhoto.src=`/static/assets/characters/companion-scenes-v1/${persona}-avatar.png`; letterPhoto.alt=`${name}，你的搭配伙伴`; letterBy.textContent=`${name}的日常小笺`;
-    avatar.setAttribute('aria-label',`${name}，日常搭配伙伴`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent=`和${name}聊聊`;
+    letterPhoto.src=`/static/assets/characters/companion-scenes-v1/${persona}-avatar.png`; letterPhoto.alt=`${name}，你的搭配助理`; letterBy.textContent=`${name}的日常小笺`;
+    avatar.setAttribute('aria-label',`${name}，日常搭配助理`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent=`和${name}聊聊`;
   }
   function applySavedProfile(profile) {
     let ownerToken='';try{ownerToken=JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token||'';}catch{}

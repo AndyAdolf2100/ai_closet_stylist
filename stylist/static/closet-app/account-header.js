@@ -15,7 +15,7 @@ export function accountHeader({make,icon,forward}) {
  let displayName='',nameOwner='',lastProfile=null,uploading=false,revision=0;
  const token=()=>{try{return JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token||'';}catch{return '';}};
  const logged=()=>!!token();
- const showName=()=>{name.textContent=logged()?(nameOwner===token()&&displayName?displayName:'我的账号'):'欢迎来到衣间';};
+ const showName=()=>{name.textContent=logged()?(nameOwner===token()&&displayName?displayName:'我的账号'):'欢迎来到爱搭衣橱';};
  card.setDisplayName=value=>{nameOwner=token();displayName=typeof value==='string'?value.trim():'';showName();};
  function reset(state='loading') {image.hidden=true;image.removeAttribute('src');fallback.hidden=false;badge.hidden=true;badge.textContent='';showName();login.hidden=logged();status.hidden=false;status.textContent=logged()?(state==='error'?'账号信息暂未读取':'正在读取账号'):'登录后，接着记录你的日常';caption.hidden=!logged();}
  image.onerror=()=>{image.hidden=true;image.removeAttribute('src');fallback.hidden=false;};

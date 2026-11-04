@@ -207,6 +207,7 @@ class Stylist:
                 "new_clothes": request.new_clothes,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
+                "dressing_priority_tags": request.companion_profile.dressing_priority_tags() if request.companion_profile else [],
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
                                      if clothing_content(note["content"]) == note["content"]],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
@@ -502,7 +503,8 @@ class Stylist:
                 "chat_image": request.chat_image,
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
-                "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
+                "companion_profile": request.companion_profile.dialogue_data(outfit_gender=task.gender) if request.companion_profile else None,
+                "dressing_priority_tags": request.companion_profile.dressing_priority_tags(outfit_gender=task.gender) if request.companion_profile else [],
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
                                      if clothing_content(note["content"]) == note["content"]],
                 "expression_guidance": ({

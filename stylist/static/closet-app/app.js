@@ -68,7 +68,7 @@ async function loadFeed(append = false) {
     const rows = Array.isArray(data?.items) ? data.items : Array.isArray(data?.list) ? data.list : [];
     state.rows = append ? [...state.rows, ...rows] : rows; state.page = page;
     container.replaceChildren();
-    if (!state.rows.length) empty(container, 'home_album_empty.png', feed === 'album' ? '这一页还空着，先和伙伴聊聊想穿什么吧。' : '这一页的灵感还在准备，稍后再来看看。');
+    if (!state.rows.length) empty(container, 'home_album_empty.png', feed === 'album' ? '这一页还空着，先和助理聊聊想穿什么吧。' : '这一页的灵感还在准备，稍后再来看看。');
     const grid = node('div', feed === 'album' ? 'album-list' : 'inspiration-grid');
     stopWaterfall?.();
     const helpers = { node, button, picture, openImage, assets: ASSETS };
@@ -137,7 +137,7 @@ async function loadMemories() {
       ? '把喜好一点点记下，\n让日常的搭配更贴近你。'
       : '对齐审美偏好，让她比上一秒更懂你\n在这里，塑造一个比谁都懂你的私人造型师。';
     pill.hidden = items.length > 0;
-    card.onclick = () => { const body = node('div', 'detail-body'); if (items.length) items.forEach(x => body.append(node('p', 'memory-detail', x.content || x.value || ''))); else body.append(node('p', '', '还没有记忆')); body.append(node('p', 'offline-note', '这里展示 App 中的记忆。衣间的对话手记保留在原有页面。'), button('打开衣间手记', () => openAgent('memory'))); detail('Memory', body); };
+    card.onclick = () => { const body = node('div', 'detail-body'); if (items.length) items.forEach(x => body.append(node('p', 'memory-detail', x.content || x.value || ''))); else body.append(node('p', '', '还没有记忆')); body.append(node('p', 'offline-note', '这里展示 App 中的记忆。爱搭衣橱的对话手记保留在原有页面。'), button('打开爱搭衣橱手记', () => openAgent('memory'))); detail('Memory', body); };
   } catch (e) { if (e.name === 'AbortError') return; copy.textContent = e.login ? '连接衣橱后查看记忆' : '记忆暂不可用，点击重试'; card.onclick = () => e.login ? openAgent('login') : loadMemories(); }
 }
 let detailOpener;
@@ -150,16 +150,16 @@ function openDetail(key) {
   const content = node('div', 'detail-body');
   if (key === 'settings') {
     content.className = 'detail-menu settings-notebook';
-    const intro=node('div','settings-intro');intro.append(node('span','settings-eyebrow','MAKE YOURSELF AT HOME'),node('h3','','让这里，更像你的衣间。'),node('p','','怎样称呼、怎样相处，都听你的。'));content.append(intro);
+    const intro=node('div','settings-intro');intro.append(node('span','settings-eyebrow','MAKE YOURSELF AT HOME'),node('h3','','让这里，更像你的爱搭衣橱。'),node('p','','怎样称呼、怎样相处，都听你的。'));content.append(intro);
     const paths={identity:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-2a7 7 0 0 1 14 0v2',preference:'m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z',memory:'M4 4h6a3 3 0 0 1 3 3v14a5 5 0 0 0-5-3H4Zm16 0h-4a3 3 0 0 0-3 3v14a5 5 0 0 1 5-3h2Z',account:'M14 4h6v16h-6M3 12h12m-4-4 4 4-4 4'};
-    const groups=[['关于彼此',[['称呼与形象','你的称呼与性别 · 伙伴名字与模样','settings','identity'],['了解我','穿搭喜好与聊天习惯','preferences','preference'],['我们的手记','查看与整理已保存的偏好','memory','memory']]],['账号',[['登录 / 切换账号','连接你的个人衣橱','login','account']]]];
+    const groups=[['关于彼此',[['称呼与形象','你的称呼与性别 · 助理名字与模样','settings','identity'],['了解我','穿搭喜好与聊天习惯','preferences','preference'],['我们的手记','查看与整理已保存的偏好','memory','memory']]],['账号',[['登录 / 切换账号','连接你的个人衣橱','login','account']]]];
     groups.forEach(([label,rows])=>{const group=node('section','settings-group');group.append(node('h4','',label));const card=node('div','settings-card');rows.forEach(([title,description,action,icon])=>{if(action==='memory'&&document.documentElement.dataset.appDesign==='yijian')return;const row=button('',()=>openAgent(action),'settings-row');const mark=node('span','settings-icon');mark.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[icon]+'"/></svg>';const text=node('span','settings-row-copy');text.append(node('strong','',title),node('small','',description));row.append(mark,text,node('span','settings-chevron','›'));card.append(row);});group.append(card);content.append(group);});
     content.append(button('退出登录',()=>openAgent('logout'),'settings-logout'),node('p','settings-footnote','按自己的节奏，留下喜欢的设置。'));
   }
   else if(['generation-records','my-outfits'].includes(key)){detail(details[key],collectionPage(key,{node,button,detail,openImage,openAgent,readSession,signal:state.controller.signal}));return;}
   else if (['contact','feedback','messages','orders'].includes(key)) { detail(details[key], profilePage(key,{node,button,detail,openAgent,readSession,signal:state.controller.signal})); return; }
-  else if(document.documentElement.dataset.appDesign==='yijian'){content.className='y-unavailable';content.append(node('span','y-unavailable-mark','✧'),node('h3','',details[key]||'此功能'),node('p','','这项功能暂未开放，请先在 AI Closet App 中使用。'));if(key==='diy')content.append(button('和伙伴聊聊搭配',()=>openAgent('chat'),'y-service-primary'));}
-  else { content.append(picture(ASSETS + 'profile_outfit_empty.png')); content.lastChild.className = 'blank-art'; content.append(node('p', 'offline-note', `${details[key] || '此功能'}尚未接入当前 Web，请在 AI Closet App 中使用。`)); if (key === 'diy') content.append(button('让衣间帮我搭配', () => openAgent('chat'))); }
+  else if(document.documentElement.dataset.appDesign==='yijian'){content.className='y-unavailable';content.append(node('span','y-unavailable-mark','✧'),node('h3','',details[key]||'此功能'),node('p','','这项功能暂未开放，请先在 AI Closet App 中使用。'));if(key==='diy')content.append(button('和助理聊聊搭配',()=>openAgent('chat'),'y-service-primary'));}
+  else { content.append(picture(ASSETS + 'profile_outfit_empty.png')); content.lastChild.className = 'blank-art'; content.append(node('p', 'offline-note', `${details[key] || '此功能'}尚未接入当前 Web，请在 AI Closet App 中使用。`)); if (key === 'diy') content.append(button('让爱搭衣橱帮我搭配', () => openAgent('chat'))); }
   detail(details[key] || '详情', content);
 }
 const agentActions = { login: 'login-open', history: 'mobile-history', upload: 'upload-open', twins: 'twin-open', records: 'journey-records-open', memory: 'memory-open', settings: 'companion-open', preferences: 'preferences-open', checkin: 'checkin-open', logout: 'logout' };
@@ -199,7 +199,7 @@ for (const b of document.querySelectorAll('[data-agent]')) b.onclick = () => ope
 for (const b of document.querySelectorAll('[data-detail]')) b.onclick = () => openDetail(b.dataset.detail);
 for (const b of document.querySelectorAll('[data-show]')) b.onclick = () => { state.feed = b.dataset.show; document.querySelectorAll('[data-feed]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.feed === state.feed))); selectTab('home'); };
 $('detail-back').onclick = () => history.back(); $('agent-back').onclick = () => history.back(); $('agent-account').onclick = () => openAgent(document.documentElement.dataset.appDesign==='yijian'?'history':'login');
-if(document.documentElement.dataset.appDesign==='yijian'){$('agent-back').textContent='‹';$('agent-back').setAttribute('aria-label','返回');$('agent-account').innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>';$('agent-account').setAttribute('aria-label','历史对话');$('agent-account').title='历史对话';$('agent-account').setAttribute('aria-haspopup','dialog');}
+if(document.documentElement.dataset.appDesign==='yijian'){$('agent-back').textContent='‹';$('agent-back').setAttribute('aria-label','返回');$('agent-account').innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>';$('agent-account').setAttribute('aria-label','聊过的日常');$('agent-account').title='聊过的日常';$('agent-account').setAttribute('aria-haspopup','dialog');}
 window.addEventListener('popstate', event => {
   closeDetail(); closeAgent(); selectTab(event.state?.tab || location.hash.slice(1).split('/')[0] || 'home', false);
   const record = event.state?.view === 'detail' && detailHistory.get(event.state.id);

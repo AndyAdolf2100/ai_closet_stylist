@@ -6,7 +6,7 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 async function setup(client){
  const dom=new JSDOM('<div id="notice"></div><button id="settings-open"></button><input id="message"><div id="appearance-status"></div>',{url:'http://synthetic.invalid',runScripts:'outside-only'}),w=dom.window;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
- for(const file of ['appearance.js','companion-characters.js','companion-settings.js','preferences.js'])w.eval(fs.readFileSync('stylist/static/'+file,'utf8'));
+ for(const file of ['appearance.js','companion-characters.js','companion-settings.js','fashion-preferences.js','preferences.js'])w.eval(fs.readFileSync('stylist/static/'+file,'utf8'));
  await w.CompanionSettings.setOwner('a',client,false);
  return {w,dom,$:id=>w.document.getElementById(id),submit:()=>w.document.getElementById('preferences-form').dispatchEvent(new w.Event('submit',{cancelable:true}))};
 }
@@ -50,9 +50,9 @@ test('MBTI cards describe all types, clear drafts and style sprites retain limit
  assert.equal(writes.length,0);
  $('mbti-clear').click();assert.equal($('mbti-dimensions').children.length,0);
  cards[0].click();$('preferences-close').click();await w.PersonalPreferences.open();assert.equal($('mbti-dimensions').children.length,0);
- assert.equal(w.document.querySelectorAll('.style-sprite').length,13);
+ assert.equal(w.document.querySelectorAll('.style-sprite').length,18);
  const priorities=w.document.querySelectorAll('[data-preference-group="dressing_priorities"] button');
- for(const card of priorities)card.click();
+ for(const card of priorities)if(!card.hidden)card.click();
  assert.equal(w.document.querySelectorAll('[data-preference-group="dressing_priorities"] [aria-pressed=true]').length,3);
  cards[1].click();submit();await tick();assert.equal(writes[0].mbti,cards[1].dataset.value);
  dom.window.close();
@@ -72,5 +72,25 @@ test('all 16 MBTI types have distinct source summaries and sprite coordinates',a
  }
  assert.equal(positions.size,16);assert.equal(summaries.size,16);
  $('mbti-clear').click();assert.equal(w.document.querySelector('.mbti-companion-art').hidden,false);assert(w.document.querySelector('.mbti-companion-art').classList.contains('mbti-default-art'));assert.equal(w.document.querySelector('.mbti-art-caption'),null);assert.equal($('mbti-official-source'),null);
+ dom.window.close();
+});
+
+test('user gender controls fashion art and female tags; assistant gender and theme do not',async()=>{
+ const writes=[];const femaleProfile={...profile,user_gender:'女',assistant_persona:'male_calm_v1'};
+ const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return{profile:writes.at(-1)}}return{profile:femaleProfile}});
+ await w.PersonalPreferences.open();$('preference-tab-style').click();
+ const priorities=()=>[...w.document.querySelectorAll('[data-preference-group="dressing_priorities"] button')];
+ assert.equal(priorities().filter(b=>!b.hidden).length,5);
+ for(const label of ['显瘦遮肉','职业干练','活力阳光'])priorities().find(b=>b.dataset.value===label).click();
+ assert.equal(priorities().filter(b=>b.getAttribute('aria-pressed')==='true').length,3);
+ assert(w.document.querySelector('.style-sprite').style.backgroundImage.includes('female-v4.png'));
+ submit();await tick();assert.deepEqual(writes[0].dressing_priorities,['显瘦遮肉','职业干练','活力阳光']);
+ assert.equal(writes[0].user_gender,'女');assert.equal(writes[0].assistant_persona,'male_calm_v1');assert.equal(writes[0].dressing_priority_tags,undefined);
+ await w.CompanionSettings.setOwner('a',async()=>({profile:{...femaleProfile,user_gender:'男',assistant_persona:'female_warm_v1',dressing_priorities:writes[0].dressing_priorities}}),false);
+ await w.PersonalPreferences.open();assert.equal(priorities().filter(b=>!b.hidden).length,5);
+ assert(priorities().filter(b=>b.hidden).every(b=>b.getAttribute('aria-pressed')==='false'));
+ assert(w.document.querySelector('.style-sprite').style.backgroundImage.includes('male-v4.png'));
+ await w.CompanionSettings.setOwner('b',async()=>({profile:{...femaleProfile,user_gender:null}}),false);
+ await w.PersonalPreferences.open();assert.equal(priorities().filter(b=>!b.hidden).length,0);assert(w.document.querySelector('.style-sprite').hidden);
  dom.window.close();
 });

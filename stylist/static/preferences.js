@@ -8,7 +8,7 @@
     conversation_style: ['自然相处','温柔鼓励','直接坦诚','轻松幽默'],
     reply_detail: ['适中','简洁重点','细致解释'],
     style_preferences: ['简约','休闲','通勤','温柔','复古','运动','街头','优雅'],
-    dressing_priorities: ['舒适自在','方便走动','容易打理','合身自然','适合场合']
+    dressing_priorities: [...FashionPreferences.commonPriorities,...FashionPreferences.femalePriorities]
   };
   // Concise Chinese paraphrases of the Foundation's descriptions; not official translations.
   const mbtiSummaries = {
@@ -112,6 +112,14 @@
   }
   function render() {
     renderMbti();
+    const userGender=window.CompanionSettings.getProfile()?.user_gender;
+    for(const button of dialog.querySelectorAll('.has-style-art')){
+      const priority=button.parentElement.dataset.preferenceGroup==='dressing_priorities';
+      button.hidden=priority&&!FashionPreferences.prioritiesFor(userGender).includes(button.dataset.value);
+      button.dataset.genderType=FashionPreferences.genderType(userGender)||'unspecified';
+      button.dataset.applicableGender=FashionPreferences.femalePriorities.includes(button.dataset.value)?'female':'unisex';
+      FashionPreferences.applyArt(button.querySelector('.style-sprite'),button.dataset.value,priority?'priority':'style',userGender);
+    }
     dialog.querySelectorAll('[data-zodiac]').forEach(button => button.setAttribute('aria-pressed',String(draft.zodiac === button.dataset.zodiac)));
     $('zodiac-clear').setAttribute('aria-pressed',String(!draft.zodiac));
     for (const [key] of Object.entries(groups)) dialog.querySelectorAll(`[data-preference-group="${key}"] button`).forEach(button => {
@@ -129,10 +137,7 @@
   for (const [key,values] of Object.entries(groups)) for (const value of values) {
     const button = document.createElement('button'); button.type = 'button'; button.className = 'preference-chip'; button.dataset.value = value;
     if (key === 'style_preferences' || key === 'dressing_priorities') {
-      const index = values.indexOf(value) + (key === 'dressing_priorities' ? 8 : 0);
       const art = document.createElement('span'); art.className = 'style-sprite'; art.setAttribute('aria-hidden','true');
-      art.style.backgroundPosition = (index % 4 * 100 / 3) + '% ' + (Math.floor(index / 4) * 100 / 3) + '%';
-      if (['合身自然','适合场合'].includes(value)) art.style.backgroundImage = "url('/static/assets/preference-fashion-priorities-v3.png')";
       button.classList.add('has-style-art'); button.append(art);
     }
     const label = document.createElement('strong'); label.textContent = value; button.append(label);
@@ -174,7 +179,7 @@
     await window.CompanionSettings.ready;
     if (current !== generation) return;
     const profile = window.CompanionSettings.getProfile(); if (!profile) return;
-    draft = {...defaults(),...profile,style_preferences:[...(profile.style_preferences || [])],dressing_priorities:(profile.dressing_priorities || []).filter(value => groups.dressing_priorities.includes(value))};
+    draft = {...defaults(),...profile,style_preferences:[...(profile.style_preferences || [])],dressing_priorities:(profile.dressing_priorities || []).filter(value => FashionPreferences.prioritiesFor(profile.user_gender).includes(value))};
      render(); chapter('stars'); dialog.showModal();
   } };
   function viewport() {

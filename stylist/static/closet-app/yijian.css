@@ -274,3 +274,17 @@ html[data-app-design=yijian] .y-wardrobe-note-copy{display:flex;flex:1;min-width
 html[data-app-design=yijian] .y-wardrobe-note-copy strong{font:16px/1.5 var(--y-serif);color:var(--y-ink);white-space:nowrap}
 html[data-app-design=yijian] .y-wardrobe-note-copy small{font-size:10px;line-height:1.7;color:var(--y-muted)}
 html[data-app-design=yijian] .y-wardrobe-note-arrow{font-size:18px;color:var(--y-muted)}
+
+/* Homepage utilities share the available row width in both check-in states. */
+html[data-app-design=yijian] .y-home-city-button{display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;min-height:44px;max-width:145px;margin-left:auto;padding:0;color:var(--y-accent);font-size:12px}
+html[data-app-design=yijian] .y-home-city-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-app-design=yijian] .y-home-city-button svg{flex-shrink:0}
+html[data-app-design=yijian] .y-daily-invitation{width:100%;justify-self:stretch}
+html[data-app-design=yijian] .y-home-checkin{margin-left:auto;margin-right:0}
+
+/* Keep city, forecast and temperatures in one compact row beside check-in. */
+html[data-app-design=yijian] .y-daily-invitation p{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-app-design=yijian] .y-daily-invitation p[data-mode=weather]{display:flex;align-items:center;gap:4px;overflow:hidden}
+.y-home-weather-city,.y-home-weather-weather{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.y-home-weather-city{max-width:38%;flex-shrink:1}.y-home-weather-weather{flex-shrink:1}
+.y-home-weather-temperature,.y-home-weather-separator{flex-shrink:0;white-space:nowrap}

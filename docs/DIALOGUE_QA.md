@@ -305,7 +305,7 @@ NODE_PATH="$PWD/var/ui-check/node_modules" node --test tests/companion_settings.
 
 执行 `tests/test_media.py`、`test_uploaded_anchor.py`、`test_images.py` 及 `tests/wardrobe_journey.test.cjs`，核验持久化回执、正式工具参数与零写入边界、前端预览／取消／双击／迟到响应／结果图回看。男女助理分别验证上传锚点，人物性别不从助理形象推断。测试使用模拟业务与合成图片字段，不证明真实抠图质量、人物相似度、积分扣退或付费留存效果。
 
-流程与接口说明：[衣间上传与数字人试穿](../../aicloset-server/doc/api接口/衣间上传与数字人试穿.md)。本轮不修改男女基础人格，不执行真实收费，体验签到积分不能用于试穿。
+流程与接口说明：[爱搭衣橱上传与数字人试穿](../../aicloset-server/doc/api接口/爱搭衣橱上传与数字人试穿.md)。本轮不修改男女基础人格，不执行真实收费，体验签到积分不能用于试穿。
 
 
 ## 文字 Token 与刊例成本测量（2026-11-02）

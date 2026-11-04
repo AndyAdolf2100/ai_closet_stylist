@@ -1,7 +1,7 @@
 const $=s=>document.querySelector(s);
 let codeStage=false;
 const live=new URLSearchParams(location.search).get('live')==='1'||new URLSearchParams(location.search).get('screen')==='login';
-if(live){document.body.dataset.live='true';document.querySelector('.login-page').setAttribute('aria-label','登录衣间');document.querySelector('.code-destination').firstChild.textContent='当前登录手机号 ';document.querySelector('.verification-intro').textContent='请输入通过现有账号服务获取的验证码。';$('#send').textContent='如何获取验证码';}
+if(live){document.body.dataset.live='true';document.querySelector('.login-page').setAttribute('aria-label','登录爱搭衣橱');document.querySelector('.code-destination').firstChild.textContent='当前登录手机号 ';$('#send').textContent='如何获取验证码';}
 if(!live){$('.login-home').href='../comparison/index.html#preview';document.querySelector('.studio>a').href='../comparison/index.html#preview';}
 let submitting=false;
 function valid(){return /^1[3-9][0-9]{9}$/.test($('#phone').value)&&$('#agree').checked;}
@@ -13,7 +13,7 @@ function update(){
 }
 function showCode(show){
   codeStage=show;$('.login-scroll').hidden=show;$('.verification-page').hidden=!show;
-  $('.login-home').setAttribute('aria-label',show?'返回手机号输入':'返回衣间');
+  $('.login-home').setAttribute('aria-label',show?'返回手机号输入':'返回爱搭衣橱');
   $('#sample').textContent=show?'填入示例验证码':'填入示例手机号';
   if(show){$('#destination').textContent='+86 '+$('#phone').value.replace(/(\d{3})(\d{4})(\d{4})/,'$1 $2 $3');$('#code').focus();}
   else{$('#code').value='';PreviewMessage.hide();$('#phone').focus();}

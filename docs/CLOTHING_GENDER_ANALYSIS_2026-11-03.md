@@ -4,7 +4,7 @@
 
 ## 原因与已确认事实
 
-独立本地会话只读核对：本人资料user_gender与Task.gender均为男，实际选款中仍有标题明确为女款的衬衫／外套，性别已传入任务。Server个人及系统商品模型有gender：0未设置、1男、2女、3通用；product.resolve契约转换为男、女、男女同款或空。修复前衣间Product未保留gender、from_row未映射，选款也未校验，导致约束没有落地。
+独立本地会话只读核对：本人资料user_gender与Task.gender均为男，实际选款中仍有标题明确为女款的衬衫／外套，性别已传入任务。Server个人及系统商品模型有gender：0未设置、1男、2女、3通用；product.resolve契约转换为男、女、男女同款或空。修复前爱搭衣橱Product未保留gender、from_row未映射，选款也未校验，导致约束没有落地。
 
 Server源码依据为internal/biz/biz-user/user_product_base.go、internal/biz/biz-aicloset/product_base.go、internal/data/user/user_product_resolve.go、internal/service/product_resolve/service.go和internal/controller/mcp/tools/product_resolve.go。源码和契约不代表远端已发布；本轮未通过真实接口核验具体商品原标签，标签质量仍可能是额外问题。
 

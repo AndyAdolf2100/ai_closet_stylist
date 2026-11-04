@@ -1,12 +1,12 @@
-# 衣间App直连Agent组件与原版签到
+# 爱搭衣橱App直连Agent组件与原版签到
 
 日期：2026-11-03。入口：`/app/?design=yijian`。范围仅Web App；未修改iOS源文件。
 
 ## 页面组织
 
-衣间版进入Agent时不设置iframe URL，直接挂载当前项目的对话、城市、天气、历史、角色、偏好、手记、上传、试穿形象及记录组件。保留既有业务控制器和固定接口，避免重新实现对话并发、账号归属、照片确认与费用确认。衣间App原版`/app/`仍保留既有iframe集成。
+爱搭衣橱版进入Agent时不设置iframe URL，直接挂载当前项目的对话、城市、天气、历史、角色、偏好、手记、上传、试穿形象及记录组件。保留既有业务控制器和固定接口，避免重新实现对话并发、账号归属、照片确认与费用确认。爱搭衣橱App原版`/app/`仍保留既有iframe集成。
 
-独立适配层：`closet-app/agent-integration.js`；衣间覆盖样式：`agent-yijian.css`。主体使用衣间三配色变量、纸面卡片与宋体标题。模块样式在`@scope (#yijian-agent-root)`内，动态创建的弹层移入同一组件根，不影响首页或个人中心。
+独立适配层：`closet-app/agent-integration.js`；爱搭衣橱覆盖样式：`agent-yijian.css`。主体使用爱搭衣橱三配色变量、纸面卡片与宋体标题。模块样式在`@scope (#yijian-agent-root)`内，动态创建的弹层移入同一组件根，不影响首页或个人中心。
 
 `python3 scripts/build_inline_agent.py`从正式Agent模板和样式生成`agent-fragment.html`／`agent-scoped.css`。修改正式模板或对应样式后应重新运行。它们是可重建的静态页面资源，不含账号、凭证或用户图片。控制器仍直接复用正式`/static/*.js`，未复制业务状态机。
 
@@ -19,7 +19,7 @@
 - 全部弹层与消息在同一文档；Escape先关闭内层弹窗，不能同时把App页面退回。
 - 关闭Agent后仍可在个人中心显示message。登录和退出同步App缓存及详情状态，迟到响应继续遵守原控制器的账号归属。
 
-## 原版App签到，衣间外观
+## 原版App签到，爱搭衣橱外观
 
 替代此App此前“对话后10体验积分”的方案：无需先聊天，奖励按服务端配置。独立Agent `/`、`/mobile/`原有体验签到保留，不把两者混为同一积分域。
 
@@ -28,7 +28,7 @@
 | GET /stylist-api/app/checkin | GET /api/check_in/today、/api/check_in/recent、/api/app_config/config_check | 今日状态、累计天数、本周记录、每日奖励配置 |
 | POST /stylist-api/app/checkin | POST /api/check_in | 用户明确点击立即签到，由原服务决定发放与幂等 |
 
-实现：`closet-app/checkin-direct.js`，仅由衣间适配器加载。不是新的本地积分账本。进入只读取，不自动领取；同一请求期间按钮禁用；granted=false不冒充新发放。未知结果要求先刷新状态，不自动重放领取。配置缺失显示“—”，不回退写死10／20。已签到时数值标为每日签到积分，不把当前配置冒称为历史实际到账数额。时间、日期、签到天数和规则以服务端为准。
+实现：`closet-app/checkin-direct.js`，仅由爱搭衣橱适配器加载。不是新的本地积分账本。进入只读取，不自动领取；同一请求期间按钮禁用；granted=false不冒充新发放。未知结果要求先刷新状态，不自动重放领取。配置缺失显示“—”，不回退写死10／20。已签到时数值标为每日签到积分，不把当前配置冒称为历史实际到账数额。时间、日期、签到天数和规则以服务端为准。
 
 首页小笺新增每日签到入口，对话天气栏也保留入口。展示原App本周七天进度，取消原演示月历和聊天解锁条件。
 
@@ -67,6 +67,6 @@
 
 ## 邂逅新衣同步（2026-11-03）
 
-输入框外上方显示「我的衣橱／邂逅新衣」，使用衣间主题文字及短下划线。移除旧隐藏规则并运行 `scripts/build_inline_agent.py` 同步正式页模板与隔离样式。继续复用 `static/app.js` 的 `new_clothes` 请求字段、自动开启message、缺衣双入口及会话状态，不新增来源状态副本。业务边界见 [NEW_CLOTHES.md](NEW_CLOTHES.md)。
+输入框外上方显示「我的衣橱／邂逅新衣」，使用爱搭衣橱主题文字及短下划线。移除旧隐藏规则并运行 `scripts/build_inline_agent.py` 同步正式页模板与隔离样式。继续复用 `static/app.js` 的 `new_clothes` 请求字段、自动开启message、缺衣双入口及会话状态，不新增来源状态副本。业务边界见 [NEW_CLOTHES.md](NEW_CLOTHES.md)。
 
 验证：`scripts/check_yijian_new_clothes.cjs` 在1440／390／320／844px与三主题运行188项模拟检查，覆盖切换不发送、请求字段、忙碌禁用、缺衣续接与草稿、自动提示去重、44px操作区、输入框间距、无横向溢出及退出清理。手机截图已目视；真实选款与付费试穿未执行。

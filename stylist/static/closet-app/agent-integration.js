@@ -5,7 +5,7 @@ import {emptyArt} from './empty-art.js';
 let ready;
 const triggers=new Map();
 const ids={login:'login-open',history:'mobile-history',upload:'upload-open',twins:'twin-open',records:'journey-records-open',memory:'memory-open',settings:'companion-open',preferences:'preferences-open',checkin:'checkin-open',logout:'logout'};
-const scripts=['appearance','companion-loading','wardrobe-journey','closet-app/checkin-direct','weather-visuals','product-preview','cutout-core','local-cutout','outfit-images','outfit-board','city-picker','companion-characters','companion-settings','preferences','memory','app'];
+const scripts=['appearance','companion-loading','wardrobe-journey','closet-app/checkin-direct','weather-visuals','product-preview','cutout-core','local-cutout','outfit-images','outfit-board','city-picker','companion-characters','companion-settings','fashion-preferences','preferences','memory','app'];
 export function mountAgent(){
   if(ready)return ready;
   ready=(async()=>{
@@ -27,7 +27,7 @@ export function mountAgent(){
     cityButton.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span></span>';
     cityBar.append(cityButton);document.querySelector('#agent-page>header').after(cityBar);
     const citySource=host.querySelector('#location-open');let locating=false;
-    const syncCity=()=>{const text=citySource.textContent.replace(/^⌖\s*/, '');const name=text.includes('选择城市')?'定位城市':text;cityButton.querySelector('span').textContent=locating?'正在定位…':name;cityButton.disabled=locating||citySource.disabled;cityButton.setAttribute('aria-label',name+'，点击定位，可手动选择城市');};
+    const syncCity=()=>{const text=citySource.textContent.replace(/^⌖\s*/, '');const name=text.includes('选择城市')?'定位城市':text;for(const button of [cityButton,document.querySelector('.y-home-city-button')].filter(Boolean)){button.querySelector('span').textContent=locating?'正在定位…':name;button.disabled=locating||citySource.disabled;button.setAttribute('aria-label',name+'，点击定位，可手动选择城市');}};
     new MutationObserver(syncCity).observe(citySource,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled']});syncCity();
     // 原生迁移要求：点击这里必须调用系统定位；不是只打开选城列表。
     // Native iOS parity contract: this entry must trigger CLLocationManager location
@@ -36,7 +36,7 @@ export function mountAgent(){
     // retain city confirmation, denial/timeout manual picker, account/close cancellation.
     // Never request permission on launch, silently pick a default city, or auto-send chat.
     // H5 adapter below reuses the browser geolocation implementation and its guards.
-    cityButton.onclick=async()=>{if(locating||citySource.disabled)return;locating=true;syncCity();try{await window.openCityPicker(null,cityButton);if(host.querySelector('#location-dialog').open)await host.querySelector('#locate-me').onclick();}catch(error){window.PreviewMessage.notify(error.message||'暂时没能定位，可以手动选择城市。');}finally{locating=false;syncCity();}};
+    cityButton.onclick=async(event)=>{if(locating||citySource.disabled)return;locating=true;syncCity();try{await window.openCityPicker(null,event?.currentTarget||cityButton);if(host.querySelector('#location-dialog').open)await host.querySelector('#locate-me').onclick();}catch(error){window.PreviewMessage.notify(error.message||'暂时没能定位，可以手动选择城市。');}finally{locating=false;syncCity();}};
     const updateWelcomePortrait=()=>{
       const profile=window.CompanionSettings?.getProfile();
       const character=window.CompanionCharacters.find(profile?.assistant_persona);
@@ -58,7 +58,7 @@ export function mountAgent(){
     historyRefresh.classList.add('y-history-refresh-fallback');
     listRefresh(document.getElementById('history-dialog'),()=>historyRefresh.disabled?Promise.resolve():historyRefresh.onclick());
     const decorateJourney=()=>{
-      const historyEmpty=host.querySelector('#history-status');if(historyEmpty?.textContent==='还没有历史对话，开始聊聊吧。')historyEmpty.textContent='第一句话，还等你来写。想聊什么，都可以从今天开始。';
+      const historyEmpty=host.querySelector('#history-status');if(historyEmpty?.textContent==='还没有聊过的日常，开始聊聊吧。')historyEmpty.textContent='第一句话，还等你来写。想聊什么，都可以从今天开始。';
       const recordEmpty=host.querySelector('.journey-history-empty');if(recordEmpty?.textContent==='还没有记录，可以先上传一件常穿的衣服。')recordEmpty.textContent='这一页还空着。挑一件常穿的衣服，让今天的小尝试有个开始。';
       const grid=host.querySelector('.journey-portraits');
       if(grid&&!grid.childElementCount){const empty=document.createElement('div');empty.className='y-twin-empty';empty.append(emptyArt('journal'));const caption=document.createElement('p');caption.textContent='这一页，等一个你的模样';empty.append(caption);grid.append(empty);}
@@ -110,6 +110,7 @@ export async function openIntegratedAgent(action){
   if(action!=='logout'&&!await ensureOnboarded())return;
   const host=await mountAgent();
   let authenticated=false;try{authenticated=!!JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token;}catch{}
+  if(action==='city'){await document.querySelector('.y-agent-city-button')?.onclick({currentTarget:document.querySelector('.y-home-city-button')});return;}
   if(action==='person-upload'){
     if(!authenticated){host.querySelector('#login-open')?.click();return;}
     const token=JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')).access_token;

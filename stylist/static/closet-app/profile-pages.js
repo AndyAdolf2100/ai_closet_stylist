@@ -20,7 +20,7 @@ export function profilePage(key, ctx) {
   function failure(target,error,retry){if(error.name==='AbortError'||!current())return;notify(error.message);target.replaceChildren(button(error.login?'连接衣橱':'重新加载',error.login?()=>openAgent('login'):retry,'y-service-secondary'));}
   function blank(target,title,text){const box=node('div','y-service-empty');if(ios&&key==='orders'){const img=node('img','ios-order-empty');img.src='/static/closet-app/assets/ios-order-empty.png';img.alt='';box.append(img);}box.append(ios?node('span','y-service-symbol','✧'):emptyArt(key==='orders'?'orders':'letters'),node('strong','',title),node('p','',text));target.append(box);}
   if(key==='contact'){
-    intro('A NOTE TO US','有想说的话，可以写给我们。','使用中的疑问，或关于衣间的想法，都可以通过邮箱联系我们。');
+    intro('A NOTE TO US','有想说的话，可以写给我们。','使用中的疑问，或关于爱搭衣橱的想法，都可以通过邮箱联系我们。');
     const card=node('section','y-service-card y-contact-card');card.append(node('span','y-service-eyebrow','CONTACT EMAIL'),node('strong','y-contact-email','Aiyichupm@microdreams.com'));
     const actions=node('div','y-service-actions');actions.append(button('复制邮箱',async()=>{try{await navigator.clipboard.writeText('Aiyichupm@microdreams.com');notify('邮箱已复制，想说的话可以慢慢写。');}catch{notify('暂时无法复制，可以长按邮箱选择复制。');}},'y-service-primary'));
     const mail=node('a','y-service-secondary','写邮件');mail.href='mailto:Aiyichupm@microdreams.com';actions.append(mail);card.append(actions);root.append(card,node('p','y-service-footnote','北京玲珑象限科技有限公司'));

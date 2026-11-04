@@ -1,4 +1,4 @@
 interface:
   display_name: "衣衣对话与人设验收"
   short_description: "验证六种陪伴人格、穿搭天气、偏好手记与连续对话，区分真实模型和合成业务证据"
-  default_prompt: "使用 $stylist-dialogue-qa 核对衣间的对话预期，按所选六种人格执行回归，审阅完整回复、状态与调用证据，保留首轮失败并区分模型表现、评审误报和真实业务验收。"
+  default_prompt: "使用 $stylist-dialogue-qa 核对爱搭衣橱的对话预期，按所选六种人格执行回归，审阅完整回复、状态与调用证据，保留首轮失败并区分模型表现、评审误报和真实业务验收。"

@@ -48,13 +48,13 @@ sections = [{'id': 'home',
            ('显示哪个名字', '读取原账号昵称；资料编辑从账号信息进入。', '暂时显示与伙伴交流时设置的用户称呼；不是伙伴名字，也暂未写回原账号昵称。'),
            ('会员与积分', '已有VIP／SVIP徽章、积分卡，以及会员和积分功能入口。', '保留真实会员等级，增加轻柔光效；积分统一逗号分隔。网页会员购买尚未完整接通。'),
            ('试穿形象在哪里', '从个人资料入口进入数字身份页面管理。', '在手记下面单独放“我的试穿形象”，明确这是用户自己的试穿模样，与账号头像和伙伴分开。'),
-           ('不想展示真人图时', '本次核对的个人页未发现衣间这样的剪影切换按钮。', '标题右侧点小眼睛即可隐藏为水彩剪影。按用户本人性别选男／女图；本浏览器按账号记住，不改原图或试穿。'),
+           ('不想展示真人图时', '本次核对的个人页未发现爱搭衣橱这样的剪影切换按钮。', '标题右侧点小眼睛即可隐藏为水彩剪影。按用户本人性别选男／女图；本浏览器按账号记住，不改原图或试穿。'),
            ('偏好如何保存', 'Memory展示账号记忆及最近变化，点击进入管理。', '“我们的手记”展示与管理穿搭喜好；入口更像日常记录，不把两边内容说成自动互相同步。'),
            ('记录与服务', '生成记录、我的搭配及订单、消息、反馈、联系、设置已有入口。', '这些入口继续保留，按常用记录和日常事务整理，统一纸面、细线与留白。已有服务不算新增能力。'),
            ('签到放在哪里', '个人页有“领积分”入口。', '首页保留每日签到，个人页去掉重复入口；成功后用当前伙伴头像、昵称和一句角色问候提示真实到账积分。')],
   'why': '个人页首先要让用户分清账号头像、试穿形象和陪伴角色。保留原有管理能力，再把问候、手记和展示选择放在容易理解的位置。',
   'benefit': '希望更快找到记录与形象设置，也让不想在个人页展示真人照片的人有清楚的选择。陪伴感来自持续一致的称呼与表达，而不是隐藏必要的账号信息。',
-  'tradeoff': '隐藏剪影只是个人页显示设置，不是原图访问权限，也不会隐藏其他试穿结果。衣间网页版与原生会员、相机等能力仍有差异，不能用截图代表完整业务验收。',
+  'tradeoff': '隐藏剪影只是个人页显示设置，不是原图访问权限，也不会隐藏其他试穿结果。爱搭衣橱网页版与原生会员、相机等能力仍有差异，不能用截图代表完整业务验收。',
   'measure': '分别尝试换头像、隐藏再显示试穿形象、寻找手记与记录；检查换号是否隔离、手机是否易点，以及用户能否分清三种形象。'},
  {'id': 'agent',
   'title': '聊天首页：让人知道和谁聊，也知道可以聊什么',
@@ -66,14 +66,14 @@ sections = [{'id': 'home',
            ('图片用在哪里', '点加号选照片或拍摄，确认发送。', '点加号选一张图片，先预览，可移除；点击发送才提交，不会自动收进衣橱。'),
            ('怎样输入需求', '支持原生录音和转文字。', '保留语音入口；网页版暂用文字与图片，手机App继续沿用原有语音方式。'),
            ('常用功能在哪里', '输入栏提供语音和添加图片的入口。', '添加衣服、试穿形象和生成记录直接摆出来；城市也能在页面上看到。')],
-  'why': 'iOS 2.0.0已经支持用文字、语音和图片交流。衣间在此基础上加入可选择的伙伴、自然的开场和更明确的穿搭入口，让用户知道在和谁聊，也更容易开始。',
+  'why': 'iOS 2.0.0已经支持用文字、语音和图片交流。爱搭衣橱在此基础上加入可选择的伙伴、自然的开场和更明确的穿搭入口，让用户知道在和谁聊，也更容易开始。',
   'benefit': '保留明确的搭配入口，同时让用户能用自己的话补充和调整。熟悉的名字、头像与语气，有望减少每次重新解释的陌生感。',
-  'tradeoff': 'iOS 2.0.0的输入区更紧凑，语音与附件已有完整原生交互。衣间增加了欢迎和工具区，需要控制首屏信息量；网页版语音仍未接通，不能把视觉调整说成能力全面升级。',
+  'tradeoff': 'iOS 2.0.0的输入区更紧凑，语音与附件已有完整原生交互。爱搭衣橱增加了欢迎和工具区，需要控制首屏信息量；网页版语音仍未接通，不能把视觉调整说成能力全面升级。',
   'measure': '观察用户能否独立开始聊天、修改建议问题，以及找到需要的功能。'}]
 style = """<style>.ev{margin:32px auto;padding:28px;max-width:1280px;background:#fffdfa;border:1px solid #e5ddd2;border-radius:20px;color:#354139;font:15px/1.85 -apple-system,"PingFang SC",sans-serif}.ev *{box-sizing:border-box}.ev h2{font:28px/1.5 Georgia,"Songti SC",serif;margin:6px 0 15px}.ev h3{font-size:20px;margin:26px 0 12px}.ev h4{font-size:16px;margin:0 0 8px}.ev p{margin:8px 0}.ev .ev-kicker{font-size:11px;letter-spacing:2px;color:#7c816f}.ev .ev-note{font-size:13px;color:#777f75}.ev .ev-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.ev button{font:inherit;padding:9px 20px;border:1px solid #dce2d5;background:transparent;color:inherit;border-radius:24px;cursor:pointer}.ev button[aria-selected=true]{background:#62755c;color:white}.ev [hidden]{display:none!important}.ev .ev-flow,.ev .ev-rationale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.ev .ev-flow>div,.ev .ev-rationale>div{padding:18px;background:#f3f5ef;border-radius:12px}.ev .ev-table{overflow-x:auto}.ev table{table-layout:fixed;border-collapse:collapse;width:100%;min-width:680px;font-size:14px}.ev col:first-child{width:20%}.ev col:not(:first-child){width:40%}.ev th,.ev td{width:auto;min-width:0;white-space:normal;overflow-wrap:anywhere;padding:18px 16px;border-bottom:1px solid #e8e3da;vertical-align:top;text-align:left}.ev th{background:#f2f4ed}.ev td:first-child{width:auto;min-width:0;font-weight:600}.ev th:last-child,.ev td:last-child{background:#f5f7f1}.ev th{white-space:nowrap}.ev .ev-shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}.ev figure{margin:12px 0}.ev img{display:block;width:100%;max-width:330px;border:1px solid #ddd;border-radius:12px;height:auto}.ev figcaption{font-size:13px;color:#747a71;margin-bottom:10px}.ev details{margin-top:16px;padding:16px;border-top:1px solid #ddd}.ev summary{cursor:pointer}.ev code{overflow-wrap:anywhere;font-size:12px}.ev .ev-rationale{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:20px}.ev a{color:#425e79}.ev .ev-boundary{padding:18px;border-left:3px solid #a9b79b;background:#f6f6f1;margin-top:22px}@media(max-width:700px){.ev{padding:18px;margin:20px 0}.ev .ev-flow,.ev .ev-rationale,.ev .ev-shots{grid-template-columns:1fr}.ev h2{font-size:23px}.ev img{max-width:100%}}</style>"""
 html = (
     style
-    + """<section class="ev" id="app-evolution"><p class="ev-kicker">WHY WE CHANGED · 产品演进对照</p><h2>从衣橱工具，到有温度的日常陪伴</h2><p>保留管理衣物与完成搭配的能力，用原创角色、可编辑的偏好和更自然的开场，降低使用门槛。视觉更克制，操作更像App，业务信息仍然清楚。</p><p class="ev-note">以 iOS 2.0.0 与当前衣间为准，对比首页、我的和聊天首页。</p><div class="ev-tabs" role="tablist" aria-label="选择对比页面">"""
+    + """<section class="ev" id="app-evolution"><p class="ev-kicker">WHY WE CHANGED · 产品演进对照</p><h2>从衣橱工具，到有温度的日常陪伴</h2><p>保留管理衣物与完成搭配的能力，用原创角色、可编辑的偏好和更自然的开场，降低使用门槛。视觉更克制，操作更像App，业务信息仍然清楚。</p><p class="ev-note">以 iOS 2.0.0 与当前爱搭衣橱为准，对比首页、我的和聊天首页。</p><div class="ev-tabs" role="tablist" aria-label="选择对比页面">"""
 )
 for i, s in enumerate(sections):
     html += f'<button role="tab" id="ev-tab-{s["id"]}" aria-selected="{str(i == 0).lower()}" aria-controls="ev-{s["id"]}" tabindex="{0 if i == 0 else -1}">{["首页", "我的", "聊天首页"][i]}</button>'
@@ -88,10 +88,10 @@ for i, s in enumerate(sections):
     )
     for title, key in [
         ("iOS 2.0.0", "new"),
-        ("衣间", "current"),
+        ("爱搭衣橱", "current"),
     ]:
         html += f"<div><h4>{title}</h4><p>{s[key]}</p></div>"
-    html += '</div><h3>具体差在哪里</h3><div class="ev-table" tabindex="0" role="region" aria-label="版本差异对照表，可横向滚动"><table><colgroup><col><col><col></colgroup><thead><tr><th>对比项</th><th>iOS 2.0.0</th><th>衣间</th></tr></thead><tbody>'
+    html += '</div><h3>具体差在哪里</h3><div class="ev-table" tabindex="0" role="region" aria-label="版本差异对照表，可横向滚动"><table><colgroup><col><col><col></colgroup><thead><tr><th>对比项</th><th>iOS 2.0.0</th><th>爱搭衣橱</th></tr></thead><tbody>'
     for row in s["rows"]:
         html += "<tr>" + "".join("<td>" + escape(c) + "</td>" for c in row) + "</tr>"
     html += '</tbody></table></div><div class="ev-rationale">'
@@ -103,31 +103,31 @@ for i, s in enumerate(sections):
     ]:
         html += f"<div><h4>{title}</h4><p>{s[key]}</p></div>"
     html += '</div><h3>' + ('页面对比 · 无数据时' if s['id'] == 'home' else '页面对比') + '</h3><div class="ev-shots">'
-    for version, label in [("ios", "iOS 2.0.0 · 原生截图"), ("yijian", "当前衣间 · 登录后截图")]:
+    for version, label in [("ios", "iOS 2.0.0 · 原生截图"), ("yijian", "当前爱搭衣橱 · 登录后截图")]:
         if version == "yijian" and s["id"] in {"profile", "agent"}:
-            label = "当前衣间 · 示例账号截图"
+            label = "当前爱搭衣橱 · 示例账号截图"
         filename = f"{version}-{s['id']}.png"
         folder = "private"
         if s["id"] == "home":
             filename = f"{version}-home-empty.png"
             folder = "demo"
-            label = "iOS 风格 HTML 参考 · 无数据" if version == "ios" else "当前衣间 · 无数据"
+            label = "iOS 风格 HTML 参考 · 无数据" if version == "ios" else "当前爱搭衣橱 · 无数据"
         html += f'<figure><figcaption>{label}</figcaption><a href="ASSET_PREFIX/screenshots/{folder}/{filename}" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/{folder}/{filename}" alt="{label}"></a></figure>'
     html += "</div>"
     if s["id"] == "home":
-        html += '<section class="ev-populated"><h3>有数据时 · 登录账号实拍</h3><p class="ev-note">2026-11-04 更新：以下使用同一个有搭配记录的账号，只读加载。左侧仍为 iOS 风格 HTML 参考，右侧为当前衣间；保留上方原截图。</p><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated.png" alt="iOS 风格 HTML 参考 · 有数据首页"></a></figure><figure><figcaption>当前衣间 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" alt="当前衣间 · 有数据首页"></a></figure></div><h4>搭配列表展示</h4><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" alt="iOS 风格 HTML 参考有数据的搭配列表"></a></figure><figure><figcaption>当前衣间 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" alt="当前衣间有数据的搭配列表"></a></figure></div></section>'
-        html += '<details><summary>展开查看衣间首页实际搭配内容</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-feed.png" alt="登录后首页搭配列表"></details>'
+        html += '<section class="ev-populated"><h3>有数据时 · 登录账号实拍</h3><p class="ev-note">2026-11-04 更新：以下使用同一个有搭配记录的账号，只读加载。左侧仍为 iOS 风格 HTML 参考，右侧为当前爱搭衣橱；保留上方原截图。</p><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated.png" alt="iOS 风格 HTML 参考 · 有数据首页"></a></figure><figure><figcaption>当前爱搭衣橱 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" alt="当前爱搭衣橱 · 有数据首页"></a></figure></div><h4>搭配列表展示</h4><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" alt="iOS 风格 HTML 参考有数据的搭配列表"></a></figure><figure><figcaption>当前爱搭衣橱 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" alt="当前爱搭衣橱有数据的搭配列表"></a></figure></div></section>'
+        html += '<details><summary>展开查看爱搭衣橱首页实际搭配内容</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-feed.png" alt="登录后首页搭配列表"></details>'
     if s["id"] == "profile":
-        html += '<p class="ev-note">衣间截图更新于2026-11-04，使用示例账号展示本轮修改；iOS 2.0.0保留原生对照截图。</p><details open><summary>衣间更新：我的试穿形象与隐藏开关</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-profile-identity.png" alt="衣间我的页面试穿形象区域最新截图"><div class="ev-shots"><figure><figcaption>用户性别女 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-female.png" alt="女用户剪影与标题右侧眼睛"></figure><figure><figcaption>用户性别男 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-male.png" alt="男用户剪影与标题右侧眼睛"></figure></div><p>两个示例故意选择与用户性别不同的伙伴，说明剪影跟随用户本人。</p></details>'
-        html += '<details><summary>展开查看衣间记录与服务菜单位置</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-profile-services.png" alt="我的页面下半部分"></details>'
+        html += '<p class="ev-note">爱搭衣橱截图更新于2026-11-04，使用示例账号展示本轮修改；iOS 2.0.0保留原生对照截图。</p><details open><summary>爱搭衣橱更新：我的试穿形象与隐藏开关</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-profile-identity.png" alt="爱搭衣橱我的页面试穿形象区域最新截图"><div class="ev-shots"><figure><figcaption>用户性别女 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-female.png" alt="女用户剪影与标题右侧眼睛"></figure><figure><figcaption>用户性别男 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-male.png" alt="男用户剪影与标题右侧眼睛"></figure></div><p>两个示例故意选择与用户性别不同的伙伴，说明剪影跟随用户本人。</p></details>'
+        html += '<details><summary>展开查看爱搭衣橱记录与服务菜单位置</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-profile-services.png" alt="我的页面下半部分"></details>'
     if s["id"] == "agent":
         html += '<details open><summary>添加附件：先选好，再发送</summary><p>照片和拍摄都只是聊天附件。选错可以移除，发送失败可以重试；“添加衣服”也提供照片／拍摄，选好后预览，明确确认才会入柜。</p><img loading="lazy" src="ASSET_PREFIX/screenshots/private/composer-attachments.png" alt="照片与拍摄附件菜单，示例账号"></details>'
     html += "</article>"
 
 html += '<div class="ev-boundary"><h3>想传达的，是被认真对待的感觉</h3><p>保留实用的穿搭帮助，用自然的问候、可选择的伙伴和日常小笺拉近距离。不替用户定义关系，也不让用户觉得必须回应。</p><p>这些是设计希望带来的变化。用户是否更喜欢、更愿意回来，还需要实际体验后再判断。</p></div>'
-html += '<div class="ev-boundary"><h3>这次还补上了什么</h3><p>登录后，如果还没有为伙伴取名字，会继续完成初次见面的介绍；保存后再进入衣间。个人页补齐头像、称呼与会员徽章，并与日常小笺放在一起。积分加上逗号分隔，会员光效保持轻柔。</p><p><a href="/app/?design=yijian" target="_blank">打开衣间体验</a> · <a href="/static/closet-app/membership-overview/index.html" target="_blank">查看会员类别</a></p></div>'
+html += '<div class="ev-boundary"><h3>这次还补上了什么</h3><p>登录后，如果还没有为伙伴取名字，会继续完成初次见面的介绍；保存后再进入爱搭衣橱。个人页补齐头像、称呼与会员徽章，并与日常小笺放在一起。积分加上逗号分隔，会员光效保持轻柔。</p><p><a href="/app/?design=yijian" target="_blank">打开爱搭衣橱体验</a> · <a href="/static/closet-app/membership-overview/index.html" target="_blank">查看会员类别</a></p></div>'
 html += '<details id="technical-records"><summary>技术记录 · 供开发核对</summary>'
-html += '<div class="ev-boundary"><strong>对比范围</strong><p>iOS 2.0.0：dev_2.0.0分支的首页、我的和聊天页，排除未提交的Stylist替换。衣间：本地 /app/?design=yijian。只比较这两套实现，仓库遗留页面不另算一个版本。</p><p class="ev-note">2026-11-03源码核对：iOS 48e77c24、Stylist df91be7及各自工作区。原生截图来自dev_2.0.0独立构建与iPhone 17模拟器；临时启动入口用于打开现有页面、读取登录态并跳过定位弹窗／新手遮罩／自动奖励检查，页面布局不改。登录后只读数据用于演示；截图仅在本机保留、不纳入提交。</p></div>'
+html += '<div class="ev-boundary"><strong>对比范围</strong><p>iOS 2.0.0：dev_2.0.0分支的首页、我的和聊天页，排除未提交的Stylist替换。爱搭衣橱：本地 /app/?design=yijian。只比较这两套实现，仓库遗留页面不另算一个版本。</p><p class="ev-note">2026-11-03源码核对：iOS 48e77c24、Stylist df91be7及各自工作区。原生截图来自dev_2.0.0独立构建与iPhone 17模拟器；临时启动入口用于打开现有页面、读取登录态并跳过定位弹窗／新手遮罩／自动奖励检查，页面布局不改。登录后只读数据用于演示；截图仅在本机保留、不纳入提交。</p></div>'
 html += '<p>前面保留的登录与初次引导演示不发送短信、不写入账号。真实登录校验与引导使用独立运行模式；短信发送、独立注册、Apple／微信授权仍未在网页接通。</p><p>统计、会员购买、DIY、OOTD、电商导入等完整业务尚未全部接入。HTML参考不等于原生验收，截图也不代表付费和语音功能已验收。账号图片仅用于本机演示。</p>'
 html += '<p>附件：参考iOS AgentComposerView／AgentChatAttachments与同级Agent受限图片校验；Stylist新增chat_image，将图片交给当前主模型理解，不调用入柜接口。一张JPG／PNG／WebP，10MB以内，网页缩至最长边2048。仅当前请求使用，图片不写入历史、检查点或浏览器持久存储，刷新后需重新选择。文字历史保留，原图不回放。网页语音仍为提示，iOS迁移需接现有原生语音。模型识图仅完成模拟接口回归，未进行真实模型验收。</p><p>“我的”及聊天新版截图使用示例账号，其他既有已登录截图保留本机证据；会员购买和短信发送不在本轮完成范围。</p>'
 html += '<p>2026-11-04个人页：账号头像POST /stylist-api/app/avatar转发iOS已有multipart头像接口，已做模拟成功／失败及账号切换检查，未真实写入账号。隐藏开关只改变个人页显示，按账号保存在本浏览器；剪影取user_gender，非assistant_persona，不修改原图。签到问候使用静态角色文案，积分以真实回执为准；本页展示与验收使用模拟回执。</p>'
@@ -137,7 +137,7 @@ html += '</details></section>'
 
 script = """<script>(()=>{const root=document.getElementById('app-evolution');const tabs=[...root.querySelectorAll('[role=tab]')];function pick(t){tabs.forEach(b=>{const selected=b===t;b.setAttribute('aria-selected',selected);b.tabIndex=selected?0:-1;root.querySelector('#'+b.getAttribute('aria-controls')).hidden=!selected;});}tabs.forEach((t,i)=>{t.onclick=()=>pick(t);t.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;pick(tabs[n]);tabs[n].focus();};});})();</script>"""
 (base / "index.html").write_text(
-    '<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>衣间与iOS 2.0.0 · 产品演进</title><body style="margin:0;background:#eef1f4">'
+    '<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>爱搭衣橱与iOS 2.0.0 · 产品演进</title><body style="margin:0;background:#eef1f4">'
     + html.replace("ASSET_PREFIX", ".")
     + script
     + "</body></html>"

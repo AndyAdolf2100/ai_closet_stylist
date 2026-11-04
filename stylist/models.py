@@ -9,6 +9,9 @@ from .personas import PersonaId
 
 MAX_WEATHER_LOCATIONS = 10
 
+MALE_DRESSING_PRIORITIES = frozenset({"舒适自在", "方便走动", "容易打理", "合身自然", "适合场合"})
+FEMALE_DRESSING_PRIORITIES = frozenset({"轻松舒适", "显瘦遮肉", "职业干练", "温柔甜美", "活力阳光"})
+
 
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -236,7 +239,7 @@ class CompanionProfile(Model):
     conversation_style: Literal["自然相处", "温柔鼓励", "直接坦诚", "轻松幽默"] = "自然相处"
     reply_detail: Literal["适中", "简洁重点", "细致解释"] = "适中"
     style_preferences: list[Literal["简约", "休闲", "通勤", "温柔", "复古", "运动", "街头", "优雅"]] = Field(default_factory=list, max_length=3)
-    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "合身自然", "适合场合", "已有衣物优先", "尝试新风格"]] = Field(default_factory=list, max_length=3)
+    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "合身自然", "适合场合", "已有衣物优先", "尝试新风格", "轻松舒适", "显瘦遮肉", "职业干练", "温柔甜美", "活力阳光"]] = Field(default_factory=list, max_length=3)
 
     @model_validator(mode="after")
     def validate_names(self):
@@ -247,8 +250,25 @@ class CompanionProfile(Model):
             raise ValueError("称呼请使用普通文字，不包含换行或特殊控制符")
         return self
 
-    def dialogue_data(self):
-        return self.model_dump(mode="json", exclude={"color_scheme"})
+    def dialogue_data(self, *, outfit_gender=None):
+        data = self.model_dump(mode="json", exclude={"color_scheme"})
+        # Keep stored choices intact while only activating the current user's set.
+        def applicable(label):
+            if label in FEMALE_DRESSING_PRIORITIES:
+                return self.user_gender == "女" and outfit_gender != "男"
+            if label in MALE_DRESSING_PRIORITIES:
+                return self.user_gender == "男" and outfit_gender != "女"
+            return True
+        data["dressing_priorities"] = [label for label in self.dressing_priorities if applicable(label)]
+        return data
+
+    def dressing_priority_tags(self, *, outfit_gender=None):
+        gender_type = {"男": "male", "女": "female"}.get(self.user_gender, "unspecified")
+        return [{"label": label, "gender_type": gender_type,
+                 "applicable_gender": ("female" if label in FEMALE_DRESSING_PRIORITIES else
+                                       "male" if label in MALE_DRESSING_PRIORITIES else "unisex")}
+                for label in self.dialogue_data(outfit_gender=outfit_gender)["dressing_priorities"]]
+
 
 
 class ChatRequest(Model):

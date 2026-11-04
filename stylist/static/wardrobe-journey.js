@@ -17,7 +17,7 @@
   const dialog=el('dialog','journey-dialog');dialog.id='journey-dialog';dialog.setAttribute('aria-labelledby','journey-title');
   const heading=el('div','journey-heading'),title=el('h2');title.id='journey-title';
   const close=button('关闭 ×',()=>dialog.close());close.setAttribute('aria-label','关闭上传与试穿面板');
-  const chapter=el('span','journey-chapter','衣间 · 日常小记');
+  const chapter=el('span','journey-chapter','爱搭衣橱 · 日常小记');
   const headingCopy=el('div','journey-heading-copy');headingCopy.append(chapter,title);heading.append(headingCopy,close);
   const scene=el('div','journey-scene'),steps=el('ol','journey-steps'),body=el('div','journey-body'),footer=el('div','journey-footer');
   dialog.append(heading,scene,steps,body,footer);document.body.append(dialog);
@@ -319,7 +319,7 @@
       default:return {lead:'这次的试穿，还需要确认。',note:'暂时没收到确切结果。这里只查询原来的进展，不会再次扣积分。',query:'看看试穿进展'};
     }
   }
-  function letterSender(label='试衣间 · 来信'){
+  function letterSender(label='试爱搭衣橱 · 来信'){
     const sender=el('div','journey-letter-sender'),portrait=el('span','journey-companion-frame journey-letter-avatar'),art=el('span','journey-companion journey-dialogue-avatar companion-dialogue-avatar');art.setAttribute('aria-hidden','true');
     portrait.append(art);
     const copy=el('div','journey-letter-signature');copy.append(el('span','',label),el('strong','',(window.CompanionSettings?.agentName?.()||'衣衣')+' 写给你'));
@@ -415,7 +415,7 @@
   function avatarCard(reply,node){
     const token=epoch,ref=reply.tryon_context||null,kind=reply.avatar_intent;
     const card=el('section','journey-invite journey-avatar-card');card.setAttribute('aria-label',kind==='upload'?'上传虚拟形象引导':'选择虚拟形象');
-    card.append(el('span','journey-card-label','试衣间 · 形象手记'),el('strong','',kind==='upload'?'把自己的模样，带进试穿里':'选一个模样，遇见新的搭配'));
+    card.append(el('span','journey-card-label','试爱搭衣橱 · 形象手记'),el('strong','',kind==='upload'?'把自己的模样，带进试穿里':'选一个模样，遇见新的搭配'));
     if(kind==='upload'){
       card.append(el('p','','先选形象照片，再预览、检查。创建个人形象与搭配试穿分别确认积分；上传照片不代表已完成本人认证。'));
       const list=el('ol','journey-card-steps');for(const text of ['选图与检查','确认创建积分','确认使用形象'])list.append(el('li','',text));
