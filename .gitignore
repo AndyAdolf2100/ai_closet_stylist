@@ -35,3 +35,17 @@ stylist/static/closet-app/comparison/evolution/screenshots/private/
 /docs/UI_CHANGELOG.html
 /docs/assets/ui-changes-*/
 /docs/assets/ui-changes-*
+
+# Local configuration and credentials; only explicit templates may be tracked.
+/config/*
+!/config/*.example
+!/config/*.example.*
+/secrets/
+/credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
