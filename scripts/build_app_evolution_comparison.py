@@ -102,14 +102,20 @@ for i, s in enumerate(sections):
         ("接下来听听用户怎么说", "measure"),
     ]:
         html += f"<div><h4>{title}</h4><p>{s[key]}</p></div>"
-    html += '</div><h3>页面对比</h3><div class="ev-shots">'
+    html += '</div><h3>' + ('页面对比 · 无数据时' if s['id'] == 'home' else '页面对比') + '</h3><div class="ev-shots">'
     for version, label in [("ios", "iOS 2.0.0 · 原生截图"), ("yijian", "当前衣间 · 登录后截图")]:
         if version == "yijian" and s["id"] in {"profile", "agent"}:
             label = "当前衣间 · 示例账号截图"
         filename = f"{version}-{s['id']}.png"
-        html += f'<figure><figcaption>{label}</figcaption><a href="ASSET_PREFIX/screenshots/private/{filename}" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/{filename}" alt="{label}"></a></figure>'
+        folder = "private"
+        if s["id"] == "home":
+            filename = f"{version}-home-empty.png"
+            folder = "demo"
+            label = "iOS 风格 HTML 参考 · 无数据" if version == "ios" else "当前衣间 · 无数据"
+        html += f'<figure><figcaption>{label}</figcaption><a href="ASSET_PREFIX/screenshots/{folder}/{filename}" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/{folder}/{filename}" alt="{label}"></a></figure>'
     html += "</div>"
     if s["id"] == "home":
+        html += '<section class="ev-populated"><h3>有数据时 · 登录账号实拍</h3><p class="ev-note">2026-11-04 更新：以下使用同一个有搭配记录的账号，只读加载。左侧仍为 iOS 风格 HTML 参考，右侧为当前衣间；保留上方原截图。</p><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated.png" alt="iOS 风格 HTML 参考 · 有数据首页"></a></figure><figure><figcaption>当前衣间 · 有数据</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated.png" alt="当前衣间 · 有数据首页"></a></figure></div><h4>搭配列表展示</h4><div class="ev-shots"><figure><figcaption>iOS 风格 HTML 参考 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/ios-home-populated-feed.png" alt="iOS 风格 HTML 参考有数据的搭配列表"></a></figure><figure><figcaption>当前衣间 · 实际搭配内容</figcaption><a href="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" target="_blank"><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-populated-feed.png" alt="当前衣间有数据的搭配列表"></a></figure></div></section>'
         html += '<details><summary>展开查看衣间首页实际搭配内容</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-home-feed.png" alt="登录后首页搭配列表"></details>'
     if s["id"] == "profile":
         html += '<p class="ev-note">衣间截图更新于2026-11-04，使用示例账号展示本轮修改；iOS 2.0.0保留原生对照截图。</p><details open><summary>衣间更新：我的试穿形象与隐藏开关</summary><img loading="lazy" src="ASSET_PREFIX/screenshots/private/yijian-profile-identity.png" alt="衣间我的页面试穿形象区域最新截图"><div class="ev-shots"><figure><figcaption>用户性别女 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-female.png" alt="女用户剪影与标题右侧眼睛"></figure><figure><figcaption>用户性别男 · 隐藏形象</figcaption><img loading="lazy" src="ASSET_PREFIX/screenshots/private/twin-private-male.png" alt="男用户剪影与标题右侧眼睛"></figure></div><p>两个示例故意选择与用户性别不同的伙伴，说明剪影跟随用户本人。</p></details>'
