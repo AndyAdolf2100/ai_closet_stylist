@@ -304,3 +304,18 @@ def test_preflight_does_not_inherit_installer_stdin(host):
                             input='must-not-reach-preflight', capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
     assert (root / 'deployment/current').is_symlink()
+
+
+def test_runtime_update_preserves_custom_docs_nginx(host):
+    root, env = host
+    first = run(make_release(root, 'base', offline=True), env)
+    assert first.returncode == 0, first.stderr
+    site = root / 'vhost/aicloset-assistant.wxbjq.top.conf'
+    site.write_text('existing site with /docs/ custom route')
+    (root / 'events').write_text('')
+    update = run(make_release(root, 'usage', offline=True), {**env, 'AICLOSET_PRESERVE_NGINX': '1'})
+    assert update.returncode == 0, update.stderr
+    assert site.read_text() == 'existing site with /docs/ custom route'
+    events = [json.loads(line) for line in (root / 'events').read_text().splitlines()]
+    assert not any(event == ['nginx', ['-s', 'reload']] for event in events)
+    assert any(event[0] == 'docker' and 'up' in event[1] for event in events)

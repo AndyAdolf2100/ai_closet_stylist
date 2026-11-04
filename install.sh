@@ -14,6 +14,11 @@ nginx_bin=${AICLOSET_NGINX_BIN:-/usr/local/nginx/sbin/nginx}
 vhost_dir=${AICLOSET_VHOST_DIR:-/usr/local/nginx/conf/vhost}
 domain=aicloset-assistant.wxbjq.top
 nginx_target="$vhost_dir/$domain.conf"
+preserve_nginx=${AICLOSET_PRESERVE_NGINX:-0}
+[[ "$preserve_nginx" == 0 || "$preserve_nginx" == 1 ]] || fail "AICLOSET_PRESERVE_NGINX只能为0或1。"
+if [[ "$preserve_nginx" == 1 && ! -f "$nginx_target" ]]; then
+  fail "保留站点模式需要现有Nginx配置；首次安装请使用默认模式。"
+fi
 
 for program in docker tar curl sha256sum awk grep sed mktemp flock ss; do
   command -v "$program" >/dev/null || fail "缺少命令：$program"
@@ -192,11 +197,15 @@ if [[ -e "$nginx_target" ]]; then
   nginx_backup="$base/backups/nginx-$version.conf"
   cp -p "$nginx_target" "$nginx_backup"
 fi
+if [[ "$preserve_nginx" == 1 ]]; then
+  printf "保留现有Nginx站点及/docs等自定义路由，不替换或重载。\n"
+else
 nginx_changed=1
 install -m 644 "$release/deploy/nginx/aicloset-assistant.centos7.conf" "$vhost_dir/.aicloset-assistant-new-$$"
 mv -f "$vhost_dir/.aicloset-assistant-new-$$" "$nginx_target"
 "$nginx_bin" -t
 "$nginx_bin" -s reload
+fi
 response=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 15 \
   --resolve "$domain:443:127.0.0.1" "https://$domain/health/ready")
 grep -Eq '"ready"[[:space:]]*:[[:space:]]*true' <<<"$response" || fail '域名代理尚未指向新 Agent。'
