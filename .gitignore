@@ -25,3 +25,13 @@ config/postgres-local.env
 
 # Authenticated App comparison screenshots are local evidence only.
 stylist/static/closet-app/comparison/evolution/screenshots/private/
+
+# Local standalone UI changelog deployment packages.
+/local-deploy/ui-changelog/
+
+# Local reporting material and compatibility links; distributed separately.
+/reports/
+/docs/UI_CHANGELOG.md
+/docs/UI_CHANGELOG.html
+/docs/assets/ui-changes-*/
+/docs/assets/ui-changes-*
