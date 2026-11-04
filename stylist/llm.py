@@ -49,7 +49,7 @@ class LanguageModel:
                                      transport=self.transport) as client:
             for attempt in range(2):
                 metering = usage_context.get() if prompt_name != "check" else None
-                event = await asyncio.to_thread(metering.begin) if metering else None
+                event = await asyncio.to_thread(metering.begin, settings.llm_model) if metering else None
                 envelope, usage_status = {}, "unknown"
                 try:
                     body = {"model": settings.llm_model, "messages": messages, "temperature": 0.3,

@@ -55,7 +55,8 @@ async def test_validation_retry_records_both_calls_without_content_or_secrets(tm
     events = [json.loads(r['payload_json']) for r in records]
     assert [e['status'] for e in events] == ['invalid_output', 'succeeded']
     assert all(e['input_tokens'] == 100 and e['cached_input_tokens'] == 10 for e in events)
-    assert all(e['actual_model'] == 'actual-model' and e['reasoning_tokens'] == 3 for e in events)
+    assert all(e['model'] == 'endpoint-1' and e['reasoning_tokens'] == 3 for e in events)
+    assert all('provider' not in e and 'actual_model' not in e for e in events)
     assert all(secret not in str(records) for secret in ['private body', 'model-secret', 'service-secret'])
 
 
@@ -191,7 +192,7 @@ async def test_http_failure_usage_is_retained_and_pending_calls_not_sent(tmp_pat
 async def test_ledger_failure_prevents_supplier_call(tmp_path, monkeypatch):
     settings = config(tmp_path)
     store = Store(settings.database)
-    def broken_begin(self):
+    def broken_begin(self, model=None):
         raise RuntimeError('ledger unavailable')
     monkeypatch.setattr(UsageContext, 'begin', broken_begin)
     def handler(request):
@@ -237,3 +238,48 @@ async def test_callback_timeout_is_queued_without_new_model_call(tmp_path):
     sender = UsageSender(store, settings, httpx.MockTransport(timeout))
     await sender.send_one()
     assert len(rows(store)) == 1 and rows(store)[0]['state'] == 'queued'
+
+
+@pytest.mark.asyncio
+async def test_configured_model_id_is_sent_verbatim_without_supplier_prefix(tmp_path):
+    settings = replace(config(tmp_path), llm_model='ep-20260910130610-tjnpm')
+    store = Store(settings.database)
+    await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
+    event = json.loads(rows(store)[0]['payload_json'])
+    assert event['model'] == 'ep-20260910130610-tjnpm'
+    assert 'provider' not in event and 'actual_model' not in event
+
+
+@pytest.mark.asyncio
+async def test_multiple_model_instances_use_each_actual_request_model(tmp_path):
+    settings = config(tmp_path)
+    store = Store(settings.database)
+    token = context.set(UsageContext(store, settings, '1', 'same-conversation', 'same-request'))
+    try:
+        for name in ['endpoint-a', 'model-b']:
+            model = LanguageModel(replace(settings, llm_model=name),
+                httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
+            await model.generate('style', {}, Answer)
+    finally:
+        context.reset(token)
+    events = [json.loads(row['payload_json']) for row in rows(store)]
+    assert [e['model'] for e in events] == ['endpoint-a', 'model-b']
+    assert len({e['event_id'] for e in events}) == 2
+    assert {e['request_id'] for e in events} == {'same-request'}
+
+
+@pytest.mark.asyncio
+async def test_existing_queued_event_payload_is_not_rewritten(tmp_path):
+    settings = config(tmp_path)
+    store = Store(settings.database)
+    await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
+    event = json.loads(rows(store)[0]['payload_json'])
+    event.update(provider='legacy-provider', actual_model='legacy-model')
+    with store.connection() as conn:
+        conn.execute('UPDATE stylist_model_usage SET payload_json=? WHERE event_id=?',
+                     (json.dumps(event), event['event_id']))
+    def receive(request):
+        assert json.loads(request.content) == event
+        return httpx.Response(200, json={'accepted': True, 'event_id': event['event_id']})
+    await UsageSender(store, settings, httpx.MockTransport(receive)).send_one()
+    assert rows(store)[0]['state'] == 'delivered'

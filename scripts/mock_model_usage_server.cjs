@@ -47,7 +47,7 @@ const server = http.createServer(async (req, res) => {
   if (req.url === '/usage-fail') return reply(503, {error: 'mock_unavailable'});
   if (req.url === '/usage-bad-ack') return reply(200, {accepted: true, event_id: 'wrong'});
   const fields = ['event_id', 'occurred_at', 'environment', 'user_id', 'conversation_id', 'request_id',
-    'business_action', 'provider', 'model', 'actual_model', 'input_tokens', 'output_tokens',
+    'business_action', 'model', 'input_tokens', 'output_tokens',
     'cached_input_tokens', 'reasoning_tokens', 'status'];
   if (!body || fields.some(key => !(key in body)) || Object.keys(body).some(key => !fields.includes(key))) {
     return reply(400, {error: 'contract_mismatch'});

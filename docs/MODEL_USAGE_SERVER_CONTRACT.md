@@ -2,6 +2,17 @@
 
 2026-11-04。Agent端已本地接入采集、持久化及后台投递；Server接口仍待同事提供、真实联调待验。Server同事提供接收接口并自行定价；Agent不上报金额或积分，不接实际扣费。
 
+## 固定接口
+
+```http
+POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
+Authorization: Bearer <双方约定的服务间密钥>
+Content-Type: application/json
+Idempotency-Key: <与JSON中event_id一致>
+```
+
+Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待接入的目标，不代表接口已上线。成功持久化或确认同内容重复事件后，返回HTTP200及 `{"accepted":true,"event_id":"原event_id"}`；不重复计费。服务密钥另行配置，不写进本文或仓库。
+
 ## 范围
 
 仅报告Stylist直接发起的对话／多模态理解模型调用，包括理解、生成与实际发生的重试。每次真实HTTP调用一条，投递重试沿用event_id；不再单独上报执行汇总，避免复杂度和重复计费。
@@ -15,9 +26,7 @@
   "conversation_id": "conversation_example",
   "request_id": "request_example",
   "business_action": "outfit_recommend",
-  "provider": "volcengine_ark",
-  "model": "configured-endpoint-example",
-  "actual_model": null,
+  "model": "ep-20260910130610-tjnpm",
   "input_tokens": 1200,
   "output_tokens": 350,
   "cached_input_tokens": null,
@@ -35,8 +44,7 @@
 | user_id | Server验证身份的用户id字符串，等于本项目owner_id |
 | conversation_id、request_id | 查整段对话和本次用户操作；不需要额外run_id、call_id |
 | business_action | 受控业务类型，如chat、style_consult、outfit_recommend、outfit_modify、outfit_regenerate、weekly_plan、weather_consult、unknown；不传用户原话 |
-| provider、model | 供应商和实际请求的模型／接入点，供Server匹配价格；不能仅传展示名 |
-| actual_model | 响应明确返回的真实模型；无法取得为null，不能把接入点猜成底层模型 |
+| model | 实际请求中的模型名／接入点ID原样传递，不加供应商前缀。Server以此唯一标识匹配价格，例如ep-20260910130610-tjnpm；不再上报provider和actual_model |
 | input_tokens、output_tokens | 供应商真实输入／输出数量；未知为null，不估算、不填0；total可由Server在二者已知时相加 |
 | cached_input_tokens、reasoning_tokens | 供应商提供时记录，未知为null；是输入／输出明细，不额外相加。Server依据价格规则判断是否足够结算 |
 | status | succeeded、invalid_output、http_error、timeout、network_error、cancelled或unknown；失败也可能有真实用量 |
@@ -45,7 +53,7 @@
 
 ## 接口及可靠性
 
-- Server提供固定POST URL和服务间鉴权，JSON接收；不保存用户Bearer用于后台回调。
+- 接收地址固定为POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage，Server提供服务间鉴权并接收JSON；不保存用户Bearer用于后台回调。
 - 建议持久化成功返回 `{"accepted":true,"event_id":"call_example_001"}`。重复event_id内容相同返回相同确认，不重复入账；同ID不同内容拒绝。部署环境／生产者身份参与幂等命名空间。
 - Agent先持久化调用记录和待发送事件，再可靠投递；超时、429、5xx重试，回调重试不重跑模型。身份或契约错误暂停并告警。重启后续传。
 - 保存模型usage后再校验回复JSON；校验失败仍记录，后续修复调用另外一条。缓存响应回放不新增模型用量。
@@ -81,28 +89,27 @@ WHERE owner_id = :user_id AND request_id = :request_id;
 
 现有积分流水不等于已记录生图供应商的实际token或图片成本。若Server需要核算供应商生图成本，应由实际生图服务采集；Stylist不掌握该原始响应，不能推算或重复报账。触发生图前若Stylist确实调用了对话模型，那次对话token仍单独记录；图片费用继续走原有确认和扣费流程。
 
-上述为本地源码证据，未执行真实生图、扣费、退款或远端部署验收。Server只需确认接收URL、服务间鉴权、回执及模型标识与价格映射，价格由他们决定。
+上述为本地源码证据，未执行真实生图、扣费、退款或远端部署验收。接收URL已确定，Server需确认服务间鉴权、回执及模型标识与价格映射，价格由他们决定。
 
 ## 后端接收后如何处理
 
 1. 验证服务Bearer凭证。此接口仅供服务端调用，user_id是Agent验证身份后提供的Server用户ID，不使用浏览器自报参数。
-2. 校验JSON类型：event_id为UUID字符串；occurred_at为UTC ISO8601时间；environment为development/test/production；用户、会话、请求、业务及模型为字符串；actual_model可为null。四种token字段为非负整数或null，布尔值不能当整数。
+2. 校验JSON类型：event_id为UUID字符串；occurred_at为UTC ISO8601时间；environment为development/test/production；用户、会话、请求、业务及模型为字符串。四种token字段为非负整数或null，布尔值不能当整数。
 3. 按服务身份、environment、event_id唯一落库。同ID相同内容返回成功，不能再收费；同ID不同内容返回409。推荐将请求正文原样留存供对账，但没有必要另取聊天正文。
-4. 根据provider、model及可用的actual_model匹配自有价格规则；input_tokens和output_tokens分别计价。cached_input_tokens包含在输入中，reasoning_tokens包含在输出中，不能再加一次。缓存明细未知时不要按0断言；实际规则由Server决定。
+4. 仅根据model匹配自有价格规则；input_tokens和output_tokens分别计价。cached_input_tokens包含在输入中，reasoning_tokens包含在输出中，不能再加一次。缓存明细未知时不要按0断言；实际规则由Server决定。
 5. test/development不计生产费用；失败但有真实token的调用仍可能有供应商成本。未知token或模型未映射的记录挂起核对，不当零成本。用户如何收费由Server决定。
 6. 只有持久化接收成功才返回HTTP200：`{"accepted":true,"event_id":"原event_id"}`。金额可后算，ACK仅表示已可靠收到。鉴权失败返回401/403，契约错误400/422，临时限流429、临时故障5xx。Agent不接受仅返回通用code但无accepted/event_id的回执。
 
-所有示例字段均会出现；不适用或未知的模型／token明细用null。业务枚举补充wardrobe_upload_intent、avatar_intent，仅表示对话意图理解的模型消耗，不是上传或生图费用。plan结构失败尚不能判断业务时为unknown；不会为补分类重复调用模型。
+新事件包含示例中的字段；未知token明细用null，model始终为实际请求配置的模型标识。业务枚举补充wardrobe_upload_intent、avatar_intent，仅表示对话意图理解的模型消耗，不是上传或生图费用。plan结构失败尚不能判断业务时为unknown；不会为补分类重复调用模型。
 
 ## Agent配置（同事提供接口后）
 
 在服务器现有私密config/deploy.env增加，随后重建应用容器使环境生效：
 
 ```dotenv
-STYLIST_USAGE_CALLBACK_URL=https://SERVER_HOST/AGREED_PATH
+STYLIST_USAGE_CALLBACK_URL=https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
 STYLIST_USAGE_CALLBACK_KEY=REPLACE_WITH_SERVICE_KEY
 STYLIST_USAGE_ENVIRONMENT=production
-STYLIST_USAGE_PROVIDER=volcengine_ark
 ```
 
 URL默认空：只本地记录，不发送，不影响正常对话。KEY是新服务间密钥，不能用用户token或模型API key。生产使用HTTPS；仅localhost/127.0.0.1/::1允许HTTP测试。拒绝URL中的账号密码、query和fragment，也不跟随重定向。environment默认test，生产需要显式设置。
@@ -155,3 +162,11 @@ MOCK_USAGE_PORT=8491 node scripts/mock_model_usage_server.cjs
 - 隔离PostgreSQL17.6：实际建表、并发账号、持久化重试、发送租约及对话轮次／回放5项通过。检查点初次缺表由测试环境初始化补齐后复测通过；未连接远端数据库。
 - 另跑Node真实本机HTTP端到端10例全部通过：正常、无地址、503、错误ACK、401、429、超时、usage缺失、真实0token、JSON修复重试。所有Agent请求正常返回，预期记录数量／状态／账号与会话关联正确；未知和0可区分，模型重试多记调用，回放不增记。
 - Node模拟服务、供应商回复、用户身份均为合成测试；未使用真实模型或Server计费接口。配置真实URL和服务密钥后仍需测试环境联调。
+
+## model唯一标识版（2026-11-04）
+
+新调用仅发送model，不发送provider或actual_model，也不读取STYLIST_USAGE_PROVIDER。现有环境里遗留该变量可删除，不影响其他配置；回调URL、密钥及事件去重规则不变。未来多个模型各次调用应使用各自的真实请求标识，Server维护标识到价格的映射，不能让不同价格的接入点使用相同标识。
+
+本版不新增数据库列、不重写已存在事件。旧版本已入库的pending/queued等事件仍保留原payload，并按原event_id重试，避免ACK丢失时修改同ID内容导致冲突。Server兼容接受历史provider／actual_model字段但不以其作为本版计价必需项；新调用不会再携带它们。
+
+V2验证：41项定向回归及10项Node端到端通过，覆盖原样model、同一请求多个模型分别记录、旧事件不重写和回调故障。amd64只读镜像写表检查、402运行文件哈希与6项精简更新包校验通过；未真实Server接收或扣费。前述921项为上一版全量基线，本版未重新宣称全量验收。

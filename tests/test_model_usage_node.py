@@ -50,7 +50,7 @@ def test_real_node_receiver_does_not_block_chat(tmp_path, monkeypatch, node_rece
     monkeypatch.setattr(Upstream, 'identity', identity)
     request_id = 'node-usage-' + case
     settings = Settings(database=str(tmp_path / 'node.db'), llm_url=node_receiver + model_path + '/v1',
-        llm_model='mock-endpoint', llm_key='local-model-test', usage_provider='node-fixture',
+        llm_model='mock-endpoint', llm_key='local-model-test',
         usage_callback_url=node_receiver + endpoint if endpoint else '', usage_callback_key='local-usage-test')
     app = create_app(settings)
     store = app.state.engine.store
@@ -87,7 +87,7 @@ def test_real_node_receiver_does_not_block_chat(tmp_path, monkeypatch, node_rece
             assert all(e['output_tokens'] == (None if expected_input is None else 0 if expected_input == 0 else 20) for e in received)
             if case == 'json_retry':
                 assert sum(e['status'] == 'invalid_output' for e in received) == 1
-            assert all(e['model'] == 'mock-endpoint' and e['actual_model'] == 'mock-conversation-model' for e in received)
+            assert all(e['model'] == 'mock-endpoint' and 'provider' not in e and 'actual_model' not in e for e in received)
             # Same immutable event is accepted again but never creates a second usage row at receiver.
             duplicate = observer.post(node_receiver + '/usage', json=received[0],
                                       headers={'Authorization': 'Bearer local-usage-test'})

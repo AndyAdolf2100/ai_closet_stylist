@@ -42,14 +42,13 @@ class UsageContext:
     request: str
     business_action: str = 'unknown'
 
-    def begin(self):
+    def begin(self, model=None):
         event = {
             'event_id': str(uuid.uuid4()), 'occurred_at': datetime.now(timezone.utc).isoformat(),
             'environment': self.settings.usage_environment, 'user_id': self.owner,
             'conversation_id': self.conversation, 'request_id': self.request,
             'business_action': self.business_action,
-            'provider': self.settings.usage_provider or urlsplit(self.settings.llm_url).hostname or 'unknown',
-            'model': self.settings.llm_model, 'actual_model': None,
+            'model': model if model is not None else self.settings.llm_model,
             'input_tokens': None, 'output_tokens': None, 'cached_input_tokens': None,
             'reasoning_tokens': None, 'status': 'unknown',
         }
@@ -69,9 +68,7 @@ class UsageContext:
         def detail(key, field):
             value = usage.get(key)
             return integer(value.get(field)) if isinstance(value, dict) else None
-        actual = envelope.get('model')
-        event.update(actual_model=actual[:256] if isinstance(actual, str) else None,
-                     input_tokens=integer(usage.get('prompt_tokens', usage.get('input_tokens'))),
+        event.update(input_tokens=integer(usage.get('prompt_tokens', usage.get('input_tokens'))),
                      output_tokens=integer(usage.get('completion_tokens', usage.get('output_tokens'))),
                      cached_input_tokens=detail('prompt_tokens_details', 'cached_tokens'),
                      reasoning_tokens=detail('completion_tokens_details', 'reasoning_tokens'),

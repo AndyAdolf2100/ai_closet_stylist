@@ -1253,3 +1253,7 @@
 | 2026-11-04 | PRD-09 Agent对话用量接入 | 用户要求最小字段MD交接后端并集成Agent，Node模拟接收、无配置／API失败不影响对话，验后另跑10例再提交打包 | 已本地接入stylist_model_usage、逐调用真实usage、已验证身份、消息事务关联与异步租约投递；Node实际HTTP及隔离PostgreSQL已验证。全量921通过／85跳过、后续定向42通过，另跑Node真实HTTP10例及隔离PostgreSQL5项通过；尚未远端接收或扣费验收。提交后构建仅运行所需的amd64包。发布仅运行所需，排除测试／模拟器／汇报／凭证。 |
 
 | 2026-11-04 | PRD-09 用量更新包保留站点 | 用户要求仅打包运行所需，更新不能覆盖已配置/docs | 安装器增加显式AICLOSET_PRESERVE_NGINX=1保留已有站点模式，本次包使用该模式；默认首次安装规则保留。仅应用更新，安装／发布32项模拟检查通过；本次精简包固定保留站点且删除替换分支，只包含离线镜像、Compose、更新脚本和说明／校验。无远端操作。 |
+
+| 2026-11-04 | PRD-09 固定Server用量路由 | 用户依据既有Server域名要求给出固定格式 | 接口文档固定POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage及Bearer／Idempotency-Key与成功回执；实际回调配置仍未开启，待Server接口与服务密钥就绪后启用。未探测写接口或实际扣费。 |
+
+| 2026-11-04 | PRD-09 用量上报仅model标识版 | 用户要求直接传model name，不加volcengine前缀，重新制作版本 | 新事件移除provider／actual_model及STYLIST_USAGE_PROVIDER，model原样使用实际请求模型名或接入点ID；保留旧事件原payload避免同ID内容变化。文档／Node同步，41项定向及10项Node端到端通过，amd64镜像／402运行文件哈希和6项精简包校验通过；V2更新包保留现有Nginx。固定回调地址仍需Server上线及服务密钥。 |

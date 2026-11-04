@@ -16,7 +16,6 @@ class Settings:
     usage_callback_url: str = ""
     usage_callback_key: str = field(default="", repr=False)
     usage_environment: str = "test"
-    usage_provider: str = ""
     llm_url: str = ""
     llm_model: str = ""
     llm_key: str = field(default="", repr=False)
@@ -56,7 +55,6 @@ class Settings:
             usage_callback_url=os.getenv("STYLIST_USAGE_CALLBACK_URL", ""),
             usage_callback_key=os.getenv("STYLIST_USAGE_CALLBACK_KEY", ""),
             usage_environment=os.getenv("STYLIST_USAGE_ENVIRONMENT", "test"),
-            usage_provider=os.getenv("STYLIST_USAGE_PROVIDER", ""),
             catalog=CatalogConfig.load({**raw, **({"db_knowledge": local["db_knowledge"]} if "db_knowledge" in local else {})}),
             server_url=server_url.rstrip("/"), mcp_url=mcp_url,
             llm_url=os.getenv("STYLIST_LLM_URL", llm.get("base_url") or "").rstrip("/"),
