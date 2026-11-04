@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 
@@ -6,6 +7,8 @@ from pydantic import ValidationError
 
 from .errors import StylistError
 from .personas import persona_instructions
+from .usage import action
+from .usage import context as usage_context
 
 
 class LanguageModel:
@@ -45,6 +48,9 @@ class LanguageModel:
         async with httpx.AsyncClient(timeout=settings.llm_timeout, trust_env=False,
                                      transport=self.transport) as client:
             for attempt in range(2):
+                metering = usage_context.get() if prompt_name != "check" else None
+                event = await asyncio.to_thread(metering.begin) if metering else None
+                envelope, usage_status = {}, "unknown"
                 try:
                     body = {"model": settings.llm_model, "messages": messages, "temperature": 0.3,
                             "max_completion_tokens": 6000, "response_format": {"type": "json_object"}}
@@ -53,11 +59,20 @@ class LanguageModel:
                     response = await client.post(settings.llm_url + "/chat/completions",
                         headers={"Authorization": f"Bearer {settings.llm_key}"},
                         json=body)
+                    usage_status = "http_error" if response.is_error else "invalid_output"
+                    try:
+                        envelope = response.json()
+                    except ValueError:
+                        envelope = {}
                     response.raise_for_status()
-                    value = response.json()["choices"][0]["message"]["content"]
+                    value = envelope["choices"][0]["message"]["content"]
                     if not isinstance(value, str):
                         raise ValueError("content_missing")
-                    return result_type.model_validate_json(value)
+                    result = result_type.model_validate_json(value)
+                    if metering and prompt_name == "plan" and metering.business_action != "outfit_regenerate":
+                        metering.business_action = action(result)
+                    usage_status = "succeeded"
+                    return result
                 except (ValidationError, ValueError, KeyError, IndexError, TypeError) as exc:
                     if attempt == 0:
                         details = [{"field": ".".join(map(str, error["loc"])), "type": error["type"]}
@@ -67,11 +82,20 @@ class LanguageModel:
                         continue
                     raise StylistError("model_output_invalid", "这次没能把建议整理完整，可以再发一次。刚才的需求不用改，衣衣会重新帮你看看。") from None
                 except httpx.TimeoutException:
+                    usage_status = "timeout"
                     raise StylistError("model_timeout", "这次模型整理超时，原需求已保留，请稍后重试。") from None
                 except httpx.HTTPStatusError as exc:
+                    usage_status = "http_error"
                     raise StylistError(f"model_http_{exc.response.status_code}", "搭配模型暂时未能完成请求，原需求已保留。") from None
                 except httpx.HTTPError:
+                    usage_status = "network_error"
                     raise StylistError("model_unavailable", "搭配模型暂时连接失败，原需求已保留，请稍后重试。") from None
+                except asyncio.CancelledError:
+                    usage_status = "cancelled"
+                    raise
+                finally:
+                    if metering and event:
+                        await asyncio.shield(asyncio.to_thread(metering.finish, event, envelope, usage_status))
 
     async def check(self):
         from pydantic import BaseModel

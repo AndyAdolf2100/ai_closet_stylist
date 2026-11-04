@@ -224,6 +224,9 @@ class Store:
                          (reply.model_dump_json(), owner, request.request_id))
             conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",
                          (reply.conversation_id, owner, reply.version, request.message, reply.model_dump_json()))
+            conn.execute("UPDATE stylist_model_usage SET message_version=? "
+                         "WHERE owner_id=? AND conversation_id=? AND request_id=?",
+                         (reply.version, owner, reply.conversation_id, request.request_id))
 
     def release(self, owner, cid, claim):
         with self.connection() as conn:

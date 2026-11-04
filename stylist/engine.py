@@ -67,6 +67,8 @@ from .policy import (
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .progress import report
 from .retrieval import resolve_products, retrieve, saved_candidates, weather_for
+from .usage import UsageContext
+from .usage import context as usage_context
 from .weather import WeatherService, apply_forecast
 
 logger = logging.getLogger(__name__)
@@ -717,6 +719,9 @@ class Stylist:
             while True:
                 await asyncio.sleep(10)
                 await asyncio.to_thread(self.store.renew, owner, cid, claim)
+        metering = UsageContext(self.store, self.settings, owner, cid, request.request_id,
+                                "outfit_regenerate" if request.regenerate_outfit else "unknown")
+        usage_token = usage_context.set(metering)
         pulse = asyncio.create_task(heartbeat())
         try:
             regeneration_source = (await asyncio.to_thread(self.store.regeneration_source, owner, cid, request.regenerate_from_version)
@@ -789,6 +794,7 @@ class Stylist:
                 await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply, memory_save)
                 return reply
         finally:
+            usage_context.reset(usage_token)
             pulse.cancel()
             await asyncio.gather(pulse, return_exceptions=True)
             await asyncio.to_thread(self.store.release, owner, cid, claim)

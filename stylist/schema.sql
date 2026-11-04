@@ -44,3 +44,16 @@ CREATE TABLE IF NOT EXISTS stylist_outfit_images (
   image_digest TEXT NOT NULL, image_url TEXT NOT NULL DEFAULT '',
   FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 );
+
+CREATE TABLE IF NOT EXISTS stylist_model_usage (
+ event_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL,
+ conversation_id TEXT NOT NULL, request_id TEXT NOT NULL,
+ message_version INTEGER, provider_request_id VARCHAR(256), payload_json TEXT NOT NULL,
+ state VARCHAR(16) NOT NULL, created_at REAL NOT NULL,
+ next_attempt REAL NOT NULL DEFAULT 0,
+ lease VARCHAR(64), lease_until REAL NOT NULL DEFAULT 0,
+ attempts INTEGER NOT NULL DEFAULT 0, last_error VARCHAR(64) NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS stylist_usage_delivery ON stylist_model_usage(state,next_attempt,lease_until);
+CREATE INDEX IF NOT EXISTS stylist_usage_request ON stylist_model_usage(owner_id,conversation_id,request_id);

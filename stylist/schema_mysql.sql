@@ -71,3 +71,15 @@ CREATE TABLE IF NOT EXISTS stylist_outfit_images (
   image_url TEXT NOT NULL,
   FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS stylist_model_usage (
+ event_id VARCHAR(128) PRIMARY KEY, owner_id VARCHAR(128) NOT NULL,
+ conversation_id VARCHAR(128) NOT NULL, request_id VARCHAR(128) NOT NULL,
+ message_version INTEGER, provider_request_id VARCHAR(256), payload_json LONGTEXT NOT NULL,
+ state VARCHAR(16) NOT NULL, created_at DOUBLE NOT NULL,
+ next_attempt DOUBLE NOT NULL DEFAULT 0,
+ lease VARCHAR(64), lease_until DOUBLE NOT NULL DEFAULT 0,
+ attempts INTEGER NOT NULL DEFAULT 0, last_error VARCHAR(64) NOT NULL DEFAULT '',
+ INDEX stylist_usage_delivery(state,next_attempt,lease_until),
+ INDEX stylist_usage_request(owner_id,conversation_id,request_id)
+);

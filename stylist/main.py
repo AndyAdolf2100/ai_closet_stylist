@@ -45,6 +45,7 @@ from .progress import events as progress_events
 from .runtime import RunManager
 from .store import Store
 from .upstream import Upstream, check_integrations
+from .usage import UsageSender
 from .wardrobe_image import read_wardrobe_image
 
 
@@ -60,12 +61,20 @@ def create_app(settings=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        yield
-        await runs.close()
+        sender_task = asyncio.create_task(usage_sender.run()) if settings.usage_callback_url else None
+        try:
+            yield
+        finally:
+            await runs.close()
+            if sender_task:
+                sender_task.cancel()
+                await asyncio.gather(sender_task, return_exceptions=True)
 
     app = FastAPI(title="AI Closet Stylist", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings
     store = Store(settings.database)
+    usage_sender = UsageSender(store, settings)
+    app.state.usage_sender = usage_sender
     model = LanguageModel(settings)
     engine = Stylist(settings, store, model)
     images = ImageService(store)
