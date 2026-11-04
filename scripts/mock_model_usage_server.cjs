@@ -39,14 +39,14 @@ const server = http.createServer(async (req, res) => {
     });
   }
   if (!['/usage', '/usage-fail', '/usage-bad-ack', '/usage-unauthorized', '/usage-limited', '/usage-timeout'].includes(req.url)) return reply(404, {error: 'not_found'});
-  if (req.headers.authorization !== 'Bearer local-usage-test') return reply(401, {error: 'unauthorized'});
-  attempts.push({event_id: body.event_id, request_id: body.request_id, path: req.url});
+  if (req.headers.authorization !== 'Bearer local-user-test') return reply(401, {error: 'unauthorized'});
+  attempts.push({event_id: body.event_id, request_id: body.request_id, path: req.url, authenticated_user: '42'});
   if (req.url === '/usage-unauthorized') return reply(401, {error: 'mock_unauthorized'});
   if (req.url === '/usage-limited') return reply(429, {error: 'mock_rate_limit'});
   if (req.url === '/usage-timeout') return setTimeout(() => reply(503, {error: 'mock_timeout'}), 12000);
   if (req.url === '/usage-fail') return reply(503, {error: 'mock_unavailable'});
   if (req.url === '/usage-bad-ack') return reply(200, {accepted: true, event_id: 'wrong'});
-  const fields = ['event_id', 'occurred_at', 'environment', 'user_id', 'conversation_id', 'request_id',
+  const fields = ['event_id', 'occurred_at', 'environment', 'conversation_id', 'request_id',
     'business_action', 'model', 'input_tokens', 'output_tokens',
     'cached_input_tokens', 'reasoning_tokens', 'status'];
   if (!body || fields.some(key => !(key in body)) || Object.keys(body).some(key => !fields.includes(key))) {

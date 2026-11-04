@@ -8,10 +8,10 @@
 
 ## 当前代码
 
-- `stylist/llm.py:LanguageModel.generate` 是正式文字模型 HTTP 入口，当前只提取 content 并做结构校验，没有持久化 model、usage 或供应商请求标识。内部可能因 JSON 校验失败再调用一次。
-- `stylist/engine.py` 包含理解、生成、修复阶段及节点重试；`stylist/policy.py` 也会调用 plan。只统计最终 style 会漏计。
-- `engine.chat` 从上游身份取得 owner，Store.reserve 按账号／request_id 处理重复请求，命中回放不再运行模型。RunManager 保持浏览器断开后的任务存活。商业事件应关联这些身份和请求，而不是使用前端自报的用户 ID。
-- `LanguageModel.check` 同样调用模型，必须标记 internal_healthcheck，不能算作用户消费。
+- llm逐次真实HTTP尝试持久化usage及供应商响应ID；健康检查不计费。
+- engine.chat验证Server用户身份后在内存登记当前Authorization，回放请求也会刷新凭证。
+- 后台按owner_id选择有可用token的事件；JSON不传user_id，Server从Bearer识别用户。token不落库，401/403清除失效token；重启或凭证失效后等该用户下次通过对话身份校验再补报，用户不再操作则等待。
+- 本地表保留owner_id和对话轮次，旧JSON发送时删除user_id但保留event_id；Server按事件去重并单独校验归属。
 
 ## 建议边界
 
@@ -21,7 +21,7 @@ Agent 记录真实模型资源使用；Server 验证事件、按自身价格版�
 
 ## 当前最小方案（2026-11-04用户收敛）
 
-以[最小Server契约](MODEL_USAGE_SERVER_CONTRACT.md)为准：仅每次直接模型调用一条，event_id同时作为调用标识；不再要求独立run_id/call_id和终态汇总回调。传用户、对话／操作ID、业务、model和真实token及必要状态。2026-11-04后续明确仅model原样作为计价标识，不加供应商前缀、不传provider或actual_model，旧入库事件不重写。试穿和数字人生图由原服务计费，不重复通过本回调上报。下方双事件及扩展字段为早期备选设计，非本次接入要求。
+以[最小Server契约](MODEL_USAGE_SERVER_CONTRACT.md)为准：仅每次直接模型调用一条，event_id同时作为调用标识；不再要求独立run_id/call_id和终态汇总回调。以用户Authorization表示归属；JSON传对话／操作ID、业务、model和真实token数量及必要状态。2026-11-04后续明确仅model原样作为计价标识，不加供应商前缀、不传provider或actual_model，旧入库事件不重写。试穿和数字人生图由原服务计费，不重复通过本回调上报。下方双事件及扩展字段为早期备选设计，非本次接入要求。
 
 ## 历史备选：事件粒度与字段
 

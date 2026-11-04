@@ -14,7 +14,6 @@ class Settings:
     server_url: str = "http://127.0.0.1:8080"
     mcp_url: str = "http://127.0.0.1:8080/mcp"
     usage_callback_url: str = ""
-    usage_callback_key: str = field(default="", repr=False)
     usage_environment: str = "test"
     llm_url: str = ""
     llm_model: str = ""
@@ -53,7 +52,6 @@ class Settings:
         server_url = os.getenv("STYLIST_SERVER_URL", f"{origin.scheme}://{origin.netloc}")
         return cls(
             usage_callback_url=os.getenv("STYLIST_USAGE_CALLBACK_URL", ""),
-            usage_callback_key=os.getenv("STYLIST_USAGE_CALLBACK_KEY", ""),
             usage_environment=os.getenv("STYLIST_USAGE_ENVIRONMENT", "test"),
             catalog=CatalogConfig.load({**raw, **({"db_knowledge": local["db_knowledge"]} if "db_knowledge" in local else {})}),
             server_url=server_url.rstrip("/"), mcp_url=mcp_url,

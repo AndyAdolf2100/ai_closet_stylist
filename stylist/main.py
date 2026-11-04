@@ -76,7 +76,7 @@ def create_app(settings=None):
     usage_sender = UsageSender(store, settings)
     app.state.usage_sender = usage_sender
     model = LanguageModel(settings)
-    engine = Stylist(settings, store, model)
+    engine = Stylist(settings, store, model, usage_tokens=usage_sender.tokens)
     images = ImageService(store)
     media = MediaActions(store)
     app.state.media = media

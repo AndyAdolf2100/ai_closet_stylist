@@ -67,7 +67,7 @@ from .policy import (
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .progress import report
 from .retrieval import resolve_products, retrieve, saved_candidates, weather_for
-from .usage import UsageContext
+from .usage import UsageContext, UsageTokens
 from .usage import context as usage_context
 from .weather import WeatherService, apply_forecast
 
@@ -128,8 +128,9 @@ def needs_outfit_city(plan: Plan, task: Task) -> bool:
 
 
 class Stylist:
-    def __init__(self, settings, store, llm):
+    def __init__(self, settings, store, llm, usage_tokens=None):
         self.settings, self.store, self.llm = settings, store, llm
+        self.usage_tokens = usage_tokens if usage_tokens is not None else UsageTokens()
         if store.postgres and settings.checkpoint_database and not settings.checkpoint_database.startswith(("postgres://", "postgresql://")):
             raise ValueError("PostgreSQL 会话必须搭配共享 PostgreSQL 检查点。")
         if store.mysql and settings.checkpoint_database and not settings.checkpoint_database.startswith("mysql://"):
@@ -711,6 +712,7 @@ class Stylist:
 
     async def chat(self, upstream, request, decision=None):
         owner = await upstream.identity()
+        self.usage_tokens.register(owner, getattr(upstream, 'authorization', None))
         explicit_memory(request.message)  # Validate explicit save commands before reserving a task.
         cid, claim, state, replay = await asyncio.to_thread(self.store.reserve, owner, request)
         if replay:

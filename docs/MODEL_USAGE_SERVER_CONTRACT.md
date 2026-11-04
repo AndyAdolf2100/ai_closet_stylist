@@ -1,4 +1,4 @@
-# Stylist → Server 模型用量通知（最小契约草案）
+# Stylist → Server 模型用量通知（用户 token 版接入契约）
 
 2026-11-04。Agent端已本地接入采集、持久化及后台投递；Server接口仍待同事提供、真实联调待验。Server同事提供接收接口并自行定价；Agent不上报金额或积分，不接实际扣费。
 
@@ -6,12 +6,12 @@
 
 ```http
 POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
-Authorization: Bearer <双方约定的服务间密钥>
+Authorization: Bearer <当前登录用户的token>
 Content-Type: application/json
 Idempotency-Key: <与JSON中event_id一致>
 ```
 
-Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待接入的目标，不代表接口已上线。成功持久化或确认同内容重复事件后，返回HTTP200及 `{"accepted":true,"event_id":"原event_id"}`；不重复计费。服务密钥另行配置，不写进本文或仓库。
+Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待接入的目标，不代表接口已上线。成功持久化或确认同内容重复事件后，返回HTTP200及 `{"accepted":true,"event_id":"原event_id"}`；不重复计费。Server复用现有登录鉴权，从token解析用户；JSON不传user_id。无需配置服务间密钥。
 
 ## 范围
 
@@ -19,10 +19,9 @@ Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待�
 
 ```json
 {
-  "event_id": "call_example_001",
+  "event_id": "b78bcb9a-84ea-4d3e-bb0b-f18ae8d5b421",
   "occurred_at": "2026-11-04T08:00:00Z",
   "environment": "test",
-  "user_id": "12345",
   "conversation_id": "conversation_example",
   "request_id": "request_example",
   "business_action": "outfit_recommend",
@@ -41,7 +40,6 @@ Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待�
 | --- | --- |
 | event_id | 唯一调用／去重ID，投递重试不变；模型重新调用则新ID |
 | occurred_at、environment | 调用时间用于价格版本和对账；环境区分测试与生产 |
-| user_id | Server验证身份的用户id字符串，等于本项目owner_id |
 | conversation_id、request_id | 查整段对话和本次用户操作；不需要额外run_id、call_id |
 | business_action | 受控业务类型，如chat、style_consult、outfit_recommend、outfit_modify、outfit_regenerate、weekly_plan、weather_consult、unknown；不传用户原话 |
 | model | 实际请求中的模型名／接入点ID原样传递，不加供应商前缀。Server以此唯一标识匹配价格，例如ep-20260910130610-tjnpm；不再上报provider和actual_model |
@@ -49,13 +47,13 @@ Server路由：`POST /api/internal/stylist/model-usage`。该地址是双方待�
 | cached_input_tokens、reasoning_tokens | 供应商提供时记录，未知为null；是输入／输出明细，不额外相加。Server依据价格规则判断是否足够结算 |
 | status | succeeded、invalid_output、http_error、timeout、network_error、cancelled或unknown；失败也可能有真实用量 |
 
-不发正文、图片、密钥、手机号、单价、金额、积分、耗时及其他诊断信息。内部健康检查不作为用户计费事件。业务理解尚未确认时用unknown，不让模型任意指定计费分类；Server若按业务类型定价，unknown需挂起对账。
+JSON不发user_id、正文、图片、密钥、手机号、单价、金额、积分、耗时及其他诊断信息。内部健康检查不作为用户计费事件。业务理解尚未确认时用unknown，不让模型任意指定计费分类；Server若按业务类型定价，unknown需挂起对账。
 
 ## 接口及可靠性
 
-- 接收地址固定为POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage，Server提供服务间鉴权并接收JSON；不保存用户Bearer用于后台回调。
-- 建议持久化成功返回 `{"accepted":true,"event_id":"call_example_001"}`。重复event_id内容相同返回相同确认，不重复入账；同ID不同内容拒绝。部署环境／生产者身份参与幂等命名空间。
-- Agent先持久化调用记录和待发送事件，再可靠投递；超时、429、5xx重试，回调重试不重跑模型。身份或契约错误暂停并告警。重启后续传。
+- 接收地址固定为POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage，Server复用现有用户Bearer鉴权并接收JSON；Agent仅在内存保存通过身份校验的用户Bearer，不写数据库／日志／配置。
+- 建议持久化成功返回 `{"accepted":true,"event_id":"b78bcb9a-84ea-4d3e-bb0b-f18ae8d5b421"}`。重复event_id内容相同返回相同确认，不重复入账；同ID不同内容拒绝。按固定来源stylist、environment、event_id全局去重，并校验已保存用户归属；其他用户重复同ID不得变成新账单。
+- Agent先持久化调用记录和待发送事件，再可靠投递；超时、429、5xx重试，回调重试不重跑模型。401/403等待该用户重新通过身份校验；契约错误暂停并告警。重启后须同一用户再次发送对话，通过身份校验取得token后才能续传。
 - 保存模型usage后再校验回复JSON；校验失败仍记录，后续修复调用另外一条。缓存响应回放不新增模型用量。
 - 未知用量不能作为免费或零消耗，交Server决定挂起／对账。供应商响应id保存为本地provider_request_id；投递次数及受控错误码仅本地记录，必要时按event_id查。
 
@@ -89,13 +87,13 @@ WHERE owner_id = :user_id AND request_id = :request_id;
 
 现有积分流水不等于已记录生图供应商的实际token或图片成本。若Server需要核算供应商生图成本，应由实际生图服务采集；Stylist不掌握该原始响应，不能推算或重复报账。触发生图前若Stylist确实调用了对话模型，那次对话token仍单独记录；图片费用继续走原有确认和扣费流程。
 
-上述为本地源码证据，未执行真实生图、扣费、退款或远端部署验收。接收URL已确定，Server需确认服务间鉴权、回执及模型标识与价格映射，价格由他们决定。
+上述为本地源码证据，未执行真实生图、扣费、退款或远端部署验收。接收URL已确定，Server需确认用户token鉴权、回执及模型标识与价格映射，价格由他们决定。
 
 ## 后端接收后如何处理
 
-1. 验证服务Bearer凭证。此接口仅供服务端调用，user_id是Agent验证身份后提供的Server用户ID，不使用浏览器自报参数。
-2. 校验JSON类型：event_id为UUID字符串；occurred_at为UTC ISO8601时间；environment为development/test/production；用户、会话、请求、业务及模型为字符串。四种token字段为非负整数或null，布尔值不能当整数。
-3. 按服务身份、environment、event_id唯一落库。同ID相同内容返回成功，不能再收费；同ID不同内容返回409。推荐将请求正文原样留存供对账，但没有必要另取聊天正文。
+1. 验证当前用户Bearer凭证，从Server既有登录鉴权结果取得用户ID，映射到本项目owner_id。JSON不接受user_id作为归属依据，token不存入用量表或访问日志。该路由仍须通过网关内网／来源访问控制仅允许Agent服务调用；用户token证明用户身份，不证明用量由Agent产生，不能允许客户端自报token数量触发计费。
+2. 校验JSON类型：event_id为UUID字符串；occurred_at为UTC ISO8601时间；environment为development/test/production；会话、请求、业务及模型为字符串。四种token字段为非负整数或null，布尔值不能当整数。
+3. 按固定来源stylist、environment、event_id唯一落库，同时保存鉴权所得用户ID。同ID须先校验用户归属，再比较业务内容；相同返回成功，不能再收费，不同返回409。历史事件比较时忽略旧user_id字段（归属单独校验），避免升级后因去掉该字段产生重复收费或冲突。推荐将请求正文原样留存供对账，但没有必要另取聊天正文。
 4. 仅根据model匹配自有价格规则；input_tokens和output_tokens分别计价。cached_input_tokens包含在输入中，reasoning_tokens包含在输出中，不能再加一次。缓存明细未知时不要按0断言；实际规则由Server决定。
 5. test/development不计生产费用；失败但有真实token的调用仍可能有供应商成本。未知token或模型未映射的记录挂起核对，不当零成本。用户如何收费由Server决定。
 6. 只有持久化接收成功才返回HTTP200：`{"accepted":true,"event_id":"原event_id"}`。金额可后算，ACK仅表示已可靠收到。鉴权失败返回401/403，契约错误400/422，临时限流429、临时故障5xx。Agent不接受仅返回通用code但无accepted/event_id的回执。
@@ -108,13 +106,14 @@ WHERE owner_id = :user_id AND request_id = :request_id;
 
 ```dotenv
 STYLIST_USAGE_CALLBACK_URL=https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
-STYLIST_USAGE_CALLBACK_KEY=REPLACE_WITH_SERVICE_KEY
 STYLIST_USAGE_ENVIRONMENT=production
 ```
 
-URL默认空：只本地记录，不发送，不影响正常对话。KEY是新服务间密钥，不能用用户token或模型API key。生产使用HTTPS；仅localhost/127.0.0.1/::1允许HTTP测试。拒绝URL中的账号密码、query和fragment，也不跟随重定向。environment默认test，生产需要显式设置。
+URL默认空：只本地记录，不发送，不影响正常对话。不再读取STYLIST_USAGE_CALLBACK_KEY；遗留配置可删除。Authorization来自已通过Server身份校验的当前对话请求，不配置固定token，也不使用模型API key。生产使用HTTPS；仅localhost/127.0.0.1/::1允许HTTP测试。拒绝URL中的账号密码、query和fragment，也不跟随重定向。environment默认test，生产需要显式设置。
 
-上报在后台进行，正常对话不等待ACK。超时10秒；408/429/5xx及网络错误指数退避（最长约一小时）后重试；401/403、其他非成功响应或错误ACK将该条标为blocked并记录受控日志，其他事件继续处理。修正接口或凭证后可按event_id将blocked改回queued，沿用原payload和ID。
+上报在后台进行，正常对话不等待ACK。超时10秒；408/429/5xx及网络错误指数退避（最长约一小时）后重试；401/403清除该用户本次失效token，将事件留在queued、last_error=awaiting_user_token；其他用户继续上报。其他非成功响应或错误ACK标为blocked，修正契约后可按event_id改回queued。
+
+**重启补报**：数据库保留未投递事件，用户token仅在当前进程内存。用户下次发送对话（包括已完成request_id的回放），Agent先向Server验证token、取得owner_id，再让后台用该用户token补报其历史queued事件；不能用另一用户token代报。若用户不再发消息则继续等待，不保证无人操作时补报。401/403后同理等待新的有效请求；登录动作或打开页面本身目前不会刷新发送器凭证。多进程各自持有内存token，共享数据库租约防止同时领取；重试不生成新event_id，不重跑模型。
 
 ## 本地表与查账
 
@@ -124,7 +123,7 @@ URL默认空：只本地记录，不发送，不影响正常对话。KEY是新�
 | --- | --- |
 | event_id、owner_id、conversation_id、request_id | 去重及归属／对话定位 |
 | message_version | 对话成功保存后的精确轮次；未保存为null |
-| payload_json | 实际上报的不可变最小JSON，不含正文和密钥 |
+| payload_json | 最小JSON，不含正文和密钥；旧记录可能含user_id，发送时复制并移除，数据库原文不重写 |
 | provider_request_id | 供应商返回的响应id，本地对账用，可空 |
 | state | pending尚无完整调用结果；queued待发；sending发送中；delivered已确认；blocked需人工检查 |
 | created_at、next_attempt、lease_until | Unix秒：创建、下次投递及发送租约到期 |
@@ -152,7 +151,7 @@ SELECT state, COUNT(*) FROM stylist_model_usage GROUP BY state;
 MOCK_USAGE_PORT=8491 node scripts/mock_model_usage_server.cjs
 ```
 
-只监听127.0.0.1，无外部模型调用；数据只在进程内存。`POST http://127.0.0.1:8491/usage`接收上述JSON，测试Authorization固定为`Bearer local-usage-test`；`GET /events`查看收到的事件及尝试。`/usage-fail`返回503，`/usage-unauthorized`返回401，`/usage-limited`返回429，`/usage-timeout`模拟超时，`/usage-bad-ack`模拟错误回执。`/v1/chat/completions`仅测试用模型桩，不用于正式配置。该脚本及测试不进入发布镜像。
+只监听127.0.0.1，无外部模型调用；数据只在进程内存。`POST http://127.0.0.1:8491/usage`接收上述JSON，测试Authorization固定为`Bearer local-user-test`，模拟映射用户42；`GET /events`查看收到的事件及尝试。`/usage-fail`返回503，`/usage-unauthorized`返回401，`/usage-limited`返回429，`/usage-timeout`模拟超时，`/usage-bad-ack`模拟错误回执。`/v1/chat/completions`仅测试用模型桩，不用于正式配置。该脚本及测试不进入发布镜像。
 
 执行`pytest -q tests/test_model_usage.py tests/test_model_usage_node.py`验证本地采集与Node真实HTTP接收。模型、身份和token均为合成数据，不能冒充真实Server接收／真实供应商用量或收费验收。
 
@@ -161,12 +160,12 @@ MOCK_USAGE_PORT=8491 node scripts/mock_model_usage_server.cjs
 - Python全量921通过、85跳过（外部数据库等显式测试未默认开启）；追加用量边界及Node检查后定向42通过。
 - 隔离PostgreSQL17.6：实际建表、并发账号、持久化重试、发送租约及对话轮次／回放5项通过。检查点初次缺表由测试环境初始化补齐后复测通过；未连接远端数据库。
 - 另跑Node真实本机HTTP端到端10例全部通过：正常、无地址、503、错误ACK、401、429、超时、usage缺失、真实0token、JSON修复重试。所有Agent请求正常返回，预期记录数量／状态／账号与会话关联正确；未知和0可区分，模型重试多记调用，回放不增记。
-- Node模拟服务、供应商回复、用户身份均为合成测试；未使用真实模型或Server计费接口。配置真实URL和服务密钥后仍需测试环境联调。
+- Node模拟服务、供应商回复、用户身份均为合成测试；未使用真实模型或Server计费接口。配置真实URL后仍需测试环境联调。以下历史测试记录不代表新版已验收。
 
-## model唯一标识版（2026-11-04）
+## 版本及兼容
 
-新调用仅发送model，不发送provider或actual_model，也不读取STYLIST_USAGE_PROVIDER。现有环境里遗留该变量可删除，不影响其他配置；回调URL、密钥及事件去重规则不变。未来多个模型各次调用应使用各自的真实请求标识，Server维护标识到价格的映射，不能让不同价格的接入点使用相同标识。
+V3使用用户token，不传user_id；保留本地owner_id用于账号隔离和查对话。model仍为每次实际调用的模型名／接入点ID，不发provider或actual_model。没有数据库新增列。旧payload不重写，发送时仅去掉user_id，旧provider／actual_model由Server兼容接受，不作为必填。Server去重应先检查归属、再比较忽略历史user_id后的业务字段；不因认证方式变化重新生成event_id或重新计费。旧版blocked事件不自动重发，需要核查原因后处理。
 
-本版不新增数据库列、不重写已存在事件。旧版本已入库的pending/queued等事件仍保留原payload，并按原event_id重试，避免ACK丢失时修改同ID内容导致冲突。Server兼容接受历史provider／actual_model字段但不以其作为本版计价必需项；新调用不会再携带它们。
+SQL里的:user_id由Server鉴权结果或授权运维查询提供，不是新的JSON字段。历史全量／数据库验证记录仅代表对应旧版本。
 
-V2验证：41项定向回归及10项Node端到端通过，覆盖原样model、同一请求多个模型分别记录、旧事件不重写和回调故障。amd64只读镜像写表检查、402运行文件哈希与6项精简更新包校验通过；未真实Server接收或扣费。前述921项为上一版全量基线，本版未重新宣称全量验收。
+V3验证：对话／安装／发布／用量定向64项通过，随后补充身份校验失败及不同用户队列互不阻塞2项通过（用量专项最终24项）；Node本地真实HTTP 10例通过。覆盖重启无token等待、401/403后恢复、换token时旧响应不清除新token、回放刷新认证、token不落库、JSON无user_id及历史事件兼容。amd64只读镜像建表／身份隔离检查通过，402个运行文件哈希一致，精简包6项及全部SHA256通过。未连接真实Server计费接口或执行真实扣费。

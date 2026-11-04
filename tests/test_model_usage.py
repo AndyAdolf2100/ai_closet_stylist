@@ -12,7 +12,15 @@ from stylist.errors import StylistError
 from stylist.llm import LanguageModel
 from stylist.models import ChatRequest, Draft, Plan
 from stylist.store import Store
-from stylist.usage import UsageContext, UsageSender, context
+from stylist.usage import UsageContext, UsageTokens, context
+from stylist.usage import UsageSender as RealUsageSender
+
+
+def UsageSender(store, settings, transport=None):
+    tokens = UsageTokens()
+    tokens.register("1", "Bearer user-test-token")
+    return RealUsageSender(store, settings, transport, tokens=tokens)
+
 
 
 class Answer(BaseModel):
@@ -27,7 +35,7 @@ def rows(store):
 def config(tmp_path):
     return Settings(database=str(tmp_path / 'state.db'), llm_url='https://model.example',
                     llm_key='model-secret', llm_model='endpoint-1',
-                    usage_callback_url='https://server.example/usage', usage_callback_key='service-secret')
+                    usage_callback_url='https://server.example/usage')
 
 
 def envelope(content='{"ok":true}', usage=None):
@@ -84,8 +92,8 @@ async def test_concurrent_users_are_isolated_and_missing_usage_stays_null(tmp_pa
     await asyncio.gather(*(invoke(store, settings, httpx.MockTransport(handler), str(i)) for i in range(1, 5)))
     for row in rows(store):
         event = json.loads(row['payload_json'])
-        assert event['conversation_id'] == 'conv-' + event['user_id']
-        assert event['request_id'] == 'req-' + event['user_id']
+        assert event['conversation_id'] == 'conv-' + row['owner_id']
+        assert event['request_id'] == 'req-' + row['owner_id']
         assert event['input_tokens'] is None and event['output_tokens'] is None
     assert context.get() is None
 
@@ -99,7 +107,7 @@ async def test_persistent_delivery_retry_ack_and_no_duplicate_claim(tmp_path):
     def handler(request):
         data = json.loads(request.content)
         seen.append(data)
-        assert request.headers['Authorization'] == 'Bearer service-secret'
+        assert request.headers['Authorization'] == 'Bearer user-test-token'
         assert request.headers['Idempotency-Key'] == data['event_id']
         if len(seen) == 1:
             return httpx.Response(503)
@@ -117,7 +125,7 @@ async def test_persistent_delivery_retry_ack_and_no_duplicate_claim(tmp_path):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('response', [httpx.Response(401), httpx.Response(302, headers={'Location': 'https://other/'}),
+@pytest.mark.parametrize('response', [httpx.Response(302, headers={'Location': 'https://other/'}),
     httpx.Response(200, json={'accepted': True, 'event_id': 'wrong'})])
 async def test_bad_ack_or_credentials_block_without_following_redirect(tmp_path, response):
     settings = config(tmp_path)
@@ -140,6 +148,7 @@ async def test_engine_links_message_and_replay_adds_no_usage(tmp_path):
         value = plan if len(calls) == 1 else Draft(message="你好，今天想聊什么？")
         return httpx.Response(200, json=envelope(value.model_dump_json()))
     class Upstream:
+        authorization = 'Bearer engine-user-token'
         async def identity(self):
             return '42'
     engine = Stylist(settings, store, LanguageModel(settings, httpx.MockTransport(handler)))
@@ -147,7 +156,9 @@ async def test_engine_links_message_and_replay_adds_no_usage(tmp_path):
     reply = await engine.chat(Upstream(), request)
     count = len(rows(store))
     assert count >= 1
+    engine.usage_tokens = UsageTokens()  # Restart-like memory loss; replay must refresh auth too.
     replay = await engine.chat(Upstream(), request)
+    assert engine.usage_tokens.get('42') == 'Bearer engine-user-token'
     assert replay == reply and len(rows(store)) == count
     for row in rows(store):
         assert row['owner_id'] == '42' and row['conversation_id'] == reply.conversation_id
@@ -219,11 +230,10 @@ async def test_expired_delivery_lease_can_be_reclaimed(tmp_path):
     assert rows(store)[0]['state'] == 'delivered'
 
 
-@pytest.mark.parametrize('url,key', [('https://server.example/usage', ''),
-    ('http://server.example/usage', 'key'), ('https://user:secret@server.example/usage', 'key'),
-    ('https://server.example/usage?secret=bad', 'key')])
-def test_callback_configuration_is_service_only(tmp_path, url, key):
-    settings = replace(config(tmp_path), usage_callback_url=url, usage_callback_key=key)
+@pytest.mark.parametrize('url', ['http://server.example/usage',
+    'https://user:secret@server.example/usage', 'https://server.example/usage?secret=bad'])
+def test_callback_configuration_rejects_unsafe_urls(tmp_path, url):
+    settings = replace(config(tmp_path), usage_callback_url=url)
     with pytest.raises(ValueError):
         UsageSender(Store(settings.database), settings)
 
@@ -274,12 +284,98 @@ async def test_existing_queued_event_payload_is_not_rewritten(tmp_path):
     store = Store(settings.database)
     await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
     event = json.loads(rows(store)[0]['payload_json'])
-    event.update(provider='legacy-provider', actual_model='legacy-model')
+    event.update(provider='legacy-provider', actual_model='legacy-model', user_id='1')
     with store.connection() as conn:
         conn.execute('UPDATE stylist_model_usage SET payload_json=? WHERE event_id=?',
                      (json.dumps(event), event['event_id']))
     def receive(request):
-        assert json.loads(request.content) == event
+        assert json.loads(request.content) == {k: v for k, v in event.items() if k != 'user_id'}
         return httpx.Response(200, json={'accepted': True, 'event_id': event['event_id']})
     await UsageSender(store, settings, httpx.MockTransport(receive)).send_one()
     assert rows(store)[0]['state'] == 'delivered'
+
+
+@pytest.mark.asyncio
+async def test_restart_waits_for_matching_authenticated_user_and_never_persists_token(tmp_path):
+    settings = config(tmp_path)
+    store = Store(settings.database)
+    await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
+    seen = []
+    def receive(request):
+        data = json.loads(request.content)
+        assert 'user_id' not in data
+        assert request.headers['Authorization'] == 'Bearer renewed-user-1'
+        seen.append(data)
+        return httpx.Response(200, json={'accepted': True, 'event_id': data['event_id']})
+    sender = RealUsageSender(Store(settings.database), settings, httpx.MockTransport(receive))
+    assert not await sender.send_one()
+    sender.tokens.register('2', 'Bearer another-user')
+    assert not await sender.send_one()
+    sender.tokens.register('1', 'Bearer renewed-user-1')
+    assert await sender.send_one()
+    assert len(seen) == 1 and rows(store)[0]['state'] == 'delivered'
+    assert 'renewed-user-1' not in str(rows(store)) and 'another-user' not in str(rows(store))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('code', [401, 403])
+async def test_expired_user_token_waits_then_resumes_with_new_token(tmp_path, code):
+    settings = config(tmp_path)
+    store = Store(settings.database)
+    await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())))
+    seen = []
+    def receive(request):
+        seen.append(request.headers['Authorization'])
+        if len(seen) == 1:
+            return httpx.Response(code)
+        return httpx.Response(200, json={'accepted': True, 'event_id': json.loads(request.content)['event_id']})
+    sender = UsageSender(store, settings, httpx.MockTransport(receive))
+    assert await sender.send_one()
+    assert rows(store)[0]['last_error'] == 'awaiting_user_token'
+    assert rows(store)[0]['state'] == 'queued'
+    assert not await sender.send_one()
+    sender.tokens.register('1', 'Bearer refreshed')
+    with store.connection() as conn:
+        conn.execute('UPDATE stylist_model_usage SET next_attempt=0')
+    assert await sender.send_one()
+    assert seen == ['Bearer user-test-token', 'Bearer refreshed']
+    assert rows(store)[0]['state'] == 'delivered'
+
+
+def test_late_unauthorized_response_does_not_discard_rotated_token():
+    tokens = UsageTokens()
+    tokens.register('1', 'Bearer old')
+    tokens.register('1', 'Bearer new')
+    tokens.invalidate('1', 'Bearer old')
+    assert tokens.get('1') == 'Bearer new'
+
+
+@pytest.mark.asyncio
+async def test_unauthenticated_request_never_registers_credential(tmp_path):
+    settings = config(tmp_path)
+    engine = Stylist(settings, Store(settings.database), None)
+    class DeniedUpstream:
+        authorization = 'Bearer unverified-token'
+        async def identity(self):
+            raise StylistError('unauthorized', 'Unauthorized')
+    with pytest.raises(StylistError):
+        await engine.chat(DeniedUpstream(), ChatRequest(message='你好', request_id='denied-usage-001'))
+    assert engine.usage_tokens.owners() == ()
+    assert rows(engine.store) == []
+
+
+@pytest.mark.asyncio
+async def test_missing_user_token_does_not_starve_other_users(tmp_path):
+    settings = config(tmp_path)
+    store = Store(settings.database)
+    for owner in ['1', '2']:
+        await invoke(store, settings, httpx.MockTransport(lambda r: httpx.Response(200, json=envelope())), owner)
+    def receive(request):
+        data = json.loads(request.content)
+        assert data['conversation_id'] == 'conv-2' and 'user_id' not in data
+        assert request.headers['Authorization'] == 'Bearer user-2'
+        return httpx.Response(200, json={'accepted': True, 'event_id': data['event_id']})
+    sender = RealUsageSender(store, settings, httpx.MockTransport(receive))
+    sender.tokens.register('2', 'Bearer user-2')
+    assert await sender.send_one()
+    assert [(r['owner_id'], r['state']) for r in rows(store)] == [('1', 'queued'), ('2', 'delivered')]

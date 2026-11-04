@@ -8,6 +8,7 @@ import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from threading import RLock
 from urllib.parse import urlsplit
 
 import httpx
@@ -33,6 +34,31 @@ def action(plan):
             'modify': 'outfit_modify', 'weekly': 'weekly_plan'}.get(getattr(plan, 'mode', ''), 'unknown')
 
 
+class UsageTokens:
+    """Validated user credentials, memory only and scoped to one application instance."""
+    def __init__(self):
+        self._values = {}
+        self._lock = RLock()
+
+    def register(self, owner, authorization):
+        if isinstance(authorization, str) and authorization.startswith('Bearer ') and authorization[7:].strip():
+            with self._lock:
+                self._values[str(owner)] = authorization
+
+    def owners(self):
+        with self._lock:
+            return tuple(self._values)
+
+    def get(self, owner):
+        with self._lock:
+            return self._values.get(str(owner))
+
+    def invalidate(self, owner, authorization):
+        with self._lock:
+            if self._values.get(str(owner)) == authorization:
+                self._values.pop(str(owner), None)
+
+
 @dataclass
 class UsageContext:
     store: object
@@ -45,7 +71,7 @@ class UsageContext:
     def begin(self, model=None):
         event = {
             'event_id': str(uuid.uuid4()), 'occurred_at': datetime.now(timezone.utc).isoformat(),
-            'environment': self.settings.usage_environment, 'user_id': self.owner,
+            'environment': self.settings.usage_environment,
             'conversation_id': self.conversation, 'request_id': self.request,
             'business_action': self.business_action,
             'model': model if model is not None else self.settings.llm_model,
@@ -88,26 +114,36 @@ class UsageContext:
 
 
 class UsageSender:
-    def __init__(self, store, settings, transport=None):
+    def __init__(self, store, settings, transport=None, tokens=None):
         self.store, self.settings, self.transport = store, settings, transport
+        self.tokens = tokens if tokens is not None else UsageTokens()
         if settings.usage_environment not in {'development', 'test', 'production'}:
             raise ValueError('Usage environment must be development, test or production')
         if settings.usage_callback_url:
             url = urlsplit(settings.usage_callback_url)
             if (url.scheme not in {'http', 'https'} or not url.hostname or url.username or url.password
-                    or url.fragment or url.query or not settings.usage_callback_key):
-                raise ValueError('Usage callback requires a fixed HTTP(S) URL and service key')
+                    or url.fragment or url.query):
+                raise ValueError('Usage callback requires a fixed HTTP(S) URL')
             if url.scheme != 'https' and url.hostname not in {'localhost', '127.0.0.1', '::1'}:
                 raise ValueError('Usage callback requires HTTPS outside loopback')
 
     def claim(self):
+        owners = self.tokens.owners()
+        if not owners:
+            return None
         now, lease = time.time(), str(uuid.uuid4())
         with self.store.connection() as conn:
             if not self.store.postgres and not self.store.mysql:
                 conn.execute('BEGIN IMMEDIATE')
-            row = conn.execute('SELECT * FROM stylist_model_usage WHERE '
-                               '(state=? AND next_attempt<=?) OR (state=? AND lease_until<?) '
-                               'ORDER BY created_at LIMIT 1', ('queued', now, 'sending', now)).fetchone()
+            # Query per owner avoids DB parameter limits and starving authenticated users.
+            candidates = []
+            for owner in owners:
+                candidate = conn.execute('SELECT * FROM stylist_model_usage WHERE owner_id=? AND '
+                    '((state=? AND next_attempt<=?) OR (state=? AND lease_until<?)) '
+                    'ORDER BY created_at LIMIT 1', (owner, 'queued', now, 'sending', now)).fetchone()
+                if candidate:
+                    candidates.append(candidate)
+            row = min(candidates, key=lambda item: item['created_at']) if candidates else None
             if not row:
                 return None
             changed = conn.execute('UPDATE stylist_model_usage SET state=?,lease=?,lease_until=?,attempts=attempts+1 '
@@ -132,14 +168,21 @@ class UsageSender:
         if not claimed:
             return False
         row, lease = claimed
+        authorization = self.tokens.get(row['owner_id'])
+        if not authorization:
+            await asyncio.to_thread(self.settle, row, lease, 'queued', 'awaiting_user_token')
+            return False
+        payload = json.loads(row['payload_json'])
+        # Historical identity is retained locally; Server derives identity from Authorization.
+        payload.pop('user_id', None)
         state, error = 'queued', 'transport_error'
         try:
             async with httpx.AsyncClient(timeout=10, trust_env=False, follow_redirects=False,
                                          transport=self.transport) as client:
                 response = await client.post(self.settings.usage_callback_url,
-                    headers={'Authorization': 'Bearer ' + self.settings.usage_callback_key,
+                    headers={'Authorization': authorization,
                              'Idempotency-Key': row['event_id']},
-                    json=json.loads(row['payload_json']))
+                    json=payload)
             if response.status_code == 200:
                 try:
                     ack = response.json()
@@ -150,6 +193,9 @@ class UsageSender:
                     state, error = 'delivered', ''
                 else:
                     state, error = 'blocked', 'invalid_ack'
+            elif response.status_code in {401, 403}:
+                self.tokens.invalidate(row['owner_id'], authorization)
+                error = 'awaiting_user_token'
             elif response.status_code in {408, 429} or response.status_code >= 500:
                 error = 'retryable_http'
             else:

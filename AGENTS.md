@@ -289,7 +289,7 @@
 
 ### PRD-09 工程与部署边界
 
-- 2026-11-04模型用量商业化回调（方案／待实现）：用户希望记录每次使用模型、业务动作及token并上报Server。建议逐调用记录真实usage、请求汇总与持久化重试，Server幂等接收并拥有定价／收费规则；未知用量不记零，缓存不重复计算，重试真实成本不漏计，不上传正文或凭证。2026-11-04用户明确Server同事后续提供接收接口并自行定价；Stylist仅逐调用上报必要用量，event_id去重并关联user_id／conversation_id／request_id；试穿及数字人生图沿用MCP后原服务计费，不重复回调生图费用，支持PostgreSQL查对话。Agent采集、独立用量表及异步投递已本地接入，URL未配置只留账；接口失败不阻断对话，失败重试不重跑模型。Server真实接口／扣费未验，见 `docs/MODEL_USAGE_CALLBACK_DESIGN.md`、`docs/MODEL_USAGE_SERVER_CONTRACT.md`。
+- 2026-11-04模型用量商业化回调（方案／待实现）：用户希望记录每次使用模型、业务动作及token并上报Server。建议逐调用记录真实usage、请求汇总与持久化重试，Server幂等接收并拥有定价／收费规则；未知用量不记零，缓存不重复计算，重试真实成本不漏计，不上传正文或凭证。2026-11-04用户明确Server同事后续提供接收接口并自行定价；Stylist仅逐调用上报必要用量，event_id去重并关联conversation_id／request_id，Server从用户Authorization确定归属（JSON不传user_id）；Agent仅内存保存已验证token，本地owner_id保留，重启／401／403后等该用户下次通过对话身份校验再补报；试穿及数字人生图沿用MCP后原服务计费，不重复回调生图费用，支持PostgreSQL查对话。Agent采集、独立用量表及异步投递已本地接入，URL未配置只留账；接口失败不阻断对话，失败重试不重跑模型。Server真实接口／扣费未验，见 `docs/MODEL_USAGE_CALLBACK_DESIGN.md`、`docs/MODEL_USAGE_SERVER_CONTRACT.md`。
 
 - 2026-11-04闲聊成本七档以用户输入10／20／50／100／200／500／1000字符为准，回复自然生成，替代此前对本轮七档的回复长度误解。轻量单调用真实文字7次、无缓存，单次¥0.006084～¥0.012942；仅实验，不代表正式链路优化或账单。Excel含原文、公式及另列误测费用，见 `docs/CHAT_INPUT_LENGTH_COST_2026-11-04.md`。
 
@@ -1257,3 +1257,5 @@
 | 2026-11-04 | PRD-09 固定Server用量路由 | 用户依据既有Server域名要求给出固定格式 | 接口文档固定POST https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage及Bearer／Idempotency-Key与成功回执；实际回调配置仍未开启，待Server接口与服务密钥就绪后启用。未探测写接口或实际扣费。 |
 
 | 2026-11-04 | PRD-09 用量上报仅model标识版 | 用户要求直接传model name，不加volcengine前缀，重新制作版本 | 新事件移除provider／actual_model及STYLIST_USAGE_PROVIDER，model原样使用实际请求模型名或接入点ID；保留旧事件原payload避免同ID内容变化。文档／Node同步，41项定向及10项Node端到端通过，amd64镜像／402运行文件哈希和6项精简包校验通过；V2更新包保留现有Nginx。固定回调地址仍需Server上线及服务密钥。 |
+
+| 2026-11-04 | PRD-09 用户token用量回调 | 用户要求改用登录用户token确定归属、不传user_id，并重出文档与包 | 已接入内存凭证、账号隔离及401/403后等待重新认证；历史JSON发送时去掉user_id并保留event_id，本地owner_id保留。token不落库；重启后需用户再次发对话并通过身份校验，无人操作则等待。文档已更新；定向64项及追加2项、Node本地HTTP10例通过，用量专项最终24项。amd64只读检查、402文件哈希及6项精简包校验通过，保留现有Nginx；未远端联调或真实扣费。 |
