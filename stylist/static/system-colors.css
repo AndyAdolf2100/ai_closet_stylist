@@ -57,3 +57,17 @@
 :root:is([data-color-scheme=system],[data-study-color=system]) .settings-panel button:hover{background-color:var(--soft)}
 :root:is([data-color-scheme=system],[data-study-color=system]) :is(.weather-day,.weather-periods>div){background-color:var(--soft);border-color:var(--line);color:var(--ink)}
 :root:is([data-color-scheme=system],[data-study-color=system]) dialog:not(#companion-dialog):not(#preferences-dialog):not(#companion-message-dialog){background-color:var(--paper);border-color:var(--line);color:var(--ink)}
+/* Weather follows the selected palette, independently of companion gender.
+   Use a readable gold for text; the App maps --accent to its bright button fill. */
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card{--weather-surface-rgb:255,255,255}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card :is(.forecast-heading strong,.weather-periods strong,.weather-tip strong,.weather-symbol){color:#85620f}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card :is(.forecast-day strong,.weather-periods p,.weather-tip p){color:var(--ink)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card :is(.forecast-heading p,.forecast-day,.weather-periods small,.weather-evidence){color:var(--muted)}
+:root:is([data-color-scheme=system],[data-study-color=system]) #weather-panel .forecast-card .forecast-day{background:#ffffffd9;border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card :is(.weather-tip,.weather-tip.important){background:var(--soft);border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card .tip-icon{background:var(--paper);color:#85620f}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card .weather-tip-day .weather-tip-list{background:var(--paper)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card .weather-tip-day .weather-tip{background:transparent}
+:root:is([data-color-scheme=system],[data-study-color=system]) .forecast-card .weather-tip-day .weather-tip.important{background:var(--soft);border-color:var(--line)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .weather-tabs button{color:var(--ink);border-color:var(--line);background:var(--paper)}
+:root:is([data-color-scheme=system],[data-study-color=system]) .weather-tabs button.active{color:#85620f;border-color:#e6ce77;background:var(--soft)}

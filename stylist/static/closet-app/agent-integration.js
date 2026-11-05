@@ -12,7 +12,7 @@ export function mountAgent(){
     const host=document.createElement('div');host.id='yijian-agent-root';host.style.display='none';
     const response=await fetch('/static/closet-app/agent-fragment.html');if(!response.ok)throw Error('页面暂时没能加载，请重试。');
     host.innerHTML=await response.text();document.getElementById('agent-frame')?.remove();document.body.append(host);host.dataset.surface='overlay';
-    const scoped=document.createElement('link');scoped.rel='stylesheet';scoped.href='/static/closet-app/agent-scoped.css';document.head.append(scoped);
+    const scoped=document.createElement('link');scoped.rel='stylesheet';scoped.href='/static/closet-app/agent-scoped.css?v=weather-system-v8';document.head.append(scoped);
     await new Promise((resolve,reject)=>{scoped.onload=resolve;scoped.onerror=reject;});
     const theme=document.createElement('link');theme.rel='stylesheet';theme.href='/static/closet-app/agent-yijian.css';document.head.append(theme);await new Promise((resolve,reject)=>{theme.onload=resolve;theme.onerror=reject;});
     const sync=()=>{for(const a of document.documentElement.attributes)if(a.name.startsWith('data-'))host.setAttribute(a.name,a.value);};

@@ -167,6 +167,7 @@ function mascot(mood = 'greeting', size = '') {
 function weatherIcon(text) { return /雪/.test(text) ? '❄' : /雷/.test(text) ? '⛈' : /雨/.test(text) ? '☂' : /雾|霾/.test(text) ? '〰' : /阴|云/.test(text) ? '☁' : '☀'; }
 function forecastCard(data, compact = false) {
   const card = el('section', 'forecast-card');
+  if (data.days?.length === 1) card.classList.add('forecast-single');
   WeatherVisuals.background(card, data.days);
   const heading = el('div', 'forecast-heading'); const wet = data.days?.some(day => /雨|雪/.test(day.condition_day + day.condition_night)); heading.append(mascot(wet ? 'rain' : 'weather', 'weather-mascot'));
   const title = el('div'); title.append(el('strong', '', `${data.city_name} · ${data.scope === 'week' ? '本周天气' : data.scope === 'next7' ? '未来七天' : '出门天气'}`), namedElement('p', '', '衣衣的天气小叮咛')); heading.append(title);
@@ -180,11 +181,11 @@ function forecastCard(data, compact = false) {
   card.append(days);
   if (data.days?.length === 1) {
     const periods = el('div', 'weather-periods');
-    for (const period of data.days[0].periods || []) {
+    for (const period of (data.days[0].periods || []).filter(period => period.key !== 'morning')) {
       const part = el('div'); part.append(el('strong', '', period.label), el('p', '', period.temp == null ? '暂无逐小时温度' : `${period.temp}°C · ${period.condition}`));
       part.append(el('small', '', period.note)); periods.append(part);
     }
-    card.append(periods);
+    if (periods.childNodes.length) card.append(periods);
   }
   const alerts = el('div', 'weather-alerts');
   const groupedTips = data.days?.length > 1;
