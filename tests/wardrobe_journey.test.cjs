@@ -189,6 +189,7 @@ test('person generation has its own quote, and dismissing it sends only cancella
   return {status:'cancelled'};
  });
  t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传并检查照片').click();await flush();byText(t.w,'查看人物生成费用').click();await flush();
+ assert.equal(t.w.document.querySelector('.journey-steps').hidden,false);
  assert.match(t.w.document.querySelector('.journey-body').textContent,/20 积分/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行报价/);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);byText(t.w,'关闭 ×').click();await flush();
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&JSON.parse(o.body).confirmed).length,0);
@@ -202,7 +203,7 @@ test('try-on result is rendered into conversation; unknown state only offers a r
   if(options?.method==='POST')return {action_id:'img_abc',title:'今日搭配',status:'unknown',result:{}};
   return {action_id:'img_abc',title:'今日搭配',status:'completed',result:{result_image_url:'https://example.test/tryon.png'}};
  });
- await t.w.WardrobeJourney.tryon({conversation_id:'current',version:1,look_index:0});byText(t.w,'确认消耗 8 积分并试穿').click();await flush();
+ await t.w.WardrobeJourney.tryon({conversation_id:'current',version:1,look_index:0});assert.equal(t.w.document.querySelector('.journey-steps').hidden,true);byText(t.w,'确认消耗 8 积分并试穿').click();await flush();
  assert.ok(t.w.document.querySelector('#feed [data-image-action="img_abc"]'));byText(t.w,'关闭 ×').click();byText(t.w,'看看试穿进展').click();await flush();
  assert.equal(calls.filter(([,o])=>o?.method==='POST').length,2);assert.match(t.w.document.querySelector('#feed .journey-letter-photo img').src,/tryon.png$/);t.close();
 });

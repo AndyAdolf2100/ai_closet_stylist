@@ -279,7 +279,7 @@
   }
   async function twins(){
     show('我的试穿形象');const token=epoch,view=viewSequence;
-    atmosphere('person',0);dialog.dataset.panel='portraits';
+    atmosphere('person',0);steps.hidden=true;dialog.dataset.panel='portraits';
     const overview=await readLoading(body,'正在读取可用形象…',()=>api('/stylist-api/twins'));if(!current(token)||!dialog.open||view!==viewSequence)return;
     body.replaceChildren(el('h3','journey-twin-section-title','数字分身'));
     if(overview.need_gender){
@@ -327,7 +327,7 @@
   async function tryon(ref){
     requireContext(ref);
     pendingLook=ref;const token=epoch;
-    show('准备试穿');
+    show('准备试穿');steps.hidden=true;
     const overview=await readLoading(body,'正在确认试穿形象…',()=>api('/stylist-api/twins'));if(!current(token)||!dialog.open)return;
     if(!overview.default_confirmed||!overview.default_twin_key){await twins();return;}
     pendingLook=null;await tryonQuote(ref);
@@ -336,7 +336,7 @@
     requireContext(ref);
     show('试穿这套搭配');const token=epoch,view=viewSequence;
     atmosphere('quote',1);
-    dialog.dataset.quoteKind='tryon';
+    dialog.dataset.quoteKind='tryon';steps.hidden=true;
     scene.querySelector('.journey-scene-copy p').textContent='先看看这次的形象与积分。等你点头，我们再开始。';
     const q=await readLoading(body,'正在读取当前费用…',()=>api('/stylist-api/images/quote',{method:'POST',body:JSON.stringify(ref)}));if(!current(token)||!dialog.open||view!==viewSequence)return;
     activeQuote={id:q.action_id,kind:'tryon'};
