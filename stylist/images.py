@@ -11,6 +11,7 @@ from pydantic import Field, StrictBool
 
 from .errors import StylistError
 from .models import Model, ProductRef, SessionState
+from .points import require_points
 from .retrieval import resolve_products
 
 
@@ -161,6 +162,7 @@ class ImageService:
             if cost["points_cost"] != snapshot["points_cost"] or twin_fingerprint(overview) != snapshot["twin"] or contract != snapshot["contract"]:
                 self.mark(owner, action_id, "expired")
                 raise StylistError("image_quote_changed", "费用、形象或接口已变化，请重新查看费用并确认。", 409)
+            await require_points(upstream, snapshot["points_cost"], "tryon_points_insufficient")
             # Claim before the first write, atomically checking the conversation is still current.
             with self.store.connection() as conn:
                 conn.execute("BEGIN IMMEDIATE")

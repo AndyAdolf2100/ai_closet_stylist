@@ -1,3 +1,4 @@
+import {readAvailablePoints} from './points-balance.js';
 import {emptyArt} from './empty-art.js';
 import { collectionPage } from './collection-pages.js';
 import { openIntegratedAgent, closeIntegratedAgent, mountAgent, placeIntegratedAgent } from './agent-integration.js';
@@ -113,7 +114,9 @@ async function loadWardrobe() {
   });
 }
 async function loadProfile() {
-  try { const p = await api('profile'); $('account-name').textContent = p.nickname || p.nick_name || '我的账号'; const src = safeURL(p.image_url || p.avatar || ''); if (src && (p.image_url || p.avatar)) $('account-avatar').src = src; $('balance').textContent = p.vip_info?.total_points != null ? (Number.isFinite(Number(p.vip_info.total_points)) ? new Intl.NumberFormat('en-US',{maximumFractionDigits:20}).format(Number(p.vip_info.total_points)) : '–') : '–'; window.dispatchEvent(new CustomEvent('yijian-account-loaded',{detail:p})); }
+  $('balance').textContent='–';
+  readAvailablePoints().catch(e=>{if(e.name!=='AbortError')$('balance').textContent='暂未查到';});
+  try { const p = await api('profile'); $('account-name').textContent = p.nickname || p.nick_name || '我的账号'; const src = safeURL(p.image_url || p.avatar || ''); if (src && (p.image_url || p.avatar)) $('account-avatar').src = src; window.dispatchEvent(new CustomEvent('yijian-account-loaded',{detail:p})); }
   catch (e) { if(e.name !== 'AbortError')window.dispatchEvent(new Event('yijian-account-error')); if (e.name !== 'AbortError' && !e.login) toast(e.message); }
 }
 async function loadMemories() {
@@ -226,3 +229,20 @@ if(document.documentElement.dataset.appDesign==='yijian'&&location.hash.endsWith
 if(document.documentElement.dataset.appDesign==='yijian'&&new URLSearchParams(location.search).get('start')==='upload'){
  const url=new URL(location.href);url.searchParams.delete('start');history.replaceState(history.state,'',url);openAgent('upload');
 }
+
+// Local UI review is explicit; no session or balance is synthesized.
+function mountPaymentEffects(){
+ if(document.documentElement.dataset.appDesign!=='yijian')return;
+ if(paymentDemoEnabled())document.documentElement.dataset.paymentDemo='true';
+ mountPaymentDemo({
+  ensureAgent:async()=>{await mountAgent();await window.CompanionSettings?.ready;},
+  showAgent:async()=>{
+   setCreate(false);closeDetail();placeIntegratedAgent(true);$('agent-page').hidden=false;backgroundInert(true);document.querySelector('.floating-bar').inert=true;
+   if(history.state?.view!=='agent')history.pushState({tab:state.tab,view:'agent'},'',`#${state.tab}/agent`);
+  },
+  showTask:key=>openDetail(key)
+ });
+}
+if(document.readyState==='complete')mountPaymentEffects();else window.addEventListener('load',mountPaymentEffects,{once:true});
+
+window.addEventListener('yijian-points-loaded',e=>{if(e.detail.ownerToken===readSession()?.access_token)$('balance').textContent=new Intl.NumberFormat('en-US',{maximumFractionDigits:20}).format(e.detail.total_available);});

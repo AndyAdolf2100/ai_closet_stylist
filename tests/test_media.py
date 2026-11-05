@@ -35,6 +35,8 @@ class Business:
         return self.owner
 
     async def get(self, path):
+        if path == '/api/vip_center/points_detail':
+            return {'total_available': 10000}
         assert path == '/api/digital_twin/overview'
         return {}
 
@@ -240,3 +242,19 @@ def test_media_api_rejects_spoofed_owner_cost_and_unconfirmed_photos(tmp_path, m
         assert client.post('/stylist-api/media/uploads', headers=h, json=upload(confirmed=False).model_dump()).json()['status'] == 'cancelled'
     with pytest.raises(ValueError):
         ConfirmInput(confirmed='yes')
+
+async def test_generation_rechecks_live_balance_before_each_confirm(setup):
+    service,business=setup
+    _,q=await quoted(service,business)
+    values=[0,20];reads=[]
+    async def balance(path):
+        reads.append(path)
+        return {'total_available':values.pop(0)}
+    business.get=balance
+    with pytest.raises(StylistError,match='digital_twin_points_insufficient'):
+        await service.confirm_generation(business,q['action_id'],True)
+    assert not any(name=='digital_twin_generate' for name,_ in business.writes)
+    assert service.get('1',q['action_id'])['status']=='quoted'
+    await service.confirm_generation(business,q['action_id'],True)
+    assert len(reads)==2 and all(p=='/api/vip_center/points_detail' for p in reads)
+    assert sum(name=='digital_twin_generate' for name,_ in business.writes)==1

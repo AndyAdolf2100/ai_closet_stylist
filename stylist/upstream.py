@@ -55,7 +55,7 @@ class Upstream:
 
     async def get(self, path: str, params=None):
         allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories",
-                   "/api/digital_twin/overview", "/api/digital_twin/profile/options"}
+                   "/api/digital_twin/overview", "/api/digital_twin/profile/options", "/api/vip_center/points_detail"}
         if path not in allowed:
             raise StylistError("endpoint_not_allowed", "该接口未接入。", 400)
         try:

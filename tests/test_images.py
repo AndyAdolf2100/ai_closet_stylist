@@ -13,6 +13,10 @@ from stylist.store import Store
 class ImageUpstream:
     def __init__(self):
         self.cost, self.commits, self.fail = 2, [], False
+    async def get(self, path):
+        assert path == '/api/vip_center/points_detail'
+        return {'total_available': 10000}
+
     async def identity(self):
         return "1"
     @asynccontextmanager
@@ -190,3 +194,21 @@ async def test_history_exposes_original_creation_time_for_cross_kind_sorting(tmp
     assert service.list('1')[0]['created_at'] == original
     assert service.list('2') == []
     assert upstream.commits == []
+
+@pytest.mark.asyncio
+async def test_each_confirm_reads_balance_and_low_or_failed_read_never_dispatches(tmp_path):
+    service, request, upstream=setup_service(tmp_path)
+    quote=await service.quote(upstream,request)
+    values=[{'total_available':1},{}, {'total_available':2}]
+    reads=[]
+    async def balance(path):
+        reads.append(path)
+        return values.pop(0)
+    upstream.get=balance
+    for expected in ['tryon_points_insufficient','points_balance_invalid']:
+        with pytest.raises(StylistError,match=expected):
+            await service.confirm(upstream,quote['action_id'],True)
+        assert not upstream.commits
+    await service.confirm(upstream,quote['action_id'],True)
+    assert reads==['/api/vip_center/points_detail']*3
+    assert upstream.commits==['save_recommended_outfit','digital_twin_tryon']

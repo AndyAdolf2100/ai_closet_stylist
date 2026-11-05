@@ -256,3 +256,22 @@ def test_avatar_uses_native_account_upload_not_wardrobe(monkeypatch):
         assert response.headers['cache-control'] == 'no-store'
         assert web.post('/stylist-api/app/avatar', headers={'Authorization': 'Bearer avatar-owner'}, json={'image_url': 'https://example.invalid/x.jpg'}).status_code == 422
     assert len(seen) == 1
+
+@pytest.mark.parametrize('value', [0, 20, '20.5'])
+def test_points_use_total_available_not_legacy_total(monkeypatch, value):
+    seen=[]
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200,json={'code':0,'data':{'total_available':value,'total_points':9999}})
+    with client(monkeypatch,handler) as web:
+        result=web.get('/stylist-api/app/points',headers={'Authorization':'Bearer fixture'})
+        assert result.status_code==200
+        assert result.json()['data']['total_available']==float(value)
+        assert result.headers['cache-control']=='no-store'
+    assert seen[0].method=='GET' and seen[0].url.path=='/api/vip_center/points_detail'
+    assert seen[0].headers['authorization']=='Bearer fixture'
+
+@pytest.mark.parametrize('value', [None, True, '', 'NaN', 'Infinity', -1])
+def test_invalid_points_never_become_zero(monkeypatch,value):
+    with client(monkeypatch,lambda r:httpx.Response(200,json={'code':0,'data':{'total_available':value}})) as web:
+        assert web.get('/stylist-api/app/points',headers={'Authorization':'Bearer fixture'}).status_code==502

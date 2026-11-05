@@ -7,6 +7,7 @@ from fastapi import APIRouter, Header, Query, Response
 from pydantic import BaseModel, Field, field_validator
 
 from .errors import AuthenticationExpired, StylistError
+from .points import available_points
 from .upstream import _business_payload
 
 READ_PAGES = {
@@ -76,6 +77,12 @@ def router(settings):
                 return _business_payload(result)
         except (httpx.HTTPError, ValueError) as exc:
             raise StylistError("app_request_unconfirmed", "操作结果暂未确认，请稍后重试。", 502) from exc
+
+    @routes.get("/points")
+    async def points_balance(response: Response, authorization: str | None = Header(default=None)):
+        response.headers["Cache-Control"] = "no-store"
+        data = await fixed_request("GET", "/api/vip_center/points_detail", authorization)
+        return {"data": {"total_available": available_points(data)}}
 
     @routes.get("/checkin")
     async def checkin_status(response: Response, authorization: str | None = Header(default=None)):

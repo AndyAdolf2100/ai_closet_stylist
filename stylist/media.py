@@ -14,6 +14,7 @@ from pydantic import Field, StrictBool
 
 from .errors import StylistError
 from .models import Model
+from .points import require_points
 
 
 class UploadInput(Model):
@@ -225,6 +226,7 @@ class MediaActions:
                     or snapshot["hat_action"] not in check.get("allowed_hat_actions", [])):
                 self.save(owner, action, {}, "expired")
                 raise StylistError("image_quote_changed", "照片状态或费用已变化，请重新查看并确认。", 409)
+            await require_points(upstream, snapshot["expected_cost_points"], "digital_twin_points_insufficient")
             with self.store.connection() as conn:
                 changed = conn.execute("UPDATE stylist_media_actions SET status='executing' WHERE id=? AND owner_id=? AND status='quoted'",
                                        (action, owner))
