@@ -6,20 +6,20 @@
 .v2-activity-card__content[data-v-6d1aa142] { position: relative; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; min-height: inherit; width: 93px; margin-left: auto; padding: 42px 7px 24px 0px; box-sizing: border-box; }
 .v2-activity-card__copy[data-v-6d1aa142] { display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0px; padding-right: 1px; box-sizing: border-box; }
 .v2-activity-card__copy h2[data-v-6d1aa142] { margin: 0px; font-size: 14px; font-weight: 600; line-height: 22px; overflow-wrap: anywhere; }
-.v2-activity-card__copy p[data-v-6d1aa142] { margin: 0px; color: rgb(119, 124, 128); font-size: 9px; font-weight: 400; line-height: 14px; white-space: normal; overflow-wrap: anywhere; }
+.v2-activity-card__copy p[data-v-6d1aa142] { margin: 0px; color: rgb(119, 124, 128); font-size: 12px; font-weight: 400; line-height: 14px; white-space: normal; overflow-wrap: anywhere; }
 .v2-activity-card__button[data-v-6d1aa142] { display: inline-flex; align-items: center; justify-content: center; gap: 0px; min-width: 86px; min-height: 28px; max-width: 100%; padding: 4px 8px 4px 14px; border: 1px solid transparent; border-radius: 16.654px; background: rgb(252, 218, 79); color: rgb(32, 33, 30); font-style: inherit; font-variant: inherit; font-stretch: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-language-override: inherit; font-size: 12px; font-weight: 500; line-height: 17px; cursor: pointer; }
 .v2-activity-card__button img[data-v-6d1aa142] { flex: 0 0 auto; }
 .v2-activity-card__button[data-v-6d1aa142]:disabled { cursor: default; }
 .v2-activity-card__button[data-v-6d1aa142]:focus-visible { outline: rgb(252, 218, 79) solid 2px; outline-offset: 3px; }
 .v2-activity-card__button[data-v-6d1aa142]:active:not(:disabled) { transform: translateY(1px); }
-.v2-activity-card__preview-badge[data-v-6d1aa142] { position: absolute; left: 42.234%; top: 129px; padding: 4px 5px; border: 0.659px solid rgb(229, 232, 228); border-radius: 7.908px; background: rgb(245, 247, 246); box-shadow: rgba(37, 42, 29, 0.04) 0px 1.318px 6.59px, rgba(37, 42, 29, 0.04) 0px 1.318px 7.908px; font-size: 6.59px; line-height: 9px; color: rgb(119, 124, 128); }
+.v2-activity-card__preview-badge[data-v-6d1aa142] { position: absolute; left: 42.234%; top: 129px; padding: 4px 5px; border: 0.659px solid rgb(229, 232, 228); border-radius: 7.908px; background: rgb(245, 247, 246); box-shadow: rgba(37, 42, 29, 0.04) 0px 1.318px 6.59px, rgba(37, 42, 29, 0.04) 0px 1.318px 7.908px; font-size: 12px; line-height: 9px; color: rgb(119, 124, 128); }
 .v2-activity-card__preview-badge p[data-v-6d1aa142] { margin-top: 2px; white-space: nowrap; }
-.v2-activity-card__preview-badge--trend[data-v-6d1aa142] { left: 43.597%; top: 93px; font-size: 6.003px; }
-.v2-activity-card__preview-badge--trend strong[data-v-6d1aa142] { font-size: 7.204px; }
+.v2-activity-card__preview-badge--trend[data-v-6d1aa142] { left: 43.597%; top: 93px; font-size: 12px; }
+.v2-activity-card__preview-badge--trend strong[data-v-6d1aa142] { font-size: 12px; }
 .v2-activity-card__preview-badge-heading[data-v-6d1aa142] { display: flex; align-items: center; gap: 3px; }
 .v2-activity-card__preview-badge-heading span[data-v-6d1aa142] { display: flex; align-items: center; justify-content: center; width: 11.866px; height: 11.866px; border-radius: 50%; background: rgb(247, 216, 95); }
 .v2-activity-card__preview-badge-heading img[data-v-6d1aa142] { display: block; }
-.v2-activity-card__preview-badge-heading strong[data-v-6d1aa142] { font-size: 7.908px; color: rgb(32, 33, 30); white-space: nowrap; }
+.v2-activity-card__preview-badge-heading strong[data-v-6d1aa142] { font-size: 12px; color: rgb(32, 33, 30); white-space: nowrap; }
 .v2-activities[data-v-192ed08e] { min-height: 100%; padding: 6px 13px calc(100px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(194deg, rgba(246, 247, 246, 0.7) 0.39467%, rgba(250, 251, 250, 0.7) 27.028%, rgba(248, 250, 249, 0.7) 97.446%), rgb(255, 255, 255); font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; }
 .v2-activities__list[data-v-192ed08e] { display: flex; flex-direction: column; gap: 10px; }
 .v2-activities__state[data-v-192ed08e] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 220px; color: rgb(119, 124, 128); font-size: 13px; }

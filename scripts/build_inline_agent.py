@@ -16,6 +16,10 @@ for name in styles:
     css = (static / name).read_text().replace(':root', ':scope')
     css = re.sub(r'(?<![\w-])(?:html|body)(?=[\s.#:\[>{,])', ':scope', css)
     css = css.replace("url('assets/", "url('/static/assets/").replace('url("assets/', 'url("/static/assets/')
+    # App typography floor; shared standalone Agent source retains its own styling.
+    css = re.sub(r'(?<![\w-])font(?:-size)?\s*:[^;}\n]+',
+                 lambda m: re.sub(r'(?<![\w.-])(\d*\.?\d+)px',
+                     lambda n: '12px' if 0 < float(n[1]) < 12 else n[0], m[0]), css)
     parts.append(f'/* {name} */\n{css}')
 (static / 'closet-app/agent-scoped.css').write_text('@scope (#yijian-agent-root) {\n' + '\n'.join(parts) + '\n}\n')
 print('Built direct Agent fragment and scoped component styles')

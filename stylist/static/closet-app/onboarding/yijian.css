@@ -9,15 +9,15 @@ body[data-edition=yijian] aside h1 { font-size:38px; letter-spacing:2px; }
 body[data-edition=yijian] .device { background:var(--paper); border:1px solid var(--line); border-radius:22px 22px 22px 6px; box-shadow:4px 5px 0 var(--bg),5px 6px 0 var(--line),0 16px 40px #00000006; }
 body[data-edition=yijian] .progress { border-bottom:1px solid var(--line); margin:0 22px; padding:14px 0; letter-spacing:.5px; }
 body[data-edition=yijian] #screen { padding:20px 28px 40px; }
-body[data-edition=yijian] #screen>.eyebrow { font-size:9px; letter-spacing:2px; color:var(--accent); }
+body[data-edition=yijian] #screen>.eyebrow { font-size:12px; letter-spacing:2px; color:var(--accent); }
 body[data-edition=yijian] h2 { font-size:29px; line-height:1.55; margin-top:18px; }
 body[data-edition=yijian] .description { line-height:2; max-width:290px; }
 body[data-edition=yijian] [data-scene=hero] #screen>.portrait { width:166px; height:354px; right:27px; bottom:100px; border:1px solid var(--line); border-radius:85px 85px 8px 8px; background:var(--bg); box-shadow:5px 5px 0 var(--soft); }
-body[data-edition=yijian] [data-scene=hero] #screen::before { content:'THE LITTLE\A THINGS\A ABOUT YOU'; white-space:pre; position:absolute; left:28px; top:280px; font:10px/2.3 Georgia,serif; letter-spacing:2px; color:var(--muted); }
+body[data-edition=yijian] [data-scene=hero] #screen::before { content:'THE LITTLE\A THINGS\A ABOUT YOU'; white-space:pre; position:absolute; left:28px; top:280px; font:12px/2.3 Georgia,serif; letter-spacing:2px; color:var(--muted); }
 body[data-edition=yijian] .quote { border-radius:5px 18px 18px 5px; background:var(--paper); border:1px solid var(--line); border-left:5px solid var(--soft); padding:18px 20px; box-shadow:0 5px 18px #00000004; }
 body[data-edition=yijian] [data-scene=hero] .quote { bottom:43px; left:22px; right:22px; }
 body[data-edition=yijian] .quote p { font-size:16px; line-height:1.9; }
-body[data-edition=yijian] .page-caption { position:absolute; bottom:12px; left:28px; right:28px; font-size:9px; color:var(--muted); letter-spacing:1px; border-top:1px dashed var(--line); padding-top:10px; }
+body[data-edition=yijian] .page-caption { position:absolute; bottom:12px; left:28px; right:28px; font-size:12px; color:var(--muted); letter-spacing:1px; border-top:1px dashed var(--line); padding-top:10px; }
 body[data-edition=yijian] footer { background:var(--paper); border-top:1px solid var(--line); }
 body[data-edition=yijian] #dots { justify-content:flex-start; gap:9px; }
 body[data-edition=yijian] #dots span { width:17px; height:2px; border-radius:0; }
@@ -45,7 +45,7 @@ body[data-edition=yijian] .finish h3 { font-size:22px; }
 @media(max-width:350px) {
  body[data-edition=yijian] h2 { font-size:24px; }
  body[data-edition=yijian] [data-scene=hero] #screen>.portrait { width:145px; height:309px; right:22px; bottom:120px; }
- body[data-edition=yijian] [data-scene=hero] #screen::before { left:22px; font-size:8px; letter-spacing:1px; }
+ body[data-edition=yijian] [data-scene=hero] #screen::before { left:22px; font-size:12px; letter-spacing:1px; }
  body[data-edition=yijian] .roles .portrait { height:120px; }
  body[data-edition=yijian] .roles { gap:8px 6px; }
 }
@@ -54,19 +54,19 @@ body[data-edition=yijian] [data-scene=hero] #screen>.portrait { width:141px; hei
 @media(max-width:350px) { body[data-edition=yijian] [data-scene=hero] #screen>.portrait { width:131px; height:280px; bottom:90px; } }
 /* First-login content: ordinary fields, independently chosen companion, optional habits. */
 body[data-edition=yijian] #screen { min-width:0; padding-bottom:48px; }
-.field{margin:22px 0 16px}.field label,.field-title{display:block;font:12px/1.6 -apple-system,'PingFang SC',sans-serif;margin:18px 0 10px;color:var(--ink)}.field input,.field textarea{display:block;width:100%;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--paper);color:var(--ink);font:16px/1.6 -apple-system,'PingFang SC',sans-serif}.field textarea{min-height:85px;resize:vertical}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{min-height:44px;padding:8px 12px;font-size:12px;border:1px solid var(--line);border-radius:22px}.feedback{font-size:12px;color:var(--accent);min-height:20px}.start-note{border-left:4px solid var(--soft);padding:16px 20px;margin:22px 0;background:var(--paper)}.start-note small{color:var(--accent);font-size:10px}.start-note p{font:18px/1.8 'Songti SC',serif}.start-actions{display:grid;gap:12px}.start-action{text-align:left;padding:16px;border:1px solid var(--line);border-radius:14px 14px 4px 14px}.start-action strong,.start-action small{display:block}.start-action strong{font:18px/1.6 'Songti SC',serif}.start-action small{font-size:11px;color:var(--muted);margin-top:7px}.page-caption{pointer-events:none}body[data-edition=yijian] [data-scene=companion] .roles .portrait{height:120px}body[data-edition=yijian] [data-scene=companion] .roles{margin-top:18px}body[data-edition=yijian] [data-scene=companion] .field{margin-top:15px}
+.field{margin:22px 0 16px}.field label,.field-title{display:block;font:12px/1.6 -apple-system,'PingFang SC',sans-serif;margin:18px 0 10px;color:var(--ink)}.field input,.field textarea{display:block;width:100%;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--paper);color:var(--ink);font:16px/1.6 -apple-system,'PingFang SC',sans-serif}.field textarea{min-height:85px;resize:vertical}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{min-height:44px;padding:8px 12px;font-size:12px;border:1px solid var(--line);border-radius:22px}.feedback{font-size:12px;color:var(--accent);min-height:20px}.start-note{border-left:4px solid var(--soft);padding:16px 20px;margin:22px 0;background:var(--paper)}.start-note small{color:var(--accent);font-size:12px}.start-note p{font:18px/1.8 'Songti SC',serif}.start-actions{display:grid;gap:12px}.start-action{text-align:left;padding:16px;border:1px solid var(--line);border-radius:14px 14px 4px 14px}.start-action strong,.start-action small{display:block}.start-action strong{font:18px/1.6 'Songti SC',serif}.start-action small{font-size:12px;color:var(--muted);margin-top:7px}.page-caption{pointer-events:none}body[data-edition=yijian] [data-scene=companion] .roles .portrait{height:120px}body[data-edition=yijian] [data-scene=companion] .roles{margin-top:18px}body[data-edition=yijian] [data-scene=companion] .field{margin-top:15px}
 /* A quieter illustrated journal: warm paper, fine framing and generous rhythm. */
 body[data-edition=yijian] .device{border-radius:75px 22px 22px 8px;box-shadow:5px 6px 0 var(--bg),6px 7px 0 var(--line),0 24px 60px #00000007;isolation:isolate}
 body[data-edition=yijian] .device::before{content:'';position:absolute;inset:8px;border:1px solid var(--line);border-radius:68px 16px 16px 3px;opacity:.5;pointer-events:none;z-index:-1}
-body[data-edition=yijian] .progress{margin-inline:30px;padding-top:24px;border-bottom:0;color:var(--muted);font-size:9px;letter-spacing:1px}
+body[data-edition=yijian] .progress{margin-inline:30px;padding-top:24px;border-bottom:0;color:var(--muted);font-size:12px;letter-spacing:1px}
 body[data-edition=yijian] #screen{padding-top:8px;padding-inline:28px}
-body[data-edition=yijian] #screen>.eyebrow{display:flex;align-items:center;gap:12px;font-size:9px;letter-spacing:2px}
+body[data-edition=yijian] #screen>.eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:2px}
 body[data-edition=yijian] #screen>.eyebrow::before{content:'✧';font:24px Georgia,serif;color:var(--accent)}
 body[data-edition=yijian] #screen>.eyebrow::after{content:'';height:1px;flex:1;background:var(--line)}
 body[data-edition=yijian] h2{font-family:'Songti SC','STSong',serif;font-weight:400;font-size:30px;line-height:1.65;letter-spacing:1px;margin-top:15px}
 body[data-edition=yijian] .description{font-size:12px;line-height:2.1;max-width:280px;margin-bottom:24px}
 body[data-edition=yijian] .field{margin:23px 0}
-body[data-edition=yijian] .field label,body[data-edition=yijian] .field-title{font-size:11px;letter-spacing:.8px;color:var(--muted)}
+body[data-edition=yijian] .field label,body[data-edition=yijian] .field-title{font-size:12px;letter-spacing:.8px;color:var(--muted)}
 body[data-edition=yijian] .field input{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:12px 0;font-family:'Songti SC',serif;font-size:23px;line-height:1.8}
 body[data-edition=yijian] .field input::placeholder{color:var(--muted);opacity:.65}
 body[data-edition=yijian] .chip{background:var(--paper);border-color:var(--line);border-radius:22px;font-size:12px;padding:9px 15px}
@@ -74,9 +74,9 @@ body[data-edition=yijian] .chip[aria-pressed=true]{background:var(--soft);color:
 body[data-edition=yijian] [data-scene=identity] .chips{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 body[data-edition=yijian] [data-scene=identity] .chip{border-radius:12px 12px 3px 12px;min-height:54px;font-family:'Songti SC',serif;font-size:18px}
 body[data-edition=yijian] .quote{position:relative;margin-top:28px;border-left:1px solid var(--line);border-radius:35px 12px 12px 4px;padding:27px 22px;background:var(--paper);font-size:17px;line-height:2;box-shadow:3px 4px 0 var(--soft)}
-body[data-edition=yijian] .quote::before{content:'衣衣的小笺';position:absolute;top:-9px;left:25px;background:var(--paper);padding:0 9px;font:10px -apple-system,sans-serif;color:var(--accent);letter-spacing:2px}
+body[data-edition=yijian] .quote::before{content:'衣衣的小笺';position:absolute;top:-9px;left:25px;background:var(--paper);padding:0 9px;font:12px -apple-system,sans-serif;color:var(--accent);letter-spacing:2px}
 body[data-edition=yijian] .roles{gap:14px 10px}
-body[data-edition=yijian] .roles .choice{border-radius:48px 48px 5px 5px;box-shadow:0 5px 14px #00000003;font-size:11px}
+body[data-edition=yijian] .roles .choice{border-radius:48px 48px 5px 5px;box-shadow:0 5px 14px #00000003;font-size:12px}
 body[data-edition=yijian] .roles .portrait{background:var(--bg);border-bottom:0}
 body[data-edition=yijian] .roles .choice[aria-pressed=true]{box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--accent)}
 body[data-edition=yijian] .roles .choice[aria-pressed=true]::after{right:7px;top:12px}
@@ -88,7 +88,7 @@ body[data-edition=yijian] .start-action small{line-height:1.8}
 body[data-edition=yijian] footer{margin:0 14px;border-top-style:dashed;padding-top:20px;background:transparent}
 body[data-edition=yijian] #next{font-size:14px;letter-spacing:2px;box-shadow:0 5px 12px #00000006}
 body[data-edition=yijian] #next:disabled{opacity:.4;box-shadow:none}
-body[data-edition=yijian] .hint{font-size:10px;line-height:2}
+body[data-edition=yijian] .hint{font-size:12px;line-height:2}
 body[data-edition=yijian] aside h1{font-weight:400;font-size:40px;line-height:1.6}
 @media(max-width:350px){body[data-edition=yijian] #screen{padding-inline:21px}body[data-edition=yijian] h2{font-size:26px}body[data-edition=yijian] .roles{gap:12px 8px}body[data-edition=yijian] .chip{padding-inline:12px}body[data-edition=yijian] .progress{margin-inline:24px}}
 /* Nickname focus uses the existing underline instead of a large rectangular outline. */

@@ -20,7 +20,7 @@ html[data-app-design=yijian] #agent-page>header button{font-size:12px;color:var(
 #yijian-agent-root .suggestions{margin-top:25px;gap:10px}
 #yijian-agent-root .suggestions button{background:var(--paper);border:1px solid var(--line);border-radius:16px;min-height:64px}
 #yijian-agent-root .weather-toolbar{padding:10px 18px;gap:8px;flex-wrap:wrap;background:transparent;border-color:var(--line);flex-shrink:0}
-#yijian-agent-root .weather-toolbar #location-label{font-size:10px}
+#yijian-agent-root .weather-toolbar #location-label{font-size:12px}
 #yijian-agent-root #composer{margin:0;padding:12px 18px max(12px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);position:relative;bottom:auto;flex-shrink:0}
 #yijian-agent-root textarea,#yijian-agent-root input[type=text],#yijian-agent-root input[type=tel],#yijian-agent-root input[type=search]{font-size:16px}
 #yijian-agent-root #message{font-size:16px;background:var(--paper)}
@@ -28,7 +28,7 @@ html[data-app-design=yijian] #agent-page>header button{font-size:12px;color:var(
 #yijian-agent-root .bubble{border-radius:4px 19px 19px 19px;background:transparent;border-color:var(--line);font-size:14px;line-height:1.9}
 #yijian-agent-root .bubble.user{background:var(--soft);border-radius:19px 4px 19px 19px}
 #yijian-agent-root .primary{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
-#yijian-agent-root .fine-print{font-size:9px;color:var(--muted)}
+#yijian-agent-root .fine-print{font-size:12px;color:var(--muted)}
 #yijian-agent-root dialog{background:var(--paper);color:var(--ink);border-color:var(--line);font-family:-apple-system,'PingFang SC',sans-serif}
 #yijian-agent-root dialog h2{font-family:var(--y-serif);font-weight:400}
 #yijian-agent-root #mobile-new{display:block}
@@ -51,33 +51,33 @@ html[data-app-design=yijian] #agent-page>header button{font-size:12px;color:var(
 #yijian-agent-root #feed{padding-top:24px}
 html[data-app-design=yijian] #agent-account{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;color:var(--y-accent)}
 #yijian-agent-root .journey-entry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:22px}
-#yijian-agent-root .journey-entry button{font-size:11px;line-height:1.7;min-height:52px;white-space:normal;text-align:center;border-radius:14px;padding:10px 8px;background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+#yijian-agent-root .journey-entry button{font-size:12px;line-height:1.7;min-height:52px;white-space:normal;text-align:center;border-radius:14px;padding:10px 8px;background:var(--paper);border:1px solid var(--line);color:var(--ink)}
 #yijian-agent-root #checkin-dialog{width:min(400px,calc(100vw - 28px));max-height:calc(100dvh - 32px);padding:22px 22px 18px;border:1px solid var(--line);border-radius:24px;overflow-y:auto;background:var(--paper);box-shadow:0 18px 70px #293a4c25}
 #yijian-agent-root #checkin-dialog .checkin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0;height:auto}
 #yijian-agent-root #checkin-close{width:44px;height:44px;font-size:23px;padding:0;flex-shrink:0}
-#yijian-agent-root #checkin-dialog .eyebrow{font-size:7px;letter-spacing:1.6px}
+#yijian-agent-root #checkin-dialog .eyebrow{font-size:12px;letter-spacing:1.6px}
 #yijian-agent-root #checkin-dialog .checkin-hero{padding:8px 0 20px;text-align:center}
-#yijian-agent-root .checkin-chapter{font-size:9px;letter-spacing:3px;color:var(--muted)}
+#yijian-agent-root .checkin-chapter{font-size:12px;letter-spacing:3px;color:var(--muted)}
 #yijian-agent-root #checkin-title{font:25px/1.6 var(--y-serif);letter-spacing:0;margin:12px 0 8px}
-#yijian-agent-root #checkin-state{font-size:11px;line-height:1.9;margin:0;color:var(--muted)}
+#yijian-agent-root #checkin-state{font-size:12px;line-height:1.9;margin:0;color:var(--muted)}
 #yijian-agent-root .checkin-companion-note{display:flex;align-items:center;gap:11px;background:var(--bg);border-radius:4px 18px 18px 18px;border:1px solid var(--line);padding:14px;margin:0 0 20px}
 #yijian-agent-root .checkin-companion-note img{width:42px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0}
 #yijian-agent-root .checkin-companion-note>div{min-width:0;flex:1}
-#yijian-agent-root .checkin-companion-note strong{font-size:10px;font-weight:500;color:var(--accent)}
+#yijian-agent-root .checkin-companion-note strong{font-size:12px;font-weight:500;color:var(--accent)}
 #yijian-agent-root .checkin-companion-note p{font:12px/1.9 var(--y-serif);margin:5px 0 0}
 #yijian-agent-root .checkin-companion-note>span{color:var(--muted);font-size:20px}
 #yijian-agent-root #checkin-dialog .checkin-stats{display:grid;grid-template-columns:1fr 1fr;background:transparent;border:0;border-radius:0;margin:0 0 22px;padding:0}
 #yijian-agent-root #checkin-dialog .checkin-stats>div{padding:6px 8px;border-color:var(--line)}
 #yijian-agent-root #checkin-dialog .checkin-stats strong{font:500 30px/1.5 Georgia,serif;color:var(--accent)}
-#yijian-agent-root #checkin-dialog .checkin-stats small{font-size:10px;line-height:1.7}
+#yijian-agent-root #checkin-dialog .checkin-stats small{font-size:12px;line-height:1.7}
 #yijian-agent-root .checkin-week-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:17px;border-top:1px solid var(--line);margin-bottom:12px}
 #yijian-agent-root .checkin-week-heading h3{font:14px/1.7 var(--y-serif);margin:0}
-#yijian-agent-root .checkin-week-heading>span{font-size:9px;color:var(--muted)}
+#yijian-agent-root .checkin-week-heading>span{font-size:12px;color:var(--muted)}
 #yijian-agent-root #checkin-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;background:transparent;margin:0 0 23px;padding:0}
 #yijian-agent-root #checkin-calendar .checkin-date{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:76px;padding:8px 0;border:1px solid var(--line);border-radius:15px;background:var(--bg);color:var(--muted)}
-#yijian-agent-root #checkin-calendar .checkin-date>span{font-size:10px}
+#yijian-agent-root #checkin-calendar .checkin-date>span{font-size:12px}
 #yijian-agent-root #checkin-calendar .checkin-date>small{font:16px/1.1 sans-serif}
-#yijian-agent-root #checkin-calendar .checkin-date>em{font:8px/1.4 sans-serif}
+#yijian-agent-root #checkin-calendar .checkin-date>em{font:12px/1.4 sans-serif}
 #yijian-agent-root #checkin-calendar .is-signed{color:var(--paper);background:var(--accent);border-color:var(--accent)}
 #yijian-agent-root #checkin-action{width:100%;min-height:47px;border-radius:25px;font-size:12px;font-weight:500;margin:0;padding:10px 14px}
 #yijian-agent-root #checkin-reload{font-size:12px;min-height:44px;margin:5px auto}
@@ -90,10 +90,10 @@ html[data-app-design=yijian] #agent-account{display:grid;place-items:center;min-
 #yijian-agent-root .y-entry-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;background:var(--soft);color:var(--accent);margin-bottom:11px}
 #yijian-agent-root .y-entry-icon svg{width:21px;height:21px}
 #yijian-agent-root .y-entry-title{display:block;font:500 13px/1.6 -apple-system,'PingFang SC',sans-serif;white-space:nowrap}
-#yijian-agent-root .y-entry-description{display:block;font-size:9px;line-height:1.7;color:var(--muted);margin-top:4px;white-space:nowrap}
+#yijian-agent-root .y-entry-description{display:block;font-size:12px;line-height:1.7;color:var(--muted);margin-top:4px;white-space:nowrap}
 #yijian-agent-root .journey-entry button:hover{transform:none;border-color:var(--accent);background:var(--bg);box-shadow:none}
 #yijian-agent-root .journey-entry button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-@media(max-width:360px){#yijian-agent-root .journey-entry{gap:7px}#yijian-agent-root .y-entry-title{font-size:12px}#yijian-agent-root .y-entry-description{font-size:8px}}
+@media(max-width:360px){#yijian-agent-root .journey-entry{gap:7px}#yijian-agent-root .y-entry-title{font-size:12px}#yijian-agent-root .y-entry-description{font-size:12px}}
 /* App settings share the active palette, including locally defined notebook tokens. */
 #yijian-agent-root #preferences-dialog{--pref-tint:var(--y-soft);--pref-paper:var(--y-paper);--pref-detail:var(--y-accent);--accent:var(--y-accent);background:var(--y-bg);color:var(--y-ink)}
 #yijian-agent-root #preferences-save{background:var(--y-button);color:var(--y-button-ink);border-color:var(--y-button)}
@@ -184,7 +184,7 @@ html[data-app-design=yijian] .y-agent-city-button:disabled{opacity:.55}
 #yijian-agent-root #chat-form .y-composer-icon:active::before{background:var(--soft)}
 #yijian-agent-root .y-attachment-options{display:flex;gap:14px;padding:12px 0 2px;border-top:1px solid var(--line);margin-top:8px}
 #yijian-agent-root .y-attachment-options[hidden]{display:none}
-#yijian-agent-root #chat-form .y-attachment-choice{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:60px;min-height:64px;padding:8px;border:0;background:transparent;color:var(--ink);font-size:11px}
+#yijian-agent-root #chat-form .y-attachment-choice{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:60px;min-height:64px;padding:8px;border:0;background:transparent;color:var(--ink);font-size:12px}
 #yijian-agent-root .y-attachment-choice svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #yijian-agent-root .y-attachment-choice[aria-disabled=true]{color:var(--muted)}
 #yijian-agent-root .chat-attachment-preview{position:relative;width:64px;height:64px;margin:4px 12px 10px}

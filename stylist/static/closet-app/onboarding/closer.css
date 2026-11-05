@@ -2,31 +2,31 @@
 body[data-edition=yijian] .device{height:850px;max-height:calc(100dvh - 140px);min-height:520px;border-radius:0;box-shadow:none;background:var(--bg);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column}
 body[data-edition=yijian] .device::before{display:none}
 body[data-edition=yijian] .progress{height:54px;min-height:54px;margin:0;padding:10px 20px;border:0;flex-shrink:0}
-.closer-brand{font:8px Georgia,serif;letter-spacing:2px;color:var(--muted)}
+.closer-brand{font:12px Georgia,serif;letter-spacing:2px;color:var(--muted)}
 body[data-edition=yijian] #dots{order:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:3px 17px 0;flex-shrink:0}
-body[data-edition=yijian] #dots span{width:auto;height:auto;min-height:35px;background:none;border-top:2px solid var(--line);border-radius:0;opacity:1;padding-top:10px;font-size:9px;color:var(--muted);white-space:nowrap;letter-spacing:0}
+body[data-edition=yijian] #dots span{width:auto;height:auto;min-height:35px;background:none;border-top:2px solid var(--line);border-radius:0;opacity:1;padding-top:10px;font-size:12px;color:var(--muted);white-space:nowrap;letter-spacing:0}
 body[data-edition=yijian] #dots .active{width:auto;color:var(--accent);border-color:var(--accent)}
-.closer-intro{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:18px;flex-shrink:0}.closer-star{font:30px/1 Georgia,serif;color:var(--muted);opacity:.65}#counter{font-size:10px;letter-spacing:2px;color:var(--muted)}
+.closer-intro{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:18px;flex-shrink:0}.closer-star{font:30px/1 Georgia,serif;color:var(--muted);opacity:.65}#counter{font-size:12px;letter-spacing:2px;color:var(--muted)}
 body[data-edition=yijian] #screen{flex:1;min-height:0;overflow-y:auto;overflow-x:clip;padding:0 18px 22px;scrollbar-width:thin}
 body[data-edition=yijian] #screen h2{font:24px/1.65 'Songti SC','STSong',serif;letter-spacing:0;text-align:center;margin:16px -2px;color:var(--ink);white-space:normal}
-.closer-dialogue{background:var(--paper);border:1px solid var(--line);border-radius:4px 22px 22px 22px;padding:17px 16px;box-shadow:0 6px 18px #00000003}.closer-dialogue small{color:var(--accent);font-size:10px;letter-spacing:1px}.closer-dialogue p{font-size:13px;line-height:1.9;margin:0;color:var(--ink)}
-body[data-edition=yijian] .description{font-size:10px;line-height:1.9;text-align:center;max-width:none;color:var(--muted);margin:15px 0 20px}
+.closer-dialogue{background:var(--paper);border:1px solid var(--line);border-radius:4px 22px 22px 22px;padding:17px 16px;box-shadow:0 6px 18px #00000003}.closer-dialogue small{color:var(--accent);font-size:12px;letter-spacing:1px}.closer-dialogue p{font-size:13px;line-height:1.9;margin:0;color:var(--ink)}
+body[data-edition=yijian] .description{font-size:12px;line-height:1.9;text-align:center;max-width:none;color:var(--muted);margin:15px 0 20px}
 body[data-edition=yijian] .field{margin:18px 0 20px}
 body[data-edition=yijian] .field label,body[data-edition=yijian] .field-title{font-size:12px;letter-spacing:0;margin:18px 0 9px}
 body[data-edition=yijian] .field input{font:16px/1.7 -apple-system,'PingFang SC',sans-serif;padding:12px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
 body[data-edition=yijian] .field input:focus-visible{outline:none;border-bottom-color:var(--accent);box-shadow:0 1px 0 var(--accent)}
 body[data-edition=yijian] [data-scene=identity] .chip{font:15px -apple-system,'PingFang SC',sans-serif;min-height:46px;border-radius:14px}
-body[data-edition=yijian] .hint{font-size:10px;line-height:1.9;margin:12px 0;color:var(--muted)}
+body[data-edition=yijian] .hint{font-size:12px;line-height:1.9;margin:12px 0;color:var(--muted)}
 body[data-edition=yijian] .page-caption{display:none}
 body[data-edition=yijian] footer{flex-shrink:0;margin:0;padding:12px 24px max(14px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line)}
 body[data-edition=yijian] #back:disabled{display:none}
 body[data-edition=yijian] .actions{gap:10px;padding:0}
 body[data-edition=yijian] #next{height:46px;min-height:46px;box-shadow:none;font-size:13px;letter-spacing:0}
-.footer-note{text-align:center;font-size:10px;line-height:1.8;color:var(--muted);margin:10px 0 0}
+.footer-note{text-align:center;font-size:12px;line-height:1.8;color:var(--muted);margin:10px 0 0}
 body[data-edition=yijian] .start-note{display:none}
 body[data-edition=yijian] .roles .choice{border-radius:16px 16px 5px 5px}
-@media(max-width:650px){body[data-edition=yijian] main{margin:0 auto;padding:0 7px;max-width:440px}body[data-edition=yijian] .device{height:calc(100dvh - 115px);max-height:none;min-height:480px}body[data-edition=yijian] .note{font-size:9px;margin:4px 3px}body[data-edition=yijian] #screen{min-height:0;padding-inline:18px}body[data-edition=yijian] .studio{padding:8px 14px}body[data-edition=yijian] .closer-intro{padding-top:15px}}
-@media(max-width:350px){body[data-edition=yijian] #screen h2{font-size:21px}body[data-edition=yijian] #dots span{font-size:8px}body[data-edition=yijian] .progress{padding-inline:17px}}
+@media(max-width:650px){body[data-edition=yijian] main{margin:0 auto;padding:0 7px;max-width:440px}body[data-edition=yijian] .device{height:calc(100dvh - 115px);max-height:none;min-height:480px}body[data-edition=yijian] .note{font-size:12px;margin:4px 3px}body[data-edition=yijian] #screen{min-height:0;padding-inline:18px}body[data-edition=yijian] .studio{padding:8px 14px}body[data-edition=yijian] .closer-intro{padding-top:15px}}
+@media(max-width:350px){body[data-edition=yijian] #screen h2{font-size:21px}body[data-edition=yijian] #dots span{font-size:12px}body[data-edition=yijian] .progress{padding-inline:17px}}
 @media(orientation:landscape) and (max-height:500px){body[data-edition=yijian] .device{height:620px;max-height:none;min-height:0}}
 /* Two-column role cards retain the shared front-view crop at its natural ratio. */
 body[data-edition=yijian] [data-scene=companion] .roles {
@@ -39,7 +39,7 @@ body[data-edition=yijian] [data-scene=companion] .roles .portrait {
   width:100%;height:auto;aspect-ratio:480 / 1024;margin-bottom:11px;
 }
 body[data-edition=yijian] .role-title {display:block;font-size:14px;font-weight:500;padding:0 12px;line-height:1.7}
-body[data-edition=yijian] .role-summary {display:block;font-size:10px;padding:4px 12px 0;line-height:1.8;color:var(--muted)}
+body[data-edition=yijian] .role-summary {display:block;font-size:12px;padding:4px 12px 0;line-height:1.8;color:var(--muted)}
 body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=true]::after {
   top:12px;right:10px;width:23px;height:23px;line-height:23px;font-size:13px;
 }
@@ -48,16 +48,16 @@ body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=tru
 .role-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0}
 .role-group{display:flex;align-items:center;gap:9px;min-width:0;min-height:72px;text-align:left;padding:9px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
 .role-group img{width:40px;height:50px;object-fit:cover;border-radius:9px;flex-shrink:0}
-.role-group span{min-width:0}.role-group strong{display:block;font-size:12px;font-weight:500}.role-group small{display:block;font-size:9px;line-height:1.7;margin-top:4px;color:var(--muted)}
+.role-group span{min-width:0}.role-group strong{display:block;font-size:12px;font-weight:500}.role-group small{display:block;font-size:12px;line-height:1.7;margin-top:4px;color:var(--muted)}
 .role-group[aria-pressed=true]{background:var(--soft);color:var(--ink);border-color:var(--accent)}
 body[data-edition=yijian] [data-scene=companion] .roles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
 body[data-edition=yijian] [data-scene=companion] .roles .choice{border-radius:12px;padding-bottom:13px}
 body[data-edition=yijian] .role-title{font:14px/1.6 'Songti SC',serif;padding:0 7px}
-body[data-edition=yijian] .role-summary{font-size:10px;padding:6px 7px 0;line-height:1.7}
-.role-height{display:block;font-size:10px;color:var(--muted);padding:5px 7px 0}
-body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=true]::after{width:18px;height:18px;line-height:18px;top:7px;right:7px;font-size:11px}
+body[data-edition=yijian] .role-summary{font-size:12px;padding:6px 7px 0;line-height:1.7}
+.role-height{display:block;font-size:12px;color:var(--muted);padding:5px 7px 0}
+body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=true]::after{width:18px;height:18px;line-height:18px;top:7px;right:7px;font-size:12px}
 .role-detail{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--paper);margin-top:13px;font-size:12px;color:var(--accent)}.role-detail p{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:0}
-@media(max-width:350px){.role-group{gap:5px;padding:7px}.role-group img{width:31px;height:44px}.role-group small{font-size:8px}body[data-edition=yijian] .role-title{font-size:12px}body[data-edition=yijian] .role-summary{font-size:9px}}
+@media(max-width:350px){.role-group{gap:5px;padding:7px}.role-group img{width:31px;height:44px}.role-group small{font-size:12px}body[data-edition=yijian] .role-title{font-size:12px}body[data-edition=yijian] .role-summary{font-size:12px}}
 
 .role-summary .role-trait{display:block;white-space:nowrap}
 /* Reuse the same 4×4 image atlas and ordering as Agent's 心动的穿搭. */
@@ -71,15 +71,15 @@ body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=tru
 .priority-grid .fashion-choice{flex-direction:row;align-items:center;text-align:left;padding:10px 38px 10px 12px;gap:13px;min-height:72px;border-radius:13px}
 .priority-grid .fashion-art{width:50px;height:50px;flex-shrink:0;border-radius:9px}
 .priority-grid .fashion-choice[aria-pressed=true]::after{top:calc(50% - 10px)}
-body[data-edition=yijian] .device footer .feedback{position:static;min-height:0;padding:0;margin:0 0 8px;font-size:11px;line-height:1.7}
+body[data-edition=yijian] .device footer .feedback{position:static;min-height:0;padding:0;margin:0 0 8px;font-size:12px;line-height:1.7}
 body[data-edition=yijian] .device footer .feedback:empty{display:none}
 body[data-edition=yijian] #dots{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-body[data-edition=yijian] #dots span{font-size:8px;white-space:normal;line-height:1.7}
+body[data-edition=yijian] #dots span{font-size:12px;white-space:normal;line-height:1.7}
 .rhythm-title{font:18px/1.7 'Songti SC',serif;margin:26px 0 16px;color:var(--ink)}
 .rhythm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .rhythm-choice{display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left;border:1px solid var(--line);border-radius:13px;background:var(--paper);padding:17px 13px;min-width:0;color:var(--ink)}
 .rhythm-choice strong{font:18px/1.5 'Songti SC',serif;font-weight:400}
-.rhythm-choice small{font-size:10px;line-height:1.8;color:var(--muted)}
+.rhythm-choice small{font-size:12px;line-height:1.8;color:var(--muted)}
 .rhythm-choice[aria-pressed=true]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
 .rhythm-list{display:grid;gap:10px}
 .rhythm-list .rhythm-choice{flex-direction:row;justify-content:space-between;align-items:center;min-height:46px;padding:11px 13px;gap:12px}
@@ -107,12 +107,12 @@ body[data-edition=yijian] [data-scene=companion] .roles .choice[aria-pressed=tru
 }
 .first-invitation{display:flex;align-items:center;gap:16px;padding:22px 16px;margin:20px 0 25px;border:1px solid var(--line);border-radius:44px 16px 16px 5px;background:var(--paper)}
 .invitation-avatar{width:68px;height:92px;object-fit:cover;border-radius:36px 36px 7px 7px;border:3px solid var(--paper);box-shadow:0 2px 8px #00000008;flex-shrink:0}
-.invitation-letter{min-width:0}.invitation-letter small{font-size:10px;color:var(--accent);line-height:1.8}.invitation-letter p{font:16px/1.9 'Songti SC',serif;margin:8px 0 0;color:var(--ink)}
+.invitation-letter{min-width:0}.invitation-letter small{font-size:12px;color:var(--accent);line-height:1.8}.invitation-letter p{font:16px/1.9 'Songti SC',serif;margin:8px 0 0;color:var(--ink)}
 body[data-edition=yijian] [data-scene=start] .start-actions{gap:16px}
 body[data-edition=yijian] [data-scene=start] .start-action{padding:19px 20px 21px;border-radius:18px 18px 5px 18px;box-shadow:2px 3px 0 var(--soft)}
-.invitation-number{display:block;font:9px/1.8 Georgia,'Songti SC',serif;letter-spacing:1.5px;color:var(--muted);margin-bottom:9px}
+.invitation-number{display:block;font:12px/1.8 Georgia,'Songti SC',serif;letter-spacing:1.5px;color:var(--muted);margin-bottom:9px}
 body[data-edition=yijian] [data-scene=start] .start-action strong{font-size:20px;color:var(--accent)}
-body[data-edition=yijian] [data-scene=start] .start-action small{font-size:11px;line-height:1.9;margin-top:10px}
+body[data-edition=yijian] [data-scene=start] .start-action small{font-size:12px;line-height:1.9;margin-top:10px}
 body[data-edition=yijian] [data-scene=start] .closer-dialogue{display:none}
 body[data-edition=yijian] [data-scene=start] footer .actions{justify-content:center}
 /* Optional weather city invitation on the final onboarding page. */
@@ -120,7 +120,7 @@ body[data-edition=yijian] [data-scene=start] footer .actions{justify-content:cen
 .onboarding-location h3{grid-column:1/-1;font:18px/1.7 'Songti SC',serif;margin:0;color:var(--accent,#3c5b79)}
 .onboarding-location h3::before{content:'✧';font-size:16px;margin-right:8px;opacity:.75}
 .onboarding-location p{grid-column:1/-1;font-size:12px;line-height:1.9;margin:0;color:var(--muted,#73818e)}
-.onboarding-location [role=status]{grid-column:1;font-size:10px;line-height:1.8;min-width:0}
+.onboarding-location [role=status]{grid-column:1;font-size:12px;line-height:1.8;min-width:0}
 .onboarding-location>.onboarding-location-actions{grid-column:2;grid-row:3;margin:0}
 .onboarding-location .onboarding-location-enable{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line,#dce3e8);border-radius:22px;background:var(--paper,#fff);font-size:12px;padding:8px 14px;white-space:nowrap}
 .onboarding-location-enable::after{content:'↗';font-size:15px}
@@ -131,7 +131,7 @@ body[data-edition=yijian] .onboarding-city-dialog{width:min(440px,calc(100vw - 3
 .onboarding-city-dialog[open]{display:flex;flex-direction:column}
 .onboarding-city-dialog::backdrop{background:#26374b55;backdrop-filter:blur(3px)}
 .onboarding-city-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 20px 0;flex-shrink:0}
-.onboarding-city-heading small{font:8px/1.7 Georgia,serif;letter-spacing:1.6px;color:var(--muted)}
+.onboarding-city-heading small{font:12px/1.7 Georgia,serif;letter-spacing:1.6px;color:var(--muted)}
 body[data-edition=yijian] .onboarding-city-dialog h2{font:400 23px/1.5 'Songti SC','STSong',serif;letter-spacing:0;white-space:normal;margin:7px 0 0;color:var(--ink)}
 .onboarding-city-heading button{flex-shrink:0;min-width:60px;min-height:44px;border:0;background:transparent;color:var(--muted);font-size:12px}
 .onboarding-city-dialog p{font-size:12px;line-height:1.8;color:var(--muted)}
@@ -139,9 +139,9 @@ body[data-edition=yijian] .onboarding-city-dialog h2{font:400 23px/1.5 'Songti S
 .onboarding-city-dialog .onboarding-city-retry{margin:0 20px;min-height:44px;flex-shrink:0;border:1px solid var(--line);background:var(--paper);color:var(--accent);border-radius:14px;font-size:13px;line-height:1.6}
 .onboarding-city-dialog .onboarding-city-status{margin:10px 20px;font-size:12px;color:var(--accent);flex-shrink:0}
 .onboarding-city-picker{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden}
-.onboarding-city-dialog .city-picker-label{display:block;margin:0 20px;color:var(--muted);font-size:11px;flex-shrink:0}
+.onboarding-city-dialog .city-picker-label{display:block;margin:0 20px;color:var(--muted);font-size:12px;flex-shrink:0}
 .onboarding-city-dialog input{box-sizing:border-box;width:100%;min-height:46px;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5;box-shadow:none}
-.onboarding-city-dialog .city-picker-summary{font-size:11px;line-height:1.7;color:var(--muted);margin:10px 20px;flex-shrink:0}
+.onboarding-city-dialog .city-picker-summary{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 20px;flex-shrink:0}
 .onboarding-city-dialog .city-picker-browse{display:grid;grid-template-columns:minmax(100px,36%) minmax(0,1fr);flex:1;min-height:0;border-block:1px solid var(--line)}
 .onboarding-city-dialog :is(.city-picker-provinces,.city-picker-cities,.city-picker-results){min-height:0;overflow:auto;overscroll-behavior:contain;scroll-padding:6px;color:var(--muted);font-size:12px}
 .onboarding-city-dialog .city-picker-provinces{padding:6px;background:var(--soft);border-right:1px solid var(--line)}
@@ -150,10 +150,10 @@ body[data-edition=yijian] .onboarding-city-dialog h2{font:400 23px/1.5 'Songti S
 .onboarding-city-dialog [hidden]{display:none!important}
 .onboarding-city-dialog :is(.city-picker-provinces,.city-picker-cities,.city-picker-results) button{display:block;width:100%;min-height:44px;margin:2px 0;padding:10px;text-align:left;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 .onboarding-city-dialog :is(.city-picker-provinces,.city-picker-cities,.city-picker-results) button[aria-pressed=true]{background:var(--paper);border-color:var(--accent);color:var(--accent);font-weight:500}
-.onboarding-city-dialog .city-picker-results button small{display:block;font-size:11px;color:var(--muted)}
+.onboarding-city-dialog .city-picker-results button small{display:block;font-size:12px;color:var(--muted)}
 .onboarding-city-footer{padding:14px 20px calc(14px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);flex-shrink:0}
 .onboarding-city-footer .onboarding-city-confirm{width:100%;min-height:46px;border:0;border-radius:24px;background:var(--action);color:var(--on-action);font-size:14px}
-.onboarding-city-footer small{display:block;text-align:center;font-size:10px;line-height:1.7;color:var(--muted);margin-top:8px}
+.onboarding-city-footer small{display:block;text-align:center;font-size:12px;line-height:1.7;color:var(--muted);margin-top:8px}
 .onboarding-city-dialog button:disabled{opacity:.4;cursor:default}
 .onboarding-city-dialog :is(button,input):focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 @media(max-width:600px){body[data-edition=yijian] .onboarding-city-dialog{width:min(440px,100vw);height:min(680px,calc(100dvh - 12px));max-height:calc(100dvh - 12px);margin:auto;inset:0;border-radius:24px}}

@@ -49,7 +49,7 @@
 .album-copy > * { position: relative; }
 .album-card h2 { margin: 0; font-size: 25px; font-weight: 400; color: #373c4f; }
 .album-card p { margin: 0; font-size: 12px; line-height: 18px; color: #737887; }
-.album-metadata { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 11px; color: #737887; }
+.album-metadata { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 12px; color: #737887; }
 .album-single .album-metadata { color: #373c4f; }
 .album-metadata > span { display: flex; align-items: flex-start; gap: 4px; }
 .album-meta-source { margin-left: auto; flex-shrink: 0; max-width: 45%; }
@@ -63,7 +63,7 @@
 .inspiration-card > img { display: block; border-radius: 0; object-fit: cover; }
 .inspiration-copy { padding: 10px 10px 12px; }
 .inspiration-copy h2 { font-size: 13px; font-weight: 600; color: #333847; }
-.inspiration-copy p { font-size: 11px; color: #7d8291; margin-top: 5px; }
+.inspiration-copy p { font-size: 12px; color: #7d8291; margin-top: 5px; }
 .create-scroll .close { font-size: 0; background: url('./assets/create2_close.png') center / 20px 20px no-repeat; }
 .create-scroll button > span { font-size: 0; width: 14px; height: 14px; flex-shrink: 0; background: url('./assets/create2_ai_arrow.png') center / contain no-repeat; }
 .create-scroll .create-ai > span { width: 16px; height: 16px; }
