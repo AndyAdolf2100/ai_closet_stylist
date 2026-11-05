@@ -14,7 +14,11 @@ nginx_bin=${AICLOSET_NGINX_BIN:-/usr/local/nginx/sbin/nginx}
 vhost_dir=${AICLOSET_VHOST_DIR:-/usr/local/nginx/conf/vhost}
 domain=aicloset-assistant.wxbjq.top
 nginx_target="$vhost_dir/$domain.conf"
-preserve_nginx=${AICLOSET_PRESERVE_NGINX:-0}
+preserve_nginx=${AICLOSET_PRESERVE_NGINX:-}
+if [[ -z "$preserve_nginx" ]]; then
+  # Updates preserve the actual live site, including custom /docs routes.
+  if [[ -f "$nginx_target" ]]; then preserve_nginx=1; else preserve_nginx=0; fi
+fi
 [[ "$preserve_nginx" == 0 || "$preserve_nginx" == 1 ]] || fail "AICLOSET_PRESERVE_NGINX只能为0或1。"
 if [[ "$preserve_nginx" == 1 && ! -f "$nginx_target" ]]; then
   fail "保留站点模式需要现有Nginx配置；首次安装请使用默认模式。"

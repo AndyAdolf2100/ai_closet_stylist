@@ -1,5 +1,7 @@
 # PostgreSQL 私密离线包：打包与部署
 
+2026-11-06 更新：已有助理站点时，安装器默认保留实际Nginx文件（包含`/docs/`等自定义路由），不替换也不重载；仍做`nginx -t`与HTTPS健康检查。首次没有站点文件时才按模板安装。只有明确要求替换站点时才设置`AICLOSET_PRESERVE_NGINX=0`。本轮新版DeepSeek私密离线包的更新命令显式设置`AICLOSET_PRESERVE_NGINX=1`，包内只配置`deepseek-v4-1-flash-261017`，不带旧Seed／旧端点凭证；私密配置安装前备份，数据库与既有持久卷保留。打包与远端安装分别记录，不能混称已部署。
+
 更新日期：2026-10-31。当前测试机为 CentOS7、x86_64，前端与 Agent 同容器，数据保存到远程 PostgreSQL 的独立 `aicloset_stylist` 库。
 
 用户已确认版本 `20261030T080643Z-91a41c298fa0-2192` 部署成功，数据库预检、应用及 HTTPS 健康检查通过。地址为 `https://aicloset-assistant.wxbjq.top/`，配置目录为 `/opt/aicloset-assistant/config`。登录、衣橱、模型回复、历史持久化和收费效果分别验收。

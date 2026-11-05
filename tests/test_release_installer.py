@@ -181,7 +181,7 @@ def test_failed_update_restores_previous_application_and_nginx(host, failure):
     old_image = (root / 'image').read_text()
     target = root / 'vhost/aicloset-assistant.wxbjq.top.conf'
     target.write_text('old site')
-    result = run(make_release(root, 'broken'), {**env, failure: '1'})
+    result = run(make_release(root, 'broken'), {**env, failure: '1', 'AICLOSET_PRESERVE_NGINX': '0'})
     assert result.returncode != 0
     assert (base / 'current').resolve() == previous
     assert (root / 'image').read_text() == old_image
@@ -313,7 +313,7 @@ def test_runtime_update_preserves_custom_docs_nginx(host):
     site = root / 'vhost/aicloset-assistant.wxbjq.top.conf'
     site.write_text('existing site with /docs/ custom route')
     (root / 'events').write_text('')
-    update = run(make_release(root, 'usage', offline=True), {**env, 'AICLOSET_PRESERVE_NGINX': '1'})
+    update = run(make_release(root, 'usage', offline=True), env)
     assert update.returncode == 0, update.stderr
     assert site.read_text() == 'existing site with /docs/ custom route'
     events = [json.loads(line) for line in (root / 'events').read_text().splitlines()]

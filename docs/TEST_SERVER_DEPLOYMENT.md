@@ -1,5 +1,7 @@
 # 测试服务器配置与部署流程
 
+2026-11-06 更新：已有助理站点时，安装器默认保留实际Nginx文件（包含`/docs/`等自定义路由），不替换也不重载；仍做`nginx -t`与HTTPS健康检查。首次没有站点文件时才按模板安装。只有明确要求替换站点时才设置`AICLOSET_PRESERVE_NGINX=0`。本轮新版DeepSeek私密离线包的更新命令显式设置`AICLOSET_PRESERVE_NGINX=1`，包内只配置`deepseek-v4-1-flash-261017`，不带旧Seed／旧端点凭证；私密配置安装前备份，数据库与既有持久卷保留。打包与远端安装分别记录，不能混称已部署。
+
 更新日期：2026-10-30。当前采用前端与Agent同容器、远程PostgreSQL独立库和私密amd64离线包。打包、配置导入及安装命令统一见 [发布操作入口](SIMPLE_DEPLOYMENT.md)，本文件维护服务器环境、站点边界与验收记录。
 
 上线前核对Stylist用量上报的回调地址和环境标记，见 [上线注意事项](SIMPLE_DEPLOYMENT.md#上线注意事项模型用量上报2026-11-04)。测试机使用`STYLIST_USAGE_ENVIRONMENT=test`，Server接口就绪后再启用回调。
