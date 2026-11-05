@@ -173,19 +173,24 @@ class MCPReads:
     def __init__(self, session, timeout=20, image_timeout=240):
         self.session, self.timeout, self.tools = session, timeout, None
         self.image_timeout = image_timeout
+        self._discovery_lock = asyncio.Lock()
 
     async def discover(self):
-        if self.tools is None:
-            self.tools = {}
-            cursor = None
+        if self.tools is not None:
+            return self.tools
+        async with self._discovery_lock:
+            if self.tools is not None:
+                return self.tools
+            tools, cursor = {}, None
             for _ in range(10):
                 result = await self.session.list_tools(cursor=cursor)
-                self.tools.update({t.name: t for t in result.tools})
+                tools.update({t.name: t for t in result.tools})
                 cursor = result.nextCursor
                 if not cursor:
-                    return self.tools
+                    # Publish only a complete catalog; concurrent readers never see {}.
+                    self.tools = tools
+                    return tools
             raise StylistError("tool_catalog_truncated", "工具目录读取不完整。")
-        return self.tools
 
     async def call(self, name, arguments):
         if name not in READ_TOOLS:

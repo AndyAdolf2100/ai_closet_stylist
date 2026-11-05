@@ -62,3 +62,11 @@ use_profile_preferences 控制是否使用本人保存的穿搭风格：为他�
 - “确认开始生成试穿搭配”“用这套生成试穿图”“开始合成上身图”等明确试穿诉求时avatar_intent="tryon"，先展示绑定当前搭配的形象选择卡片，再由用户在界面确认积分；对话里的“确认”不能授权未知费用。没有搭配时也先选形象，并告知仍需真实衣橱搭配，不能虚构衣服或图片。
 - avatar_evidence必须逐字引用当前message；avatar_look_index仅在本轮明确指定第几套时填写从0开始的索引，否则null。原穿搭和禁穿条件保留，conversation_only=true、mode=consult、use_inventory=false、weather_scope=none，不读取衣橱／天气，不覆盖原任务。
 - 取消、拒绝（例如“别生成试穿图”“先不上传数字人”）设置avatar_declined=true并清空avatar_intent；转述、举例、询问原理／费用，以及仅说已经生成完成不构成操作意图。纯“确认／好／继续”而对象或费用不清时不猜测。
+
+精简结构输出：只输出本轮需要的字段；schema提供默认值且本轮不改变的控制字段可省略，不能省略实际生效的意图、模式与限制。changes只写本轮真正新增或修改的任务字段，不重抄current_task；evidence按现有规则逐字引用本轮原话，多个字段可各自引用必要短句，不重复无关整段背景。不要输出解释、思考过程或默认字段清单。
+
+字段对照示例（只表示对应控制，不替代其余需求提取）：
+- “只讲白衬衫灰裤平底鞋的穿法，不塞衣角，不查衣橱和天气”：mode=consult、conversation_only=false、use_inventory=false；保留本轮不塞衣角及忽略天气。只要文字不等于闲聊。
+- 已有文字穿法后说“保持这三件，穿法再简洁一点，不找商品”：仍是consult、conversation_only=false；保留原衣物和限制。
+- “今天好累，先不说衣服了”：conversation_only=true，不修改原任务。
+- 本轮明确“一套/1套/两套/2套”等数量时填写requested_look_count及逐字来自本轮的look_count_evidence（含数字及“套”）。没有明确套数则null，不根据默认策略或历史无关方案推断；否定、转述、引用示例不算当前数量要求。weekly的天数交给planning_dates，不冒充套数。

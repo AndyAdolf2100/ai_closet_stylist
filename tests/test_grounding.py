@@ -103,8 +103,9 @@ def test_last_resort_rewrites_claims_and_preserves_selected_items(persona):
 
 @pytest.mark.parametrize("persona", ["male_calm_v1", "female_warm_v1"])
 @pytest.mark.parametrize("second_attempt_bad", [False, True, "drops_items", "changes_items"])
+@pytest.mark.parametrize("title_claim", [False, True])
 @pytest.mark.asyncio
-async def test_engine_repairs_claims_and_still_delivers_when_model_repeats_them(tmp_path, persona, second_attempt_bad):
+async def test_engine_repairs_claims_and_still_delivers_when_model_repeats_them(tmp_path, persona, second_attempt_bad, title_claim):
     class Model:
         def __init__(self):
             self.calls = []
@@ -123,7 +124,7 @@ async def test_engine_repairs_claims_and_still_delivers_when_model_repeats_them(
                 return Draft(message="先试穿看看。", looks=[LookDraft(title="通勤",
                     selected_keys=["user:101", "user:102", "user:104"], why=["配色"], how=["按体感调整"])])
             text = "这条裤子坐下没有压迫感，衬衫不贴身。" if not repair or second_attempt_bad else "先坐下试穿，确认腰腹不勒再选。"
-            return Draft(message=text, looks=[LookDraft(title="通勤",
+            return Draft(message=text, looks=[LookDraft(title="宽松通勤" if title_claim else "通勤",
                 selected_keys=["user:101", "user:102", "user:103"], why=["配色清爽"], how=["先试穿活动再决定"])])
 
     model = Model()
@@ -133,7 +134,8 @@ async def test_engine_repairs_claims_and_still_delivers_when_model_repeats_them(
     assert reply.delivery == "outfit" and len(reply.looks[0].items) == 3
     assert {p.key for p in reply.looks[0].items} == {"user:101", "user:102", "user:103"}
     assert not attribute_claim_problems(Draft(message=reply.message), {})
-    assert model.calls == ["plan", "style", "style"]
+    assert model.calls == (["plan", "style", "style"] if title_claim else ["plan", "style"])
+    # Semantic title/style repairs still use the model; text-only repairs keep the selection.
     assert "不会勒" not in reply.message and "没有压迫感" not in reply.message
 
 

@@ -21,7 +21,7 @@ const server = http.createServer(async (req, res) => {
   let body;
   try { body = JSON.parse(raw); } catch { return reply(400, {error: 'invalid_json'}); }
   if (req.url.endsWith('/v1/chat/completions')) {
-    const planning = body.messages?.[0]?.content.includes('"title": "Plan"');
+    const planning = /"title"\s*:\s*"Plan"/.test(body.messages?.[0]?.content || "");
     const modelKey = req.url + ':' + planning;
     const previousCalls = modelCalls.get(modelKey) || 0;
     modelCalls.set(modelKey, previousCalls + 1);

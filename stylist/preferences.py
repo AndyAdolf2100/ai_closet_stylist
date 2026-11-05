@@ -1,20 +1,19 @@
 """Apply soft wardrobe style preferences after hard suitability checks."""
 import re
 
-from .models import Slot
-
 
 def preferred_pool(pool, styles, frozen=()):
     if not styles:
         return pool, []
     frozen_keys = {p.key for p in frozen}
-    garment_slots = {Slot.TOP, Slot.BOTTOM, Slot.DRESS, Slot.OUTER}
+
     def matches(p, wanted=styles):
-        return any(label in style for label in p.styles for style in wanted)
-    matching_slots = {p.slot for p in pool.values() if matches(p)}
+        return any(label and label in style for label in p.styles for style in wanted)
+
     missing = [style for style in styles if not any(matches(p, [style]) for p in pool.values())]
-    return {key: p for key, p in pool.items() if key in frozen_keys or p.slot not in garment_slots
-            or p.slot not in matching_slots or matches(p)}, missing
+    # Style is a soft preference: neutral/unknown pieces may be the best complement.
+    ranked = sorted(pool.items(), key=lambda item: (item[0] not in frozen_keys, not matches(item[1])))
+    return dict(ranked), missing
 
 
 def wardrobe_allowed(message, history=()):

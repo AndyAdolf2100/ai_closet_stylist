@@ -64,13 +64,14 @@ def create_app(settings=None):
     @asynccontextmanager
     async def lifespan(app):
         sender_task = asyncio.create_task(usage_sender.run()) if settings.usage_callback_url else None
-        try:
-            yield
-        finally:
-            await runs.close()
-            if sender_task:
-                sender_task.cancel()
-                await asyncio.gather(sender_task, return_exceptions=True)
+        async with model.session():
+            try:
+                yield
+            finally:
+                await runs.close()
+                if sender_task:
+                    sender_task.cancel()
+                    await asyncio.gather(sender_task, return_exceptions=True)
 
     app = FastAPI(title="AI Closet Stylist", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings

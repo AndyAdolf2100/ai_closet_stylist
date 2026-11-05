@@ -36,7 +36,7 @@ from .memory import (
     strip_save_claims,
     verified_memory_save,
 )
-from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Task
+from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Slot, Task
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
@@ -436,7 +436,9 @@ class Stylist:
                     async with upstream.mcp() as mcp:
                         pool, cautions, rejected = await retrieve(upstream, mcp, effective_task,
                                                                  plan.search_query, frozen, request.assistant_persona,
-                                                                 allow_system=data.get("new_clothes", False), diagnostics=retrieval_diagnostics)
+                                                                 allow_system=data.get("new_clothes", False), diagnostics=retrieval_diagnostics,
+                                                                 style_preferences=(request.companion_profile.style_preferences
+                                                                     if request.companion_profile and plan.use_profile_preferences else ()))
                         frozen = [pool.get(p.key, p) for p in frozen]
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
@@ -505,7 +507,21 @@ class Stylist:
             from .feedback import style_evidence
             feedback_styles = (await asyncio.to_thread(style_evidence, self.store, owner or await upstream.identity(), task)
                                if plan.use_profile_preferences and not plan.conversation_only and not plan.weather_only else [])
+            profile = request.companion_profile
+            styling_task = apply_memory(task, plan, data.get("long_term_memory", []))
+            effective_styles = ([styling_task.style] if styling_task.style else
+                                (profile.style_preferences if profile and plan.use_profile_preferences else []))
             draft_payload = {
+                "requested_look_count": plan.requested_look_count,
+                "styling_brief": {
+                    "scene": styling_task.scene or styling_task.occasion,
+                    "effective_styles": effective_styles,
+                    "preferred_keys_by_slot": {
+                        slot.value: [p.key for p in pool.values() if p.slot == slot and any(
+                            label and label in style for label in p.styles for style in effective_styles)]
+                        for slot in Slot},
+                    "strategy": "先遵守本轮套数与冻结；每套以有效风格的核心单品为主，配套围绕核心协调；已有足够匹配款时不另加偏离风格的方案。",
+                } if plan.use_inventory and plan.mode != "consult" else None,
                 "outfit_feedback_styles": feedback_styles,
                 "chat_image": request.chat_image,
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
@@ -524,7 +540,7 @@ class Stylist:
                 "conversation_only": plan.conversation_only,
                 "weather_only": plan.weather_only,
                 "message": request.message,
-                "task": apply_memory(task, plan, data.get("long_term_memory", [])).model_dump(mode="json"),
+                "task": styling_task.model_dump(mode="json"),
                 "layering_requirements": layering_requirements(Task.model_validate(data["effective_task"]), plan, weather),
                 "mode": plan.mode,
                 "planning_dates": schedule_dates(plan, task),
@@ -586,12 +602,24 @@ class Stylist:
                 {key: Product.model_validate(p) for key, p in data["pool"].items()},
                 Task.model_validate(data["effective_task"]), Plan.model_validate(data["plan"]),
                 data.get("weather"), schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
+            requested_count = data["plan"].get("requested_look_count")
+            if requested_count and data["plan"]["mode"] != "weekly" and len(data["draft"].get("looks", [])) > requested_count:
+                problems.append(f"套数超过本轮明确要求：最多{requested_count}套，删除额外方案并同步正文，不改变保留方案的硬性要求")
             problems.extend(schedule_problems(Draft.model_validate(data["draft"]),
                 schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"]))))
             return {"problems": problems}
 
         async def repair_node(data):
             attribute_only = all(problem.startswith(PREFIX) for problem in data["problems"])
+            # Text-only unsupported claims need no second selection or full model rewrite.
+            # Keep semantic title/style repairs and conversation expression with the model.
+            if attribute_only and not data["plan"].get("conversation_only") and not any(
+                    problem.removeprefix(PREFIX).split(" ", 1)[0].endswith((".title", ".style_name")) for problem in data["problems"]):
+                local = ground_attribute_fallback(Draft.model_validate(data["draft"]),
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                candidate = {**data, "draft": local.model_dump(mode="json")}
+                if not validate_node(candidate)["problems"]:
+                    return {"draft": candidate["draft"], "problems": []}
             instruction = ("只修正缺少依据的文字，原选款已经通过结构和禁穿检查，保留原造型数量及每套selected_keys；"
                            "不要因尺寸或功能未知就清空衣物，改为具体的试穿核对、选款目标或未知说明。"
                            if attribute_only else

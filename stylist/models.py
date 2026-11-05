@@ -102,6 +102,8 @@ class Plan(Model):
     replace_slots: list[Slot] = Field(default_factory=list, max_length=6)
     memory_save: MemorySave | None = None
     memory_changes: dict[Literal["style", "no_heels", "no_bare_shoulders", "excluded_materials", "excluded_colors", "excluded_categories", "preferences"], Change] = Field(default_factory=dict)
+    requested_look_count: int | None = Field(default=None, ge=1, le=7)
+    look_count_evidence: str = Field(default="", max_length=120)
     search_query: str = Field(default="", max_length=500)
     clarification: str | None = None
 

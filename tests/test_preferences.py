@@ -12,10 +12,10 @@ def test_style_pool_applies_every_variant_preserves_photos_and_frozen_items():
         wanted, other, shoes = item(1, target), item(2, '其他'), item(3, '', Slot.SHOES)
         pool = {p.key: p for p in [wanted, other, shoes]}
         selected, missing = preferred_pool(pool, [target])
-        assert set(selected) == {wanted.key, shoes.key} and not missing
+        assert list(selected) == [wanted.key, other.key, shoes.key] and not missing
         assert selected[wanted.key].original_image == wanted.original_image
         retained, _ = preferred_pool(pool, [target], [other])
-        assert other.key in retained
+        assert next(iter(retained)) == other.key
 
 
 def test_unmatched_styles_remain_soft_and_multiple_choices_are_supported():

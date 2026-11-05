@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from .catalog_retrieval import collect_catalog
@@ -39,12 +40,14 @@ def from_row(row, source, extra=None):
 
 async def resolve_products(mcp, refs, extras=None):
     refs = list({r.key: r for r in refs}.values())
-    products = []
     extras = extras or {}
-    for index in range(0, len(refs), 20):
-        chunk = refs[index:index + 20]
-        result = await mcp.call("product.resolve", {"items": [r.model_dump() for r in chunk]})
+    semaphore = asyncio.Semaphore(3)
+
+    async def resolve_chunk(chunk):
+        async with semaphore:
+            result = await mcp.call("product.resolve", {"items": [r.model_dump() for r in chunk]})
         requested = {r.key for r in chunk}
+        products = []
         for row in result["items"]:
             key = f"{row['source']}:{row['product_id']}"
             if key not in requested:
@@ -52,7 +55,15 @@ async def resolve_products(mcp, refs, extras=None):
             product = from_row(row, row["source"], extras.get(key))
             if product:
                 products.append(product)
-    return products
+        return products
+
+    # Finish all sibling reads before closing the shared MCP session on any error.
+    batches = await asyncio.gather(*(resolve_chunk(refs[i:i + 20]) for i in range(0, len(refs), 20)),
+                                   return_exceptions=True)
+    for batch in batches:
+        if isinstance(batch, BaseException):
+            raise batch
+    return [product for batch in batches for product in batch]
 
 
 async def weather_for(task: Task, mcp, persona_id=None):
@@ -82,7 +93,7 @@ async def weather_for(task: Task, mcp, persona_id=None):
         return None, [service_notice(persona_id, kind)]
 
 
-async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None, *, allow_system=False, diagnostics=None):
+async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None, *, allow_system=False, diagnostics=None, style_preferences=()):
     """Personal-first retrieval; catalog requires separately verified permission."""
     task = task.model_copy(update={"source": "hybrid" if allow_system else "wardrobe"})
     frozen = [p for p in frozen if allow_system or p.source == "user"]
@@ -142,8 +153,14 @@ async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None, *, al
         warnings.extend(cautions)
     if not valid and any(reason.startswith(GENDER_PREFIX) for reason in excluded):
         warnings.append("本次查到的候选未找到同时符合穿衣性别和其他要求的单品，先给文字参考；不代表整个衣橱为空。")
+    styles = [task.style] if task.style else style_preferences
+
     def score(p):
+        # Rank before per-slot truncation, so preferences outside the first ten survive.
+        style_match = any(label and label in wanted for label in p.styles for wanted in styles)
+        occasion_match = any(label and label in (task.occasion or task.scene or "") for label in p.occasions)
         return (int(bool(task.gender) and p.gender in {task.gender, "男女同款"}),
+                int(style_match), int(occasion_match),
                 (10 if p.source == "user" else 0) + sum(
                     3 for token in [task.style, task.target_description] if token and token in p.evidence_text))
     valid.sort(key=score, reverse=True)

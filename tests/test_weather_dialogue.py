@@ -39,7 +39,8 @@ async def test_weather_only_after_outfit_and_city_followup_never_deliver_outfit_
             # Reproduce the old style output: even two unsolicited looks must be discarded.
             look = LookDraft(title="通勤", selected_keys=["user:101", "user:102", "user:103"],
                              why=["配色清爽"], how=["按体感穿脱"])
-            return Draft(message="结果已整理。", looks=[look, look], follow_ups=["帮我调整搭配"])
+            return Draft(message="结果已整理。", looks=[look] if payload.get("requested_look_count") == 1 else [look, look],
+                         follow_ups=["帮我调整搭配"])
 
     model, upstream = Model(), ExploratoryUpstream("weather_only_regression")
     engine = Stylist(Settings(), Store(str(tmp_path / "state.db")), model)
@@ -67,5 +68,5 @@ async def test_weather_only_after_outfit_and_city_followup_never_deliver_outfit_
     upstream.calls.clear()
     resumed = await engine.chat(upstream, ChatRequest(message="按这个天气，从衣橱搭一套", request_id="weather-resume-styling",
         conversation_id=first.conversation_id, expected_version=previous.version, assistant_persona=persona))
-    assert resumed.delivery == "outfit" and not resumed.weather_only
+    assert resumed.delivery == "outfit" and not resumed.weather_only and len(resumed.looks) == 1
     assert "/api/user_product/quick_edit_list" in upstream.calls

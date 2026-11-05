@@ -69,6 +69,25 @@ def discard_stale_restatements(state: SessionState, plan: Plan, message: str):
     return plan.model_copy(update={"changes": changes})
 
 
+def explicit_look_count(message):
+    """A narrow numeric constraint, never an intent/tool/permission router."""
+    text = re.sub(r'“[^”]*”|「[^」]*」|"[^"]*"|‘[^’]*’', '', message)
+    pattern = r"(?:给我|帮我|替我|为我|来|要|挑|选|搭|推荐|安排|提供)(?:[^0-9一二两三四五六七，。！？；:：]{0,12}?)([1-7一二两三四五六七])\s*套"
+    values = []
+    numbers = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
+    for match in re.finditer(pattern, text):
+        if match.group() not in message:
+            continue  # Removing a quotation must never manufacture verbatim evidence.
+        clause = re.split(r"[，。！？；:：]", text[:match.start(1)])[-1]
+        if re.search(r"不|别|无需|拒绝|取消|例如|假设|如果|比如|转述|说|举例|提到", clause):
+            continue
+        if re.match(r"\s*(?:到|至|[-—~～])", text[match.end():]):
+            continue
+        number = match.group(1)
+        values.append((numbers.get(number, int(number) if number.isdigit() else None), match.group()))
+    return values[-1] if values else (None, "")
+
+
 async def interpret_task(llm, payload, state, message):
     """Repair the model's extraction, rather than asking the user to repair our citation format."""
     previous = None
@@ -83,6 +102,17 @@ async def interpret_task(llm, payload, state, message):
                         task_validation_errors=validation_errors,
                         repair_instruction="修复抽取结果，不向用户追问内部格式问题。证据必须逐字来自本条message，禁止省略号拼接。多段原话请用字符串数组；无法精确摘录时直接引用完整原message。修正task_validation_errors指出的字段值，例如event_date只能是YYYY-MM-DD的单日日期，不能填日期范围或本周等文字。保留所有正确要求。")
         previous = await llm.generate("plan", data, Plan)
+        if previous.requested_look_count is not None:
+            evidence = previous.look_count_evidence
+            counts = re.findall(r"([1-7一二两三四五六七])\s*套", evidence)
+            numbers = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
+            if (not evidence or evidence not in message or len(counts) != 1
+                    or numbers.get(counts[0], int(counts[0]) if counts[0].isdigit() else None) != previous.requested_look_count):
+                previous.requested_look_count = None
+                previous.look_count_evidence = ""
+        explicit_count, count_evidence = explicit_look_count(message)
+        if explicit_count is not None:
+            previous.requested_look_count, previous.look_count_evidence = explicit_count, count_evidence
         # Formatting/query controls are not garment requirements. Dropping them
         # does not loosen evidence checks for clothing, identity or fees.
         control = previous.changes.get("preferences")
