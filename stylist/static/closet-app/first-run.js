@@ -1,7 +1,7 @@
 const KEY='ai-closet-stylist-session-v1';
 export const onboardingURL='/app/?design=yijian&screen=onboarding';
 export function sessionToken(){try{return JSON.parse(sessionStorage.getItem(KEY)||'null')?.access_token||'';}catch{return '';}}
-export function loginURL(){return '/app/?design=yijian&screen=login';}
+export function loginURL(){const palette=document.documentElement.dataset.appPalette;return '/app/?design=yijian&screen=login&color='+(['system','male','female'].includes(palette)?palette:'system');}
 export function needsOnboarding(profile){return typeof profile?.agent_name!=='string'||!profile.agent_name.trim();}
 let pending=null,pendingToken='';
 export async function ensureOnboarded(){
