@@ -177,7 +177,8 @@ test('a late upload cannot replace a newly opened person-photo flow for the same
 test('portrait selection is a draft; only confirmation changes default and no generation is charged',async()=>{
  const calls=[];const overview={default_twin_key:'base-a',default_confirmed:true,selection_version:3,available_points:80,system_twins:[{twin_key:'base-a',name:'基础形象A',image_url:'https://example.test/a.png'},{twin_key:'base-b',name:'基础形象B',image_url:'https://example.test/b.png'}]};
  const t=setup(async(path,options)=>{calls.push([path,options]);return overview;});await t.w.WardrobeJourney.twins();
- const tiles=t.w.document.querySelectorAll('.journey-portrait');tiles[1].click();await flush();assert.equal(calls.length,1);assert.equal(tiles[1].getAttribute('aria-pressed'),'true');
+ assert.equal(t.w.document.querySelector('.journey-steps').hidden,true);
+ const tiles=t.w.document.querySelectorAll('.journey-portrait');tiles[1].click();await flush();assert.ok(calls.every(([,options])=>!options?.method||options.method==='GET'),'draft selection must not write; profile option reads are allowed');assert.equal(tiles[1].getAttribute('aria-pressed'),'true');
  byText(t.w,'确认使用所选形象').click();await flush();const writes=calls.filter(([,o])=>o?.method==='POST');assert.equal(writes.length,1);assert.equal(JSON.parse(writes[0][1].body).twin_key,'base-b');t.close();
 });
 test('person generation has its own quote, and dismissing it sends only cancellation',async()=>{

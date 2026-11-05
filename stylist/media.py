@@ -48,6 +48,15 @@ class TwinGender(Model):
     expected_version: int = Field(ge=0)
 
 
+class TwinBodyProfile(Model):
+    expected_version: int = Field(ge=0)
+    height_cm: float | None = Field(default=None, gt=0, le=300, allow_inf_nan=False)
+    weight_kg: float | None = Field(default=None, gt=0, le=500, allow_inf_nan=False)
+    body_description: str | None = Field(default=None, max_length=1000)
+    skin_tone: str | None = Field(default=None, max_length=64)
+    skin_description: str | None = Field(default=None, max_length=500)
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 

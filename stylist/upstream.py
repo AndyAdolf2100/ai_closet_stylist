@@ -55,7 +55,7 @@ class Upstream:
 
     async def get(self, path: str, params=None):
         allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories",
-                   "/api/digital_twin/overview"}
+                   "/api/digital_twin/overview", "/api/digital_twin/profile/options"}
         if path not in allowed:
             raise StylistError("endpoint_not_allowed", "该接口未接入。", 400)
         try:
@@ -98,6 +98,21 @@ class Upstream:
                 return _business_payload(response)
         except (httpx.HTTPError, ValueError) as exc:
             raise StylistError("upstream_unavailable", "人物资料暂时没有保存成功，请稍后重试。") from exc
+
+    async def update_twin_body(self, fields):
+        """Explicit body form save through the same versioned service as iOS."""
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout, trust_env=False,
+                                         transport=self.transport) as client:
+                response = await client.post(self.settings.server_url + "/api/digital_twin/profile/update",
+                    json=fields, headers={"Authorization": self.authorization,
+                    "version": self.settings.login_app_version, "device": "PC"})
+                payload = response.json()
+                if isinstance(payload, dict) and payload.get("code") == 45305:
+                    raise StylistError("profile_version_conflict", "资料已更新，请重新打开页面后再保存。", 409)
+                return _business_payload(response)
+        except (httpx.HTTPError, ValueError) as exc:
+            raise StylistError("upstream_unavailable", "资料保存结果暂未确认，请刷新后核对。") from exc
 
     async def upload_outfit_image(self, image_data):
         """Store the final client-composed PNG using the existing authenticated upload API."""

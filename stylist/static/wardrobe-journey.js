@@ -212,11 +212,76 @@
     const caption=el('span','journey-portrait-caption');caption.append(el('span','journey-portrait-name',name),el('span','journey-portrait-source',p.twin_key==='custom'?'我的专属形象':'预设试穿形象'));
     tile.append(frame,mark,caption);return tile;
   }
+  async function bodyProfile(overview,token,view){
+    const section=el('section','journey-body-profile');
+    section.append(el('h3','','身体与外观'));body.append(section);
+    let options;
+    try{options=await api('/stylist-api/twins/options');if(!options?.height_cm||!options?.weight_kg||!Array.isArray(options.skin_tone))throw Error('身体资料选项暂不可用');}catch(error){
+      if(current(token)&&dialog.open&&view===viewSequence){section.append(el('p','journey-note','身体资料暂未读取，请稍后重试。'),button('重新读取',()=>{section.remove();return bodyProfile(overview,token,view);}));}return;
+    }
+    if(!current(token)||!dialog.open||view!==viewSequence)return;
+    const profile=overview.profile||{},form=el('form','journey-body-form'),fields={},dirty=new Set();
+    const bmi=el('output','journey-body-bmi');bmi.setAttribute('aria-live','polite');
+    const updateBMI=()=>{const h=Number(fields.height_cm?.value),w=Number(fields.weight_kg?.value);bmi.textContent=h>0&&w>0?'BMI（参考）  '+(w/((h/100)**2)).toFixed(1):'BMI（参考）  —';};
+    for(const [key,label,unit] of [['height_cm','身高','cm'],['weight_kg','体重','kg']]){
+      const range=options[key]||{},row=el('div','journey-measurement'),heading=el('label','journey-measurement-heading'),caption=el('span','',label);
+      const input=el('input');input.type='number';input.inputMode='decimal';input.id='twin-'+key;input.setAttribute('aria-label',label);input.placeholder='未填写';input.value=profile[key]??'';
+      const valid=Number.isFinite(range.min)&&Number.isFinite(range.max)&&range.max>range.min;
+      if(valid){input.min=range.min;input.max=range.max;input.step=range.step>0?range.step:0.1;}else input.disabled=true;
+      const value=el('span','journey-measurement-value');value.append(input,el('span','',unit));heading.htmlFor=input.id;heading.append(caption,value);
+      if(profile[key+'_is_default'])caption.append(el('small','journey-note',' 默认值'));
+      row.append(heading);fields[key]=input;
+      if(valid){const slider=el('input','journey-body-slider');slider.type='range';slider.min=input.min;slider.max=input.max;slider.step=input.step;slider.value=input.value||range.min;slider.setAttribute('aria-label','调整'+label);
+        slider.oninput=()=>{input.value=slider.value;dirty.add(key);updateBMI();};input.oninput=()=>{if(input.value)slider.value=input.value;dirty.add(key);updateBMI();};row.append(slider);
+      }
+      form.append(row);
+    }
+    form.append(bmi);updateBMI();
+    const details=el('details','journey-body-description');details.append(el('summary','','身材描述'));
+    const description=el('textarea');description.value=profile.body_description||'';description.maxLength=Math.min(options.body_description_max_length||1000,1000);description.placeholder='例如：肩背较宽，喜欢腰腹宽松一些';description.setAttribute('aria-label','身材描述');fields.body_description=description;description.oninput=()=>dirty.add('body_description');
+    const suggestions=el('div','journey-body-suggestions');for(const text of ['偏瘦','中等','偏胖'])suggestions.append(button(text,()=>{description.value=text;dirty.add('body_description');}));
+    details.append(suggestions,description);form.append(details);
+    const skinValue=el('input');skinValue.type='hidden';skinValue.value=profile.skin_tone||'';fields.skin_tone=skinValue;
+    const skinNote=el('input');skinNote.type='hidden';skinNote.value=profile.skin_description||'';fields.skin_description=skinNote;
+    const skinChoices=(options.skin_tone||[]).map(o=>({value:o.value||o.code||o.id,label:o.label||o.name}));
+    const skinLabel=()=>skinChoices.find(o=>o.value===skinValue.value)?.label||(skinValue.value?'已保存的肤色':'未填写');
+    const skinEntry=button('',()=>{
+      const sheet=el('dialog','journey-skin-sheet');sheet.setAttribute('aria-label','肤色参考');
+      const heading=el('div','journey-skin-heading');heading.append(el('h3','','肤色参考'));
+      const closeSheet=()=>sheet.close();const cancel=button('取消',closeSheet);heading.append(cancel);
+      const content=el('div','journey-skin-content');content.append(el('p','journey-note','选择接近你的肤色，也可以补充描述。'));
+      let chosen=skinValue.value;const choices=el('div','journey-skin-options');choices.setAttribute('role','group');choices.setAttribute('aria-label','选择肤色');
+      const rows=[{value:'',label:'暂不填写'},...skinChoices];if(chosen&&!rows.some(o=>o.value===chosen))rows.push({value:chosen,label:'已保存的肤色'});
+      for(const option of rows){const tile=button(option.label,()=>{chosen=option.value;for(const item of choices.children)item.setAttribute('aria-pressed',String(item===tile));});tile.setAttribute('aria-pressed',String(option.value===chosen));choices.append(tile);}
+      const label=el('label','journey-skin-note-label','补充描述（选填）'),note=el('textarea');note.id='twin-skin-note';label.htmlFor=note.id;note.setAttribute('aria-label','肤色补充描述');note.value=skinNote.value;note.maxLength=Math.min(options.skin_description_max_length||500,500);note.placeholder='例如：肤色偏暖，容易晒黑';
+      content.append(choices,label,note);
+      const actions=el('div','journey-skin-actions');actions.append(el('p','journey-note','完成后，点击“保存身体资料”生效。'),button('完成',()=>{if(chosen!==skinValue.value){skinValue.value=chosen;dirty.add('skin_tone');}if(note.value!==skinNote.value){skinNote.value=note.value;dirty.add('skin_description');}skinSummary.textContent=skinLabel();closeSheet();},true));
+      sheet.append(heading,content,actions);section.append(sheet);
+      const resize=()=>{const viewport=window.visualViewport;sheet.style.setProperty('--skin-visible-height',(viewport?.height||window.innerHeight)+'px');sheet.style.setProperty('--skin-visible-top',(viewport?.offsetTop||0)+'px');if(document.activeElement===note)requestAnimationFrame(()=>note.scrollIntoView({block:'nearest'}));};
+      const observer=new MutationObserver(()=>{if(!dialog.open||!section.isConnected||!current(token)||view!==viewSequence)closeSheet();});observer.observe(dialog,{attributes:true,attributeFilter:['open'],childList:true,subtree:true});
+      const onParentClose=()=>closeSheet();dialog.addEventListener('close',onParentClose);window.visualViewport?.addEventListener('resize',resize);window.visualViewport?.addEventListener('scroll',resize);
+      sheet.addEventListener('close',()=>{observer.disconnect();dialog.removeEventListener('close',onParentClose);window.visualViewport?.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('scroll',resize);sheet.remove();if(skinEntry.isConnected&&dialog.open)skinEntry.focus();},{once:true});
+      resize();sheet.showModal();cancel.focus();
+    });skinEntry.className='journey-skin-entry';const skinSummary=el('span','',skinLabel());skinEntry.append(el('span','','肤色参考'),skinSummary,el('span','','›'));form.append(skinValue,skinNote,skinEntry);
+    const status=el('p','journey-note');status.setAttribute('role','status');
+    const save=button('保存身体资料',async()=>{
+      if(!dirty.size){status.textContent='资料没有变化。';return;}
+      if(!form.reportValidity())return;
+      const payload={expected_version:overview.profile_version};
+      for(const key of dirty)payload[key]=['height_cm','weight_kg'].includes(key)?(fields[key].value===''?null:Number(fields[key].value)):key==='skin_tone'?(fields[key].value||null):fields[key].value;
+      const disabledBefore=Array.from(form.elements).map(e=>[e,e.disabled]);disabledBefore.forEach(([e])=>e.disabled=true);
+      try{const result=await api('/stylist-api/twins/profile',{method:'POST',body:JSON.stringify(payload)});
+        if(!current(token)||!dialog.open||view!==viewSequence)return;
+        if(!Number.isInteger(result.profile_version))throw Error('资料保存状态暂未确认，请刷新后核对。');
+        overview.profile_version=result.profile_version;dirty.clear();status.textContent='身体资料已保存。';
+      }finally{if(current(token)&&dialog.open&&view===viewSequence)disabledBefore.forEach(([e,disabled])=>e.disabled=disabled);}
+    });save.classList.add('journey-body-save');form.onsubmit=e=>e.preventDefault();form.append(save,status);section.append(form);
+  }
   async function twins(){
     show('我的试穿形象');const token=epoch,view=viewSequence;
     atmosphere('person',0);dialog.dataset.panel='portraits';
     const overview=await readLoading(body,'正在读取可用形象…',()=>api('/stylist-api/twins'));if(!current(token)||!dialog.open||view!==viewSequence)return;
-    body.replaceChildren(el('p','journey-intro','把喜欢的模样收进这一页，陪你试试衣橱里的新搭配。'));
+    body.replaceChildren(el('h3','journey-twin-section-title','数字分身'));
     if(overview.need_gender){
       body.append(el('p','','先选择试穿人物的性别，系统会提供对应的基础形象。'));
       for(const gender of ['女','男'])body.append(button('使用'+gender+'性人物',async()=>{
@@ -224,7 +289,7 @@
       }));return;
     }
     const portraits=[...(overview.custom_twin?[{...overview.custom_twin,twin_key:'custom',name:'我的试穿形象'}]:[]),...(overview.system_twins||[])];
-    const grid=el('div','journey-portraits');grid.setAttribute('aria-label','试穿形象选择');let selected=overview.default_twin_key;
+    const grid=el('div','journey-portraits journey-twin-strip');grid.setAttribute('aria-label','试穿形象选择');let selected=overview.default_twin_key;
     const selection=el('span','journey-selection');selection.setAttribute('aria-live','polite');
     const updateSelection=()=>{const chosen=portraits.find(p=>p.twin_key===selected);selection.textContent=chosen?'已选 · '+(chosen.name||'试穿形象'):'选一个喜欢的形象';};updateSelection();
     for(const p of portraits){
@@ -257,6 +322,7 @@
     const uploadCopy=el('span','journey-portrait-upload-copy');uploadCopy.append(el('strong','','上传本人照片，创建我的试穿形象'),el('span','','从一张照片，遇见新的自己'));
     const arrow=el('span','journey-portrait-arrow','↗');arrow.setAttribute('aria-hidden','true');uploadEntry.append(plus,uploadCopy,arrow);
     body.append(uploadEntry);
+    if(!pendingLook)await bodyProfile(overview,token,view);
   }
   async function tryon(ref){
     requireContext(ref);

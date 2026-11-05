@@ -34,6 +34,7 @@ from .media import (
     ConfirmInput,
     GenerationInput,
     MediaActions,
+    TwinBodyProfile,
     TwinCandidate,
     TwinGender,
     TwinSelection,
@@ -365,6 +366,18 @@ def create_app(settings=None):
     @app.get("/stylist-api/twins")
     async def twin_overview(authorization: str | None = Header(default=None)):
         return await media.overview(Upstream(settings, require_token(authorization)))
+
+    @app.get("/stylist-api/twins/options")
+    async def twin_options(authorization: str | None = Header(default=None)):
+        upstream = Upstream(settings, require_token(authorization))
+        await upstream.identity()
+        return await upstream.get("/api/digital_twin/profile/options")
+
+    @app.post("/stylist-api/twins/profile")
+    async def twin_body(request: TwinBodyProfile, authorization: str | None = Header(default=None)):
+        upstream = Upstream(settings, require_token(authorization))
+        await upstream.identity()
+        return await upstream.update_twin_body(request.model_dump(exclude_unset=True))
 
     @app.post("/stylist-api/twins/default")
     async def twin_default(request: TwinSelection, authorization: str | None = Header(default=None)):
