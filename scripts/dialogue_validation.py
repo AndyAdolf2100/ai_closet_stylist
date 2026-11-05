@@ -306,6 +306,8 @@ def check_reply(reply, expected, calls, model_calls=(), previous=None):
             errors.append("unfinished_outfit_sentence")
     if expected.get("mentioned_zodiac") and expected["mentioned_zodiac"] not in visible_text(reply):
         errors.append("missing_expected_zodiac")
+    if expected.get("max_looks") is not None and len(reply.looks) > expected["max_looks"]:
+        errors.append("too_many_looks")
     if expected.get("selected_style"):
         garments = [p for look in reply.looks for p in look.items if p.slot in {"top", "bottom", "dress"}]
         if not garments or any(expected["selected_style"] not in p.styles for p in garments):

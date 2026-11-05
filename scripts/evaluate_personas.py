@@ -9,7 +9,7 @@ import hashlib
 import json
 import tempfile
 import time
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import replace
 from pathlib import Path
 from typing import get_args
@@ -102,8 +102,10 @@ class ObservedModel:
         self.model, self.calls = model, []
 
     async def generate(self, name, payload, result_type):
+        started = time.monotonic()
         result = await self.model.generate(name, payload, result_type)
-        self.calls.append({"name": name, "result": result.model_dump(mode="json")})
+        self.calls.append({"name": name, "seconds": round(time.monotonic() - started, 3),
+                           "result": result.model_dump(mode="json")})
         return result
 
 
@@ -117,11 +119,16 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
     output.parent.mkdir(parents=True, exist_ok=True)
     results = []
     comparisons = []
+    runtime_files = ["stylist/engine.py", "stylist/retrieval.py", "stylist/preferences.py", "stylist/llm.py",
+                     "stylist/models.py", "stylist/policy.py",
+                     "stylist/prompts/plan.md", "stylist/prompts/style.md"]
+    runtime_sha256 = {name: hashlib.sha256(Path(name).read_bytes()).hexdigest() for name in runtime_files}
     selected_personas = getattr(args, "personas", None) or ["male_calm_v1", "female_warm_v1"]
     semaphore = asyncio.Semaphore(args.concurrency)
 
     def save():
         output.write_text(json.dumps({"kind": "live_text_model_synthetic_adapters", "model": settings.llm_model,
+            "runtime_sha256": runtime_sha256,
             "profile_sha256": {p: hashlib.sha256(persona_instructions(p).encode()).hexdigest()
                                for p in selected_personas},
             "business_services": "synthetic_only", "paid_images": "not_executed",
@@ -136,10 +143,14 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
 
     async def session(persona, rows, label):
         async with semaphore:
-            with tempfile.TemporaryDirectory(prefix="stylist-persona-") as temp:
+            async with AsyncExitStack() as resources:
+                temp = resources.enter_context(tempfile.TemporaryDirectory(prefix="stylist-persona-"))
                 local = replace(settings, database=str(Path(temp) / "state.db"), checkpoint_database="")
                 store = Store(local.database)
-                model = ObservedModel(LanguageModel(local))
+                language_model = LanguageModel(local)
+                if hasattr(language_model, "session"):
+                    await resources.enter_async_context(language_model.session())
+                model = ObservedModel(language_model)
                 engine = Stylist(local, store, model)
                 upstream = upstream_type(label) if label in scenarios else SyntheticUpstream()
                 previous = None
@@ -184,6 +195,7 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                             location=expected.get("location"),
                             conversation_id=previous.conversation_id if previous else None,
                             expected_version=previous.version if previous else 0))
+                        record["generation_seconds"] = round(time.monotonic() - start, 3)
                         record["reply"] = reply.model_dump(mode="json")
                         memory = store.memory_book(await upstream.identity())
                         record["memory_after"] = memory.model_dump(mode="json")
@@ -246,6 +258,15 @@ async def run(args, *, scenarios=None, expectations=None, upstream_type=Dialogue
                     record.setdefault("automatic_errors", record["errors"].copy())
                     record["seconds"] = round(time.monotonic() - start, 2)
                     record["model_calls"] = model.calls.copy()
+                    with store.connection() as conn:
+                        metered = conn.execute(
+                            "SELECT payload_json FROM stylist_model_usage WHERE request_id=? ORDER BY created_at,event_id",
+                            (f"eval-{label}-{name}-{i}",)).fetchall()
+                    record["generation_usage"] = [
+                        {key: value for key, value in json.loads(row["payload_json"]).items()
+                         if key in {"input_tokens", "output_tokens", "cached_input_tokens", "status", "business_action"}}
+                        for row in metered]
+                    # Review calls run outside engine usage context; do not call this total billing.
                     results.append(record)
                     save()
                     print(json.dumps({"case": record["case"], "errors": record["errors"],
