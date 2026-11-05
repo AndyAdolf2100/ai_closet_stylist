@@ -17,8 +17,8 @@ export function mountAgent(){
     const theme=document.createElement('link');theme.rel='stylesheet';theme.href='/static/closet-app/agent-yijian.css';document.head.append(theme);await new Promise((resolve,reject)=>{theme.onload=resolve;theme.onerror=reject;});
     const sync=()=>{for(const a of document.documentElement.attributes)if(a.name.startsWith('data-'))host.setAttribute(a.name,a.value);};
     sync();new MutationObserver(sync).observe(document.documentElement,{attributes:true});
-    // Existing modules create their dialogs on body; put them inside the scoped host.
-    const relocate=()=>{for(const child of [...document.body.children])if(child.matches('dialog,#companion-notification'))host.append(child);};
+    // Agent modules create their dialogs on body; keep App-owned dialogs in their native modal layer.
+    const relocate=()=>{for(const child of [...document.body.children])if(child.matches('dialog:not([data-first-visit]):not([data-app-dialog]),#companion-notification'))host.append(child);};
     const observer=new MutationObserver(relocate);observer.observe(document.body,{childList:true});
     for(const name of scripts){if(name==='app')for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/static/'+name+'.js';script.onload=resolve;script.onerror=()=>reject(Error('组件没能加载，请刷新页面。'));document.body.append(script);});relocate();}
     for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}

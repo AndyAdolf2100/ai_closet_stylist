@@ -1,5 +1,6 @@
-import {skuDetail} from './sku-fusion.js';
 import {readAvailablePoints} from './points-balance.js';
+import {mountPaymentDemo,paymentDemoEnabled} from './payment-demo.js';
+import {skuDetail} from './sku-fusion.js';
 import {emptyArt} from './empty-art.js';
 import { collectionPage } from './collection-pages.js';
 import { openIntegratedAgent, closeIntegratedAgent, mountAgent, placeIntegratedAgent } from './agent-integration.js';
@@ -220,7 +221,7 @@ window.addEventListener('yijian-overlay-closed',()=>{if(agentOpener?.isConnected
 window.addEventListener('yijian-agent-open',e=>openAgent(e.detail||'chat'));
 window.addEventListener('yijian-checkin-claimed',()=>{if(state.tab==='profile')loadProfile();});
 document.addEventListener('keydown', e => {
-  if(e.key==='Escape'&&document.querySelector('#yijian-agent-root dialog[open]'))return;
+  if(e.key==='Escape'&&document.querySelector('#yijian-agent-root dialog[open],dialog[data-app-dialog][open]'))return;
   if (e.key === 'Escape') { if (!$('create-overlay').hidden) setCreate(false); else if (!$('agent-page').hidden || !$('detail-page').hidden) history.back(); }
   if (e.key === 'Tab' && !$('create-overlay').hidden) { const list = [...$('create-overlay').querySelectorAll('button'), $('create-toggle')]; const first = list[0], last = list.at(-1); if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
 });

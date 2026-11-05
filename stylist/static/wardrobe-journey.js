@@ -54,7 +54,7 @@
   }
   async function guard(control,run){
     if(control.disabled)return;control.disabled=true;const token=epoch;
-    try{await run();}catch(e){if(current(token))notify?.(e.message||'操作未完成，请稍后重试。');}
+    try{await run();}catch(e){if(current(token)&&!e.paymentHandled)notify?.(e.message||'操作未完成，请稍后重试。');}
     finally{if(current(token))control.disabled=false;}
   }
   function photo(url,alt){
@@ -143,7 +143,7 @@
     if(!['processing','executing'].includes(action.status)||!dialog.open||count>=30)return;
     clearTimer();timer=setTimeout(async()=>{
       try{const next=await api('/stylist-api/media/'+action.action_id);if(current(token)&&dialog.open&&view===viewSequence){renderMedia(next,false);pollMedia(next,token,count+1);}}
-      catch(e){if(current(token))notify?.(e.message);}
+      catch(e){if(current(token)&&!e.paymentHandled)notify?.(e.message);}
     },3000);
   }
   function renderMedia(action,startPolling=true){
@@ -192,6 +192,9 @@
     atmosphere('quote',1);
     body.append(el('p','journey-cost',`本次生成人物形象：${points(q.points_cost)} 积分`),el('p','','此费用仅包含人物形象生成。之后选择搭配试穿时，会另行报价。'));
     dock(button(`确认消耗 ${points(q.points_cost)} 积分并生成`,async()=>{
+      const pendingQuote=activeQuote;
+      if(window.AppPayment&&!await window.AppPayment.checkFunds(q.points_cost,'twin'))return;
+      if(!current(token)||!dialog.open||activeQuote!==pendingQuote)return;
       const quote=activeQuote;activeQuote=null;
       const result=await api('/stylist-api/media/'+quote.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:true})});
       if(current(token)&&dialog.open)renderMedia(result);
@@ -297,7 +300,7 @@
     }
     body.append(grid);
     const selectionInfo=el('div','journey-selection-info');selectionInfo.append(selection);
-    if(Number.isInteger(overview.available_points))selectionInfo.append(el('span','journey-selection-balance',`可用 ${points(overview.available_points)} 积分`));
+    if(window.AppPayment){const balanceLabel=el('span','journey-selection-balance','正在查询可用积分…');selectionInfo.append(balanceLabel);api('/stylist-api/app/points').then(result=>{if(balanceLabel.isConnected&&current(token))balanceLabel.textContent=typeof result?.data?.total_available==='number'?`可用 ${points(result.data.total_available)} 积分`:'可用积分暂未查到';}).catch(()=>{if(balanceLabel.isConnected&&current(token))balanceLabel.textContent='可用积分暂未查到';});}
     if(portraits.length)dock(selectionInfo,button(pendingLook?'确认形象，继续查看试穿费用':'确认使用所选形象',async()=>{
       if(!selected){notify?.('请先选一个试穿形象。');return;}
       await api('/stylist-api/twins/default',{method:'POST',body:JSON.stringify({twin_key:selected,expected_version:overview.selection_version})});
@@ -356,6 +359,9 @@
       for(const note of q.notices)list.append(el('li','',note));notes.append(list);body.append(notes);
     }
     dock(button(`确认消耗 ${points(q.points_cost)} 积分并试穿`,async()=>{
+      const pendingQuote=activeQuote;
+      if(window.AppPayment&&!await window.AppPayment.checkFunds(q.points_cost,'tryon'))return;
+      if(!current(token)||!dialog.open||activeQuote!==pendingQuote)return;
       const quote=activeQuote;activeQuote=null;
       requireContext(ref);
       const waiting={...ref,action_id:quote.id,title:q.title,status:'executing',result:{}};

@@ -294,3 +294,18 @@ test('new accounts default to the left male group while saved female roles survi
  assert.equal(w.document.documentElement.dataset.companionPersona,'male_calm_v1');
  dom.window.close();
 });
+
+test('notification read action is scoped to its message and cleared on account reset',async()=>{
+ const {w,dom,$}=await setup();let calls=0;
+ await w.CompanionSettings.setOwner('demo-a',async()=>({profile:profile()}),false);
+ w.CompanionSettings.notify('示例积分来信',{onRead:()=>calls++});
+ w.document.querySelector('#companion-notification .companion-message-open').click();
+ assert.equal(calls,1);assert(!$('companion-message-dialog').open);
+ w.CompanionSettings.notify('普通来信');
+ w.document.querySelector('#companion-notification .companion-message-open').click();
+ assert.equal(calls,1);assert($('companion-message-dialog').open);
+ w.CompanionSettings.notify('账号来信',{onRead:()=>calls++});
+ await w.CompanionSettings.setOwner(null);
+ w.document.querySelector('#companion-notification .companion-message-open').click();
+ assert.equal(calls,1);dom.window.close();
+});

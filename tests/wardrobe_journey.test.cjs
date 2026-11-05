@@ -380,3 +380,12 @@ test('history filters keep each category descending, restore all records, and ne
  }
  assert.equal(calls.length,2);t.close();
 });
+
+test('each try-on confirm checks current funds before consuming the quote or submitting',async()=>{
+ const calls=[],checks=[];let allowed=false;
+ const t=setup(async(path,options)=>{calls.push([path,options]);if(path==='/stylist-api/twins')return{default_confirmed:true,default_twin_key:'base'};if(path.endsWith('/quote'))return{action_id:'img_funds',title:'示例',points_cost:8,item_count:1,notices:[],portrait:{}};return{action_id:'img_funds',status:'completed',result:{result_image_url:'https://example.test/result.png'}};});
+ t.w.AppPayment={checkFunds:async(cost,scene)=>{checks.push([cost,scene]);return allowed;}};
+ await t.w.WardrobeJourney.tryon({conversation_id:'current',version:1,look_index:0});
+ byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);
+ allowed=true;byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,1);assert.deepEqual(checks,[[8,'tryon'],[8,'tryon']]);t.close();
+});

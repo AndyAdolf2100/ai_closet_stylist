@@ -112,9 +112,12 @@ async function api(path, options = {}) {
   }
   if (!response.ok || data === null) {
     if (response.status === 401) expireSession(data?.message);
-    throw error(data?.code || 'invalid_response', data?.message || (response.status === 413
+    const issue=error(data?.code || 'invalid_response', data?.message || (response.status === 413
       ? '图片过大，请选择10MB以内的图片。' : '服务暂时未完成请求，请稍后重试。'));
+    issue.paymentHandled=globalThis.AppPayment?.handleError(issue)===true;
+    throw issue;
   }
+  if(data?.status==='failed'&&data?.result?.error_code)globalThis.AppPayment?.handleError({code:data.result.error_code,message:data.result.message});
   return data;
 }
 const compositionPath = ref => '/stylist-api/conversations/' + encodeURIComponent(ref.conversationId) + '/composition';
@@ -616,6 +619,8 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     let received = false;
     while (!received) {
       try {
+        if(window.AppPayment&&!await window.AppPayment.checkFunds(null,'agent')){savePending(null);return;}
+        if(session?.user.id!==chatOwner)return;
         const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
         if (session?.user.id !== chatOwner) return;
         if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
@@ -662,7 +667,8 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     if (session?.user.id !== chatOwner) return;
     if (err.code !== 'authentication_expired') savePending(null);
     pending.stop();
-    if (err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
+    if (!err.paymentHandled) err.paymentHandled=globalThis.AppPayment?.handleError(err)===true;
+    if (!err.paymentHandled && err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
     if (err.code === 'authentication_expired') expireSession(err.message);
   } finally { pending.stop(); if (!session || session.user.id === chatOwner) setBusy(false); }
 }

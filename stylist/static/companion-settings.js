@@ -71,6 +71,7 @@
     const message = notificationMessage;
     messageReturnFocus = notificationReturnFocus || document.getElementById('settings-open') || document.getElementById('companion-open') || document.getElementById('preview-open') || document.getElementById('message');
     hideNotification();
+    if (message.onRead) { messageReturnFocus = null; message.onRead(); return; }
     messageDialog.dataset.persona = message.persona;
     messageDialog.querySelector('h2').textContent = `${message.name}的来信`;
     messageDialog.querySelector('.companion-letter-body').textContent = message.body;
@@ -136,7 +137,7 @@
     }
     return variants[male ? 1 : 0];
   }
-  function showNotification(saved, body) {
+  function showNotification(saved, body, options = {}) {
     // Native modal dialogs live in the top layer; their messages must live inside them.
     const host = [...document.querySelectorAll('dialog[open]')].filter(item => item !== messageDialog).at(-1) || document.body;
     if (!notification.contains(document.activeElement)) notificationReturnFocus = document.activeElement;
@@ -146,7 +147,7 @@
     notification.hidden = false;
     notification.querySelector('strong').textContent = saved.agent_name;
     notification.querySelector('p').textContent = body != null ? feedbackText(saved, body) : `${saved.user_name ? saved.user_name + '，' : ''}以后就叫我${saved.agent_name}吧。我们的日常，从这里开始。`;
-    notificationMessage = { name: saved.agent_name, persona: saved.assistant_persona, body: notification.querySelector('p').textContent };
+    notificationMessage = { name: saved.agent_name, persona: saved.assistant_persona, body: notification.querySelector('p').textContent, onRead: typeof options.onRead === 'function' ? options.onRead : null };
     notification.querySelector('.companion-message-open').setAttribute('aria-label', `阅读${saved.agent_name}的完整消息`);
     scheduleDismiss();
   }
@@ -356,7 +357,7 @@
     } finally { if (sequence === current) saving = false; }
   }
   window.CompanionSettings = {
-    notify: body => showNotification(profile, body),
+    notify: (body, options) => showNotification(profile, body, options),
     savePreferences, setOwner, open, get ready() { return ready; }, agentName: () => profile.agent_name,
     getProfile: () => owner && loaded ? JSON.parse(JSON.stringify(profile)) : null,
   };
