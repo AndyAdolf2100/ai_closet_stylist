@@ -49,3 +49,6 @@ stylist/static/closet-app/comparison/evolution/screenshots/private/
 *.keystore
 id_rsa
 id_ed25519
+
+# Local H5 source archives and extracted validation copies.
+/local-deploy/h5-app/

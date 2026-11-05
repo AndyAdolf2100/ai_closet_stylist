@@ -22,7 +22,7 @@ FILES = ["Dockerfile", ".dockerignore", "compose.yaml", "install.sh", "pyproject
          "deploy/docker/Dockerfile.compact", "deploy/docker/start.sh", "deploy/docker/deploy.sh", "deploy/docker/deploy.env.example",
          "deploy/nginx/aicloset-assistant.conf", "deploy/nginx/aicloset-assistant.http.conf",
          "deploy/nginx/aicloset-assistant.centos7.conf"]
-ASSET_SUFFIXES = {".py", ".sql", ".md", ".css", ".js", ".json", ".html", ".svg", ".png", ".jpg", ".webp"}
+ASSET_SUFFIXES = {".py", ".sql", ".md", ".css", ".js", ".json", ".html", ".svg", ".png", ".jpg", ".webp", ".mjs", ".wasm", ".onnx", ".txt"}
 
 
 def release_files(root):
