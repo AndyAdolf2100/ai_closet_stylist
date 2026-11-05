@@ -114,7 +114,7 @@ iOS 会员弹窗包含“无限上传”和“批量上传”等宣传，但后�
 | 衣物美化 | MCP `product_beautify_quote`、`product_beautify` | 个人单品报价与执行分开，不能在上传后自动执行 |
 | 形象与生成 | MCP `digital_twin_overview`、`digital_twin_generate` 等 | 还需配套照片检查与形象确认流程 |
 | 试穿 | MCP `digital_twin_tryon_quote`、`digital_twin_tryon` | Stylist 已有整套费用确认流程，保存搭配另复用 `save_recommended_outfit` |
-| 真实积分余额 | `GET /api/vip_center/points_detail` | 使用上游真实账本，不在 Stylist 再维护一套余额 |
+| 真实积分余额 | `GET /api/vip_center/points_detail` | 2026-11-05已本地接入固定同源代理，读取total_available；每次确认与后端生成／试穿执行前查询，不缓存、不维护本地余额；真实带身份上游另验 |
 | 积分流水 | `GET /api/user_points/list` | 用于业务积分记录展示 |
 | 会员商品与权益 | `GET /api/vip_product/products`、`GET /api/vip_product/privileges/compare` | 按商品与用户实际状态展示 |
 | 余额不足推荐商品 | `GET /api/vip_center/pay_intercept` | 当前按较低价格推荐，需结合任务缺额及已有权益判断 |
