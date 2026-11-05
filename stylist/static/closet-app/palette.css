@@ -1,0 +1,15 @@
+/* The proposal is opt-in. /app/ continues to render the native parity baseline. */
+html[data-app-design=yijian] {
+  --y-bg:#f4f6f8; --y-paper:#fdfefd; --y-ink:#293a4c; --y-muted:#73818e;
+  --y-line:#dce3e8; --y-accent:#3c5b79; --y-soft:#e8eff5; --y-button:#3c5b79; --y-button-ink:#fff;
+  --y-serif:Georgia,"Songti SC","STSong",serif;
+  background:var(--y-bg); color:var(--y-ink);
+}
+html[data-app-design=yijian][data-app-palette=female] {
+  --y-bg:#fbf7f2; --y-paper:#fffdfa; --y-ink:#42483c; --y-muted:#8b8175;
+  --y-line:#e9ddd2; --y-accent:#63775b; --y-soft:#edf0e7; --y-button:#63775b; --y-button-ink:#fff;
+}
+html[data-app-design=yijian][data-app-palette=system] {
+  --y-bg:#fff; --y-paper:#fff; --y-ink:#302f29; --y-muted:#858174;
+  --y-line:#eee6d2; --y-accent:#8a6915; --y-soft:#fff9e6; --y-button:#fcda4f; --y-button-ink:#302a18;
+}
