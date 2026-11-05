@@ -1,3 +1,4 @@
+import {mountSku,careCopy} from './sku-fusion.js';
 import {mountHomeWeatherNote} from './home-weather-note.js';
 import {needsOnboarding,onboardingURL} from './first-run.js';
 import '../companion-characters.js';
@@ -80,11 +81,11 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const letterTitle = make('h2','','今天，也想听听你的想法。');
   const letterCopy = make('p','','一件想穿的衣服，一点今天的心情，都可以聊聊。');
   const letterAction = make('button','y-letter-action','聊聊今天'); letterAction.append(icon('arrow')); letterAction.onclick=()=>forward('chat');
-  letterBody.append(letterBy,letterTitle,letterCopy,letterAction);
-  letter.append(letterPhoto,letterBody);
+  letterBody.append(letterTitle,letterCopy);
+  letter.append(letterPhoto,letterBody,letterAction);
   const seal=make('span','y-letter-seal','✧');seal.setAttribute('aria-hidden','true');letter.append(seal);
   accountJournal.append(letter);
-  accountJournal.after(document.querySelector('.points-card'));
+  mountSku(accountJournal,letter);
 
   document.querySelector('.memory-title').textContent='我们的手记';
   document.querySelector('.memory-card').prepend(make('span','y-memory-kicker','LITTLE THINGS ABOUT YOU'));
@@ -141,7 +142,8 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     const character=window.CompanionCharacters.find(persona);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
-    letterPhoto.src=`/static/assets/characters/companion-scenes-v1/${persona}-avatar.png`; letterPhoto.alt=`${name}，你的搭配助理`; letterBy.textContent=`${name}的日常小笺`;
+    letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];
+    letterPhoto.src=`/static/closet-app/assets/care-portraits/${persona}-closeup.png`; letterPhoto.alt=`${name}，你的搭配助理`; letterBy.textContent=`${name}的日常小笺`;
     avatar.setAttribute('aria-label',`${name}，日常搭配助理`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent=`和${name}聊聊`;
   }
   function applySavedProfile(profile) {

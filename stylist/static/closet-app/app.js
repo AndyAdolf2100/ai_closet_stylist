@@ -1,3 +1,4 @@
+import {skuDetail} from './sku-fusion.js';
 import {readAvailablePoints} from './points-balance.js';
 import {emptyArt} from './empty-art.js';
 import { collectionPage } from './collection-pages.js';
@@ -144,7 +145,7 @@ async function loadMemories() {
   } catch (e) { if (e.name === 'AbortError') return; copy.textContent = e.login ? '连接衣橱后查看记忆' : '记忆暂不可用，点击重试'; card.onclick = () => e.login ? openAgent('login') : loadMemories(); }
 }
 let detailOpener;
-function detail(title, content) { detailOpener = document.activeElement; setCreate(false); $('detail-title').textContent = title; $('detail-content').replaceChildren(content); $('detail-page').hidden = false; $('detail-page').scrollTop = 0; backgroundInert(true); document.querySelector('.floating-bar').inert = true; $('detail-back').focus(); const id = ++detailSerial; detailHistory.set(id, {title, content, opener: detailOpener}); if (detailHistory.size > 30) detailHistory.delete(detailHistory.keys().next().value); history.pushState({tab: state.tab, view: 'detail', id}, '', `#${state.tab}/detail`); }
+function detail(title, content) { detailOpener = document.activeElement; setCreate(false); $('detail-title').textContent = title; $('detail-content').replaceChildren(content); $('detail-page').hidden = false; $('detail-page').scrollTop = 0; backgroundInert(true); document.querySelector('.floating-bar').inert = true; ($('detail-content').querySelector('.sku-center-back') || $('detail-back')).focus(); const id = ++detailSerial; detailHistory.set(id, {title, content, opener: detailOpener}); if (detailHistory.size > 30) detailHistory.delete(detailHistory.keys().next().value); history.pushState({tab: state.tab, view: 'detail', id}, '', `#${state.tab}/detail`); }
 function closeDetail() { $('detail-page').hidden = true; backgroundInert(false); document.querySelector('.floating-bar').inert = false; if (detailOpener?.isConnected) detailOpener.focus(); }
 function openImage(title, src, description) { const body = node('div', 'detail-body'); body.append(picture(src, title), node('h3', '', title)); if (description) body.append(node('p', '', description)); detail(title, body); }
 function showProducts(products, title = '衣橱单品') { const wrap = node('div'), search = node('input', 'search'), grid = node('div', 'product-grid'); search.type = 'search'; search.placeholder = '搜索当前列表'; search.setAttribute('aria-label', '搜索当前列表'); const render = () => { grid.replaceChildren(); products.filter(p => JSON.stringify([p.title, p.name, p.product_name, p.brand_name]).includes(search.value)).forEach(p => grid.append(productCard(p))); }; search.oninput = render; render(); wrap.append(search, grid); detail(title, wrap); }
@@ -161,6 +162,7 @@ function openDetail(key) {
   }
   else if(['generation-records','my-outfits'].includes(key)){detail(details[key],collectionPage(key,{node,button,detail,openImage,openAgent,readSession,signal:state.controller.signal}));return;}
   else if (['contact','feedback','messages','orders'].includes(key)) { detail(details[key], profilePage(key,{node,button,detail,openAgent,readSession,signal:state.controller.signal})); return; }
+  else if(key==='membership'&&document.documentElement.dataset.appDesign==='yijian'){detail(details[key],skuDetail());return;}
   else if(document.documentElement.dataset.appDesign==='yijian'){content.className='y-unavailable';content.append(node('span','y-unavailable-mark','✧'),node('h3','',details[key]||'此功能'),node('p','','这项功能暂未开放，请先在 AI Closet App 中使用。'));if(key==='diy')content.append(button('和助理聊聊搭配',()=>openAgent('chat'),'y-service-primary'));}
   else { content.append(picture(ASSETS + 'profile_outfit_empty.png')); content.lastChild.className = 'blank-art'; content.append(node('p', 'offline-note', `${details[key] || '此功能'}尚未接入当前 Web，请在 AI Closet App 中使用。`)); if (key === 'diy') content.append(button('让爱搭衣橱帮我搭配', () => openAgent('chat'))); }
   detail(details[key] || '详情', content);
@@ -206,7 +208,7 @@ if(document.documentElement.dataset.appDesign==='yijian'){$('agent-back').textCo
 window.addEventListener('popstate', event => {
   closeDetail(); closeAgent(); selectTab(event.state?.tab || location.hash.slice(1).split('/')[0] || 'home', false);
   const record = event.state?.view === 'detail' && detailHistory.get(event.state.id);
-  if (record) { $('detail-title').textContent = record.title; $('detail-content').replaceChildren(record.content); $('detail-page').hidden = false; detailOpener = record.opener; backgroundInert(true); document.querySelector('.floating-bar').inert = true; $('detail-back').focus(); }
+  if (record) { $('detail-title').textContent = record.title; $('detail-content').replaceChildren(record.content); $('detail-page').hidden = false; detailOpener = record.opener; backgroundInert(true); document.querySelector('.floating-bar').inert = true; ($('detail-content').querySelector('.sku-center-back') || $('detail-back')).focus(); }
   else if (event.state?.view === 'agent') { if(document.documentElement.dataset.appDesign==='yijian')placeIntegratedAgent(true); $('agent-page').hidden = false; backgroundInert(true); document.querySelector('.floating-bar').inert = true; }
 });
 window.addEventListener('storage', e => { if (e.key === KEY) syncAccount(); });
