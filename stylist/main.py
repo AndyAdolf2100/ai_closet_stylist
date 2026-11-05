@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, Header, Request
+from fastapi import FastAPI, Header, Query, Request
 from fastapi import Path as ApiPath
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -27,6 +27,7 @@ from .config import Settings
 from .engine import Stylist
 from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
+from .feedback import OutfitFeedback, read_feedback, save_feedback
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
 from .media import (
@@ -302,6 +303,19 @@ def create_app(settings=None):
     async def history(conversation_id: str, authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.history, owner, conversation_id)
+
+    @app.get("/stylist-api/conversations/{conversation_id}/feedback")
+    async def outfit_feedback_get(conversation_id: str, version: int = Query(ge=1), look_index: int = Query(ge=0, le=6),
+                                  authorization: str | None = Header(default=None)):
+        request = OutfitFeedback(version=version, look_index=look_index)
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(read_feedback, store, owner, conversation_id, request.version, request.look_index)
+
+    @app.put("/stylist-api/conversations/{conversation_id}/feedback")
+    async def outfit_feedback_save(conversation_id: str, request: OutfitFeedback,
+                                   authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(save_feedback, store, owner, conversation_id, request)
 
     @app.get("/stylist-api/conversations/{conversation_id}/composition")
     async def composition_get(conversation_id: str, version: int, look_index: int, theme: str,

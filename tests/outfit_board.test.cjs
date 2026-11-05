@@ -95,7 +95,7 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const setNewClothes=()=>{};'+
    app.slice(app.indexOf('function bulletSection('),app.indexOf('function productGrid('))+
    app.slice(app.indexOf('function showReply('),app.indexOf('function setBusy('))+';return showReply;';
- const show=new Function('window','el','bubble','scrollBottom',code)(w,el,bubble,()=>{});
+ const show=new Function('window','el','bubble','scrollBottom','outfitFeedback',code)(w,el,bubble,()=>{},()=>el('div','outfit-feedback'));
  const selected=item('top',{product_id:'1',title:'白衬衫'});
  let composed;
  w.OutfitImages.get=async look=>{composed=look.items;return {image_url:'https://photos.invalid/one-owned.png'}};

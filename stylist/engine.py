@@ -158,7 +158,7 @@ class Stylist:
         digest = hashlib.sha256((owner + ":" + request.request_id).encode()).hexdigest()
         return {"configurable": {"thread_id": "sty-v1-" + digest}}
 
-    def graph(self, upstream, request, saver):
+    def graph(self, upstream, request, saver, owner=None):
         from .models import Product
 
         def unpack(data):
@@ -490,7 +490,7 @@ class Stylist:
                     "frozen": [p.model_dump(mode="json") for p in frozen],
                     "warnings": warnings, "rejected": rejected, "service_gap": service_gap}
 
-        def draft_payload(data):
+        async def draft_payload(data):
             plan, task = unpack(data)
             state = source_session(data)
             pool = {key: Product.model_validate(p) for key, p in data["pool"].items()}
@@ -502,7 +502,11 @@ class Stylist:
             original_targets = {p.key for p in current[0].items if p.slot in plan.replace_slots} if current and plan.mode == "modify" else set()
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
+            from .feedback import style_evidence
+            feedback_styles = (await asyncio.to_thread(style_evidence, self.store, owner or await upstream.identity(), task)
+                               if plan.use_profile_preferences and not plan.conversation_only and not plan.weather_only else [])
             draft_payload = {
+                "outfit_feedback_styles": feedback_styles,
                 "chat_image": request.chat_image,
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
                 "assistant_persona": request.assistant_persona,
@@ -553,7 +557,7 @@ class Stylist:
                 return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
                 report("styling", progress_message(request.assistant_persona, "styling"))
-            draft = await self.llm.generate("style", draft_payload(data), Draft)
+            draft = await self.llm.generate("style", await draft_payload(data), Draft)
             if data["plan"].get("conversation_only") or data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"looks": []})
             if data["plan"].get("weather_only"):
@@ -593,7 +597,7 @@ class Stylist:
                            if attribute_only else
                            "只修正不合格的选择和文字；只有部分合规衣物时保留实际selected_keys，缺少的品类写reference_pieces。"
                            "只有确无适合单品时才留空selected_keys并说明unmatched_reason，不为凑齐整套丢掉已有单品。")
-            draft = await self.llm.generate("style", {**draft_payload(data), "validation_errors": data["problems"],
+            draft = await self.llm.generate("style", {**(await draft_payload(data)), "validation_errors": data["problems"],
                 "previous_draft": data["draft"], "instruction": instruction}, Draft)
             if attribute_only:
                 original = Draft.model_validate(data["draft"])
@@ -610,7 +614,7 @@ class Stylist:
             repaired = {**data, "draft": draft.model_dump(mode="json")}
             problems = validate_node(repaired)["problems"]
             if any(problem.startswith(REPLACEMENT_PREFIX) for problem in problems):
-                options = draft_payload(data)["replacement_options"]
+                options = (await draft_payload(data))["replacement_options"]
                 kind = "replacement_failed" if any(options.values()) else "replacement"
                 draft = Draft(message=service_notice(request.assistant_persona, kind))
                 repaired["draft"] = draft.model_dump(mode="json")
@@ -739,7 +743,7 @@ class Stylist:
                     row = await (await saver.conn.execute("SELECT pg_try_advisory_lock(%s) AS locked", (lock_id,))).fetchone()
                     if not row["locked"]:
                         raise StylistError("request_in_progress", "原任务仍在执行，请稍候重连。", 409)
-                graph = self.graph(upstream, request, saver)
+                graph = self.graph(upstream, request, saver, owner=owner)
                 config = self.thread(owner, request)
                 snapshot = await graph.aget_state(config)
                 if snapshot.values and (snapshot.values["session_id"] != cid or

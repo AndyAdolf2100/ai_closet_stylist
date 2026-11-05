@@ -57,3 +57,12 @@ CREATE TABLE IF NOT EXISTS stylist_model_usage (
 
 CREATE INDEX IF NOT EXISTS stylist_usage_delivery ON stylist_model_usage(state,next_attempt,lease_until);
 CREATE INDEX IF NOT EXISTS stylist_usage_request ON stylist_model_usage(owner_id,conversation_id,request_id);
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_feedback (
+ owner_id TEXT NOT NULL, conversation_id TEXT NOT NULL, version INTEGER NOT NULL,
+ look_index INTEGER NOT NULL, vote VARCHAR(16) NOT NULL, style_name VARCHAR(16) NOT NULL,
+ gender VARCHAR(8) NOT NULL, personal INTEGER NOT NULL,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(owner_id,conversation_id,version,look_index),
+ FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+);

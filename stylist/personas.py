@@ -220,3 +220,28 @@ def progress_message(persona_id, stage):
     if persona_id in overrides:
         return overrides[persona_id][stages.index(stage)]
     return messages[stage][0 if male else 1]
+
+
+def outfit_feedback_receipt(persona_id, vote, can_reference=True):
+    """Acknowledge only committed votes; never claim a permanent profile or training."""
+    if vote is None:
+        return "这次评价已经撤回。喜欢什么，随时都可以改主意。"
+    if vote == "dislike":
+        return {
+            "male_calm_v1": "好，不勉强。哪一处不合心意，告诉我，我们一起调。",
+            "male_artistic_v1": "这次的感觉还没对上。你说说哪里不喜欢，我陪你换个方向。",
+            "male_confident_v1": "收到，不合心意就换方向。想改哪里，你来定。",
+            "female_warm_v1": "没关系，不用勉强喜欢。哪一点不舒服，我们慢慢调。",
+            "female_sweet_v1": "那就再找找感觉呀。你挑一处想改的，我陪你一起看。",
+            "female_regal_v1": "你的喜欢最要紧。不合心意的地方，说给我听。",
+        }.get(persona_id, "没关系，不用勉强喜欢。哪一点不舒服，我们慢慢调。")
+    if not can_reference:
+        return "这份喜欢收到了。评价留在这套搭配里，你也随时可以改主意。"
+    return {
+        "male_calm_v1": "这份喜欢收到了。下次选款，我会多留意这样的风格。",
+        "male_artistic_v1": "原来这样的风格，会让你心动。下次挑衣服，我会多留意一点。",
+        "male_confident_v1": "好，这个方向收到了。下次搭配，我会多考虑这样的风格。",
+        "female_warm_v1": "你喜欢就好。下次挑衣服，我会多照顾一点这样的风格。",
+        "female_sweet_v1": "找到一点心动啦。下次搭配，我会多看看这样的风格。",
+        "female_regal_v1": "这份喜欢，值得留意。下次选款，我会多考虑这样的风格。",
+    }.get(persona_id, "你喜欢就好。下次挑衣服，我会多照顾一点这样的风格。")

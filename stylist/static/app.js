@@ -342,6 +342,62 @@ function wardrobeGapCard(reply, request) {
   }
   return card;
 }
+function outfitFeedback(reply, index) {
+  const box = el('section', 'outfit-feedback'); box.setAttribute('aria-label', '穿搭回音');
+  const heading = el('div', 'outfit-feedback-heading');
+  const ornament = el('span', 'outfit-feedback-star', '✧'); ornament.setAttribute('aria-hidden', 'true');
+  const titles = el('div'); titles.append(el('small', 'outfit-feedback-eyebrow', '穿 搭 回 音'), el('h4', '', '这一套，有没有一点心动？'));
+  heading.append(titles, ornament);
+  const controls = el('div', 'outfit-feedback-choices');
+  const response = el('p', 'outfit-feedback-response', '等我翻一翻这一页…');
+  response.setAttribute('role', 'status'); response.setAttribute('aria-live', 'polite');
+  const footer = el('div', 'outfit-feedback-footer');
+  footer.append(el('small', '', '按你的喜欢，慢慢来。'));
+  const capturedSession = session;
+  const path = `/stylist-api/conversations/${encodeURIComponent(reply.conversation_id)}/feedback`;
+  const query = new URLSearchParams({version:reply.version,look_index:index});
+  const profile = window.CompanionSettings?.getProfile?.();
+  const persona = profile?.assistant_persona || (document.documentElement.dataset.appearance === 'male' ? 'male_calm_v1' : 'female_warm_v1');
+  let current = null, pending = true;
+  const buttons = [];
+  const active = () => session === capturedSession && box.isConnected;
+  function paint(message) {
+    box.dataset.vote = current || 'none'; box.setAttribute('aria-busy', String(pending));
+    response.textContent = message || (current === 'like' ? '这份喜欢留在这一页了，心意也随时能改。' : current === 'dislike' ? '还没找到对的感觉也没关系，想改哪里，可以说给我听。' : '喜欢可以留下，想换个感觉也可以告诉我。');
+    for (const [button, vote] of buttons) {
+      button.disabled = pending;
+      if (vote !== null) button.setAttribute('aria-pressed', String(current === vote));
+      else button.style.visibility = current === null ? 'hidden' : 'visible';
+    }
+  }
+  const heart = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
+  const breeze = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M5 16h4a3 3 0 1 1-3 3"/></svg>';
+  for (const [label, accessible, vote, icon] of [['有点心动','喜欢这套','like',heart],['再找找感觉','不喜欢这套','dislike',breeze],['撤回评价','撤回评价',null,'']]) {
+    const button = el('button', vote === null ? 'outfit-feedback-undo' : 'outfit-feedback-choice');
+    button.type = 'button'; button.disabled = true; button.setAttribute('aria-label', accessible);
+    if (icon) button.innerHTML = icon;
+    button.append(el('span', '', label));
+    button.onclick = async () => {
+      if (pending || !active() || !requireLogin()) return;
+      pending = true; paint('把这一点心意，轻轻留在这页…');
+      try {
+        const saved = await api(path, {method:'PUT',body:JSON.stringify({version:reply.version,look_index:index,vote,assistant_persona:persona})});
+        if (active()) { current = saved.vote; pending = false; paint(saved.message); }
+      } catch (err) {
+        if (active()) { pending = false; paint('这次没能留住，原来的选择还在。稍后再试一次吧。'); notifyIssue(err.message); }
+      }
+    };
+    buttons.push([button,vote]); (vote === null ? footer : controls).append(button);
+  }
+  box.append(heading, controls, response, footer);
+  api(`${path}?${query}`).then(saved => {
+    if (active()) { current = saved.vote; pending = false; paint(); }
+  }).catch(err => {
+    if (active()) { response.textContent = '这一页暂时没能翻开，重新打开对话后再试试吧。'; box.setAttribute('aria-busy','false'); notifyIssue(err.message); }
+  });
+  return box;
+}
+
 function showReply(reply, request = null) {
   setNewClothes(reply.new_clothes);
   if (request && reply.new_clothes_auto_enabled && reply.new_clothes_notice && !newClothesNotices.has(request.request_id)) {
@@ -445,6 +501,7 @@ function showReply(reply, request = null) {
       };
       card.append(regenerate);
     }
+    if (reply.delivery === 'outfit' && !reply.pending_confirmation) card.append(outfitFeedback(reply, lookIndex));
     options.append(card);
   }
   if (looks.length) node.append(options);

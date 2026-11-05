@@ -83,3 +83,12 @@ CREATE TABLE IF NOT EXISTS stylist_model_usage (
  INDEX stylist_usage_delivery(state,next_attempt,lease_until),
  INDEX stylist_usage_request(owner_id,conversation_id,request_id)
 );
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_feedback (
+ owner_id VARCHAR(191) NOT NULL, conversation_id VARCHAR(191) NOT NULL, version INTEGER NOT NULL,
+ look_index INTEGER NOT NULL, vote VARCHAR(16) NOT NULL, style_name VARCHAR(16) NOT NULL,
+ gender VARCHAR(8) NOT NULL, personal INTEGER NOT NULL,
+ updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ PRIMARY KEY(owner_id,conversation_id,version,look_index),
+ FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
