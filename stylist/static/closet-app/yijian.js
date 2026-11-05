@@ -97,7 +97,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const wardrobeNote=document.querySelector('.profile-top [data-detail=statistics]');
   wardrobeNote.className='y-wardrobe-note';
   const wardrobeNoteCopy=make('span','y-wardrobe-note-copy');
-  wardrobeNoteCopy.append(make('strong','','衣橱小记'),make('small','','查看衣橱统计'));
+  wardrobeNoteCopy.append(make('strong','','衣橱小记'),make('small','','查看衣橱小记'));
   wardrobeNote.replaceChildren(icon('stats'),wardrobeNoteCopy,make('span','y-wardrobe-note-arrow','›'));
   document.querySelector('.feature-cards').after(wardrobeNote);
   document.querySelectorAll('.feature-cards button').forEach((b,i)=>b.replaceChild(icon(i?'diy':'records'),b.querySelector('img')));

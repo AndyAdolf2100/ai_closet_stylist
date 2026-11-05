@@ -145,7 +145,7 @@ function detail(title, content) { detailOpener = document.activeElement; setCrea
 function closeDetail() { $('detail-page').hidden = true; backgroundInert(false); document.querySelector('.floating-bar').inert = false; if (detailOpener?.isConnected) detailOpener.focus(); }
 function openImage(title, src, description) { const body = node('div', 'detail-body'); body.append(picture(src, title), node('h3', '', title)); if (description) body.append(node('p', '', description)); detail(title, body); }
 function showProducts(products, title = '衣橱单品') { const wrap = node('div'), search = node('input', 'search'), grid = node('div', 'product-grid'); search.type = 'search'; search.placeholder = '搜索当前列表'; search.setAttribute('aria-label', '搜索当前列表'); const render = () => { grid.replaceChildren(); products.filter(p => JSON.stringify([p.title, p.name, p.product_name, p.brand_name]).includes(search.value)).forEach(p => grid.append(productCard(p))); }; search.oninput = render; render(); wrap.append(search, grid); detail(title, wrap); }
-const details = { 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱统计', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
+const details = { 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱小记', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
 function openDetail(key) {
   const content = node('div', 'detail-body');
   if (key === 'settings') {
