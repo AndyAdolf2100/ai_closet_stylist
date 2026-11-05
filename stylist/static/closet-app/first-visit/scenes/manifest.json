@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-11-05T12:04:30.079Z",
+  "source": "http://127.0.0.1:8466/app/?design=yijian",
+  "data": "isolated synthetic fixtures; no real business requests",
+  "scenes": [
+    "home",
+    "create",
+    "upload",
+    "upload-preview",
+    "upload-completed",
+    "profile",
+    "memory",
+    "memory-edit",
+    "twins-empty",
+    "person-upload",
+    "person-preview",
+    "person-checked",
+    "generation-quote",
+    "generation-processing",
+    "generation-result",
+    "twins-ready",
+    "chat",
+    "chat-outfit",
+    "tryon-select",
+    "tryon-quote",
+    "tryon-processing",
+    "tryon-result",
+    "records"
+  ]
+}

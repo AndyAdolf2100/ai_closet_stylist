@@ -1,0 +1,7 @@
+# 功能导览示例素材
+
+2026-11-05。shirt-example、jeans-example、tryon-example来自同工作区iOS工程Module2.0/Resources/DesignAssets.xcassets中的fitting_product_mock_shirt、fitting_product_mock_jeans、fitting_result_mock，仅用于只读导览。不是当前用户照片、真实库存或本轮模型／付费生成结果。
+
+outfit-example由构建脚本按当前OutfitBoard.layout将两张内置示例衣物排列生成，示例形象照片使用项目原有匿名水彩占位。没有外部上传、真实账号或真实积分操作。
+
+scenes/manifest.json记录最近一次从当前App组件捕获的时间、来源和23种状态。运行scripts/build_first_visit_scenes.cjs可在新建隔离浏览器上下文、全业务接口拦截下重建；不复用用户浏览器。
