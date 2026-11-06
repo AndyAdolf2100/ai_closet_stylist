@@ -61,7 +61,7 @@ const key='ai-closet-stylist-session-v1';
   const context=await browser.newContext({viewport:{width:390,height:844}});const p=await context.newPage();let gender='女';
   await p.addInitScript(key=>{if(!sessionStorage.getItem(key))sessionStorage.setItem(key,JSON.stringify({access_token:'synthetic-access',user:{id:'1'}}));},key);
   await p.route('**/stylist-api/**',r=>r.fulfill({json:{profile:{user_name:'账号小夏',user_gender:gender,agent_name:'衣衣',assistant_persona:'male_calm_v1',color_scheme:scheme}}}));
-  await p.goto(base+'/app/?design=yijian#home/agent');await p.waitForFunction(s=>document.documentElement.dataset.appPalette===(s==='system'?'system':'female'),scheme);
+  await p.goto(base+'/app/?design=yijian#home/agent');await p.waitForFunction(s=>document.documentElement.dataset.appPalette===(s==='system'?'system':'male'),scheme);
   await p.waitForFunction(()=>window.CompanionSettings?.getProfile()?.user_gender==='女');gender='男';await p.evaluate(()=>window.dispatchEvent(new Event('focus')));
   await p.waitForFunction(s=>document.documentElement.dataset.appPalette===(s==='system'?'system':'male'),scheme);await p.waitForFunction(()=>window.CompanionSettings.getProfile().user_gender==='男');
   assert.equal(await p.evaluate(()=>CompanionSettings.getProfile().assistant_persona),'male_calm_v1');

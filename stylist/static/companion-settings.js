@@ -20,7 +20,7 @@
         <fieldset class="companion-gender" data-step="1"><legend class="sr-only">选择你的性别</legend><label><input type="radio" name="companion-user-gender" value="女"><span>女生<small>从你的喜好开始</small></span></label><label><input type="radio" name="companion-user-gender" value="男"><span>男生<small>找到自在的穿法</small></span></label><label><input type="radio" name="companion-user-gender" value=""><span>暂不设定<small>慢慢了解也很好</small></span></label><p>仅作为为你搭配时的默认参考，也可以先不选。</p></fieldset>
         <div class="companion-field" data-step="2"><label for="companion-agent-name">你想怎么叫我</label><input id="companion-agent-name" type="text" maxlength="24" autocomplete="off" placeholder="一个你喜欢的名字" aria-describedby="companion-error"><button type="button" class="companion-soft-choice" id="companion-agent-default">就叫“衣衣”吧</button></div>
         <div class="companion-cast-step" data-step="3">
-          <div class="companion-cast-tools"><span id="companion-color-label">界面配色</span><fieldset class="companion-color-switch" aria-labelledby="companion-color-label"><label class="companion-color-option"><input id="companion-color-companion" type="radio" name="companion-color-scheme" value="companion"><span><i class="companion-color-swatch companion-color-swatch-follow" aria-hidden="true"></i>跟随账号</span></label><label class="companion-color-option" title="与 App 保持一致"><input id="companion-system-color" type="radio" name="companion-color-scheme" value="system"><span><i class="companion-color-swatch companion-color-swatch-system" aria-hidden="true"></i>系统配色</span></label></fieldset></div>
+          <div class="companion-cast-tools"><span id="companion-color-label">界面配色</span><fieldset class="companion-color-switch" aria-labelledby="companion-color-label"><label class="companion-color-option"><input id="companion-color-companion" type="radio" name="companion-color-scheme" value="companion"><span><i class="companion-color-swatch companion-color-swatch-follow" aria-hidden="true"></i>跟随助理</span></label><label class="companion-color-option" title="与 App 保持一致"><input id="companion-system-color" type="radio" name="companion-color-scheme" value="system"><span><i class="companion-color-swatch companion-color-swatch-system" aria-hidden="true"></i>系统配色</span></label></fieldset></div>
           <fieldset class="companion-assistant-gender"><legend class="sr-only">选择助理形象的性别，与用户性别独立</legend>
             ${['male', 'female'].map(gender => { const representative = characters.find(gender === 'male' ? 'male_calm_v1' : 'female_warm_v1'); return `<label class="companion-gender-picture"><input type="radio" name="companion-assistant-gender" value="${gender}"><span class="companion-gender-thumb" aria-hidden="true"><img src="${representative.image}" alt="" width="1536" height="1024"></span><span><strong>${gender === 'female' ? '女助理' : '男助理'}</strong><small>三种性格，慢慢选</small></span><span class="companion-gender-tick" aria-hidden="true">✓</span></label>`; }).join('')}
           </fieldset>
@@ -37,7 +37,7 @@
     const colors = dialog.querySelector('.companion-cast-tools');
     dialog.querySelector('.companion-recall').after(colors);
     const label = colors.querySelector('#companion-color-companion + span');
-    label.lastChild.textContent = '随账号性别';
+    label.lastChild.textContent = '随角色变动';
   }
   document.body.append(dialog);
   // The six selected designs use their original static images; no new atlases.
@@ -164,14 +164,14 @@
   let client = null, loaded = false, saving = false, ready = Promise.resolve();
   let appearanceSave = Promise.resolve(), previewOriginal = null;
   let groupChoices = { female: 'female_warm_v1', male: 'male_calm_v1' };
-  const previewAppearance = (persona,colorScheme=draft.color_scheme,userGender=draft.user_gender) => {
+  const previewAppearance = (persona,colorScheme=draft.color_scheme) => {
     characters.apply(persona);
-    if (editPage) document.documentElement.dataset.appPalette = colorScheme === 'system' ? 'system' : userGender==='女'?'female':userGender==='男'?'male':personaGender(persona);
+    if (editPage) document.documentElement.dataset.appPalette = colorScheme === 'system' ? 'system' : personaGender(persona);
     window.dispatchEvent(new CustomEvent('stylist-appearance-preview', { detail:{gender:personaGender(persona),color_scheme:colorScheme} }));
   };
   function restoreAppearance() {
     if (previewOriginal === null) return;
-    const original = previewOriginal; previewOriginal = null; previewAppearance(original.assistant_persona,original.color_scheme,original.user_gender);
+    const original = previewOriginal; previewOriginal = null; previewAppearance(original.assistant_persona,original.color_scheme);
     if (editPage && original.appPalette) document.documentElement.dataset.appPalette = original.appPalette;
   }
   const notify = () => {

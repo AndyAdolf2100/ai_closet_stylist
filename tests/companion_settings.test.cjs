@@ -10,8 +10,8 @@ function choose(w,id){
  w.document.querySelector('[name=companion-persona][value="'+id+'"]').click();
 }
 const profile=(name='知秋')=>({user_name:'小夏',user_gender:'女',agent_name:name,assistant_persona:'male_calm_v1',color_scheme:'companion'});
-async function setup(){
- const dom=new JSDOM('<div id="notice"></div><span data-agent-name>衣衣</span><p data-stylist-copy="intro"></p><input id="message"><div id="appearance-status"></div>',{url:'http://synthetic.invalid/',runScripts:'outside-only'}),w=dom.window;
+async function setup(editPage=false){
+ const dom=new JSDOM((editPage?'<html data-app-design="yijian">':'')+'<div id="notice"></div><span data-agent-name>衣衣</span><p data-stylist-copy="intro"></p><input id="message"><div id="appearance-status"></div>',{url:'http://synthetic.invalid/',runScripts:'outside-only'}),w=dom.window;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
  w.eval(fs.readFileSync(path.join(root,'appearance.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'companion-characters.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'companion-settings.js'),'utf8'));await tick();
  return {w,dom,$:id=>w.document.getElementById(id),submit:()=>w.document.getElementById('companion-form').dispatchEvent(new w.Event('submit',{cancelable:true}))};
@@ -309,3 +309,23 @@ test('notification read action is scoped to its message and cleared on account r
  w.document.querySelector('#companion-notification .companion-message-open').click();
  assert.equal(calls,1);dom.window.close();
 });
+
+for(const userGender of ['男','女',null]) for(const scheme of ['companion','system']) {
+ test(`H5 palette follows assistant, not account gender ${userGender}, in ${scheme} mode`,async()=>{
+  const {w,dom}=await setup(true);
+  const saved={...profile(),user_gender:userGender,color_scheme:scheme};
+  await w.CompanionSettings.setOwner('theme-owner',async()=>({profile:saved}),false);
+  w.document.documentElement.dataset.appPalette=scheme==='system'?'system':'male';
+  await w.CompanionSettings.open();
+  assert(w.document.querySelector('#companion-color-companion + span').textContent.includes('随角色变动'));
+  choose(w,'female_warm_v1');
+  assert.equal(w.document.documentElement.dataset.appPalette,scheme==='system'?'system':'female');
+  choose(w,'male_confident_v1');
+  assert.equal(w.document.documentElement.dataset.appPalette,scheme==='system'?'system':'male');
+  w.document.querySelector('.companion-close').click();
+  assert.equal(w.document.documentElement.dataset.appPalette,scheme==='system'?'system':'male');
+  assert.equal(w.CompanionSettings.getProfile().user_gender,userGender);
+  assert.equal(w.CompanionSettings.getProfile().assistant_persona,'male_calm_v1');
+  dom.window.close();
+ });
+}

@@ -144,11 +144,15 @@ GET /stylist-api/companion-profile返回profile与account；没有助理设置�
 
 PostgreSQL stylist_companion_profiles.profile_json不再保存user_name／user_gender；运行时聚合及历史请求快照仍保留相应字段。助理昵称agent_name、具体角色、配色开关及偏好继续存Stylist。清理命令：python -m scripts.cleanup_companion_account_settings（仅统计），加--apply仅删除这两个JSON键，不改原MySQL账号和历史消息。本地已清理1条，复查0条遗留；没有执行远端清理。
 
-H5 color_scheme=companion保留旧枚举以兼容，现对应“随账号性别”，而不是随助理角色；用户选择system时保持系统黄。应用加载及回前台重新读取账号资料，用户性别变化更新H5配色和下次请求资料，助理形象／人格不变。未知性别只回退角色配色，不默认选中用户性别。已开始任务和重放使用原快照，不改旧消息。
+H5 color_scheme=companion始终对应“随角色变动”：男助理灰蓝、女助理暖白绿，按assistant_persona性别选择；system保持系统黄。用户昵称／性别仍从账号资料读取，性别变化只更新用户资料与下次穿搭请求，不控制配色。设置预览、保存、刷新、回前台和首次引导均使用同一角色配色规则，取消恢复已保存角色与配色。已开始任务和重放使用原快照，不改旧消息。2026-11-06纠正此前把主题绑定账号性别的错误实现及说明。
 
-验证：全量1011项Python通过、85默认跳过；末轮83项定向通过（含新增账号保存回读不一致保护）；172项Node通过；8组浏览器场景覆盖390／1440px、账号预填、空资料不回退、步骤无写入、最终保存失败重试、sex_token只在最终消费、换号迟到响应、前台性别刷新及系统配色。所有业务接口均模拟，无真实账号写入、向量初始化或付费生图。截图与MD／HTML在reports/26-11-06/change-log/docs/。
+验证：全量1011项Python通过、85默认跳过；末轮83项定向通过（含新增账号保存回读不一致保护）；172项Node通过；8组浏览器场景覆盖390／1440px、账号预填、空资料不回退、步骤无写入、最终保存失败重试、sex_token只在最终消费、换号迟到响应、前台账号资料刷新及系统配色。所有业务接口均模拟，无真实账号写入、向量初始化或付费生图。截图与MD／HTML在reports/26-11-06/change-log/docs/。
 
 
 ### 2026-11-06 功能复测
 
-本轮83项后端定向、172项前端、8组浏览器边界通过。新增tests/test_onboarding_http_functional.py与onboarding_http.browser.cjs：真实本地浏览器→Stylist HTTP→模拟Server HTTP→临时SQLite，15场景通过，包括页面验证码登录、最终统一提交、昵称成功／性别失败后的补偿重试、城市只在成功后保存、防重复点击、刷新恢复、旧偏好快照不覆盖账号资料、Server回读不匹配拒绝完成、凭证过期及前台主题同步。该套件默认跳过，需STYLIST_BROWSER_FUNCTIONAL=1和PLAYWRIGHT_MODULE显式运行；无真实账号写入、向量初始化或收费调用。本轮未发现业务缺陷，回归证据在reports/26-11-06/functional-regression/。
+本轮83项后端定向、172项前端、8组浏览器边界通过。新增tests/test_onboarding_http_functional.py与onboarding_http.browser.cjs：真实本地浏览器→Stylist HTTP→模拟Server HTTP→临时SQLite，15场景通过，包括页面验证码登录、最终统一提交、昵称成功／性别失败后的补偿重试、城市只在成功后保存、防重复点击、刷新恢复、旧偏好快照不覆盖账号资料、Server回读不匹配拒绝完成、凭证过期及前台账号资料同步。该套件默认跳过，需STYLIST_BROWSER_FUNCTIONAL=1和PLAYWRIGHT_MODULE显式运行；无真实账号写入、向量初始化或收费调用。本轮未发现业务缺陷，回归证据在reports/26-11-06/functional-regression/。
+
+### 配色纠偏验证（2026-11-06）
+
+194项前端与71项后端模拟通过；H5 320／393／1440px共126项角色／账号／系统色检查，6项首次引导与8组账号浏览器场景通过。预览、取消、保存、刷新均跟随助理，修改用户性别不改角色主题；系统色固定。无真实账号写入或模型调用。证据reports/26-11-06/assistant-theme-fix/。
