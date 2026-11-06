@@ -25,6 +25,43 @@
     "tryon-quote",
     "tryon-processing",
     "tryon-result",
-    "records"
-  ]
+    "records",
+    "wardrobe"
+  ],
+  "scene_captured_at": {
+    "home": "2026-11-06T04:39:51.295Z",
+    "create": "2026-11-05T12:04:30.079Z",
+    "upload": "2026-11-05T12:04:30.079Z",
+    "upload-preview": "2026-11-05T12:04:30.079Z",
+    "upload-completed": "2026-11-05T12:04:30.079Z",
+    "profile": "2026-11-06T04:39:51.295Z",
+    "memory": "2026-11-05T12:04:30.079Z",
+    "memory-edit": "2026-11-05T12:04:30.079Z",
+    "twins-empty": "2026-11-05T12:04:30.079Z",
+    "person-upload": "2026-11-05T12:04:30.079Z",
+    "person-preview": "2026-11-05T12:04:30.079Z",
+    "person-checked": "2026-11-05T12:04:30.079Z",
+    "generation-quote": "2026-11-05T12:04:30.079Z",
+    "generation-processing": "2026-11-05T12:04:30.079Z",
+    "generation-result": "2026-11-05T12:04:30.079Z",
+    "twins-ready": "2026-11-05T12:04:30.079Z",
+    "chat": "2026-11-05T12:04:30.079Z",
+    "chat-outfit": "2026-11-05T12:04:30.079Z",
+    "tryon-select": "2026-11-05T12:04:30.079Z",
+    "tryon-quote": "2026-11-05T12:04:30.079Z",
+    "tryon-processing": "2026-11-05T12:04:30.079Z",
+    "tryon-result": "2026-11-05T12:04:30.079Z",
+    "records": "2026-11-05T12:04:30.079Z",
+    "wardrobe": "2026-11-06T04:39:51.295Z"
+  },
+  "last_partial_refresh": {
+    "captured_at": "2026-11-06T04:39:51.295Z",
+    "source": "http://127.0.0.1:8466/app/?design=yijian",
+    "scenes": [
+      "home",
+      "wardrobe",
+      "profile"
+    ],
+    "data": "isolated synthetic fixtures; no real business requests"
+  }
 }
