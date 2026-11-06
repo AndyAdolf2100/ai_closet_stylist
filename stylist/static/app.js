@@ -133,6 +133,11 @@ window.OutfitImages?.configure({
 });
 const feed = $('feed');
 let followLatest = false, bottomFrame = null;
+const bottomButton = $('scroll-bottom');
+function updateBottomButton() {
+  bottomButton.hidden = feed.scrollHeight - feed.clientHeight - feed.scrollTop <= 48;
+}
+bottomButton.onclick = () => { scrollBottom(); feed.tabIndex = -1; feed.focus({preventScroll:true}); };
 function scrollBottom(force = true) {
   if (force) followLatest = true;
   if (!followLatest || bottomFrame !== null) return;
@@ -140,14 +145,16 @@ function scrollBottom(force = true) {
   bottomFrame = requestAnimationFrame(() => {
     bottomFrame = null;
     if (followLatest) feed.scrollTop = feed.scrollHeight;
+    updateBottomButton();
   });
 }
 feed.addEventListener('scroll', () => {
   followLatest = feed.scrollHeight - feed.clientHeight - feed.scrollTop <= 48;
+  updateBottomButton();
 }, { passive: true });
 // Observe message heights as well as the viewport: images, wrapped progress
 // text and the mobile keyboard can all change the bottom after insertion.
-const feedResize = new ResizeObserver(() => scrollBottom(false));
+const feedResize = new ResizeObserver(() => { updateBottomButton(); scrollBottom(false); });
 feedResize.observe(feed);
 const observedMessages = new Set();
 new MutationObserver(() => {
@@ -524,7 +531,7 @@ function setBusy(value) {
   window.ChatAttachments?.setBusy(value);
   for (const id of ['personal-clothes', 'new-clothes']) if ($(id)) $(id).disabled = value;
   $('send').disabled = value;
-  $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送 ↑';
+  $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送';
   $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
   $('location-open').disabled = value; $('companion-open').disabled = value; $('preferences-open').disabled = value;

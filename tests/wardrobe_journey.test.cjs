@@ -129,7 +129,7 @@ for(const kind of ['person','garment'])test(`${kind} upload uses the JPEG signat
  const file=new t.w.File([bytes],'photo.png',{type:'image/png'});
  const input=t.w.document.querySelector('input[type=file]');Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new t.w.Event('change'));await flush();
  assert.equal(requests.length,0);
- byText(t.w,kind==='person'?'确认上传并检查照片':'确认上传并抠图入柜').click();await flush();
+ byText(t.w,'确认上传').click();await flush();
  assert.equal(requests.length,1);assert.equal(requests[0].kind,kind);
  assert.equal(requests[0].image_data,'data:image/jpeg;base64,'+Buffer.from(bytes).toString('base64'));
  t.close();
@@ -140,39 +140,39 @@ test('a supported image without a browser MIME type can be submitted',async()=>{
  const bytes=Uint8Array.from([82,73,70,70,16,0,0,0,87,69,66,80,86,80,56,32]);
  const file=new t.w.File([bytes],'photo',{type:''});
  const input=t.w.document.querySelector('input[type=file]');Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new t.w.Event('change'));await flush();
- byText(t.w,'确认上传并检查照片').click();await flush();
+ byText(t.w,'确认上传').click();await flush();
  assert.equal(requests.length,1);assert.equal(requests[0].image_data,'data:image/webp;base64,'+Buffer.from(bytes).toString('base64'));t.close();
 });
 test('non-image content named PNG stays blocked before any upload',async()=>{
  let calls=0;const t=setup(async()=>{calls++;});t.w.WardrobeJourney.upload('person');
  const file=new t.w.File(['this is not an image file'],'photo.png',{type:'image/png'});
  const input=t.w.document.querySelector('input[type=file]');Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new t.w.Event('change'));await flush();
- assert.equal(byText(t.w,'确认上传并检查照片').disabled,true);assert.equal(calls,0);
+ assert.equal(byText(t.w,'确认上传').disabled,true);assert.equal(calls,0);
  assert.match(t.notices.join(''),/不是可识别的/);t.close();
 });
 test('photo remains local until explicit upload; cancel never sends or charges',async()=>{
  const calls=[];const t=setup(async(...args)=>{calls.push(args);return {action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:17,class_name:'上衣',result_image_url:'https://example.test/cutout.png'}};});
  t.w.WardrobeJourney.upload();await selectFile(t.w);assert.equal(calls.length,0);assert.match(t.w.document.querySelector('.journey-upload-preview img').src,/^blob:/);
  byText(t.w,'关闭 ×').click();assert.equal(calls.length,0);
- t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传并抠图入柜').click();await flush();
+ t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();await flush();
  assert.equal(calls.length,1);assert.equal(JSON.parse(calls[0][1].body).confirmed,true);assert.ok(byText(t.w,'用这件搭一套'));t.close();
 });
 test('an upload cannot be double-submitted, and closing does not reopen on late response',async()=>{
  let done;let calls=0;const t=setup(()=>{calls++;return new Promise(resolve=>done=resolve);});
- t.w.WardrobeJourney.upload();await selectFile(t.w);const b=byText(t.w,'确认上传并抠图入柜');b.click();b.click();assert.equal(calls,1);
+ t.w.WardrobeJourney.upload();await selectFile(t.w);const b=byText(t.w,'确认上传');b.click();b.click();assert.equal(calls,1);
  byText(t.w,'关闭 ×').click();done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:1}});await flush();
  assert.equal(t.w.document.querySelector('dialog').open,false);t.close();
 });
 test('switching accounts discards a late upload response and clears preview',async()=>{
- let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传并抠图入柜').click();
+ let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();
  t.w.WardrobeJourney.setOwner('2');done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:17}});await flush();
  assert.equal(t.w.document.querySelector('dialog').open,false);assert.equal(t.w.document.querySelector('.journey-body').textContent,'');assert.deepEqual(t.notices,[]);t.close();
 });
 test('a late upload cannot replace a newly opened person-photo flow for the same account',async()=>{
- let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传并抠图入柜').click();
+ let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();
  byText(t.w,'关闭 ×').click();t.w.WardrobeJourney.upload('person');
  done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:17}});await flush();
- assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的试穿形象');assert.ok(byText(t.w,'确认上传并检查照片'));t.close();
+ assert.equal(t.w.document.querySelector('#journey-title').textContent,'创建我的试穿形象');assert.ok(byText(t.w,'确认上传'));t.close();
 });
 test('portrait selection is a draft; only confirmation changes default and no generation is charged',async()=>{
  const calls=[];const overview={default_twin_key:'base-a',default_confirmed:true,selection_version:3,available_points:80,system_twins:[{twin_key:'base-a',name:'基础形象A',image_url:'https://example.test/a.png'},{twin_key:'base-b',name:'基础形象B',image_url:'https://example.test/b.png'}]};
@@ -188,7 +188,7 @@ test('person generation has its own quote, and dismissing it sends only cancella
   if(path.endsWith('/generation-quote'))return {action_id:'med_quote',kind:'generation',status:'quoted',points_cost:20};
   return {status:'cancelled'};
  });
- t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传并检查照片').click();await flush();byText(t.w,'查看人物生成费用').click();await flush();
+ t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();byText(t.w,'查看人物生成费用').click();await flush();
  assert.equal(t.w.document.querySelector('.journey-steps').hidden,false);
  assert.match(t.w.document.querySelector('.journey-body').textContent,/20 积分/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行报价/);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);byText(t.w,'关闭 ×').click();await flush();
@@ -213,10 +213,10 @@ test('a delayed history load cannot pollute a different conversation',async()=>{
 });
 test('an upload failure preserves the preview and permits a different file without automatic retry',async()=>{
  let writes=0;const t=setup(async()=>{writes++;throw Error('上传暂时失败');});
- t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传并抠图入柜').click();await flush();
+ t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();await flush();
  assert.equal(writes,1);assert.equal(t.w.document.querySelector('input[type=file]').disabled,false);
  assert.ok(t.w.document.querySelector('.journey-upload-preview img'));
- await selectFile(t.w);assert.equal(writes,1);assert.equal(byText(t.w,'确认上传并抠图入柜').disabled,false);t.close();
+ await selectFile(t.w);assert.equal(writes,1);assert.equal(byText(t.w,'确认上传').disabled,false);t.close();
 });
 test('changing accounts clears the docked fee action and companion scene',async()=>{
  const t=setup(async p=>p.endsWith('/quote')?{action_id:'img_q',title:'搭配',points_cost:8,item_count:1,portrait:{}}:{default_confirmed:true,default_twin_key:'base'});
@@ -230,13 +230,13 @@ test('explicit clothing invitation shows upload steps; only a click opens the lo
  assert.equal(t.w.document.querySelectorAll('.journey-card-steps li').length,3);
  assert.equal(t.w.document.querySelector('dialog').open,false);assert.equal(calls,0);
  byText(t.w,'好，选择衣物照片').click();assert.equal(t.w.document.querySelector('dialog').open,true);
- await selectFile(t.w);assert.equal(calls,0);assert.ok(byText(t.w,'确认上传并抠图入柜'));t.close();
+ await selectFile(t.w);assert.equal(calls,0);assert.ok(byText(t.w,'确认上传'));t.close();
 });
 test('ambiguous photo card offers separate purposes without automatically opening or submitting',async()=>{
  let calls=0;const t=setup(async()=>{calls++;});t.w.WardrobeJourney.offer({upload_intent:'unspecified'},t.w.document.getElementById('feed'));
  assert.ok(byText(t.w,'上传衣物照片'));assert.ok(byText(t.w,'创建本人试穿形象'));
  assert.equal(t.w.document.querySelector('dialog').open,false);assert.equal(calls,0);
- byText(t.w,'上传衣物照片').click();assert.equal(calls,0);assert.ok(byText(t.w,'确认上传并抠图入柜'));t.close();
+ byText(t.w,'上传衣物照片').click();assert.equal(calls,0);assert.ok(byText(t.w,'确认上传'));t.close();
 });
 test('ordinary reply without upload invitation adds no card',()=>{
  const t=setup(async()=>{});t.w.WardrobeJourney.offer({upload_intent:null,upload_suggestion:false},t.w.document.getElementById('feed'));
@@ -280,7 +280,7 @@ test('avatar upload invitation is distinct from adding garments and requires a c
  let calls=0;const t=setup(async()=>{calls++;return galleryOverview;});
  t.w.WardrobeJourney.offer({avatar_intent:'upload'},t.w.document.getElementById('feed'));assert.equal(calls,0);
  assert.equal(t.w.document.querySelector('dialog').open,false);byText(t.w,'选择形象照片').click();await flush();
- assert.equal(calls,1);assert.ok(byText(t.w,'确认上传并检查照片'));assert.equal(t.w.document.querySelectorAll('.journey-card-steps li').length,3);t.close();
+ assert.equal(calls,1);assert.ok(byText(t.w,'确认上传'));assert.equal(t.w.document.querySelectorAll('.journey-card-steps li').length,3);t.close();
 });
 test('an unloaded gallery ignores late data after account change',async()=>{
  let done;const t=setup(()=>new Promise(resolve=>done=resolve));
@@ -388,4 +388,28 @@ test('each try-on confirm checks current funds before consuming the quote or sub
  await t.w.WardrobeJourney.tryon({conversation_id:'current',version:1,look_index:0});
  byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);
  allowed=true;byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,1);assert.deepEqual(checks,[[8,'tryon'],[8,'tryon']]);t.close();
+});
+
+for(const kind of ['person','garment','generation'])test(`${kind} media waits poll every two seconds read-only until terminal status`,async()=>{
+ let status='processing',reads=0;const calls=[],pending=new Map();let serial=0;
+ const action=()=>({action_id:'med_auto',kind,status,result:{}});
+ const t=setup(async(path,options)=>{calls.push([path,options]);if(path.endsWith('/media'))return [action()];if(path.endsWith('/images'))return [];reads++;return action();});
+ t.w.setTimeout=(fn,delay)=>{assert.equal(delay,2000);pending.set(++serial,fn);return serial;};t.w.clearTimeout=id=>pending.delete(id);
+ await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();
+ assert.equal(byText(t.w,'查看当前处理结果'),undefined);
+ for(let i=0;i<32;i++){assert.equal(pending.size,1);const [id,fn]=pending.entries().next().value;pending.delete(id);await fn();}
+ status='completed';const [id,fn]=pending.entries().next().value;pending.delete(id);await fn();
+ assert.equal(pending.size,0);assert.equal(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');assert.equal(reads,34);assert(calls.every(([,o])=>!o?.method||o.method==='GET'));t.close();
+});
+test('media unknown status retries transient read failures, then stops on failed status',async()=>{
+ let reads=0;const a={action_id:'med_retry',kind:'person',status:'unknown',result:{}};
+ const t=setup(async path=>{if(path.endsWith('/media'))return [a];if(path.endsWith('/images'))return [];if(++reads===2)throw Error('network');return reads>=3?{...a,status:'failed'}:a;});const tick=mockPolling(t.w);
+ await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();await tick();assert.equal(t.w.document.querySelectorAll('.journey-poll-note').length,1);await tick();assert.equal(t.w.document.querySelector('#journey-dialog').dataset.status,'failed');assert.equal(t.w.document.querySelectorAll('.journey-poll-note').length,0);assert.deepEqual(t.notices,[]);await assert.rejects(tick);t.close();
+});
+for(const transition of ['close','account','view'])test(`media polling discards a late response after ${transition}`,async()=>{
+ let reads=0,resolve;const a={action_id:'med_stale_poll',kind:'person',status:'processing',result:{}};
+ const t=setup(async path=>{if(path.endsWith('/media'))return [a];if(path.endsWith('/images'))return [];return ++reads===1?a:new Promise(done=>resolve=done);});const tick=mockPolling(t.w);
+ await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();const inflight=tick();await flush();
+ if(transition==='close')t.w.document.querySelector('#journey-dialog').close();else if(transition==='account')t.w.WardrobeJourney.setOwner('2');else t.w.WardrobeJourney.upload('person');
+ resolve({...a,status:'completed'});await inflight;assert.notEqual(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');await assert.rejects(tick);t.close();
 });

@@ -754,6 +754,22 @@ footer>#notice:empty{display:none}
 .forecast-single .weather-evidence{font-size:12px;line-height:1.8;margin-top:12px}
 @media(max-width:360px){.forecast-card.forecast-single{padding:12px}.forecast-single .weather-periods{gap:8px}.forecast-single .weather-periods>div{padding:10px}.forecast-single .weather-periods p{font-size:14px}}
 
+/* One-tap return to the latest message, sharing the existing composer row. */
+.clothing-source-options:has(#scroll-bottom){position:relative;width:100%;padding-right:44px}
+#scroll-bottom{position:absolute;right:0;top:-6px;display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;color:var(--ink);cursor:pointer;isolation:isolate}
+#scroll-bottom::before{content:"";position:absolute;inset:6px;border:1px solid var(--line);border-radius:50%;background:var(--paper);box-shadow:0 2px 6px #0000000c;z-index:-1}
+#scroll-bottom[hidden]{display:none}
+#scroll-bottom:hover::before{background:var(--soft)}
+#scroll-bottom:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:50%}
+/* Daily and multi-day cards share the same portrait/title spacing. */
+#weather-panel .forecast-card.compact .forecast-heading{min-height:64px;padding-bottom:0}
+#weather-panel .forecast-card.compact .forecast-days{margin-top:16px}
+#weather-panel .forecast-card.compact{padding:18px;overflow:hidden}
+#weather-panel .forecast-card.compact .forecast-heading>div:last-child{min-width:0}
+#weather-panel .forecast-card.compact .forecast-heading strong{font-size:15px;line-height:1.6}
+#weather-panel .forecast-card.compact .forecast-heading p{font-size:12px;line-height:1.6}
+@media(max-width:360px){#weather-panel .forecast-card.compact{padding:12px}}
+
 /* outfit-board.css */
 /* Clothing board: the same paper, soft accent and typography as the chat. */
 .outfit-composition{max-width:480px;margin:0 auto 22px;white-space:normal}
