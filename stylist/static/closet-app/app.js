@@ -5,6 +5,7 @@ import {emptyArt} from './empty-art.js';
 import { collectionPage } from './collection-pages.js';
 import { openIntegratedAgent, closeIntegratedAgent, mountAgent, placeIntegratedAgent } from './agent-integration.js';
 import { profilePage } from './profile-pages.js';
+import {pointsEarningPage} from './points-earning.js';
 import { albumCard, inspirationCard, observeWaterfall } from './cards.js';
 // App navigation is isolated from the existing Agent document and its state.
 const $ = id => document.getElementById(id);
@@ -150,7 +151,8 @@ function detail(title, content) { detailOpener = document.activeElement; setCrea
 function closeDetail() { $('detail-page').hidden = true; backgroundInert(false); document.querySelector('.floating-bar').inert = false; if (detailOpener?.isConnected) detailOpener.focus(); }
 function openImage(title, src, description) { const body = node('div', 'detail-body'); body.append(picture(src, title), node('h3', '', title)); if (description) body.append(node('p', '', description)); detail(title, body); }
 function showProducts(products, title = '衣橱单品') { const wrap = node('div'), search = node('input', 'search'), grid = node('div', 'product-grid'); search.type = 'search'; search.placeholder = '搜索当前列表'; search.setAttribute('aria-label', '搜索当前列表'); const render = () => { grid.replaceChildren(); products.filter(p => JSON.stringify([p.title, p.name, p.product_name, p.brand_name]).includes(search.value)).forEach(p => grid.append(productCard(p))); }; search.oninput = render; render(); wrap.append(search, grid); detail(title, wrap); }
-const details = { 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱小记', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
+window.addEventListener('yijian-points-earn-open',()=>openDetail('earn-points'));
+const details = { 'earn-points':'积分获取', 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱小记', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
 function openDetail(key) {
   const content = node('div', 'detail-body');
   if (key === 'settings') {
@@ -161,6 +163,7 @@ function openDetail(key) {
     groups.forEach(([label,rows])=>{const group=node('section','settings-group');group.append(node('h4','',label));const card=node('div','settings-card');rows.forEach(([title,description,action,icon])=>{if(action==='memory'&&document.documentElement.dataset.appDesign==='yijian')return;const row=button('',()=>openAgent(action),'settings-row');const mark=node('span','settings-icon');mark.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[icon]+'"/></svg>';const text=node('span','settings-row-copy');text.append(node('strong','',title),node('small','',description));row.append(mark,text,node('span','settings-chevron','›'));card.append(row);});group.append(card);content.append(group);});
     content.append(button('退出登录',()=>openAgent('logout'),'settings-logout'),node('p','settings-footnote','按自己的节奏，留下喜欢的设置。'));
   }
+  else if(key==='earn-points'){detail(details[key],pointsEarningPage({node,button,openAgent,openPurchase:group=>detail(details.membership,skuDetail({group})),readSession,signal:state.controller.signal}));return;}
   else if(['generation-records','my-outfits'].includes(key)){detail(details[key],collectionPage(key,{node,button,detail,openImage,openAgent,readSession,signal:state.controller.signal}));return;}
   else if (['contact','feedback','messages','orders'].includes(key)) { detail(details[key], profilePage(key,{node,button,detail,openAgent,readSession,signal:state.controller.signal})); return; }
   else if(key==='membership'&&document.documentElement.dataset.appDesign==='yijian'){detail(details[key],skuDetail());return;}
@@ -209,7 +212,7 @@ if(document.documentElement.dataset.appDesign==='yijian'){$('agent-back').textCo
 window.addEventListener('popstate', event => {
   closeDetail(); closeAgent(); selectTab(event.state?.tab || location.hash.slice(1).split('/')[0] || 'home', false);
   const record = event.state?.view === 'detail' && detailHistory.get(event.state.id);
-  if (record) { $('detail-title').textContent = record.title; $('detail-content').replaceChildren(record.content); $('detail-page').hidden = false; detailOpener = record.opener; backgroundInert(true); document.querySelector('.floating-bar').inert = true; ($('detail-content').querySelector('.sku-center-back') || $('detail-back')).focus(); }
+  if (record) { if(record.content.reopen)record.content=record.content.reopen();$('detail-title').textContent = record.title; $('detail-content').replaceChildren(record.content); $('detail-page').hidden = false; detailOpener = record.opener; backgroundInert(true); document.querySelector('.floating-bar').inert = true; ($('detail-content').querySelector('.sku-center-back') || $('detail-back')).focus(); }
   else if (event.state?.view === 'agent') { if(document.documentElement.dataset.appDesign==='yijian')placeIntegratedAgent(true); $('agent-page').hidden = false; backgroundInert(true); document.querySelector('.floating-bar').inert = true; }
 });
 window.addEventListener('storage', e => { if (e.key === KEY) syncAccount(); });

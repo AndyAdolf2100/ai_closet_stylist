@@ -102,6 +102,20 @@ def router(settings):
             pass
         return {"data": {**today, "days": recent["days"], "tips": recent.get("tips", ""), "daily_points": points}}
 
+    @routes.get("/milestones")
+    async def points_milestones(response: Response, authorization: str | None = Header(default=None)):
+        response.headers["Cache-Control"] = "no-store"
+        data = await fixed_request("GET", "/api/milestones", authorization)
+        valid = isinstance(data, dict) and type(data.get("current_item_count")) is int and data["current_item_count"] >= 0
+        tiers = data.get("tiers") if isinstance(data, dict) else None
+        if (not valid or not isinstance(tiers, list) or len(tiers) > 20 or any(
+                not isinstance(t, dict) or any(type(t.get(k)) is not int for k in ("level", "threshold", "reward"))
+                or t["level"] < 1 or t["threshold"] < 1 or t["reward"] < 0 or type(t.get("granted")) is not bool
+                for t in tiers) or len({t["level"] for t in tiers}) != len(tiers)):
+            raise StylistError("milestones_contract_error", "衣橱任务状态暂未确认，请稍后重试。", 502)
+        return {"data": {"current_item_count": data["current_item_count"],
+                         "tiers": sorted(tiers, key=lambda t: t["threshold"])}}
+
     @routes.post("/checkin")
     async def claim_checkin(response: Response, authorization: str | None = Header(default=None)):
         response.headers["Cache-Control"] = "no-store"

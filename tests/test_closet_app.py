@@ -275,3 +275,32 @@ def test_points_use_total_available_not_legacy_total(monkeypatch, value):
 def test_invalid_points_never_become_zero(monkeypatch,value):
     with client(monkeypatch,lambda r:httpx.Response(200,json={'code':0,'data':{'total_available':value}})) as web:
         assert web.get('/stylist-api/app/points',headers={'Authorization':'Bearer fixture'}).status_code==502
+
+
+def test_milestone_tasks_are_read_only_and_use_authoritative_config(monkeypatch):
+    seen = []
+    def handler(request):
+        seen.append((request.method, request.url.path))
+        return httpx.Response(200, json={'code': 0, 'data': {
+            'current_item_count': 12, 'tiers': [
+                {'level': 2, 'threshold': 20, 'reward': 80, 'granted': False},
+                {'level': 1, 'threshold': 10, 'reward': 30, 'granted': True}]}})
+    with client(monkeypatch, handler) as web:
+        assert web.get('/stylist-api/app/milestones').status_code == 401
+        response = web.get('/stylist-api/app/milestones', headers={'Authorization': 'Bearer fixture'})
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.json()['data']['current_item_count'] == 12
+    assert [t['reward'] for t in response.json()['data']['tiers']] == [30, 80]
+    assert seen == [('GET', '/api/milestones')]
+
+
+@pytest.mark.parametrize('data', [None, {'current_item_count': -1, 'tiers': []},
+    {'current_item_count': 1, 'tiers': [{'level': 1, 'threshold': 0, 'reward': 20, 'granted': False}]},
+    {'current_item_count': 1, 'tiers': [{'level': 1, 'threshold': 10, 'reward': 20, 'granted': 0}]},
+    {'current_item_count': 1, 'tiers': [{'level': 1, 'threshold': 10, 'reward': 20, 'granted': False}]*2}])
+def test_milestone_tasks_reject_unknown_or_invalid_rewards(monkeypatch, data):
+    def handler(request):
+        return httpx.Response(200, json={'code': 0, 'data': data})
+    with client(monkeypatch, handler) as web:
+        assert web.get('/stylist-api/app/milestones', headers={'Authorization': 'Bearer fixture'}).status_code == 502
