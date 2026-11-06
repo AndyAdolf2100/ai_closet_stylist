@@ -245,3 +245,15 @@ def outfit_feedback_receipt(persona_id, vote, can_reference=True):
         "female_sweet_v1": "找到一点心动啦。下次搭配，我会多看看这样的风格。",
         "female_regal_v1": "这份喜欢，值得留意。下次选款，我会多考虑这样的风格。",
     }.get(persona_id, "你喜欢就好。下次挑衣服，我会多照顾一点这样的风格。")
+
+
+def image_feature_pending(persona_id):
+    """Unsupported photo generation is a conversation boundary, never a paid action."""
+    return {
+        "female_sweet_v1": "这个新模样先留一点期待吧，自由合成照片的功能还没开放。这次没有生成图片。",
+        "female_warm_v1": "想要的画面可以先留着，自由合成照片的功能还没开放。这次没有生成图片。",
+        "female_regal_v1": "这个画面值得好好准备。自由合成照片暂未开放，这次没有生成图片，等它准备好再见。",
+        "male_artistic_v1": "这个画面先留在想象里吧。自由合成照片还没开放，这次没有生成图片。",
+        "male_calm_v1": "自由合成照片的功能暂未开放，这次没有生成图片。等功能准备好了，再试这个想法。",
+        "male_confident_v1": "这个想法先留着。自由合成照片暂未开放，这次没有生成图片，等准备好了再来。",
+    }.get(persona_id, "自由合成照片的功能暂未开放，这次没有生成图片。")

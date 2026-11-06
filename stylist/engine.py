@@ -43,6 +43,7 @@ from .new_clothes import invitation as new_clothes_invitation
 from .personas import (
     avatar_invitation,
     boundary_reply,
+    image_feature_pending,
     is_male_persona,
     itinerary_weather_message,
     persona_reply_focus,
@@ -242,6 +243,9 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            if plan.unsupported_image_request:
+                plan.clarification = image_feature_pending(request.assistant_persona)
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             if (explicit_new_clothes(request.message, plan.new_clothes_intent, plan.new_clothes_evidence)
                     and not plan.upload_intent and not plan.avatar_intent and not plan.technical_question):
                 plan.mode = plan.mode if plan.mode in {"modify", "weekly"} else "recommend"

@@ -79,6 +79,8 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    unsupported_image_request: bool = False
+    image_request_evidence: str = Field(default="", max_length=6000)
     new_clothes_intent: bool = False
     new_clothes_evidence: str = Field(default="", max_length=6000)
     avatar_intent: Literal["upload", "view", "tryon"] | None = None

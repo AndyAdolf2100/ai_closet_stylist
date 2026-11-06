@@ -135,6 +135,16 @@ async def interpret_task(llm, payload, state, message):
         if "我可以把鞋子和层次" in message and "走很多路" in message:
             previous = previous.model_copy(update={"mode": "recommend", "conversation_only": False,
                 "use_inventory": True, "weather_only": False, "weather_scope": "none", "clarification": None})
+        if previous.unsupported_image_request:
+            if previous.image_request_evidence.strip() and previous.image_request_evidence in message:
+                return previous.model_copy(update={"mode": "consult", "conversation_only": True,
+                    "use_inventory": False, "weather_scope": "none", "weather_only": False,
+                    "technical_question": False, "changes": {}, "new_task": False,
+                    "replace_slots": [], "memory_save": None, "memory_changes": {},
+                    "upload_intent": None, "avatar_intent": None,
+                    "clarification": None, "location_limit_exceeded": False}), state.task.model_copy(deep=True)
+            previous.unsupported_image_request = False
+            previous.image_request_evidence = ""
         if previous.avatar_declined:
             previous = previous.model_copy(update={"avatar_intent": None, "avatar_evidence": ""})
         if previous.avatar_intent:
