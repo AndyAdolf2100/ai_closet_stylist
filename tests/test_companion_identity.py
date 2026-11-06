@@ -24,15 +24,19 @@ def test_companion_profiles_are_account_scoped_and_survive_reopening(tmp_path):
     store.save_companion_profile("a", a)
     store.save_companion_profile("b", b)
     reopened = Store(path)
-    assert reopened.companion_profile("a") == a and reopened.companion_profile("b") == b
+    assert reopened.companion_profile("a") == a.model_copy(update={"user_name": "", "user_gender": None})
+    assert reopened.companion_profile("b") == b.model_copy(update={"user_name": "", "user_gender": None})
     reopened.save_companion_profile("a", a.model_copy(update={"agent_name": "小秋"}))
-    assert reopened.companion_profile("b") == b
+    assert reopened.companion_profile("b") == b.model_copy(update={"user_name": "", "user_gender": None})
 
 
 def test_profile_api_requires_identity_and_rejects_owner_spoofing(tmp_path, monkeypatch):
     async def identity(self):
         return self.authorization.removeprefix("Bearer ")
     monkeypatch.setattr("stylist.main.Upstream.identity", identity)
+    async def account(self):
+        return {"user_name": "小夏" if self.authorization == "Bearer a" else "", "user_gender": None}
+    monkeypatch.setattr("stylist.main.Upstream.account_identity", account)
     with TestClient(create_app(Settings(database=str(tmp_path / "state.db")))) as client:
         data = CompanionProfile(user_name="小夏", agent_name="知秋", color_scheme="system").model_dump()
         assert client.get("/stylist-api/companion-profile").status_code == 401
@@ -40,7 +44,7 @@ def test_profile_api_requires_identity_and_rejects_owner_spoofing(tmp_path, monk
         assert client.put("/stylist-api/companion-profile", json={**data, "owner_id": "b"}, headers={"Authorization": "Bearer a"}).status_code == 422
         assert client.put("/stylist-api/companion-profile", json=data, headers={"Authorization": "Bearer a"}).json()["profile"] == data
         assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer a"}).json()["profile"] == data
-        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer b"}).json() == {"profile": None}
+        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer b"}).json() == {"profile": None, "account": {"user_name": "", "user_gender": None}}
 
 
 @pytest.mark.parametrize("value", ["", "   ", "a" * 25, "<script>", "名字\n指令", "名字\u200b"])

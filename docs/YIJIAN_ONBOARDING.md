@@ -34,7 +34,7 @@
 
 用户明确本次讨论针对首次注册／登录。以下是结合源码的产品建议，不代表已修改引导、账号模型或接口。
 
-现状：iOS OnboardingStep 包含称呼、性别、年龄、城市、偏好，OnboardingAPIService 使用账号 guideStatus 恢复流程，性别独立走 sex_token；偏好有灵感图、偏好探索、直接聊聊入口。衣衣 CompanionProfile 有用户称呼／性别、助理昵称／六种人格、配色、相处方式、详略、风格与穿衣优先项。两个资料域尚不能视为自动互通；iOS 旧 Agent 的偏好探索也不等于当前 Stylist 已接入。当前 H5 手记原型仅为内存预览。
+现状：iOS OnboardingStep 包含称呼、性别、年龄、城市、偏好，OnboardingAPIService 使用账号 guideStatus 恢复流程，性别独立走 sex_token；偏好有灵感图、偏好探索、直接聊聊入口。衣衣 CompanionProfile 有用户称呼／性别、助理昵称／六种人格、配色、相处方式、详略、风格与穿衣优先项。用户昵称／性别现通过原账号API聚合，助理设置仍独立；iOS 旧 Agent 的偏好探索也不等于当前 Stylist 已接入。当前 H5 手记原型仅为内存预览。
 
 建议四个可操作步骤：①称呼与用户性别（已有资料预填，性别独立确认，不据此选择助理）；②陪伴角色与助理昵称（默认衣衣、保留默认角色，可跳过，配色为次级入口）；③少量穿衣喜好／禁穿条件（可跳过，常见场景可选，不用星座代替穿衣需求）；④按真实衣橱状态选择第一件事（已有衣物→请求搭配，无衣物→自愿添加一件，也可直接聊天／先看首页）。欢迎视觉并入第一步，结束页承担实际入口，不增加纯介绍页。
 
@@ -130,3 +130,25 @@ imagegen基于原图集生成preference-fashion-priorities-v3.png，仅后两项
 ## 用户性别参考图与女性追加偏好 2026-11-04
 
 心动穿搭与设置共用按用户本人性别的男／女摄影图集，替代原混合图；助理性别独立。男性显示原五项，女性只显示轻松舒适、显瘦遮肉、职业干练、温柔甜美、活力阳光五项及对应女装图，两组均最多三项。图片仅为偏好示意，不是衣橱库存或试穿。Agent派生标签适用性别，当轮明确对象优先。完整映射、提示词及模拟证据见[GENDER_FASHION_PREFERENCES.md](GENDER_FASHION_PREFERENCES.md)。
+
+
+## 2026-11-06：账号昵称与性别同源（本地已实现）
+
+用户要求以Server MySQL账号资料为权威：GET /api/user/info的nick_name与sex预填Onboarding，无昵称留空、未知性别不预选；不使用Stylist旧profile覆盖。实际表为user，userInfo为客户端／接口概念。助理昵称、角色、配色和偏好继续由Stylist维护。资料修改复用业务API，不直写旧库。
+
+iOS新用户性别步骤下一步调用POST /users/app/login/set/sex，token为登录返回sex_token，sex=1/2，成功获得账号响应后执行loginCompleteGetUserInfo；已登录修改走POST /api/user/update/sex。后者本地实现更新sex和model_id，可带style_ids更新风格，未见直接向量初始化；前者位于独立用户服务，本工作区未找到源码，向量初始化尚未证实，不可用后者替代。昵称可复用POST /api/user/onboarding/profile的onboarding_name字段，后端保存nick_name与name_guide_done。
+
+Stylist现已支持sex_token待完成登录态；前进、返回和跳过可选步骤只更新内存草稿，最后进入衣橱／聊天或保存进入才提交。新用户最后先调POST /stylist-api/auth/complete-gender（转发原set/sex），获得access_token后再调用PUT /stylist-api/companion-profile；若后续失败，保留正式登录态和草稿，重试不重复交换已消费的sex_token。最后一页选城也先保留草稿，成功后才保存本页城市选择；待完成登录的新用户可手动选城，不把sex_token当作Bearer调用定位。
+
+GET /stylist-api/companion-profile返回profile与account；没有助理设置时profile=null，account仍用于预填。profile中的用户昵称／性别每次由MySQL账号资料覆盖。PUT新增可选account_fields，仅显式列入user_name／user_gender的字段才写原业务API，避免保存配色／偏好时用旧快照覆盖新账号资料。保存后重读核对，不一致不报成功；跨服务不是原子事务，已成功的账号字段不会因另一步失败回滚，重试跳过已成功项。昵称和性别没有独立的前端分步提交。
+
+PostgreSQL stylist_companion_profiles.profile_json不再保存user_name／user_gender；运行时聚合及历史请求快照仍保留相应字段。助理昵称agent_name、具体角色、配色开关及偏好继续存Stylist。清理命令：python -m scripts.cleanup_companion_account_settings（仅统计），加--apply仅删除这两个JSON键，不改原MySQL账号和历史消息。本地已清理1条，复查0条遗留；没有执行远端清理。
+
+H5 color_scheme=companion保留旧枚举以兼容，现对应“随账号性别”，而不是随助理角色；用户选择system时保持系统黄。应用加载及回前台重新读取账号资料，用户性别变化更新H5配色和下次请求资料，助理形象／人格不变。未知性别只回退角色配色，不默认选中用户性别。已开始任务和重放使用原快照，不改旧消息。
+
+验证：全量1011项Python通过、85默认跳过；末轮83项定向通过（含新增账号保存回读不一致保护）；172项Node通过；8组浏览器场景覆盖390／1440px、账号预填、空资料不回退、步骤无写入、最终保存失败重试、sex_token只在最终消费、换号迟到响应、前台性别刷新及系统配色。所有业务接口均模拟，无真实账号写入、向量初始化或付费生图。截图与MD／HTML在reports/26-11-06/change-log/docs/。
+
+
+### 2026-11-06 功能复测
+
+本轮83项后端定向、172项前端、8组浏览器边界通过。新增tests/test_onboarding_http_functional.py与onboarding_http.browser.cjs：真实本地浏览器→Stylist HTTP→模拟Server HTTP→临时SQLite，15场景通过，包括页面验证码登录、最终统一提交、昵称成功／性别失败后的补偿重试、城市只在成功后保存、防重复点击、刷新恢复、旧偏好快照不覆盖账号资料、Server回读不匹配拒绝完成、凭证过期及前台主题同步。该套件默认跳过，需STYLIST_BROWSER_FUNCTIONAL=1和PLAYWRIGHT_MODULE显式运行；无真实账号写入、向量初始化或收费调用。本轮未发现业务缺陷，回归证据在reports/26-11-06/functional-regression/。

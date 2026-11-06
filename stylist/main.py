@@ -21,7 +21,7 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 
-from .auth import LoginRequest, login
+from .auth import GenderLoginRequest, LoginRequest, finish_gender_login, login
 from .composition import CompositionInput, Compositions
 from .config import Settings
 from .engine import Stylist
@@ -41,7 +41,14 @@ from .media import (
     UploadInput,
 )
 from .memory import MemoryBook, MemoryBookWrite
-from .models import ChatRequest, CompanionProfile, ForecastRequest, LocateRequest, Model
+from .models import (
+    ChatRequest,
+    CompanionProfile,
+    CompanionProfileWrite,
+    ForecastRequest,
+    LocateRequest,
+    Model,
+)
 from .personas import progress_message
 from .progress import events as progress_events
 from .runtime import RunManager
@@ -93,6 +100,8 @@ def create_app(settings=None):
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request, exc):
+        if request.url.path == "/stylist-api/auth/complete-gender":
+            return JSONResponse({"code": "invalid_gender_login", "message": "登录凭证或性别格式不正确，请重新登录。"}, status_code=422)
         # Never echo attached photo bytes in a validation response.
         if isinstance(exc.body, dict) and ("chat_image" in exc.body or request.url.path == "/stylist-api/app/avatar" or
                 isinstance(exc.body.get("request"), dict) and "chat_image" in exc.body["request"]):
@@ -171,6 +180,10 @@ def create_app(settings=None):
     async def mobile_login(request: LoginRequest):
         return await login(settings, request)
 
+    @app.post("/stylist-api/auth/complete-gender")
+    async def complete_gender(request: GenderLoginRequest):
+        return await finish_gender_login(settings, request)
+
     @app.post("/stylist-api/location/resolve")
     async def resolve_location(request: LocateRequest, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
@@ -181,13 +194,20 @@ def create_app(settings=None):
 
     @app.get("/stylist-api/companion-profile")
     async def companion_profile(authorization: str | None = Header(default=None)):
-        owner = await Upstream(settings, require_token(authorization)).identity()
+        upstream = Upstream(settings, require_token(authorization))
+        owner = await upstream.identity()
+        account = await upstream.account_identity()
         profile = await asyncio.to_thread(store.companion_profile, owner)
-        return {"profile": profile.model_dump(mode="json") if profile else None}
+        return {"profile": profile.model_copy(update=account).model_dump(mode="json") if profile else None,
+                "account": account}
 
     @app.put("/stylist-api/companion-profile")
-    async def save_companion_profile(profile: CompanionProfile, authorization: str | None = Header(default=None)):
-        owner = await Upstream(settings, require_token(authorization)).identity()
+    async def save_companion_profile(profile: CompanionProfileWrite, authorization: str | None = Header(default=None)):
+        upstream = Upstream(settings, require_token(authorization))
+        owner = await upstream.identity()
+        account = (await upstream.save_account_identity(profile, profile.account_fields) if profile.account_fields
+                   else await upstream.account_identity())
+        profile = CompanionProfile.model_validate(profile.model_dump(exclude={"account_fields"})).model_copy(update=account)
         await asyncio.to_thread(store.save_companion_profile, owner, profile)
         return {"profile": profile.model_dump(mode="json")}
 

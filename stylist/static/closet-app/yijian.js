@@ -151,7 +151,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     window.dispatchEvent(new CustomEvent('yijian-user-profile',{detail:{profile,ownerToken}}));
     account.setDisplayName(profile?.user_name);
     renderCompanion(profile);
-    applyPalette(profile?.color_scheme === 'system' ? 'system' : profile?.assistant_persona?.startsWith('female_') ? 'female' : 'male');
+    applyPalette(profile?.color_scheme === 'system' ? 'system' : profile?.user_gender==='女'?'female':profile?.user_gender==='男'?'male':profile?.assistant_persona?.startsWith('female_') ? 'female' : 'male');
   }
   let version=0;
   async function refreshCompanion() {
@@ -175,5 +175,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const layers = [$('create-overlay'), $('detail-page'), $('agent-page')];
   const modalObserver = new MutationObserver(() => { toolbar.inert = layers.some(layer => !layer.hidden); });
   layers.forEach(layer => modalObserver.observe(layer, {attributes:true, attributeFilter:['hidden']}));
+  window.addEventListener('focus',refreshCompanion);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCompanion();});
   refreshCompanion();
 }

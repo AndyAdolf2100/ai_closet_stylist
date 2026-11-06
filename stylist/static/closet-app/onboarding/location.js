@@ -1,5 +1,5 @@
 // Optional onboarding city selection. Coordinates stay in the resolver request only.
-export function mountLocation(root,{live,getToken,ownerToken}){
+export function mountLocation(root,{live,getToken,ownerToken,getAccessToken=getToken,getCity=()=>null,onSelect=()=>{}}){
  const make=(tag,text='')=>{const e=document.createElement(tag);e.textContent=text;return e;};
  const key='ai-closet-stylist-city-v1';let sequence=0,dialog=null,chosen=null,opener=null;
  const current=()=>root.isConnected&&(!live||getToken()===ownerToken);
@@ -11,7 +11,7 @@ export function mountLocation(root,{live,getToken,ownerToken}){
  const locate=make('button','开启定位');locate.className='onboarding-location-enable';locate.setAttribute('aria-label','开启定位');locate.setAttribute('aria-haspopup','dialog');
  for(const b of [locate]){b.type='button';actions.append(b)}
  root.append(title,copy,status,actions);
- if(live){try{const city=JSON.parse(sessionStorage.getItem(key)||'null');if(city?.city_name)status.textContent='已选择'+city.city_name+'，之后的穿搭会按需参考这里的天气。';}catch{}}
+ if(live){try{const city=getCity()||JSON.parse(sessionStorage.getItem(key)||'null');if(city?.city_name)status.textContent='已选择'+city.city_name+'，之后的穿搭会按需参考这里的天气。';}catch{}}
  const invalidate=()=>{sequence++;dialog?.close();dialog?.remove();dialog=null;};
  const observer=new MutationObserver(()=>{if(!current()){invalidate();observer.disconnect();window.removeEventListener('yijian-session-change',onSession);}});
  observer.observe(document.getElementById('screen'),{childList:true});
@@ -33,10 +33,11 @@ export function mountLocation(root,{live,getToken,ownerToken}){
    const response=await fetch('/static/china-cities.json');if(!response.ok)throw Error('城市列表暂时没能打开，可以稍后再试。');const catalog=await response.json();if(!alive())return;
    picker=new CityPicker(pickerRoot,{onChange:()=>{locationAttempt++;retry.disabled=false;chosen=picker.getValue();confirm.disabled=!chosen;}});picker.setCatalog(catalog);
   }catch(error){if(alive())hint.textContent=error.message;return;}
-  confirm.onclick=()=>{if(!alive()||!picker.getValue())return;const city=picker.getValue();if(live)sessionStorage.setItem(key,JSON.stringify(city));status.textContent=(live?'已选择':'预览已选择')+city.city_name+'，之后的穿搭会按需参考这里的天气。';dialog.close();};
+  confirm.onclick=()=>{if(!alive()||!picker.getValue())return;const city=picker.getValue();onSelect(city);status.textContent=(live?'已选择':'预览已选择')+city.city_name+'，之后的穿搭会按需参考这里的天气。';dialog.close();};
   async function locateCity(){
    if(!alive()||retry.disabled)return;
    if(!live){picker.setValue({city_name:'上海市',province_name:'上海市'});chosen=picker.getValue();confirm.disabled=!chosen;hint.textContent='预览示例：上海市。未申请定位，也不会保存城市。';return;}
+   if(!getAccessToken()){hint.textContent='新账号可先手动选城；完成引导后即可使用定位。';return;}
    if(!window.isSecureContext||!navigator.geolocation){hint.textContent='当前环境暂不支持定位，手动选择城市也可以。';return;}
    // Native iOS must request system location on this tap, then use the same WGS84 resolver.
    const attempt=++locationAttempt;const locating=()=>alive()&&attempt===locationAttempt;retry.disabled=true;hint.textContent='请允许访问位置；不想开启也可以手动选择城市。';

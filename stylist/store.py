@@ -74,14 +74,34 @@ class Store:
     def companion_profile(self, owner):
         with self.connection() as conn:
             row = conn.execute("SELECT profile_json FROM stylist_companion_profiles WHERE owner_id=?", (owner,)).fetchone()
-        return CompanionProfile.model_validate_json(row["profile_json"]) if row else None
+        if not row:
+            return None
+        data = json.loads(row["profile_json"])
+        for field in ("user_name", "user_gender"):
+            data.pop(field, None)
+        return CompanionProfile.model_validate(data)
 
     def save_companion_profile(self, owner, profile):
         with self.connection() as conn:
             conn.execute("INSERT INTO stylist_companion_profiles(owner_id,profile_json) VALUES(?,?) "
                          "ON CONFLICT(owner_id) DO UPDATE SET profile_json=excluded.profile_json,updated_at=CURRENT_TIMESTAMP",
-                         (owner, profile.model_dump_json()))
+                         (owner, json.dumps(profile.model_dump(mode="json", exclude={"user_name", "user_gender"}), ensure_ascii=False)))
         return profile
+
+    def remove_legacy_account_settings(self):
+        """Remove duplicate settings only; keep historical request/message snapshots."""
+        changed = 0
+        with self.connection() as conn:
+            for row in conn.execute("SELECT owner_id,profile_json FROM stylist_companion_profiles").fetchall():
+                data = json.loads(row["profile_json"])
+                if "user_name" not in data and "user_gender" not in data:
+                    continue
+                data.pop("user_name", None)
+                data.pop("user_gender", None)
+                conn.execute("UPDATE stylist_companion_profiles SET profile_json=? WHERE owner_id=?",
+                             (json.dumps(data, ensure_ascii=False), row["owner_id"]))
+                changed += 1
+        return changed
 
     def memory_book(self, owner):
         from .memory import decode_memory_book

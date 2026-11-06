@@ -273,6 +273,10 @@ class CompanionProfile(Model):
 
 
 
+class CompanionProfileWrite(CompanionProfile):
+    account_fields: list[Literal["user_name", "user_gender"]] = Field(default_factory=list, max_length=2)
+
+
 class ChatRequest(Model):
     chat_image: str | None = Field(default=None, max_length=13981039, repr=False)
 

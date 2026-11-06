@@ -63,6 +63,9 @@ def test_all_six_profiles_roundtrip_authenticated_api_without_touching_other_acc
     async def identity(self):
         return self.authorization.removeprefix("Bearer ")
     monkeypatch.setattr("stylist.main.Upstream.identity", identity)
+    async def account(self):
+        return {"user_name": "", "user_gender": "女" if self.authorization == "Bearer synthetic-a" else None}
+    monkeypatch.setattr("stylist.main.Upstream.account_identity", account)
     app = create_app(Settings(database=str(tmp_path / "six.db")))
     profile = CompanionProfile(agent_name="知秋", user_gender="女", assistant_persona=persona,
                                mbti="INTJ", style_preferences=["简约"], reply_detail="简洁重点")
@@ -72,7 +75,7 @@ def test_all_six_profiles_roundtrip_authenticated_api_without_touching_other_acc
         assert saved.status_code == 200
         assert saved.json()["profile"] == profile.model_dump()
         assert client.get("/stylist-api/companion-profile", headers=headers).json()["profile"] == profile.model_dump()
-        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer synthetic-b"}).json() == {"profile": None}
+        assert client.get("/stylist-api/companion-profile", headers={"Authorization": "Bearer synthetic-b"}).json() == {"profile": None, "account": {"user_name": "", "user_gender": None}}
         request = ChatRequest(message="只讲配色，不查衣橱和天气", request_id="six-profile", companion_profile=profile)
         assert request.assistant_persona == persona
         snapshot = request.model_dump(mode="json")

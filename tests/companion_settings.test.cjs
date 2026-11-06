@@ -25,7 +25,7 @@ test('four steps preserve drafts, save once, apply names and keep user/assistant
  $('companion-agent-name').value='知秋';$('companion-back').click();assert.equal($('companion-dialog').dataset.step,'1');submit();assert.equal($('companion-agent-name').value,'知秋');
  submit();assert.equal($('companion-dialog').dataset.step,'3');assert.equal(writes.length,0);
  choose(w,'male_calm_v1');submit();await tick();
- assert.equal(writes.length,1);assert.deepEqual(writes[0],profile());assert(!$('companion-dialog').open);
+ assert.equal(writes.length,1);assert.deepEqual(writes[0],{...profile(),account_fields:['user_name','user_gender']});assert(!$('companion-dialog').open);
  assert.equal(w.document.querySelector('[data-agent-name]').textContent,'知秋');assert.equal(w.document.documentElement.dataset.stylistGender,'male');
  assert(w.document.querySelector('[data-stylist-copy=intro]').textContent.includes('知秋'));
  const snapshot=w.CompanionSettings.getProfile();await w.CompanionSettings.open();$('companion-agent-name').value='另一个名字';w.document.querySelector('.companion-close').click();assert.equal(w.CompanionSettings.getProfile().agent_name,'知秋');assert.equal(snapshot.agent_name,'知秋');

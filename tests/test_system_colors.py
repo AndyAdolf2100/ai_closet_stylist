@@ -15,7 +15,7 @@ def test_color_profiles_survive_reopening_and_remain_account_scoped(tmp_path):
     store.save_companion_profile("color-a", a)
     store.save_companion_profile("color-b", CompanionProfile())
     reopened = Store(path)
-    assert reopened.companion_profile("color-a") == a
+    assert reopened.companion_profile("color-a") == a.model_copy(update={"user_name": "", "user_gender": None})
     assert reopened.companion_profile("color-b").color_scheme == "companion"
     assert reopened.companion_profile("unknown") is None
 

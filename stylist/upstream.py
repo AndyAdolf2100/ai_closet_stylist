@@ -73,7 +73,47 @@ class Upstream:
         owner = str(info.get("id", "")) if isinstance(info, dict) else ""
         if not owner.isdecimal() or int(owner) < 1:
             raise StylistError("identity_contract_error", "无法确认当前账号，请重新登录。", 401)
+        self.account_info = info
         return owner
+
+    async def account_identity(self):
+        """The existing account service owns nickname and clothing gender."""
+        info = getattr(self, "account_info", None)
+        if info is None:
+            info = await self.get("/api/user/info")
+        if not isinstance(info, dict) or (info.get("nick_name") is not None and not isinstance(info.get("nick_name"), str)):
+            raise StylistError("identity_contract_error", "账号资料格式异常，请稍后重试。", 502)
+        return {"user_name": (info.get("nick_name") or "").strip(),
+                "user_gender": {"1": "男", "2": "女"}.get(str(info.get("sex")))}
+
+    async def save_account_identity(self, profile, fields):
+        """Explicit saves only; never infer account writes from preference snapshots."""
+        current = await self.account_identity()
+        changes = []
+        if "user_name" in fields and profile.user_name != current["user_name"]:
+            if not profile.user_name:
+                raise StylistError("account_name_required", "请填写你的昵称。", 422)
+            changes.append(("/api/user/onboarding/profile", {"onboarding_name": profile.user_name}))
+        if "user_gender" in fields and profile.user_gender != current["user_gender"]:
+            if profile.user_gender not in {"男", "女"}:
+                raise StylistError("account_gender_required", "请选择你的性别。", 422)
+            changes.append(("/api/user/update/sex", {"sex": {"男": 1, "女": 2}[profile.user_gender]}))
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout, trust_env=False,
+                                         transport=self.transport) as client:
+                for path, body in changes:
+                    response = await client.post(self.settings.server_url + path, json=body,
+                        headers={"Authorization": self.authorization,
+                                 "version": self.settings.login_app_version, "device": "PC"})
+                    _business_payload(response)
+        except (httpx.HTTPError, ValueError) as exc:
+            raise StylistError("account_save_unknown", "账号资料保存尚未全部确认，请重试；已成功的资料会保留。", 502) from exc
+        # Authoritative reread also makes retries skip already successful writes.
+        self.account_info = await self.get("/api/user/info")
+        saved = await self.account_identity()
+        if any(saved[field] != getattr(profile, field) for field in fields):
+            raise StylistError("account_save_unconfirmed", "账号资料尚未确认保存，请保留当前填写并重试。", 502)
+        return saved
 
     @property
     def catalog_available(self):
