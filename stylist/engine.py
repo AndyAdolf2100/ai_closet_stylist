@@ -525,6 +525,7 @@ class Stylist:
                 "outfit_feedback_styles": feedback_styles,
                 "chat_image": request.chat_image,
                 "now": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
+                "selected_location": request.location.model_dump(mode="json") if request.location else None,
                 "assistant_persona": request.assistant_persona,
                 "companion_profile": request.companion_profile.dialogue_data(outfit_gender=task.gender) if request.companion_profile else None,
                 "dressing_priority_tags": request.companion_profile.dressing_priority_tags(outfit_gender=task.gender) if request.companion_profile else [],
