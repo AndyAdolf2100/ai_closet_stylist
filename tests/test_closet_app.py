@@ -304,3 +304,56 @@ def test_milestone_tasks_reject_unknown_or_invalid_rewards(monkeypatch, data):
         return httpx.Response(200, json={'code': 0, 'data': data})
     with client(monkeypatch, handler) as web:
         assert web.get('/stylist-api/app/milestones', headers={'Authorization': 'Bearer fixture'}).status_code == 502
+
+
+@pytest.mark.parametrize('section,path,data', [
+    ('member', '/api/vip_product/products', {'products': [{'product_id': 91, 'price': 23.4}]}),
+    ('points', '/api/booster/products', {'list': [{'id': 86, 'points_amount': 630, 'price': 27}]}),
+    ('benefits', '/api/vip_product/privileges/compare', {'benefit_table': {'columns': [], 'rows': []}}),
+    ('config', '/api/app_config/config_check', {'vip_tip': {'title': '运营配置'}, 'fitting_cost': 73}),
+])
+def test_purchase_catalog_uses_only_fixed_read_only_server_contract(monkeypatch, section, path, data):
+    seen = []
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={'code': 0, 'data': data})
+    with client(monkeypatch, handler) as web:
+        assert web.get('/stylist-api/app/purchase/'+section).status_code == 401
+        for token in ['catalog-a', 'catalog-b']:
+            result = web.get('/stylist-api/app/purchase/'+section, headers={'Authorization': 'Bearer '+token})
+            assert result.status_code == 200 and result.json() == {'data': data}
+            assert result.headers['cache-control'] == 'no-store'
+        assert web.post('/stylist-api/app/purchase/'+section, headers={'Authorization': 'Bearer catalog-a'}).status_code == 405
+        assert web.get('/stylist-api/app/purchase/unknown', headers={'Authorization': 'Bearer catalog-a'}).status_code == 404
+    assert [r.headers['authorization'] for r in seen] == ['Bearer catalog-a', 'Bearer catalog-b']
+    assert all(r.method == 'GET' and r.url.path == path and not r.url.query for r in seen)
+    assert all(r.headers['device']=='PC' for r in seen)
+
+
+@pytest.mark.parametrize('section,data', [('member', {}), ('points', {'list': {}}),
+                                         ('benefits', {'benefit_table': []})])
+def test_purchase_bad_contract_has_no_fixture_fallback(monkeypatch, section, data):
+    with client(monkeypatch, lambda req: httpx.Response(200, json={'code': 0, 'data': data})) as web:
+        result = web.get('/stylist-api/app/purchase/'+section, headers={'Authorization': 'Bearer fixture'})
+        assert result.status_code == 502 and 'data' not in result.json()
+
+
+def test_purchase_does_not_leak_unrelated_configuration(monkeypatch):
+    with client(monkeypatch, lambda req: httpx.Response(200, json={'code': 0, 'data': {
+            'vip_tip': {'title': '后台标题'}, 'unrelated': 'not-public-purchase-data'}})) as web:
+        assert web.get('/stylist-api/app/purchase/config', headers={'Authorization': 'Bearer fixture'}).json() == {
+            'data': {'vip_tip': {'title': '后台标题'}}}
+
+
+def test_purchase_agreements_use_configured_ios_web_paths(monkeypatch):
+    original = httpx.AsyncClient
+    monkeypatch.setattr('stylist.closet_app.httpx.AsyncClient', lambda **kw: original(
+        **kw, transport=httpx.MockTransport(lambda req: httpx.Response(200, json={'code': 0, 'data': {}}))))
+    app = FastAPI()
+    app.include_router(router(Settings(server_url='https://upstream.invalid',
+                                      purchase_web_url='https://contracts.invalid/app')))
+    with TestClient(app) as web:
+        data = web.get('/stylist-api/app/purchase/config', headers={'Authorization': 'Bearer fixture'}).json()['data']
+    assert data['agreements'] == {'member': 'https://contracts.invalid/app/membershipService',
+                                 'subscription': 'https://contracts.invalid/app/continuousSubscription',
+                                 'points': 'https://contracts.invalid/app/pointsPurchase'}

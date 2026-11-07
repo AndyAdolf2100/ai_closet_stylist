@@ -101,3 +101,5 @@ html[data-app-design=yijian] .detail-page:has(.sku-details){background:#fffcf5;c
 .sku-details button:focus-visible,.sku-details summary:focus-visible{outline:2px solid #956700;outline-offset:2px}
 @media(max-width:360px){.sku-center-header{padding-inline:8px}.sku-center-copy{padding:14px 0 0 14px}.sku-center-brand{margin-bottom:5px}.sku-center-subtitle{font-size:12px;max-width:140px}.sku-details .sku-product-name{font-size:13px}.sku-details .sku-term{font-size:12px}.sku-details .sku-dock{padding-inline:14px}.sku-details .sku-dock .sku-pay{min-width:132px;padding-inline:10px}}
 html[data-app-design=yijian] #detail-page:has(.sku-details)>.detail-header{display:none}
+/* The server may publish any number of benefit columns. */
+.sku-table-wrap{overflow-x:auto}.sku-benefits table{min-width:100%;width:max-content}.sku-benefits th,.sku-benefits td{min-width:80px;max-width:220px;overflow-wrap:anywhere}.sku-benefit-tooltip{display:block;font-size:12px;font-weight:400;line-height:1.6}.sku-data-state{white-space:normal;min-width:180px}.sku-dock[hidden]{display:none}.sku-benefits .sku-data-state{padding:12px}

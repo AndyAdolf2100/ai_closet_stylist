@@ -25,6 +25,26 @@ function twin(){open(`<p class="eyebrow">我的数字分身</p><h1 class="page-h
 function message(){open(`<div class="agent-byline"><img src="${photo()}" alt=""><span>衣衣</span></div><div class="payment-chat-note"><div class="payment-chat-title">这次的想法，先替你留着</div><div class="payment-chat-copy">${copy()}</div><div class="payment-chat-action"><span>示例积分 <b>0</b></span><button data-action="letter">补充积分 <span aria-hidden="true">↗</span></button></div></div>`);}
 function confirm(){open(sheetTop('购买确认 · 设计预览')+`<div class="sheet-body"><p class="letter-copy">这里将展示实际商品与系统购买确认。</p><p class="subcopy">当前预览未创建订单、未支付，也不会增加账号积分。</p><div class="page-actions"><button class="primary" data-action="demo-receipt">体验到账返回示例</button><button class="secondary" data-action="return-origin">取消，返回原操作</button></div></div>`);}
 
+ // Approved payment-wall composition; live data never falls back to fixture SKUs.
+ if(options.live){
+  const cat=options.catalog||{},entry=cat.points||{},products=entry.status==='ready'?entry.data:[];
+  const gap=Number.isFinite(options.pointsCost)&&Number.isFinite(options.availablePoints)?Math.max(0,options.pointsCost-options.availablePoints):null;
+  const eligible=gap===null?products:products.filter(p=>p.points>=gap);
+  const pack=gap===null?(eligible.find(p=>p.recommended)||eligible[0]):[...eligible].sort((a,b)=>a.price-b.price)[0];
+  const price=p=>escape(new Intl.NumberFormat('zh-CN',{style:'currency',currency:p.currency||'CNY'}).format(p.price));
+  const packCard=pack?`<button class="vip-pack" data-action="points"><span><small>${gap!==null?'覆盖本次积分缺口':'查看积分方案'}</small><b>${escape(pack.name)}</b><em>${pack.points} 积分</em></span><strong>${price(pack)} <i>›</i></strong></button>`:`<p class="fine" role="status">${entry.status==='error'?'积分方案暂未读到，请进入积分页重试。':entry.status==='ready'?'暂无适用的积分包，请查看当前可用方案。':'正在读取积分方案…'}</p>`;
+  const member=options.memberActive===true;
+  let result;
+  if(options.view==='message')result=`<div class="agent-byline"><img src="${photo()}" alt=""><span>衣衣</span></div><div class="payment-chat-note"><div class="payment-chat-title">这次的想法，先替你留着</div><div class="payment-chat-copy">${escape(copy())}</div><div class="payment-chat-action"><span>积分暂时不足</span><button data-action="letter">补充积分 ↗</button></div></div>`;
+  else if(options.view==='capacity'){
+   const info=cat.config?.data?.vip_tip,notes=Array.isArray(info?.desc_list)?info.desc_list:[];
+   result=`<div class="sheet-hero"><button class="close" data-action="close" aria-label="关闭会员面板">×</button><p>衣衣陪你，一起慢慢整理。</p><h2 id="sheet-title">${escape(info?.title||'爱搭衣橱会员')}</h2><img src="${photo()}" alt="衣衣"></div><div class="sheet-body"><div class="benefits">${notes.map(t=>`<div class="benefit"><span>✧</span><div>${escape(String(t).replace(/<[^>]*>/g,''))}</div></div>`).join('')}</div><p class="subcopy">衣橱已达到当前上限。积分包不能扩容；可增加的容量需以当前会员权益为准。</p><div class="sheet-actions"><button class="primary" data-action="member">查看会员方案</button><button class="tertiary" data-action="close">先留着，稍后再来</button></div></div>`;
+  }
+  else if(options.view==='letter')result=`<button class="close" data-action="close" aria-label="关闭来信">×</button><div class="letter-head"><img src="${photo()}" alt="衣衣"><div><small>衣衣给你的小笺</small><h2 id="sheet-title">想法先留在这里</h2></div></div><div class="sheet-body"><p class="letter-copy">${escape(copy())}</p>${balance(null)}${packCard}<button class="primary" data-action="points">补充积分</button><button class="tertiary" data-action="close">先留着，稍后再聊</button><p class="fine">原来的对话和输入仍保留，由你决定继续。</p></div>`;
+  else result=sheetTop(member?'这次还需要补充积分':'积分还差一点')+`<div class="sheet-body"><p class="subcopy">${scenes[scene][0]} · 这次的选择已保留</p>${member?'<div class="member-active"><span>✓</span><div><b>会员权益生效中</b><small>本次只需补充积分</small></div></div>':''}${balance()}${companion()}${packCard}<p class="plans-intro">积分可用于 Agent 对话、润色、数字分身及试穿。</p><div class="sheet-actions"><button class="primary" data-action="points">补充积分</button>${member?'':'<button class="secondary" data-action="member">查看会员权益</button>'}<button class="tertiary" data-action="close">先留着，稍后再来</button></div><p class="fine">返回原选择后重新确认费用，由你决定是否开始。</p></div>`;
+  return result.replaceAll('衣衣',escape(options.name||'衣衣'));
+ }
+
  const views={points:pointsSheet,letter,capacity:capacitySheet,purchase:purchaseRender,receipt:()=>receipt(returnState),vip:vipSheet,twin,message,confirm};
  if(!views[options.view])throw new Error('Unknown payment view: '+options.view);
  views[options.view]();

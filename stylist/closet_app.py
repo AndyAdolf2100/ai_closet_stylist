@@ -1,6 +1,7 @@
 """Fixed App presentation and explicit feedback boundary; separate from Agent tools."""
 import base64
 import binascii
+from urllib.parse import urlsplit
 
 import httpx
 from fastapi import APIRouter, Header, Query, Response
@@ -77,6 +78,31 @@ def router(settings):
                 return _business_payload(result)
         except (httpx.HTTPError, ValueError) as exc:
             raise StylistError("app_request_unconfirmed", "操作结果暂未确认，请稍后重试。", 502) from exc
+
+    @routes.get("/purchase/{section}")
+    async def purchase_catalog(section: str, response: Response, authorization: str | None = Header(default=None)):
+        # A fixed read-only boundary, not a general Server proxy. Eligibility stays on Server.
+        paths = {"member": "/api/vip_product/products",
+                 "benefits": "/api/vip_product/privileges/compare",
+                 "points": "/api/booster/products", "config": "/api/app_config/config_check"}
+        if section not in paths:
+            raise StylistError("purchase_section_missing", "没有这个商品分类。", 404)
+        response.headers["Cache-Control"] = "no-store"
+        data = await fixed_request("GET", paths[section], authorization)
+        key = {"member": "products", "points": "list", "benefits": "benefit_table"}.get(section)
+        expected = dict if section == "benefits" else list
+        if not isinstance(data, dict) or (key and not isinstance(data.get(key), expected)):
+            raise StylistError("purchase_contract_error", "商品资料格式异常，请重新读取。", 502)
+        if section == "config":
+            # Public purchase display fields only; do not expose unrelated app configuration.
+            data = {k: data[k] for k in ("vip_tip", "prettify_cost", "fitting_cost") if k in data}
+            origin = urlsplit(settings.purchase_web_url)
+            if origin.scheme == "https" and origin.netloc and not origin.username and not origin.password:
+                base = settings.purchase_web_url.rstrip("/")
+                data["agreements"] = {"member": base + "/membershipService",
+                                      "subscription": base + "/continuousSubscription",
+                                      "points": base + "/pointsPurchase"}
+        return {"data": data}
 
     @routes.get("/points")
     async def points_balance(response: Response, authorization: str | None = Header(default=None)):

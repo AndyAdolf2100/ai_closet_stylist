@@ -171,6 +171,11 @@ function openDetail(key) {
   else { content.append(picture(ASSETS + 'profile_outfit_empty.png')); content.lastChild.className = 'blank-art'; content.append(node('p', 'offline-note', `${details[key] || '此功能'}尚未接入当前 Web，请在 AI Closet App 中使用。`)); if (key === 'diy') content.append(button('让爱搭衣橱帮我搭配', () => openAgent('chat'))); }
   detail(details[key] || '详情', content);
 }
+document.addEventListener('yijian-purchase-request',e=>{
+  const options=e.detail||{},token=readSession()?.access_token;
+  if(!token||options.ownerToken!==token||!['member','points'].includes(options.group))return;
+  detail(details.membership,skuDetail({group:options.group,requiredPoints:options.requiredPoints}));
+});
 const agentActions = { login: 'login-open', history: 'mobile-history', upload: 'upload-open', twins: 'twin-open', records: 'journey-records-open', memory: 'memory-open', settings: 'companion-open', preferences: 'preferences-open', checkin: 'checkin-open', logout: 'logout' };
 let agentReady, agentOpener;
 async function openAgent(action = 'chat') {

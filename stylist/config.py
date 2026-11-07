@@ -31,6 +31,8 @@ class Settings:
     alerts_key: str = field(default="", repr=False)
     cors_origins: tuple[str, ...] = ("http://127.0.0.1:8465", "http://localhost:8465")
 
+    purchase_web_url: str = ""
+
     @classmethod
     def load(cls):
         local_path = Path(os.getenv("STYLIST_LOCAL_CONFIG", "config/local.yaml"))
@@ -51,6 +53,7 @@ class Settings:
         origin = urlsplit(mcp_url)
         server_url = os.getenv("STYLIST_SERVER_URL", f"{origin.scheme}://{origin.netloc}")
         return cls(
+            purchase_web_url=os.getenv("STYLIST_PURCHASE_WEB_URL", "").rstrip("/"),
             usage_callback_url=os.getenv("STYLIST_USAGE_CALLBACK_URL", ""),
             usage_environment=os.getenv("STYLIST_USAGE_ENVIRONMENT", "test"),
             catalog=CatalogConfig.load({**raw, **({"db_knowledge": local["db_knowledge"]} if "db_knowledge" in local else {})}),
