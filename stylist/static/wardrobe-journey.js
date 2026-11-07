@@ -219,7 +219,7 @@
     tile.className='journey-portrait';tile.dataset.twinKey=p.twin_key;tile.setAttribute('aria-label',name);tile.setAttribute('aria-pressed',String(selected===p.twin_key));
     const frame=el('span','journey-portrait-photo'),image=el('img'),src=imageURL(p.thumbnail_url||p.image_url);
     image.alt='';image.referrerPolicy='no-referrer';
-    const missing=()=>frame.replaceChildren(el('span','journey-portrait-missing','照片暂未载入'));
+    const missing=()=>{const placeholder=el('span','journey-portrait-missing','暂无图片');placeholder.setAttribute('aria-label','照片暂未载入');frame.replaceChildren(placeholder);};
     image.onerror=missing;if(src){image.src=src;frame.append(image);}else missing();
     const mark=el('span','journey-portrait-check','✓');mark.setAttribute('aria-hidden','true');
     const caption=el('span','journey-portrait-caption');caption.append(el('span','journey-portrait-name',name),el('span','journey-portrait-source',p.twin_key==='custom'?'我的专属形象':'预设试穿形象'));

@@ -29,12 +29,12 @@
     "wardrobe"
   ],
   "scene_captured_at": {
-    "home": "2026-11-06T04:39:51.295Z",
+    "home": "2026-11-07T06:29:11.229Z",
     "create": "2026-11-05T12:04:30.079Z",
     "upload": "2026-11-05T12:04:30.079Z",
     "upload-preview": "2026-11-05T12:04:30.079Z",
     "upload-completed": "2026-11-05T12:04:30.079Z",
-    "profile": "2026-11-06T04:39:51.295Z",
+    "profile": "2026-11-07T06:29:11.229Z",
     "memory": "2026-11-05T12:04:30.079Z",
     "memory-edit": "2026-11-05T12:04:30.079Z",
     "twins-empty": "2026-11-05T12:04:30.079Z",
@@ -45,17 +45,17 @@
     "generation-processing": "2026-11-05T12:04:30.079Z",
     "generation-result": "2026-11-05T12:04:30.079Z",
     "twins-ready": "2026-11-05T12:04:30.079Z",
-    "chat": "2026-11-05T12:04:30.079Z",
-    "chat-outfit": "2026-11-05T12:04:30.079Z",
+    "chat": "2026-11-07T06:26:14.012Z",
+    "chat-outfit": "2026-11-07T06:26:14.012Z",
     "tryon-select": "2026-11-05T12:04:30.079Z",
-    "tryon-quote": "2026-11-05T12:04:30.079Z",
+    "tryon-quote": "2026-11-07T06:26:14.012Z",
     "tryon-processing": "2026-11-05T12:04:30.079Z",
     "tryon-result": "2026-11-05T12:04:30.079Z",
     "records": "2026-11-05T12:04:30.079Z",
-    "wardrobe": "2026-11-06T04:39:51.295Z"
+    "wardrobe": "2026-11-07T06:29:11.229Z"
   },
   "last_partial_refresh": {
-    "captured_at": "2026-11-06T04:39:51.295Z",
+    "captured_at": "2026-11-07T06:29:11.229Z",
     "source": "http://127.0.0.1:8466/app/?design=yijian",
     "scenes": [
       "home",

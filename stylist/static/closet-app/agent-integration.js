@@ -11,7 +11,7 @@ export function mountAgent(){
   ready=(async()=>{
     const host=document.createElement('div');host.id='yijian-agent-root';host.style.display='none';
     const response=await fetch('/static/closet-app/agent-fragment.html');if(!response.ok)throw Error('页面暂时没能加载，请重试。');
-    host.innerHTML=await response.text();document.getElementById('agent-frame')?.remove();document.body.append(host);host.dataset.surface='overlay';
+    host.innerHTML=await response.text();host.querySelector('main>footer>.fine-print')?.remove();document.getElementById('agent-frame')?.remove();document.body.append(host);host.dataset.surface='overlay';
     const scoped=document.createElement('link');scoped.rel='stylesheet';scoped.href='/static/closet-app/agent-scoped.css?v=weather-system-v8';document.head.append(scoped);
     await new Promise((resolve,reject)=>{scoped.onload=resolve;scoped.onerror=reject;});
     const theme=document.createElement('link');theme.rel='stylesheet';theme.href='/static/closet-app/agent-yijian.css';document.head.append(theme);await new Promise((resolve,reject)=>{theme.onload=resolve;theme.onerror=reject;});
@@ -25,9 +25,14 @@ export function mountAgent(){
     const cityBar=document.createElement('div');cityBar.className='y-agent-city';
     const cityButton=document.createElement('button');cityButton.type='button';cityButton.className='y-agent-city-button';cityButton.setAttribute('aria-haspopup','dialog');cityButton.setAttribute('aria-controls','location-dialog');
     cityButton.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span></span>';
-    cityBar.append(cityButton);document.querySelector('#agent-page>header').after(cityBar);
+    const header=document.querySelector('#agent-page>header');
+    const heading=document.createElement('div');heading.className='y-agent-heading';
+    const cityCaption=document.createElement('span');cityCaption.className='y-agent-city-caption';cityCaption.hidden=true;
+    heading.append(header.querySelector(':scope>span'),cityCaption);header.append(heading);
+    const headerActions=document.createElement('div');headerActions.className='y-agent-header-actions';
+    cityBar.append(cityButton);headerActions.append(cityBar,header.querySelector('#agent-account'));header.append(headerActions);
     const citySource=host.querySelector('#location-open');let locating=false;
-    const syncCity=()=>{const text=citySource.textContent.replace(/^⌖\s*/, '');const name=text.includes('选择城市')?'定位城市':text;for(const button of [cityButton,document.querySelector('.y-home-city-button')].filter(Boolean)){button.querySelector('span').textContent=locating?'正在定位…':name;button.disabled=locating||citySource.disabled;button.setAttribute('aria-label',name+'，点击定位，可手动选择城市');}};
+    const syncCity=()=>{const text=citySource.textContent.replace(/^⌖\s*/, '');const hasCity=!!text.trim()&&!text.includes('选择城市');const name=hasCity?text:'定位城市';cityButton.dataset.hasCity=String(hasCity);cityCaption.textContent=hasCity?text:'';cityCaption.title=hasCity?text:'';cityCaption.hidden=!hasCity;for(const button of [cityButton,document.querySelector('.y-home-city-button')].filter(Boolean)){button.querySelector('span').textContent=locating?'正在定位…':name;button.disabled=locating||citySource.disabled;button.setAttribute('aria-label',name+'，点击定位，可手动选择城市');button.title=locating?'正在定位…':name;}};
     new MutationObserver(syncCity).observe(citySource,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled']});syncCity();
     // 原生迁移要求：点击这里必须调用系统定位；不是只打开选城列表。
     // Native iOS parity contract: this entry must trigger CLLocationManager location
@@ -85,6 +90,8 @@ export function mountAgent(){
     attachment.before(voice);
     const {mountChatAttachments}=await import('./chat-attachments.js');
     mountChatAttachments(host, attachment);
+    const {mountCompactComposer}=await import('./compact-composer.js');
+    mountCompactComposer(host,voice,attachment);
 
 
     // Keep the existing authenticated submit handler while giving login its own two steps.

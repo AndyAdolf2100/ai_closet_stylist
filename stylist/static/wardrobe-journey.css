@@ -327,3 +327,6 @@
 .journey-skin-note-label{display:block;font-size:14px;margin:0 0 8px}.journey-skin-sheet textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;min-height:100px;padding:12px;margin:0;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:16px/1.6 -apple-system,sans-serif;resize:none}
 .journey-skin-actions{padding:10px 20px max(14px,env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--line);background:var(--paper)}.journey-skin-actions p{font-size:12px;margin:0 0 8px;line-height:1.5}.journey-skin-actions button{width:100%;min-height:48px;font-size:16px;border-radius:14px}
 @media(min-width:761px){.journey-skin-sheet{top:calc(var(--skin-visible-top,0px) + (var(--skin-visible-height,100dvh) - min(620px,var(--skin-visible-height,100dvh)))/2);border-radius:22px}}
+
+/* Keep the missing-photo label legible inside compact portrait tiles. */
+.journey-portrait .journey-portrait-missing{padding:2px;white-space:nowrap;font-size:10px;letter-spacing:0}

@@ -44,7 +44,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const hero = make('section','y-welcome'); hero.setAttribute('aria-label','爱搭衣橱日常');
   const copy=make('div','y-welcome-copy'); copy.append(make('span','y-eyebrow','A LITTLE MOMENT WITH YOU'),make('h1','','今天，穿得像自己。'),make('p','','今天的心情，想用哪件衣服表达？'));
   const heading = copy.querySelector('h1'); heading.replaceChildren(make('span','','今天，'),make('span','','穿得像自己。'));
-  const talk=make('button','y-talk','和衣衣聊聊'); talk.append(icon('arrow')); talk.onclick=()=>forward('chat'); copy.append(talk);
+  const talk=make('button','y-talk','聊聊穿搭'); talk.append(icon('arrow')); talk.onclick=()=>forward('chat'); copy.append(talk);
   const portrait=make('div','y-portrait'); const avatar=make('div','y-companion-photo'); avatar.setAttribute('role','img'); const scene=make('span','y-companion-scene'); avatar.append(scene); const caption=make('span','y-portrait-caption','衣衣 · 陪你慢慢挑'); portrait.append(avatar,caption);
   const invitation=make('div','y-daily-invitation');invitation.append(make('span','y-daily-mark','✧'),make('p','','不急着决定，先说说今天想怎么过。'));const daily=make('button','y-home-checkin','每日签到');daily.type='button';daily.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'checkin'}));invitation.append(daily);hero.append(copy,portrait,invitation); $('home').prepend(hero);const homeWeatherNote=mountHomeWeatherNote(invitation.querySelector('p'));
   // Read-only homepage status; claiming still requires the check-in dialog.
@@ -144,7 +144,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
     letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];
     letterPhoto.src=`/static/closet-app/assets/care-portraits/${persona}-closeup.png`; letterPhoto.alt=`${name}，你的搭配助理`; letterBy.textContent=`${name}的日常小笺`;
-    avatar.setAttribute('aria-label',`${name}，日常搭配助理`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent=`和${name}聊聊`;
+    avatar.setAttribute('aria-label',`${name}，日常搭配助理`); caption.textContent=`${name} · 陪你慢慢挑`; talk.firstChild.textContent='聊聊穿搭';
   }
   function applySavedProfile(profile) {
     let ownerToken='';try{ownerToken=JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token||'';}catch{}
