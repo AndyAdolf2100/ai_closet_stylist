@@ -245,3 +245,10 @@ html[data-app-design=yijian] #agent-page>header .y-agent-heading>span{display:bl
 html[data-app-design=yijian] #agent-page>header .y-agent-heading>span:first-child{font:500 17px/1.4 -apple-system,'PingFang SC',sans-serif;color:var(--y-ink)}
 html[data-app-design=yijian] #agent-page>header .y-agent-city-caption{font:12px/16px -apple-system,'PingFang SC',sans-serif;color:var(--y-muted)}
 html[data-app-design=yijian] #agent-page>header .y-agent-city-caption[hidden]{display:none}
+
+/* Original iOS send / stop artwork, with a 44px hit area. */
+#yijian-agent-root #chat-form.y-compact-composer #send{background:transparent;border:0;box-shadow:none;display:grid;place-items:center}
+#yijian-agent-root #chat-form.y-compact-composer #send img{display:block;width:34px;height:34px;object-fit:contain}
+#yijian-agent-root #chat-form.y-compact-composer[data-has-draft=false] #send{display:none}
+#yijian-agent-root #chat-form.y-compact-composer #send:disabled{opacity:.45;cursor:default}
+#yijian-agent-root .reply-stopped{display:block;margin-top:8px;font-size:11px;color:var(--y-muted)}

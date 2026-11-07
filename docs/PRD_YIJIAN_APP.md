@@ -368,3 +368,5 @@ companion配色跟随assistant_persona的助理性别（男灰蓝／女暖白绿
 - 2026-11-07 Agent埋点只用eventName（本地已实现）：用户取消内部键概念；代码注册、调用、日志、文档与每事件参数示例全部直接使用PageView／ClickAgentBtn／AgentResult等eventName，不再维护agent_*映射或event_key。唯一公开记录接口为AgentTracking.track(eventName,properties)；event_id同步为eventName＋本页编号，如AgentSendBlocked_000005。旧别名不再接收，11默认＋3调试、业务字段与触发范围保持。三主题×三视口9组模拟通过，静态文档及PRD同步，iOS不变。
 
 - 2026-11-07 iOS埋点交付说明：用户确认iOS尚在开发，具体代码接入点由iOS同学结合当前实现自行定位；文档以eventName、properties字段类型／单位／枚举、触发与去重为合同，H5截图及选择器只供理解。已完成能力先接，未完成交互不伪造事件；原生SDK接收和入库另验。不以缺少具体方法行号阻挡交付，未修改iOS。
+
+- 2026-11-07 H5 Agent发送箭头与停止（本地已实现）：App输入条原样使用iOS dev_2.0.0发送／停止图标，有内容时发送箭头，运行中切为可点击停止；取消中禁用，结束后恢复。独立Agent复用停止能力。停止中断当前流与渐显，保留草稿／附件及已显示正文（标注未完成），清除待恢复请求，不自动重连或派发迟到结果。新增带身份POST /stylist-api/chat/stop，以同一凭证＋完整原请求匹配当前进程任务，取消及释放；短期停止标记处理鉴权尚未完成的竞态。普通断线仍维持原任务恢复。停止请求未确认或任务已完成时不声称远端已撤销，已完成记录仍以历史为准。点击停止记ClickAgentBtn/stop_generation，结束记AgentAbandon/reason=user_stop，默认业务事件数不增加。19项后端、9组原埋点、三主题×三视口9组停止模拟通过，覆盖纯等待／正文中／积分预检等待停止、重复防护、保留输入与无自动重启；本地8466已重载，取消入口无身份401。iOS不变，无真实模型或扣费。

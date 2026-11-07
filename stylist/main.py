@@ -247,6 +247,11 @@ def create_app(settings=None):
     async def approve(body: PlanDecision, authorization: str | None = Header(default=None)):
         return await runs.run(engine, Upstream(settings, require_token(authorization)), body.request, body.approved)
 
+    @app.post("/stylist-api/chat/stop")
+    async def stop_chat(request: ChatRequest, authorization: str | None = Header(default=None)):
+        # Exact authenticated request only. Disconnects alone still do not cancel work.
+        return await runs.stop(Upstream(settings, require_token(authorization)), request)
+
     @app.get("/stylist-api/runs/{request_id}")
     async def run_status(request_id: str, authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))

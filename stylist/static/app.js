@@ -4,7 +4,7 @@ const agentName = () => window.CompanionSettings?.agentName() || '衣衣';
 const agentText = text => text.replaceAll('衣衣', agentName());
 const KEY = 'ai-closet-stylist-session-v1';
 let session = null, conversation = null, version = 0, busy = false;
-let selectedLook = null;
+let selectedLook = null, activeChatRun = null;
 let outfitGroupSequence = 0;
 let selectedCity = null, forecastScope = 'day', forecastBusy = false, forecastSequence = 0;
 const CITY_KEY = 'ai-closet-stylist-city-v1';
@@ -299,7 +299,7 @@ function revealReplyText(text, pendingNode) {
     if(count===chars.length&&(reduce||now-start>=duration+240))finish();else frame=requestAnimationFrame(tick);
   }
   frame=requestAnimationFrame(tick);
-  return {node,done,finish,remove(){finish();node.remove();}};
+  return {node,done,finish,cancel(){if(finished)return;finished=true;if(frame!==null)cancelAnimationFrame(frame);resolve();},remove(){finish();node.remove();}};
 }
 function namedElement(tag, cls, template) {
   const node = el(tag, cls, agentText(template)); node.dataset.agentTemplate = template; return node;
@@ -576,12 +576,29 @@ function completeReplyAtReadingPosition(reply,request,preview,pending) {
   feed.scrollTop=readingTop;
   markNewContent();
 }
+function stopChatGeneration() {
+  const run=activeChatRun;
+  if(!run||run.cancelled||run.completed)return;
+  run.cancelled=true;run.resolveCancel?.(false);run.controller.abort();run.preview?.cancel();setBusy(true);
+  if(session?.access_token!==run.token)return;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);
+  run.stopPromise=fetch('/stylist-api/chat/stop',{method:'POST',headers:run.headers,body:JSON.stringify(run.request),signal:controller.signal})
+    .then(async response=>{if(!response.ok)throw Error('stop_unconfirmed');return response.json();})
+    .then(()=>{if(session?.access_token===run.token)notifyIssue('已停止接收本次回复，输入已保留。已完成的内容可在聊过的日常查看。');})
+    .catch(()=>{if(session?.access_token===run.token)notifyIssue('已停止接收本次回复，后台停止暂未确认。可稍后查看聊过的日常。');})
+    .finally(()=>clearTimeout(timeout));
+}
 function setBusy(value) {
   busy = value;
   window.ChatAttachments?.setBusy(value);
   for (const id of ['personal-clothes', 'new-clothes']) if ($(id)) $(id).disabled = value;
-  $('send').disabled = value;
-  $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = value ? '整理中…' : '发送';
+  const running=value&&activeChatRun&&!activeChatRun.completed;
+  const canStop=running&&!activeChatRun.cancelled;
+  $('send').disabled = value&&!canStop;
+  $('send').dataset.state=running?(canStop?'stop':'stopping'):'send';
+  $('send').setAttribute('aria-label',canStop?'停止生成':running?'正在停止':'发送');
+  $('send').setAttribute('aria-busy',String(value));
+  $('new-chat').disabled = value; $('mobile-new').disabled = value; $('send').textContent = canStop?'停止生成':running?'正在停止':'发送';
   $('mobile-history').disabled = value; $('history-refresh').disabled = value;
   $('logout').disabled = value; $('login-open').disabled = value;
   $('location-open').disabled = value; $('companion-open').disabled = value; $('preferences-open').disabled = value;
@@ -672,6 +689,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   if(request.chat_image){const image=document.createElement('img');image.src=request.chat_image;image.alt='本轮图片附件';image.style.cssText='display:block;max-width:180px;max-height:180px;object-fit:contain;border-radius:12px;margin-top:8px';userBubble.append(image);}
   const pending = pendingBubble(request.assistant_persona);
   let textPreview=null,replyCommitted=false;
+  const run={request,token:session.access_token,headers:headers(),controller:new AbortController(),cancelled:false,preview:null,stopPromise:null};activeChatRun=run;run.cancelWait=new Promise(resolve=>run.resolveCancel=resolve);
   const trackingStart=performance.now(),trackingAttempt=window.AgentTracking?.begin({text_length:Array.from(text).length,has_image:!!request.chat_image,new_clothes:!!request.new_clothes,resuming:!!saved});
   let trackingOutcome=false,trackingFirstText=false,trackingRetries=0;const trackingStages=new Set();
   const track=(event,params={})=>window.AgentTracking?.track(event,{attempt:trackingAttempt,...params});
@@ -681,17 +699,19 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     let received = false;
     while (!received) {
       try {
-        if(window.AppPayment&&!await window.AppPayment.checkFunds(null,'agent')){trackingOutcome=true;track('AgentSendBlocked');savePending(null);return;}
-        if(session?.user.id!==chatOwner)return;
+        const fundsOk=!window.AppPayment||await Promise.race([window.AppPayment.checkFunds(null,'agent',()=>!run.cancelled&&session?.access_token===run.token),run.cancelWait]);
+        if(run.cancelled)return;
+        if(!fundsOk){trackingOutcome=true;track('AgentSendBlocked');savePending(null);return;}
+        if(run.cancelled||session?.user.id!==chatOwner)return;
         track('AgentRequest',{retry_count:trackingRetries});
-        const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
-        if (session?.user.id !== chatOwner) return;
+        const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request),signal:run.controller.signal });
+        if (run.cancelled||session?.user.id !== chatOwner) return;
         if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
         const reader = response.body.getReader(), decoder = new TextDecoder(); let buffer = '';
         try {
           while (!received) {
             const { value, done } = await reader.read();
-            if (session?.user.id !== chatOwner) return;
+            if (run.cancelled||session?.user.id !== chatOwner) return;
             buffer += decoder.decode(value, { stream: !done });
             let cut;
             while ((cut = buffer.indexOf('\n\n')) >= 0) {
@@ -702,7 +722,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
               if (kind === 'progress') {
                 const progress = JSON.parse(raw);
                 if(!trackingStages.has(progress.stage)){trackingStages.add(progress.stage);if(progress.stage!=='reply_text')track('AgentStage',{stage:progress.stage});}
-                if(progress.stage==='reply_text'){if(!textPreview&&progress.message){trackFirstText();textPreview=revealReplyText(progress.message,pending.node);}}
+                if(progress.stage==='reply_text'){if(!textPreview&&progress.message){trackFirstText();textPreview=revealReplyText(progress.message,pending.node);run.preview=textPreview;}}
                 else if (progress.stage === 'new_clothes') {
                   setNewClothes(true);
                   if (!newClothesNotices.has(request.request_id)) { notifyIssue(progress.message); newClothesNotices.add(request.request_id); }
@@ -710,10 +730,10 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
               }
               if (kind === 'result') {
                 const reply = JSON.parse(raw);
-                if(!textPreview&&reply.message){trackFirstText();textPreview=revealReplyText(reply.message,pending.node);}
+                if(!textPreview&&reply.message){trackFirstText();textPreview=revealReplyText(reply.message,pending.node);run.preview=textPreview;}
                 if(textPreview)await textPreview.done;
-                if(session?.user.id!==chatOwner)return;
-                completeReplyAtReadingPosition(reply,request,textPreview?.node,pending);replyCommitted=true;received=true;trackingOutcome=true;track('AgentResult',{elapsed_ms:performance.now()-trackingStart,delivery:reply.delivery,look_count:reply.looks?.length||0,retry_count:trackingRetries});
+                if(run.cancelled||session?.user.id!==chatOwner)return;
+                completeReplyAtReadingPosition(reply,request,textPreview?.node,pending);replyCommitted=true;received=true;run.completed=true;setBusy(true);trackingOutcome=true;track('AgentResult',{elapsed_ms:performance.now()-trackingStart,delivery:reply.delivery,look_count:reply.looks?.length||0,retry_count:trackingRetries});
                 if (reply.pending_confirmation) showPlanApproval(request);
                 else { savePending(null); dailyCheckin.completeChat(chatOwner); }
               }
@@ -723,6 +743,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
         } finally { await reader.cancel().catch(() => {}); }
         if (!received) throw new TypeError('stream_disconnected');
       } catch (err) {
+        if(run.cancelled)break;
         if (!(err instanceof TypeError) && !['request_in_progress', 'server_draining'].includes(err.code)) throw err;
         if (!session || session.user.id !== pendingRun?.owner) throw error('authentication_expired', '请重新登录后继续原任务。');
         trackingRetries++;track('AgentReconnect',{retry_count:trackingRetries});
@@ -730,18 +751,19 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
         await new Promise(resolve => setTimeout(resolve, 2500));
       }
     }
+    if(run.cancelled)return;
     if (!cityAction && !explorationAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
     if(request.chat_image) window.ChatAttachments?.ack(request.chat_image);
     await refreshHistory();
   } catch (err) {
-    if(!replyCommitted){trackingOutcome=true;track('AgentError',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries,error_kind:err.code==='authentication_expired'?'auth':err instanceof TypeError?'network':err.code==='model_output_invalid'?'model':'other'});}
+    if(!run.cancelled&&!replyCommitted){trackingOutcome=true;track('AgentError',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries,error_kind:err.code==='authentication_expired'?'auth':err instanceof TypeError?'network':err.code==='model_output_invalid'?'model':'other'});}
     if (session?.user.id !== chatOwner) return;
     if (err.code !== 'authentication_expired') savePending(null);
     pending.stop();
     if (!err.paymentHandled) err.paymentHandled=globalThis.AppPayment?.handleError(err)===true;
     if (!err.paymentHandled && err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
     if (err.code === 'authentication_expired') expireSession(err.message);
-  } finally { if(!trackingOutcome)track('AgentAbandon',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries});window.AgentTracking?.end(trackingAttempt);pending.stop();if(!replyCommitted)textPreview?.remove(); if (!session || session.user.id === chatOwner) setBusy(false); }
+  } finally { if(!trackingOutcome)track('AgentAbandon',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries,reason:run.cancelled?'user_stop':'context_changed'});window.AgentTracking?.end(trackingAttempt);pending.stop();if(!replyCommitted){if(run.cancelled&&textPreview){textPreview.cancel();textPreview.node.classList.remove('reply-preview');textPreview.node.append(el('small','reply-stopped','已停止 · 此段未完成'));}else textPreview?.remove();}if(run.cancelled&&session?.access_token===run.token)savePending(null);if(run.stopPromise)await run.stopPromise;if(activeChatRun===run)activeChatRun=null; if (!session || session.user.id === chatOwner) setBusy(false); }
 }
 function showPlanApproval(request) {
   // Compatibility for requests already waiting before the composer option was removed.
@@ -764,7 +786,7 @@ function showPlanApproval(request) {
   }
   feed.append(actions); scrollBottom(false);
 }
-$('chat-form').onsubmit = event => { event.preventDefault(); sendMessage(); };
+$('chat-form').onsubmit = event => { event.preventDefault();if(busy&&activeChatRun)stopChatGeneration();else sendMessage(); };
 $('message').onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendMessage(); } };
 for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { $('message').value = button.dataset.prompt; $('message').focus(); };
 function resetChat() {

@@ -18,7 +18,10 @@ export function mountCompactComposer(host, voice, attachment) {
   form.classList.add('y-compact-composer');
   function sync(){
     const hasText=!!input.value.trim(),hasPhoto=!!window.ChatAttachments?.get();
-    form.dataset.hasDraft=String(hasText||hasPhoto||send.disabled);
+    form.dataset.hasDraft=String(hasText||hasPhoto||send.disabled||send.dataset.state==='stop'||send.dataset.state==='stopping');
+    const state=send.dataset.state||'send';
+    if(send.dataset.iconState!==state||!send.querySelector('img')){const img=document.createElement('img');img.src='/static/closet-app/assets/ios-agent/'+(state==='send'?'send':'stop')+'.png';img.alt='';img.setAttribute('aria-hidden','true');send.replaceChildren(img);send.dataset.iconState=state;}
+    if(!send.hasAttribute('aria-label'))send.setAttribute('aria-label','发送');
     hint.hidden=!!input.value;
     input.style.height='44px';
     const height=input.value?Math.min(140,Math.max(44,input.scrollHeight)):44;
@@ -26,7 +29,7 @@ export function mountCompactComposer(host, voice, attachment) {
   }
   input.addEventListener('input',sync);input.addEventListener('focus',sync);
   form.addEventListener('reset',()=>queueMicrotask(sync));
-  new MutationObserver(sync).observe(send,{attributes:true,attributeFilter:['disabled'],childList:true,subtree:true});
+  new MutationObserver(sync).observe(send,{attributes:true,attributeFilter:['disabled','data-state'],childList:true,subtree:true});
   const preview=form.querySelector('.chat-attachment-preview');
   if(preview)new MutationObserver(sync).observe(preview,{attributes:true,attributeFilter:['hidden']});
   let width=0;new ResizeObserver(()=>{if(input.clientWidth!==width){width=input.clientWidth;sync();}}).observe(field);

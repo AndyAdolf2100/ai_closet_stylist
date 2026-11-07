@@ -46,9 +46,9 @@ export function mountPaymentDemo({ensureAgent,showAgent,showTask}){
  if(demo){entry(document.querySelector('.wardrobe-scene'),'衣橱付费位置',[['beautify','润色积分不足'],['capacity','衣橱容量'],['capacity-vip','会员容量已满'],['capacity-system','系统单品上限']]);const e=entry(document.querySelector('.profile-content'),'形象与搭配付费位置',[['twin','数字分身费用'],['tryon','搭配试穿费用'],['vip','会员积分不足'],['return','购买返回效果']]);if(e)document.querySelector('.identity')?.after(e);entry(document.querySelector('.y-welcome'),'Agent付费位置',[['agent','查看Agent积分提示']]);document.addEventListener('yijian-agent-mounted',()=>entry(document.querySelector('#feed'),'Agent付费位置',[['agent','查看积分提示（演示）']]));const banner=document.createElement('div');banner.className='app-payment-demo-banner';banner.textContent='App内付费效果演示 · 不创建订单或变更积分';const exit=document.createElement('button');exit.textContent='退出演示';exit.onclick=()=>{const u=new URL(location.href);u.searchParams.delete('payment_demo');location.href=u.href;};banner.append(exit);document.querySelector('#app').prepend(banner);}
  const errorScenes={product_upload_capacity_exhausted:'capacity',digital_twin_points_insufficient:'twin',tryon_points_insufficient:'tryon',agent_points_insufficient:'agent',points_insufficient:'agent'};
  window.AppPayment=Object.freeze({
- async checkFunds(cost,scene='agent'){
+ async checkFunds(cost,scene='agent',isCurrent=()=>true){
   if(cost!==null&&(typeof cost!=='number'||!Number.isFinite(cost)||cost<0))throw new Error('费用暂时无法确认，请重新读取报价。');
-  const ticket=epoch,balance=await readAvailablePoints();if(ticket!==epoch)throw new DOMException('账号已切换','AbortError');
+  const ticket=epoch,balance=await readAvailablePoints();if(ticket!==epoch||!isCurrent())throw new DOMException('请求已取消或账号已切换','AbortError');
   if(cost===null?balance<=0:balance<cost){const amounts={pointsCost:cost,availablePoints:balance};if(scene==='agent')card(true,amounts);else open(scene,{actual:true,...amounts});return false;}return true;
  },
  handleError(error){const scene=errorScenes[error?.code];if(!scene||!token())return false;if(scene==='agent')card(true);else open(scene==='capacity'?'capacity-vip':scene,{actual:true});return true;}});
