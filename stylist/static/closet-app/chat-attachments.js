@@ -13,7 +13,7 @@ export function mountChatAttachments(host, trigger) {
   form.querySelector('textarea').after(preview);form.append(menu);
   const close=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false');};
   function clear(){epoch++;draft=null;photo.removeAttribute('src');preview.hidden=true;close();}
-  remove.onclick=()=>{if(!busy)clear();};
+  remove.onclick=()=>{if(!busy){if(draft)window.AgentTracking?.track('AgentAttachment',{outcome:'removed'});clear();}};
   const controls=[trigger,remove];
   for(const [label,camera] of [['照片',false],['拍摄',true]]){
     const button=document.createElement('button');button.type='button';button.className='y-attachment-choice';button.dataset.attachment=camera?'camera':'photo';
@@ -25,8 +25,9 @@ export function mountChatAttachments(host, trigger) {
     button.onclick=()=>{if(busy)return;close();pickedOwner=owner();pickedEpoch=++epoch;input.value='';input.click();};
     input.onchange=async()=>{
       const file=input.files?.[0];if(!file)return;
+      window.AgentTracking?.track('AgentAttachment',{outcome:'selected',source:camera?'camera':'photo'});
       if(busy||pickedEpoch!==epoch||pickedOwner!==owner())return;
-      if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>10*1024*1024){notify('选一张 10MB 以内的 JPG、PNG 或 WebP 图片吧。');return;}
+      if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>10*1024*1024){window.AgentTracking?.track('AgentAttachment',{outcome:'failed'});notify('选一张 10MB 以内的 JPG、PNG 或 WebP 图片吧。');return;}
       const ticket=pickedEpoch,url=URL.createObjectURL(file);
       try{
         const image=new Image();image.src=url;await image.decode();
@@ -37,8 +38,8 @@ export function mountChatAttachments(host, trigger) {
         const data=canvas.toDataURL('image/jpeg',.85);
         if(data.length>13981039)throw Error();
         if(ticket!==epoch||pickedOwner!==owner()||busy)return;
-        draft=data;photo.src=data;preview.hidden=false;
-      }catch{if(ticket===epoch&&pickedOwner===owner())notify('这张图片没能读取，换一张试试吧。');}
+        draft=data;photo.src=data;preview.hidden=false;window.AgentTracking?.track('AgentAttachment',{outcome:'ready'});
+      }catch{if(ticket===epoch&&pickedOwner===owner()){window.AgentTracking?.track('AgentAttachment',{outcome:'failed'});notify('这张图片没能读取，换一张试试吧。');}}
       finally{URL.revokeObjectURL(url);input.value='';}
     };
     controls.push(button);menu.append(button,input);

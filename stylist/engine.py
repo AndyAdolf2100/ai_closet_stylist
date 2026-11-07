@@ -818,6 +818,8 @@ class Stylist:
                 if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
                         "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
                     reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
+                # Validated, post-policy text preview; persistence and cards remain final-only.
+                report("reply_text", reply.message)
                 state.messages = (state.messages + [
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,

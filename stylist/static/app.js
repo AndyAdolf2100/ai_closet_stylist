@@ -132,10 +132,17 @@ window.OutfitImages?.configure({
   }
 });
 const feed = $('feed');
-let followLatest = false, bottomFrame = null;
+let followLatest = false, bottomFrame = null, unreadContent = false;
 const bottomButton = $('scroll-bottom');
+const newContentLabel=el('span','new-content-label','有新内容');newContentLabel.hidden=true;bottomButton.append(newContentLabel);
+function markNewContent(){if(!followLatest){const wasUnread=unreadContent;unreadContent=true;updateBottomButton();if(!wasUnread&&unreadContent)window.AgentTracking?.track('AgentNewContentShow');}}
 function updateBottomButton() {
-  bottomButton.hidden = feed.scrollHeight - feed.clientHeight - feed.scrollTop <= 48;
+  const atBottom=feed.scrollHeight-feed.clientHeight-feed.scrollTop<=48;
+  if(atBottom)unreadContent=false;
+  bottomButton.hidden=atBottom;
+  bottomButton.classList.toggle('has-new-content',unreadContent);
+  newContentLabel.hidden=!unreadContent;
+  bottomButton.setAttribute('aria-label',unreadContent?'有新内容，查看最新消息':'回到最新消息');
 }
 bottomButton.onclick = () => { scrollBottom(); feed.tabIndex = -1; feed.focus({preventScroll:true}); };
 function scrollBottom(force = true) {
@@ -157,7 +164,8 @@ feed.addEventListener('scroll', () => {
 const feedResize = new ResizeObserver(() => { updateBottomButton(); scrollBottom(false); });
 feedResize.observe(feed);
 const observedMessages = new Set();
-new MutationObserver(() => {
+new MutationObserver(records => {
+  if(records.some(r=>!r.target.closest?.('.pending')&&(r.type==='characterData'||[...r.addedNodes].some(n=>(n.nodeType===1&&!n.matches('.pending'))||(n.nodeType===3&&n.textContent.trim())))))markNewContent();
   for (const node of observedMessages) {
     if (node.parentElement !== feed) { feedResize.unobserve(node); observedMessages.delete(node); }
   }
@@ -255,13 +263,43 @@ async function loadForecast(location = selectedCity) {
 }
 function pendingBubble(persona) {
   const node = bubble('assistant', ''); node.classList.add('pending');
-  const male = window.CompanionCharacters.gender(persona) === 'male';
-  const body = window.CompanionLoading.create({persona,
-    message:male ? '收到，正在连接服务。' : '收到啦，正在连接服务。',
-    detail:male ? '我会按你这次的要求处理。' : '我会照顾你这次提到的要求。'});
+  const lines = {
+    female_sweet_v1:['收到啦，让我想一想。','你提到的小细节，我记着呢。','舒服和好看，都想替你顾到。'],
+    female_warm_v1:['我在，先想想你的需要。','你的喜欢，我会认真放在心上。','希望这次的建议，让你觉得自在。'],
+    female_regal_v1:['你的想法，值得认真对待。','风格可以鲜明，也可以很自在。','合你心意，比追赶潮流更重要。'],
+    male_artistic_v1:['收到，给灵感一点空隙。','日常的衣服，也能有新的心情。','想让这次的建议，多一点你的味道。'],
+    male_calm_v1:['收到，我想一想。','你说的要求，我都记着。','合适和舒服，我们都顾到。'],
+    male_confident_v1:['收到，这次按你的喜欢来。','穿得自在，才是你的主场。','不用急着定风格，喜欢就值得试试。']
+  };
+  const copy=lines[persona]||lines.male_calm_v1;
+  let index=0,ticks=0,stopped=false;
+  const body = window.CompanionLoading.create({persona,message:copy[0],detail:'正在等待回复。'});
   body.classList.add('companion-wait');node.append(body);
-  const timer = setTimeout(() => window.CompanionLoading.update(body,{detail:male ? '还在等待服务返回，结果到了就给你。' : '这次等得久一些，还在等待服务返回。'}),15000);
-  return {node,update(data){body.dataset.stage=data.stage||'styling';window.CompanionLoading.update(body,{message:data.message});},stop(){clearTimeout(timer);node.remove();}};
+  const timer=setInterval(()=>{
+    if(stopped)return;
+    if(!node.isConnected){clearInterval(timer);return;}
+    ticks++;index=(index+1)%copy.length;
+    window.CompanionLoading.update(body,{message:copy[index],detail:ticks>=5?'这次回复慢一些，还在等待，你可以随时停止。':'正在等待回复。'});
+  },6000);
+  return {node,update(data){body.dataset.stage=data.stage||'styling';},stop(){stopped=true;clearInterval(timer);node.remove();}};
+}
+
+function revealReplyText(text, pendingNode) {
+  const node=bubble('assistant','');node.classList.add('reply-preview');
+  feed.insertBefore(node,pendingNode);pendingNode.hidden=true;const copy=node.lastElementChild;
+  const chars=Array.from(text),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let frame=null,finished=false,shown=0,resolve;const done=new Promise(r=>resolve=r),start=performance.now();
+  const duration=reduce?0:Math.min(2400,chars.length*16);
+  function finish(){if(finished)return;finished=true;if(frame!==null)cancelAnimationFrame(frame);copy.textContent=text;resolve();}
+  function tick(now){
+    if(finished)return;
+    const raw=duration?Math.min(chars.length,Math.ceil((now-start)/duration*chars.length)):chars.length;
+    const count=raw===chars.length?raw:Math.floor(raw/3)*3;
+    if(count>shown){const part=el('span','reply-text-part',chars.slice(shown,count).join(''));copy.append(part);shown=count;}
+    if(count===chars.length&&(reduce||now-start>=duration+240))finish();else frame=requestAnimationFrame(tick);
+  }
+  frame=requestAnimationFrame(tick);
+  return {node,done,finish,remove(){finish();node.remove();}};
 }
 function namedElement(tag, cls, template) {
   const node = el(tag, cls, agentText(template)); node.dataset.agentTemplate = template; return node;
@@ -385,7 +423,7 @@ function outfitFeedback(reply, index) {
   const breeze = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M5 16h4a3 3 0 1 1-3 3"/></svg>';
   for (const [label, accessible, vote, icon] of [['有点心动','喜欢这套','like',heart],['再找找感觉','不喜欢这套','dislike',breeze],['撤回评价','撤回评价',null,'']]) {
     const button = el('button', vote === null ? 'outfit-feedback-undo' : 'outfit-feedback-choice');
-    button.type = 'button'; button.disabled = true; button.setAttribute('aria-label', accessible);
+    button.type = 'button'; button.dataset.agentVote=vote||'undo'; button.disabled = true; button.setAttribute('aria-label', accessible);
     if (icon) button.innerHTML = icon;
     button.append(el('span', '', label));
     button.onclick = async () => {
@@ -409,7 +447,7 @@ function outfitFeedback(reply, index) {
   return box;
 }
 
-function showReply(reply, request = null) {
+function showReply(reply, request = null, previewNode = null) {
   setNewClothes(reply.new_clothes);
   if (request && reply.new_clothes_auto_enabled && reply.new_clothes_notice && !newClothesNotices.has(request.request_id)) {
     notifyIssue(reply.new_clothes_notice); newClothesNotices.add(request.request_id);
@@ -417,7 +455,9 @@ function showReply(reply, request = null) {
   conversation = reply.conversation_id; version = reply.version;
   if (reply.looks?.length) selectedLook = { conversationId: conversation, lookVersion: reply.version, index: 0 };
   else if (selectedLook?.conversationId !== conversation) selectedLook = null;
-  const node = bubble('assistant', reply.message);
+  const node = previewNode || bubble('assistant', reply.message);
+  if(previewNode){node.classList.remove('reply-preview');node.lastElementChild.textContent=reply.message;}
+  markNewContent();
   const systemItems = reply.looks?.some(look => look.items?.some(item => item.source === 'system'));
   const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
   const label = { advice: '穿法建议', outfit: systemItems ? '邂逅新衣 · 含未拥有的参考款' : partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
@@ -495,6 +535,7 @@ function showReply(reply, request = null) {
     bulletSection(card, '穿着提醒', look.notes);
     if (look.items?.length) {
       const preview = el('button', 'subtle', look.items.some(item => item.source === 'system') ? '用数字人试穿参考搭配 ↗' : look.wardrobe_complete === false ? '试穿衣橱中已有的单品 ↗' : '用数字人试穿这套 ↗');
+      preview.dataset.agentTrack='outfit_tryon';
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
         if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
@@ -504,6 +545,7 @@ function showReply(reply, request = null) {
       };
       card.append(preview);
       const regenerate = el('button', 'subtle', '重新生成穿搭'); regenerate.type = 'button';
+      regenerate.dataset.agentTrack='outfit_regenerate';
       regenerate.onclick = async () => {
         if (regenerate.disabled) return;
         regenerate.disabled = true;
@@ -525,6 +567,14 @@ function showReply(reply, request = null) {
   }
   if (reply.wardrobe_gap) node.append(wardrobeGapCard(reply, request));
   scrollBottom(false);
+}
+function completeReplyAtReadingPosition(reply,request,preview,pending) {
+  const readingTop=feed.scrollTop;
+  followLatest=false;
+  pending.stop();
+  showReply(reply,request,preview);
+  feed.scrollTop=readingTop;
+  markNewContent();
 }
 function setBusy(value) {
   busy = value;
@@ -621,13 +671,19 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   const userBubble = bubble('user', text);
   if(request.chat_image){const image=document.createElement('img');image.src=request.chat_image;image.alt='本轮图片附件';image.style.cssText='display:block;max-width:180px;max-height:180px;object-fit:contain;border-radius:12px;margin-top:8px';userBubble.append(image);}
   const pending = pendingBubble(request.assistant_persona);
+  let textPreview=null,replyCommitted=false;
+  const trackingStart=performance.now(),trackingAttempt=window.AgentTracking?.begin({text_length:Array.from(text).length,has_image:!!request.chat_image,new_clothes:!!request.new_clothes,resuming:!!saved});
+  let trackingOutcome=false,trackingFirstText=false,trackingRetries=0;const trackingStages=new Set();
+  const track=(event,params={})=>window.AgentTracking?.track(event,{attempt:trackingAttempt,...params});
+  const trackFirstText=()=>{if(!trackingFirstText){trackingFirstText=true;track('AgentFirstText',{elapsed_ms:performance.now()-trackingStart});}};
   setBusy(true); $('notice').textContent = '';
   try {
     let received = false;
     while (!received) {
       try {
-        if(window.AppPayment&&!await window.AppPayment.checkFunds(null,'agent')){savePending(null);return;}
+        if(window.AppPayment&&!await window.AppPayment.checkFunds(null,'agent')){trackingOutcome=true;track('AgentSendBlocked');savePending(null);return;}
         if(session?.user.id!==chatOwner)return;
+        track('AgentRequest',{retry_count:trackingRetries});
         const response = await fetch('/stylist-api/chat/stream', { method: 'POST', headers: headers(), body: JSON.stringify(request) });
         if (session?.user.id !== chatOwner) return;
         if (!response.ok) { const data = await response.json(); throw error(data.code, data.message); }
@@ -645,13 +701,19 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
               if (kind === 'error') { const data = JSON.parse(raw); throw error(data.code, data.message); }
               if (kind === 'progress') {
                 const progress = JSON.parse(raw);
-                if (progress.stage === 'new_clothes') {
+                if(!trackingStages.has(progress.stage)){trackingStages.add(progress.stage);if(progress.stage!=='reply_text')track('AgentStage',{stage:progress.stage});}
+                if(progress.stage==='reply_text'){if(!textPreview&&progress.message){trackFirstText();textPreview=revealReplyText(progress.message,pending.node);}}
+                else if (progress.stage === 'new_clothes') {
                   setNewClothes(true);
                   if (!newClothesNotices.has(request.request_id)) { notifyIssue(progress.message); newClothesNotices.add(request.request_id); }
                 } else pending.update(progress);
               }
               if (kind === 'result') {
-                const reply = JSON.parse(raw); pending.stop(); showReply(reply, request); received = true;
+                const reply = JSON.parse(raw);
+                if(!textPreview&&reply.message){trackFirstText();textPreview=revealReplyText(reply.message,pending.node);}
+                if(textPreview)await textPreview.done;
+                if(session?.user.id!==chatOwner)return;
+                completeReplyAtReadingPosition(reply,request,textPreview?.node,pending);replyCommitted=true;received=true;trackingOutcome=true;track('AgentResult',{elapsed_ms:performance.now()-trackingStart,delivery:reply.delivery,look_count:reply.looks?.length||0,retry_count:trackingRetries});
                 if (reply.pending_confirmation) showPlanApproval(request);
                 else { savePending(null); dailyCheckin.completeChat(chatOwner); }
               }
@@ -663,6 +725,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
       } catch (err) {
         if (!(err instanceof TypeError) && !['request_in_progress', 'server_draining'].includes(err.code)) throw err;
         if (!session || session.user.id !== pendingRun?.owner) throw error('authentication_expired', '请重新登录后继续原任务。');
+        trackingRetries++;track('AgentReconnect',{retry_count:trackingRetries});
         pending.update({stage: 'connecting', message: '连接正在恢复，已完成的步骤会保留…'});
         await new Promise(resolve => setTimeout(resolve, 2500));
       }
@@ -671,13 +734,14 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     if(request.chat_image) window.ChatAttachments?.ack(request.chat_image);
     await refreshHistory();
   } catch (err) {
+    if(!replyCommitted){trackingOutcome=true;track('AgentError',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries,error_kind:err.code==='authentication_expired'?'auth':err instanceof TypeError?'network':err.code==='model_output_invalid'?'model':'other'});}
     if (session?.user.id !== chatOwner) return;
     if (err.code !== 'authentication_expired') savePending(null);
     pending.stop();
     if (!err.paymentHandled) err.paymentHandled=globalThis.AppPayment?.handleError(err)===true;
     if (!err.paymentHandled && err.code !== 'authentication_expired') notifyIssue((err.message || '请求未完成，请稍后重试。') + '\n' + (err.code === 'model_output_invalid' ? '输入还在，点「发送」就能重试。' : agentText('输入还在，可以调整后再发给衣衣。')));
     if (err.code === 'authentication_expired') expireSession(err.message);
-  } finally { pending.stop(); if (!session || session.user.id === chatOwner) setBusy(false); }
+  } finally { if(!trackingOutcome)track('AgentAbandon',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries});window.AgentTracking?.end(trackingAttempt);pending.stop();if(!replyCommitted)textPreview?.remove(); if (!session || session.user.id === chatOwner) setBusy(false); }
 }
 function showPlanApproval(request) {
   // Compatibility for requests already waiting before the composer option was removed.

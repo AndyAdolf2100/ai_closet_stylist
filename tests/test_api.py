@@ -39,6 +39,8 @@ def test_stream_delivers_structured_result_and_no_internal_details(tmp_path, mon
     monkeypatch.setattr("stylist.main.Upstream.identity", identity)
     app = create_app(Settings(database=str(tmp_path / "state.db")))
     async def fake_chat(upstream, request):
+        from stylist.progress import report
+        report("reply_text", "这三件可以这样穿。")
         assert upstream.authorization == "Bearer test"
         return Reply(conversation_id="sty_" + "1" * 32, version=1, mode="consult", delivery="advice",
                      message="这三件可以这样穿。", task=Task())
@@ -47,6 +49,7 @@ def test_stream_delivers_structured_result_and_no_internal_details(tmp_path, mon
         result = client.post("/stylist-api/chat/stream", headers={"Authorization": "Bearer test"},
                              json={"message": "只咨询穿法", "request_id": "stream-test-001"})
         assert result.status_code == 200 and "event: result" in result.text
+        assert result.text.index('"stage": "reply_text"') < result.text.index("event: result")
         block = result.text.split("event: result\ndata: ")[1].split("\n\n")[0]
         assert json.loads(block)["delivery"] == "advice"
 

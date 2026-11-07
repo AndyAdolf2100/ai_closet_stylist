@@ -15,6 +15,7 @@ export function mountAgent(){
     const scoped=document.createElement('link');scoped.rel='stylesheet';scoped.href='/static/closet-app/agent-scoped.css?v=weather-system-v8';document.head.append(scoped);
     await new Promise((resolve,reject)=>{scoped.onload=resolve;scoped.onerror=reject;});
     const theme=document.createElement('link');theme.rel='stylesheet';theme.href='/static/closet-app/agent-yijian.css';document.head.append(theme);await new Promise((resolve,reject)=>{theme.onload=resolve;theme.onerror=reject;});
+    const {installAgentTracking}=await import('./agent-tracking.js');installAgentTracking(host);
     const sync=()=>{for(const a of document.documentElement.attributes)if(a.name.startsWith('data-'))host.setAttribute(a.name,a.value);};
     sync();new MutationObserver(sync).observe(document.documentElement,{attributes:true});
     // Agent modules create their dialogs on body; keep App-owned dialogs in their native modal layer.
@@ -135,4 +136,4 @@ export function closeIntegratedAgent(){
   for(const dialog of host.querySelectorAll('dialog[open]')){dialog.dispatchEvent(new Event('cancel',{cancelable:true}));if(dialog.open)dialog.close();}
 }
 
-export function placeIntegratedAgent(chat){const host=document.getElementById('yijian-agent-root');if(!host)return;host.dataset.surface=chat?'chat':'overlay';if(chat)document.getElementById('agent-page').append(host);else document.body.append(host);}
+export function placeIntegratedAgent(chat){const host=document.getElementById('yijian-agent-root');if(!host)return;window.AgentTracking?.view(chat);host.dataset.surface=chat?'chat':'overlay';if(chat)document.getElementById('agent-page').append(host);else document.body.append(host);}

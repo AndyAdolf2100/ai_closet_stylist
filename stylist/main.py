@@ -296,6 +296,8 @@ def create_app(settings=None):
                             except asyncio.CancelledError:
                                 pass
                 result = await task
+                while not queue.empty():
+                    yield event("progress", queue.get_nowait())
                 yield event("result", result.model_dump(mode="json"))
             except StylistError as exc:
                 yield event("error", {"code": exc.code, "message": exc.message})
