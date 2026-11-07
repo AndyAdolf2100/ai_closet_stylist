@@ -200,3 +200,13 @@ html[data-app-design=yijian] .y-agent-city-button:disabled{opacity:.55}
 /* System yellow fills keep dark text; foreground accent uses the shared ink token. */
 html[data-app-palette=system] #yijian-agent-root :is(.outfit-tab[aria-selected=true],.stylist-switch button[aria-pressed=true],.journey-steps .is-current .journey-step-number),
 html[data-app-palette=system] #yijian-agent-root #checkin-calendar .is-signed{color:var(--y-button-ink)}
+
+/* System palette: readable text does not redefine brand fills or decorative borders. */
+html[data-app-palette=system] #yijian-agent-root{--accent-ink:var(--y-accent)!important;--accent-decoration:var(--y-button);--accent-outline:#b48a14}
+html[data-app-palette=system] #yijian-agent-root :is(.look h3,.look h4,.forecast-heading strong,.weather-periods strong,.weather-tip strong,.journey-cost,.journey-quote-copy h3,.checkin-stats strong){color:var(--y-ink)}
+html[data-app-palette=system] #yijian-agent-root :is(.suggestion-icon,.checkin-seal,.city-invite-star,.journey-star,.journey-entry-icon){color:var(--accent-decoration)}
+html[data-app-palette=system] #yijian-agent-root .suggestion-icon{border-color:color-mix(in srgb,var(--accent-decoration) 38%,var(--y-line))}
+html[data-app-palette=system] #yijian-agent-root :is(.companion-selected,.companion-gender-tick){color:var(--accent-outline)}
+html[data-app-palette=system] #yijian-agent-root :is(.journey-portrait[aria-pressed=true],[data-edit-page] .companion-person:has(input:checked)){border-color:var(--accent-decoration)}
+html[data-app-palette=system] #yijian-agent-root :is(button,a,input,textarea):focus-visible{outline-color:var(--accent-outline)}
+html[data-app-palette=system] #yijian-agent-root .clothing-source-option::after{background:var(--accent-decoration)}
