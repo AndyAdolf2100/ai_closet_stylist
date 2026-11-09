@@ -138,6 +138,10 @@ class Store:
             excluded.add("chat_image")
         if request.upload_action_id is None:
             excluded.add("upload_action_id")
+        if request.subject_product is None:
+            excluded.add("subject_product")
+        if request.subject_outfit is None:
+            excluded.add("subject_outfit")
         if not request.regenerate_outfit:
             excluded.add("regenerate_outfit")
         if request.regenerate_from_version is None:

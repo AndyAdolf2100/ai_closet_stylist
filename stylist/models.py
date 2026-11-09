@@ -119,6 +119,11 @@ class ProductRef(Model):
         return f"{self.source}:{self.product_id}"
 
 
+class SavedOutfitRef(Model):
+    source: Literal["user"] = "user"
+    outfit_id: int = Field(gt=0, le=9007199254740991)
+
+
 class Product(ProductRef):
     gender: Literal["男", "女", "男女同款"] | None = None
     title: str = ""
@@ -222,6 +227,10 @@ class Reply(Model):
     follow_ups: list[str] = Field(default_factory=list)
     pending_confirmation: bool = False
     request_id: str | None = None
+    product_entry: dict | None = None
+    subject_product: ProductRef | None = None
+    outfit_entry: dict | None = None
+    subject_outfit: SavedOutfitRef | None = None
 
 
 class SessionState(Model):
@@ -294,7 +303,7 @@ class ChatRequest(Model):
     regenerate_outfit: bool = False
     regenerate_from_version: int | None = Field(default=None, ge=1)
     upload_action_id: str | None = Field(default=None, pattern=r"^med_[a-f0-9]{32}$")
-    message: str = Field(min_length=1, max_length=6000)
+    message: str = Field(default="", max_length=6000)
     conversation_id: str | None = Field(default=None, pattern=r"^sty_[a-f0-9]{32}$")
     expected_version: int = Field(default=0, ge=0)
     request_id: str = Field(min_length=8, max_length=100, pattern=r"^[A-Za-z0-9._:-]+$")
@@ -305,12 +314,19 @@ class ChatRequest(Model):
     assistant_persona: PersonaId | None = None
     selected_look_index: int | None = Field(default=None, ge=0, le=6)
     companion_profile: CompanionProfile | None = None
+    subject_product: ProductRef | None = None
+    subject_outfit: SavedOutfitRef | None = None
 
     @model_validator(mode="after")
     def validate_message(self):
         self.message = self.message.strip()
-        if not self.message:
+        if self.subject_product is not None and self.subject_outfit is not None:
+            raise ValueError("单品和搭配入口不能同时提交")
+        if not self.message and self.subject_product is None and self.subject_outfit is None:
             raise ValueError("请输入搭配需求")
+        if not self.message and (self.conversation_id or self.expected_version or self.chat_image
+                                 or self.upload_action_id or self.regenerate_outfit):
+            raise ValueError("入口回显请求不能带已有会话或执行参数")
         if self.regenerate_from_version is not None and (not self.regenerate_outfit or self.regenerate_from_version > self.expected_version):
             raise ValueError("重新生成的来源必须是已有搭配版本")
         if self.regenerate_outfit:

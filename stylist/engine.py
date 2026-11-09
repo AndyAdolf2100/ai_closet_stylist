@@ -67,7 +67,8 @@ from .policy import (
 )
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .progress import report
-from .retrieval import resolve_products, retrieve, saved_candidates, weather_for
+from .retrieval import from_row, resolve_products, retrieve, saved_candidates, weather_for
+from .subject_entry import resolve_outfit_entry, resolve_product_entry
 from .usage import UsageContext, UsageTokens
 from .usage import context as usage_context
 from .weather import WeatherService, apply_forecast
@@ -243,6 +244,23 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            upload_anchor_pairing = bool(request.upload_action_id and wardrobe_requested(request.message))
+            if upload_anchor_pairing:
+                # The upload card is an explicit user action. Keep this request on
+                # the outfit path even if the language model labels the sentence
+                # as an upload invitation, consultation, or technical question.
+                plan = plan.model_copy(update={
+                    "mode": "recommend",
+                    "use_inventory": True,
+                    "conversation_only": False,
+                    "weather_only": False,
+                    "technical_question": False,
+                    "unsupported_image_request": False,
+                    "image_request_evidence": "",
+                    "avatar_intent": None,
+                    "upload_intent": None,
+                    "clarification": None,
+                })
             if plan.unsupported_image_request:
                 plan.clarification = image_feature_pending(request.assistant_persona)
                 return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
@@ -750,6 +768,10 @@ class Stylist:
     async def chat(self, upstream, request, decision=None):
         owner = await upstream.identity()
         self.usage_tokens.register(owner, getattr(upstream, 'authorization', None))
+        if decision is not None and (request.subject_product is not None or request.subject_outfit is not None):
+            raise StylistError("entry_not_resumable", "单品或搭配入口不能恢复确认流程。", 409)
+        if request.subject_product is not None or request.subject_outfit is not None:
+            return await self._subject_entry(upstream, request, owner)
         explicit_memory(request.message)  # Validate explicit save commands before reserving a task.
         cid, claim, state, replay = await asyncio.to_thread(self.store.reserve, owner, request)
         if replay:
@@ -838,6 +860,54 @@ class Stylist:
             usage_context.reset(usage_token)
             pulse.cancel()
             await asyncio.gather(pulse, return_exceptions=True)
+            await asyncio.to_thread(self.store.release, owner, cid, claim)
+
+    async def _subject_entry(self, upstream, request, owner):
+        """Persist one authenticated, read-only detail-page load without invoking the model."""
+        cid, claim, state, replay = await asyncio.to_thread(self.store.reserve, owner, request)
+        if replay:
+            return replay
+        try:
+            product_entry = None
+            outfit_entry = None
+            looks = []
+            if request.subject_product is not None:
+                product_entry = await resolve_product_entry(upstream, request.subject_product)
+                message = "已打开这件单品，可以继续聊怎么搭配。"
+                history_message = f"打开单品：{product_entry.get('title') or request.subject_product.product_id}"
+            else:
+                outfit_entry = await resolve_outfit_entry(upstream, request.subject_outfit)
+                items = [from_row(item, "user") for item in outfit_entry["items"]]
+                if any(item is None for item in items):
+                    raise StylistError("outfit_entry_items_invalid", "这套搭配的单品信息不完整，请检查原搭配。", 422)
+                looks = [Look(title=outfit_entry["title"] or "搭配详情", items=items,
+                              pieces=[item.display_name for item in items],
+                              wardrobe_complete=True, why=[], how=[], notes=[])]
+                message = "已打开这套搭配，可以继续聊怎么调整。"
+                history_message = f"打开搭配：{outfit_entry.get('title') or request.subject_outfit.outfit_id}"
+            reply = Reply(
+                conversation_id=cid,
+                version=request.expected_version + 1,
+                mode="consult",
+                delivery="advice",
+                message=message,
+                task=Task(),
+                looks=looks,
+                product_entry=product_entry,
+                subject_product=request.subject_product,
+                outfit_entry=outfit_entry,
+                subject_outfit=request.subject_outfit,
+                request_id=request.request_id,
+            )
+            state.looks = looks
+            state.messages = (state.messages + [
+                {"role": "user", "content": history_message},
+                {"role": "assistant", "content": json.dumps(reply.model_dump(mode="json"), ensure_ascii=False)},
+            ])[-16:]
+            finish_request = request.model_copy(update={"message": history_message})
+            await asyncio.to_thread(self.store.finish, owner, finish_request, claim, state, reply)
+            return reply
+        finally:
             await asyncio.to_thread(self.store.release, owner, cid, claim)
 
     @staticmethod

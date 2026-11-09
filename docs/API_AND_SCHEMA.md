@@ -2,6 +2,10 @@
 
 2026-11-02对话回复新增 `city_selection_required: bool = false`，由程序根据已解析目的地及天气需求决定是否展示城市引导卡；不是定位授权或模型写权限。新网页请求固定 `confirm_plan=false`，旧待确认请求和审批接口保留恢复兼容。城市卡确认后使用原消息、新请求ID、当前会话版本及选定 `location` 继续对话；不调用收费图片接口。实现与边界见 [城市引导验收](CITY_INVITATION_QA.md)。
 
+详情页入口使用现有 `POST /stylist-api/chat` 或 `/chat/stream`，首轮 `message` 可为空并提交其一的 `subject_product={source,product_id}` 或 `subject_outfit={source:"user",outfit_id}`。Agent 通过 `product.resolve` / `outfit.resolve` 读取权威详情，不调用模型，回复中的 `product_entry` 或 `outfit_entry` 用于 H5/App 回显；搭配同时填充 `looks` 以复用现有搭配卡。入口请求仍使用现有 `request_id` 幂等，未增加对象绑定会话或数据库表。H5 调试入口为 `/app/?debug=subject-entry`。
+
+上传完成后的“用这件搭一套”继续使用 `upload_action_id`。按钮触发的搭配请求会强制进入衣橱搭配路径并保留上传单品，模型误判为闲聊、上传提示或技术问题时也不会提前结束；H5 在请求失败时保留上传锚点，成功回执后才清除。
+
 依据：相邻 `aicloset-server/internal/biz`、`internal/controller/mcp/tools`、`internal/server/router.go`，以及旧 Agent 的迁移文件。此处确认的是代码模型与已验证接口；没有直接连接生产库执行 DDL 或检查线上每一列的实际迁移状态。
 
 2026-10-27补充只读核对：已直连当前配置的MySQL，`SELECT DATABASE()`返回`aicloset_dev`。以授权测试账号为范围，`user_product_base`正常状态记录共292条，与本次图库导出的292个个人单品ID及原图／抠图URL路径全部一致。图片字段为URL，文件内容来自对应OSS／CDN；本地`var/stylist.sqlite3`仅保存新Agent状态，不是原始衣橱图片来源。未执行业务数据写入或DDL。

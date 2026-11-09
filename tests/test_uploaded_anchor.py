@@ -27,7 +27,11 @@ async def test_newly_uploaded_item_is_resolved_and_retained_even_before_search_i
     class Model:
         async def generate(self, name, payload, result_type):
             if name == 'plan':
-                return Plan(mode='consult', conversation_only=True, use_inventory=False)
+                # The upload-card action is authoritative even when the model
+                # mislabels the generated sentence as another intent.
+                return Plan(mode='consult', conversation_only=True, use_inventory=False,
+                            technical_question=True, unsupported_image_request=True,
+                            avatar_intent='view', upload_intent='garment')
             assert payload['frozen_keys'] == ['user:999']
             assert any(p['key'] == 'user:999' for p in payload['candidates'])
             return Draft(message='围绕刚上传的衬衫来搭配。', looks=[LookDraft(title='新衬衫穿搭',

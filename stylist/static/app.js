@@ -457,6 +457,25 @@ function showReply(reply, request = null, previewNode = null) {
   else if (selectedLook?.conversationId !== conversation) selectedLook = null;
   const node = previewNode || bubble('assistant', reply.message);
   if(previewNode){node.classList.remove('reply-preview');node.lastElementChild.textContent=reply.message;}
+  const productEntry = reply.product_entry;
+  const outfitEntry = reply.outfit_entry;
+  if (productEntry || outfitEntry) {
+    const entryCard = el('article', 'look subject-entry-card');
+    const subject = productEntry || outfitEntry;
+    entryCard.append(el('h3', '', productEntry ? (subject.title || '单品详情') : (subject.title || '搭配详情')));
+    if (subject.image_url || subject.presentation?.canvas_image) {
+      const image = el('img', 'subject-entry-image');
+      image.src = subject.image_url || subject.presentation.canvas_image;
+      image.alt = subject.title || (productEntry ? '单品图片' : '搭配图片');
+      image.loading = 'lazy';
+      entryCard.append(image);
+    }
+    if (subject.description) entryCard.append(el('p', '', subject.description));
+    if (outfitEntry?.items?.length) {
+      entryCard.append(el('p', '', `这套搭配包含 ${outfitEntry.items.length} 件衣物，可以继续聊怎么调整。`));
+    }
+    node.append(entryCard);
+  }
   markNewContent();
   const systemItems = reply.looks?.some(look => look.items?.some(item => item.source === 'system'));
   const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
@@ -656,13 +675,14 @@ function savePending(value) {
   if (value && !value.request?.chat_image) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
   else sessionStorage.removeItem(PENDING_KEY);
 }
-async function sendMessage(resuming = false, outfitAction = null, cityAction = null, explorationAction = null) {
+async function sendMessage(resuming = false, outfitAction = null, cityAction = null, explorationAction = null, subjectEntry = null) {
   const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
   const attachmentOwner = session?.access_token;
   const inputValue = $('message').value;
-  const draftImage = !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
-  const text = (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
-  if (!text || busy || !requireLogin()) return;
+  const draftImage = !subjectEntry && !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
+  const text = subjectEntry ? '' : (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
+  const displayText = subjectEntry?.subject_product ? '打开单品详情' : subjectEntry?.subject_outfit ? '打开搭配详情' : text;
+  if ((!text && !subjectEntry) || busy || !requireLogin()) return;
   if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
   if (draftImage && (attachmentOwner !== session?.access_token || draftImage !== window.ChatAttachments?.get())) return;
   if (outfitAction && (session.user.id !== outfitAction.owner || conversation !== outfitAction.conversation_id)) {
@@ -674,23 +694,27 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   if (explorationAction && (session.user.id !== explorationAction.owner || conversation !== explorationAction.conversation_id || version !== explorationAction.version)) {
     notifyIssue('对话已有更新，请从最新的搭配继续。'); return;
   }
-  const request = saved?.request || { ...(cityAction?.request || {}), message: text, conversation_id: conversation, expected_version: version, request_id: crypto.randomUUID(), confirm_plan: false };
-  if (!saved && !cityAction && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
-  if (!saved && !request.assistant_persona) request.assistant_persona = request.companion_profile?.assistant_persona || (document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1');
-  if (!saved) request.new_clothes = $('new-clothes')?.checked || false;
-  if (!saved && selectedCity) request.location = selectedCity;
-  if (!saved && !cityAction && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
+  const request = saved?.request || { ...(cityAction?.request || {}), message: text,
+    conversation_id: subjectEntry ? null : conversation, expected_version: subjectEntry ? 0 : version,
+    request_id: crypto.randomUUID(), confirm_plan: false, ...(subjectEntry || {}) };
+  if (!saved && !subjectEntry && !cityAction && window.CompanionSettings?.getProfile()) request.companion_profile = window.CompanionSettings.getProfile();
+  if (!saved && !subjectEntry && !request.assistant_persona) request.assistant_persona = request.companion_profile?.assistant_persona || (document.documentElement.dataset.stylistGender === 'male' ? 'male_calm_v1' : 'female_warm_v1');
+  if (!saved && !subjectEntry) request.new_clothes = $('new-clothes')?.checked || false;
+  if (!saved && !subjectEntry && selectedCity) request.location = selectedCity;
+  if (!saved && !subjectEntry && !cityAction && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
   if (!saved && outfitAction) { request.regenerate_outfit = true; request.selected_look_index = outfitAction.look_index; request.regenerate_from_version = outfitAction.version; }
-  if (!saved && !cityAction && !explorationAction && !request.regenerate_outfit && pendingUploadAnchor) { request.upload_action_id = pendingUploadAnchor; pendingUploadAnchor = null; updateUploadAnchor(); }
+  const uploadAnchorForRequest = !saved && !subjectEntry && !cityAction && !explorationAction
+    && !request.regenerate_outfit ? pendingUploadAnchor : null;
+  if (uploadAnchorForRequest) request.upload_action_id = uploadAnchorForRequest;
   if (!saved && draftImage) request.chat_image = draftImage;
   const chatOwner = session.user.id;
   savePending({owner: chatOwner, request});
-  const userBubble = bubble('user', text);
+  const userBubble = bubble('user', displayText);
   if(request.chat_image){const image=document.createElement('img');image.src=request.chat_image;image.alt='本轮图片附件';image.style.cssText='display:block;max-width:180px;max-height:180px;object-fit:contain;border-radius:12px;margin-top:8px';userBubble.append(image);}
   const pending = pendingBubble(request.assistant_persona);
   let textPreview=null,replyCommitted=false;
   const run={request,token:session.access_token,headers:headers(),controller:new AbortController(),cancelled:false,preview:null,stopPromise:null};activeChatRun=run;run.cancelWait=new Promise(resolve=>run.resolveCancel=resolve);
-  const trackingStart=performance.now(),trackingAttempt=window.AgentTracking?.begin({text_length:Array.from(text).length,has_image:!!request.chat_image,new_clothes:!!request.new_clothes,resuming:!!saved});
+  const trackingStart=performance.now(),trackingAttempt=window.AgentTracking?.begin({text_length:Array.from(displayText).length,has_image:!!request.chat_image,new_clothes:!!request.new_clothes,resuming:!!saved});
   let trackingOutcome=false,trackingFirstText=false,trackingRetries=0;const trackingStages=new Set();
   const track=(event,params={})=>window.AgentTracking?.track(event,{attempt:trackingAttempt,...params});
   const trackFirstText=()=>{if(!trackingFirstText){trackingFirstText=true;track('AgentFirstText',{elapsed_ms:performance.now()-trackingStart});}};
@@ -754,6 +778,9 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     if(run.cancelled)return;
     if (!cityAction && !explorationAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
     if(request.chat_image) window.ChatAttachments?.ack(request.chat_image);
+    if (uploadAnchorForRequest && pendingUploadAnchor === uploadAnchorForRequest) {
+      pendingUploadAnchor = null; pendingAnchorOwner = null; updateUploadAnchor();
+    }
     await refreshHistory();
   } catch (err) {
     if(!run.cancelled&&!replyCommitted){trackingOutcome=true;track('AgentError',{elapsed_ms:performance.now()-trackingStart,retry_count:trackingRetries,error_kind:err.code==='authentication_expired'?'auth':err instanceof TypeError?'network':err.code==='model_output_invalid'?'model':'other'});}
@@ -952,6 +979,26 @@ if (session) window.CompanionSettings?.setOwner(session.user.id, api);
 loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedCity) loadForecast(); }
 
 if (pendingRun && session && pendingRun.owner === session.user.id) sendMessage(true);
+
+function setupSubjectEntryDebug() {
+  const panel = $('subject-entry-debug');
+  if (!panel || new URLSearchParams(location.search).get('debug') !== 'subject-entry') return;
+  panel.hidden = false;
+  const query = new URLSearchParams(location.search);
+  $('debug-product-id').value = query.get('product_id') || '12';
+  $('debug-outfit-id').value = query.get('outfit_id') || '72';
+  $('debug-product-open').onclick = () => {
+    const productId = $('debug-product-id').value.trim();
+    if (!/^[1-9][0-9]{0,19}$/.test(productId)) return notifyIssue('请输入有效的单品 ID。');
+    sendMessage(false, null, null, null, {subject_product: {source: 'user', product_id: productId}});
+  };
+  $('debug-outfit-open').onclick = () => {
+    const outfitId = Number($('debug-outfit-id').value.trim());
+    if (!Number.isSafeInteger(outfitId) || outfitId < 1) return notifyIssue('请输入有效的搭配 ID。');
+    sendMessage(false, null, null, null, {subject_outfit: {source: 'user', outfit_id: outfitId}});
+  };
+}
+setupSubjectEntryDebug();
 // Shared Stylist attachment flow. Wardrobe ingestion remains in its dedicated entry.
 if (!document.getElementById('yijian-agent-root')) {
   $('upload-open').textContent='＋';
