@@ -4,6 +4,10 @@
 
 详情页入口使用现有 `POST /stylist-api/chat` 或 `/chat/stream`，首轮 `message` 可为空并提交其一的 `subject_product={source,product_id}` 或 `subject_outfit={source:"user",outfit_id}`。Agent 通过 `product.resolve` / `outfit.resolve` 读取权威详情，不调用模型，回复中的 `product_entry` 或 `outfit_entry` 用于 H5/App 回显；搭配同时填充 `looks` 以复用现有搭配卡。入口请求仍使用现有 `request_id` 幂等，未增加对象绑定会话或数据库表。H5 调试入口为 `/app/?debug=subject-entry`。
 
+2026-11-09：Reply新增attachment_wardrobe_required布尔标记（缺省false）。仅规划判定聊天附图／明确旧照片指代的执行请求时置true，同时upload_intent=garment并返回六人格边界提示，前端展示单张单件衣物入柜入口；不返回avatar_intent或tryon_context，不携带附件图片，不授权上传或生成。普通分析及无图衣橱操作保持现有字段。
+
+当前单品入口回显同时将权威单品保存为本会话的单件look（`wardrobe_complete=false`），用于复用既有试穿报价接口；前端仅展示当前单品卡，不重复渲染搭配卡。“用这件搭一套”提交同一会话当前版本、`pair_subject_product=true`及普通文字需求，不再重复传subject_product；服务端校验最新回复确为该用户单品入口，并将该单品作为必须保留对象，权威重读及禁穿／性别校验继续生效。字段缺省false从请求摘要排除，兼容已有幂等请求。“试穿这件”仍走`/stylist-api/images/quote`，引用当前会话／版本／look_index=0，只报价一件；读取与报价不调用收费生成，明确积分确认后才进入既有执行流程。
+
 上传完成后的“用这件搭一套”继续使用 `upload_action_id`。按钮触发的搭配请求会强制进入衣橱搭配路径并保留上传单品，模型误判为闲聊、上传提示或技术问题时也不会提前结束；H5 在请求失败时保留上传锚点，成功回执后才清除。
 
 依据：相邻 `aicloset-server/internal/biz`、`internal/controller/mcp/tools`、`internal/server/router.go`，以及旧 Agent 的迁移文件。此处确认的是代码模型与已验证接口；没有直接连接生产库执行 DDL 或检查线上每一列的实际迁移状态。
