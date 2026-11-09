@@ -41,6 +41,7 @@ from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
 from .personas import (
+    attachment_wardrobe_invitation,
     avatar_invitation,
     boundary_reply,
     image_feature_pending,
@@ -205,6 +206,19 @@ class Stylist:
                     clarification="这本手记只记录穿搭相关信息，日常片段和相处约定不写进去。我们仍然可以接着聊。"
                     ).model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             today = datetime.now(ZoneInfo("Asia/Shanghai"))
+            subject_anchor = None
+            if request.pair_subject_product:
+                try:
+                    last = json.loads(state.messages[-1]["content"])
+                    reference = last["subject_product"]
+                    subject_anchor = state.looks[0].items[0]
+                    valid = (len(state.looks) == 1 and len(state.looks[0].items) == 1
+                             and reference["source"] == subject_anchor.source == "user"
+                             and reference["product_id"] == subject_anchor.product_id)
+                except (IndexError, KeyError, TypeError, ValueError):
+                    valid = False
+                if not valid:
+                    raise StylistError("subject_product_context_changed", "当前单品已有变化，请重新打开单品再搭配。", 409)
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             planning_payload = {
                 "chat_image": request.chat_image,
@@ -245,7 +259,7 @@ class Stylist:
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
             upload_anchor_pairing = bool(request.upload_action_id and wardrobe_requested(request.message))
-            if upload_anchor_pairing:
+            if upload_anchor_pairing or request.pair_subject_product:
                 # The upload card is an explicit user action. Keep this request on
                 # the outfit path even if the language model labels the sentence
                 # as an upload invitation, consultation, or technical question.
@@ -261,6 +275,9 @@ class Stylist:
                     "upload_intent": None,
                     "clarification": None,
                 })
+            if plan.attachment_wardrobe_required:
+                plan.clarification = attachment_wardrobe_invitation(request.assistant_persona)
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
             if plan.unsupported_image_request:
                 plan.clarification = image_feature_pending(request.assistant_persona)
                 return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
@@ -336,7 +353,7 @@ class Stylist:
             if (task.weather_policy == "ignored" or (plan.weather_only and task.weather_policy == "auto")) and not plan.conversation_only:
                 task.temp_min = task.temp_max = None
                 task.weather_description = ""
-            frozen = []
+            frozen = [subject_anchor] if subject_anchor is not None else []
             if plan.mode == "modify":
                 current = selected_looks(state)
                 if not current or not current[0].items:
@@ -696,6 +713,7 @@ class Stylist:
                     tryon_context=({"conversation_id": data["session_id"], "version": request.expected_version + 1,
                                     "look_index": index} if index is not None else None),
                     tryon_title=state.looks[index].title if index is not None else None,
+                    attachment_wardrobe_required=plan.attachment_wardrobe_required,
                     upload_intent=plan.upload_intent, upload_suggestion=plan.upload_intent == "garment",
                     conversation_only=plan.conversation_only,
                     mode=plan.mode, delivery="clarification", message=plan.clarification or "已取消本次生成。",
@@ -873,6 +891,11 @@ class Stylist:
             looks = []
             if request.subject_product is not None:
                 product_entry = await resolve_product_entry(upstream, request.subject_product)
+                item = from_row(product_entry["product"], request.subject_product.source)
+                if item is None:
+                    raise StylistError("product_entry_invalid_result", "这件单品的信息不完整，请重新打开。", 422)
+                looks = [Look(title=product_entry["title"] or "当前单品", items=[item],
+                              pieces=[item.display_name], wardrobe_complete=False)]
                 message = "已打开这件单品，可以继续聊怎么搭配。"
                 history_message = f"打开单品：{product_entry.get('title') or request.subject_product.product_id}"
             else:

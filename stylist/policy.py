@@ -1,8 +1,10 @@
 """Deterministic task validation and narrow guards for explicit user boundaries."""
 import re
+from datetime import date
 
 from pydantic import ValidationError
 
+from .attachment_policy import requires_wardrobe_upload
 from .errors import StylistError
 from .memory import address_boundary, boundary_only, memory_intent, preference_statement
 from .models import MAX_WEATHER_LOCATIONS, Look, Plan, Product, SessionState, Slot, Task
@@ -88,6 +90,22 @@ def explicit_look_count(message):
     return values[-1] if values else (None, "")
 
 
+def weather_adjustment_requested(plan, state, message):
+    """Weather-wide adjustment of an existing look does not require a garment slot."""
+    if plan.replace_slots or not any(look.items for look in state.looks):
+        return False
+    text = re.sub(r'“[^”]*”|「[^」]*」|"[^"]*"', '', message)
+    if re.search(r'只(?:换|改|调整)|(?:其他|其余).{0,6}(?:不动|保留)|不要动|假设|举例|转述', text):
+        return False
+    if not re.search(r'天气|气温|温度|降温|下雨', text) or not re.search(r'调整|重新搭|重搭|改(?:下|一|这|成)|换成', text):
+        return False
+    if re.search(r'(?:不要|不用|别).{0,4}(?:调整|重搭|改|换)', text):
+        return False
+    cited = (plan.outfit_weather_adjustment and plan.outfit_weather_evidence.strip()
+             and plan.outfit_weather_evidence in message)
+    return bool(cited or re.search(r'这套|这身|刚才|当前|原来|之前', text))
+
+
 async def interpret_task(llm, payload, state, message):
     """Repair the model's extraction, rather than asking the user to repair our citation format."""
     previous = None
@@ -102,6 +120,18 @@ async def interpret_task(llm, payload, state, message):
                         task_validation_errors=validation_errors,
                         repair_instruction="修复抽取结果，不向用户追问内部格式问题。证据必须逐字来自本条message，禁止省略号拼接。多段原话请用字符串数组；无法精确摘录时直接引用完整原message。修正task_validation_errors指出的字段值，例如event_date只能是YYYY-MM-DD的单日日期，不能填日期范围或本周等文字。保留所有正确要求。")
         previous = await llm.generate("plan", data, Plan)
+        if requires_wardrobe_upload(previous, message, has_image=bool(payload.get("chat_image"))):
+            return Plan(mode="consult", conversation_only=True, use_inventory=False,
+                        attachment_wardrobe_required=True, attachment_action_evidence=message,
+                        upload_intent="garment", upload_evidence=message), state.task.model_copy(deep=True)
+        previous.attachment_wardrobe_required = False
+        previous.attachment_action_evidence = ""
+        weather_adjustment = weather_adjustment_requested(previous, state, message)
+        if weather_adjustment:
+            previous = previous.model_copy(update={"mode": "recommend", "use_inventory": True,
+                "conversation_only": False, "weather_only": False, "new_task": False,
+                "clarification": None, "weather_scope": "day", "requested_look_count": 1,
+                "look_count_evidence": ""})
         if previous.requested_look_count is not None:
             evidence = previous.look_count_evidence
             counts = re.findall(r"([1-7一二两三四五六七])\s*套", evidence)
@@ -113,6 +143,8 @@ async def interpret_task(llm, payload, state, message):
         explicit_count, count_evidence = explicit_look_count(message)
         if explicit_count is not None:
             previous.requested_look_count, previous.look_count_evidence = explicit_count, count_evidence
+        if weather_adjustment and explicit_count is None:
+            previous.requested_look_count = 1
         # Formatting/query controls are not garment requirements. Dropping them
         # does not loosen evidence checks for clothing, identity or fees.
         control = previous.changes.get("preferences")
@@ -200,6 +232,11 @@ async def interpret_task(llm, payload, state, message):
                 weather_state = state.model_copy(update={"task": state.task.model_copy(update={
                     "weather_policy": "auto", "temp_min": None, "temp_max": None, "weather_description": ""})})
             task = merge_task(weather_state, previous, message)
+            if (weather_adjustment and 'event_date' not in previous.changes
+                    and re.search(r'今天|今日', message)
+                    and not re.search(r'明天|后天|昨天|前天|不是今天|不按今天|不要.{0,3}今天', message)
+                    and payload.get('now')):
+                task.event_date = date.fromisoformat(str(payload['now'])[:10])
             # A verified location correction changes the task, not an unspecified garment.
             # Explicit slot replacements and genuine clarification requests keep their path.
             if (previous.mode == "modify" and not previous.replace_slots and not previous.clarification

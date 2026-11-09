@@ -79,6 +79,10 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    outfit_weather_adjustment: bool = False
+    outfit_weather_evidence: str = Field(default="", max_length=6000)
+    attachment_wardrobe_required: bool = False
+    attachment_action_evidence: str = Field(default="", max_length=6000)
     unsupported_image_request: bool = False
     image_request_evidence: str = Field(default="", max_length=6000)
     new_clothes_intent: bool = False
@@ -211,6 +215,7 @@ class Reply(Model):
     tryon_context: TryonReference | None = None
     tryon_title: str | None = None
     upload_intent: Literal["garment", "unspecified"] | None = None
+    attachment_wardrobe_required: bool = False
     upload_suggestion: bool = False
     conversation_only: bool = False
     weather_only: bool = False
@@ -314,6 +319,7 @@ class ChatRequest(Model):
     assistant_persona: PersonaId | None = None
     selected_look_index: int | None = Field(default=None, ge=0, le=6)
     companion_profile: CompanionProfile | None = None
+    pair_subject_product: bool = False
     subject_product: ProductRef | None = None
     subject_outfit: SavedOutfitRef | None = None
 
@@ -324,6 +330,10 @@ class ChatRequest(Model):
             raise ValueError("单品和搭配入口不能同时提交")
         if not self.message and self.subject_product is None and self.subject_outfit is None:
             raise ValueError("请输入搭配需求")
+        if self.pair_subject_product and (not self.conversation_id or self.expected_version < 1
+                or self.subject_product or self.subject_outfit or self.upload_action_id
+                or self.regenerate_outfit or self.chat_image or self.confirm_plan):
+            raise ValueError("请从当前单品卡片发起搭配")
         if not self.message and (self.conversation_id or self.expected_version or self.chat_image
                                  or self.upload_action_id or self.regenerate_outfit):
             raise ValueError("入口回显请求不能带已有会话或执行参数")

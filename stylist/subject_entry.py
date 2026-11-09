@@ -26,6 +26,13 @@ def _product_display(row: Mapping, subject: ProductRef) -> dict:
         "secondary_class_name": _text(row.get("secondary_class_name"), 100),
         "color": _text(row.get("color"), 500),
         "style": _text(row.get("style"), 500),
+        "product": {
+            **subject.model_dump(mode="json"),
+            **{key: _text(row.get(key), 2048 if key.endswith("image") else 500)
+               for key in ("title", "class_name", "secondary_class_name", "color", "material",
+                           "gender", "original_image", "cutout_image")},
+            "description": _text(row.get("features_desc") or row.get("description"), 2000),
+        },
         "beautify_status": status,
         "beautify_eligible": bool(subject.source == "user" and row.get("beautify_eligible") is True
                                    and status in {0, 2}),
