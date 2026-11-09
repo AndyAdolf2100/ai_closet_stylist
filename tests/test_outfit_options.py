@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import pytest
 
 from scripts.dialogue_validation import PRODUCTS
@@ -69,6 +71,46 @@ async def test_local_change_uses_the_selected_tab_and_keeps_other_items(tmp_path
         message="其他保留，只换鞋", request_id="outfit-options-change", conversation_id=cid,
         expected_version=1, selected_look_index=selected_index))
     assert reply.delivery == "outfit" and {p.key for p in reply.looks[0].items} == set(expected)
+
+
+@pytest.mark.parametrize("selected_index,target_index", [(None, 0), (2, 2)])
+@pytest.mark.asyncio
+async def test_consultation_explanation_uses_the_selected_tab_or_first_by_default(tmp_path, selected_index, target_index):
+    store = Store(str(tmp_path / "state.db"))
+    pool = {p.key: p for row in PRODUCTS + EXTRA_PRODUCTS if (p := from_row(row, "user"))}
+    initial = ChatRequest(message="三套原搭配", request_id="consult-selection-setup")
+    owner = "synthetic-persona-evaluation"
+    cid, claim, state, _ = store.reserve(owner, initial)
+    state.task = Task(weather_policy="ignored")
+    state.looks = [Look(**x.model_dump(exclude={"selected_keys", "unmatched_reason"}),
+                        items=[pool[k] for k in x.selected_keys]) for x in options()]
+    store.finish(owner, initial, claim, state, Reply(conversation_id=cid, version=1, mode="recommend",
+        delivery="outfit", message="三套搭配", task=state.task, looks=state.looks))
+
+    class Upstream:
+        async def identity(self):
+            return owner
+
+        @asynccontextmanager
+        async def mcp(self):
+            pytest.fail("纯咨询不应调用工具")
+            yield
+
+    target = options()[target_index]
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == "plan":
+                return Plan(mode="consult", conversation_only=True, use_inventory=False)
+            assert {p["key"] for p in payload["current_selection"]} == set(target.selected_keys)
+            return Draft(message="这是温柔日常风格，上衣是薰衣草T恤。")
+
+    reply = await Stylist(Settings(), store, Model()).chat(Upstream(), ChatRequest(
+        message="解释当前选中的搭配方案，告诉我它的风格和上衣，不要生成或试穿",
+        request_id="consult-selection-test", conversation_id=cid, expected_version=1,
+        selected_look_index=selected_index, new_clothes=True))
+    assert reply.delivery == "advice"
+    assert reply.conversation_only
 
 
 @pytest.mark.asyncio

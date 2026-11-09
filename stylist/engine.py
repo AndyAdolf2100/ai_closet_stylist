@@ -539,7 +539,9 @@ class Stylist:
             service_gap, weather, warnings, rejected = (data[k] for k in ("service_gap", "weather", "warnings", "rejected"))
             # A partial or absent candidate pool must not force a fabricated outfit.
             concept = plan.mode != "consult" and plan.use_inventory and not pool
-            current = selected_looks(state) if plan.mode == "modify" or request.regenerate_outfit else state.looks[:1]
+            current = (selected_looks(state)
+                       if plan.mode == "modify" or request.regenerate_outfit or request.selected_look_index is not None
+                       else state.looks[:1])
             original_targets = {p.key for p in current[0].items if p.slot in plan.replace_slots} if current and plan.mode == "modify" else set()
             replacement_options = {slot.value: [p.key for p in pool.values() if p.slot == slot and p.key not in original_targets]
                                    for slot in plan.replace_slots} if plan.mode == "modify" else {}
