@@ -30,3 +30,4 @@ html[data-app-design=ios] .y-message-title{font:500 20px/1.6 -apple-system,sans-
 .y-collection-art.y-collection-canvas{display:block;aspect-ratio:auto;background:transparent}
 .y-collection-art.y-collection-canvas>.y-outfit-preview{width:100%}
 .y-outfit-full>.y-outfit-preview{max-width:520px;margin:0 auto;border:1px solid var(--y-line,#e5e7ec);border-radius:15px}
+.subject-chat-entry{display:flex;width:100%;min-height:44px;margin-top:24px;margin-bottom:16px;flex-shrink:0}

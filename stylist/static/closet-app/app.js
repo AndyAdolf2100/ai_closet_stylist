@@ -7,6 +7,7 @@ import { openIntegratedAgent, closeIntegratedAgent, mountAgent, placeIntegratedA
 import { profilePage } from './profile-pages.js';
 import {pointsEarningPage} from './points-earning.js';
 import { albumCard, inspirationCard, observeWaterfall } from './cards.js';
+import {subjectChatButton} from './subject-chat.js';
 // App navigation is isolated from the existing Agent document and its state.
 const $ = id => document.getElementById(id);
 const ASSETS = '/static/closet-app/assets/';
@@ -88,7 +89,13 @@ async function loadFeed(append = false) {
 function productCard(item) {
   const title = item.title || item.name || item.product_name || item.brand_name || '衣橱单品';
   const src = item.cutout_image || item.original_image || item.image_url || item.cover_image;
-  const b = button('', () => openImage(title, src, item.last_add_time ? `添加于 ${item.last_add_time}` : ''), 'product'); b.append(picture(src, title), node('span', '', title)); return b;
+  const b = button('', () => {
+    const body = node('div', 'detail-body');
+    body.append(picture(src, title), node('h3', '', title));
+    if (item.last_add_time) body.append(node('p', '', `添加于 ${item.last_add_time}`));
+    body.append(subjectChatButton('product', item, {button, openAgent, readSession}));
+    detail(title, body);
+  }, 'product'); b.append(picture(src, title), node('span', '', title)); return b;
 }
 function wardrobeSection(title, count, action, label) {
   const section = node('section', 'wardrobe-section'), header = node('header', 'section-heading'); header.append(node('strong', '', title)); if (count != null) header.append(node('span', '', String(count))); if (action) header.append(button(label, action, '')); section.append(header); return section;
@@ -149,7 +156,7 @@ async function loadMemories() {
 let detailOpener;
 function detail(title, content) { detailOpener = document.activeElement; setCreate(false); $('detail-title').textContent = title; $('detail-content').replaceChildren(content); $('detail-page').hidden = false; $('detail-page').scrollTop = 0; backgroundInert(true); document.querySelector('.floating-bar').inert = true; ($('detail-content').querySelector('.sku-center-back') || $('detail-back')).focus(); const id = ++detailSerial; detailHistory.set(id, {title, content, opener: detailOpener}); if (detailHistory.size > 30) detailHistory.delete(detailHistory.keys().next().value); history.pushState({tab: state.tab, view: 'detail', id}, '', `#${state.tab}/detail`); }
 function closeDetail() { $('detail-page').hidden = true; backgroundInert(false); document.querySelector('.floating-bar').inert = false; if (detailOpener?.isConnected) detailOpener.focus(); }
-function openImage(title, src, description) { const body = node('div', 'detail-body'); body.append(picture(src, title), node('h3', '', title)); if (description) body.append(node('p', '', description)); detail(title, body); }
+function openImage(title, src, description, discussion = null) { const body = node('div', 'detail-body'); body.append(picture(src, title), node('h3', '', title)); if (description) body.append(node('p', '', description)); if (discussion) body.append(subjectChatButton('discussion', discussion, {button, openAgent, readSession})); detail(title, body); }
 function showProducts(products, title = '衣橱单品') { const wrap = node('div'), search = node('input', 'search'), grid = node('div', 'product-grid'); search.type = 'search'; search.placeholder = '搜索当前列表'; search.setAttribute('aria-label', '搜索当前列表'); const render = () => { grid.replaceChildren(); products.filter(p => JSON.stringify([p.title, p.name, p.product_name, p.brand_name]).includes(search.value)).forEach(p => grid.append(productCard(p))); }; search.oninput = render; render(); wrap.append(search, grid); detail(title, wrap); }
 window.addEventListener('yijian-points-earn-open',()=>openDetail('earn-points'));
 const details = { 'earn-points':'积分获取', 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱小记', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
@@ -178,15 +185,17 @@ document.addEventListener('yijian-purchase-request',e=>{
 });
 const agentActions = { login: 'login-open', history: 'mobile-history', upload: 'upload-open', twins: 'twin-open', records: 'journey-records-open', memory: 'memory-open', settings: 'companion-open', preferences: 'preferences-open', checkin: 'checkin-open', logout: 'logout' };
 let agentReady, agentOpener;
-async function openAgent(action = 'chat') {
+async function openAgent(action = 'chat', subjectEntry = null) {
+  const owner = readSession()?.access_token;
   if(document.documentElement.dataset.appDesign==='yijian'){
     agentOpener=document.activeElement;setCreate(false);
     try{
       await mountAgent();
+      if (subjectEntry && readSession()?.access_token !== owner) return;
       const chat=action==='chat'&&!!readSession()?.access_token;
       if(chat){closeDetail();placeIntegratedAgent(true);$('agent-page').hidden=false;backgroundInert(true);document.querySelector('.floating-bar').inert=true;if(history.state?.view!=='agent')history.pushState({tab:state.tab,view:'agent'},'',`#${state.tab}/agent`);}
       else if($('agent-page').hidden)placeIntegratedAgent(false);
-      await openIntegratedAgent(action);
+      await openIntegratedAgent(action, subjectEntry);
     }catch(error){window.PreviewMessage.notify(error.message||'页面暂时没能加载，请刷新后重试。');}
     return;
   }
@@ -194,6 +203,10 @@ async function openAgent(action = 'chat') {
   const frame = $('agent-frame');
   if (!agentReady) agentReady = new Promise(resolve => { frame.onload = resolve; frame.src = '/static/index.html'; });
   await agentReady;
+  if (subjectEntry) {
+    if (readSession()?.access_token !== owner || $('agent-page').hidden) return;
+    await frame.contentWindow.openSubjectConversation(subjectEntry); return;
+  }
   if ($('agent-page').hidden) return;
   const id = agentActions[action]; if (id) frame.contentDocument.getElementById(id)?.click(); else frame.contentDocument.getElementById('message')?.focus();
 }

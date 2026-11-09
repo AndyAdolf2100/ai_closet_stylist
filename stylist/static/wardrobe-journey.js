@@ -603,12 +603,12 @@
       // Legacy replies may suggest uploads merely because an outfit is incomplete.
       // Only an identified upload intent may create this invitation.
       if(!['garment','unspecified'].includes(reply.upload_intent))return;
-      const ambiguous=reply.upload_intent==='unspecified',explicit=reply.upload_intent==='garment';
+      const ambiguous=reply.upload_intent==='unspecified',explicit=reply.upload_intent==='garment',attachment=reply.attachment_wardrobe_required===true;
       const card=el('section','journey-invite');card.setAttribute('aria-label',ambiguous?'选择照片用途':'衣物上传步骤');
-      card.append(el('span','journey-card-label','衣橱小记'),el('strong','',ambiguous?'这张照片，想用在哪里？':explicit?'把新衣服，收进你的衣橱':'让搭配更像你'));
-      card.append(el('p','',ambiguous?'衣物照片可以整理入柜；本人照片可以用来创建试穿形象，生成费用会单独确认。':'先选照片、看一眼，再由你确认上传。我会帮你抠图识别，收进个人衣橱。'));
+      card.append(el('span','journey-card-label','衣橱小记'),el('strong','',attachment?'单张上传到个人衣橱':ambiguous?'这张照片，想用在哪里？':explicit?'把新衣服，收进你的衣橱':'让搭配更像你'));
+      card.append(el('p','',attachment?'请重新选择一张只含单件衣物的照片，预览并确认上传后，再从个人衣橱搭配或试穿。聊天附图不会自动转存。':ambiguous?'衣物照片可以整理入柜；本人照片可以用来创建试穿形象，生成费用会单独确认。':'先选照片、看一眼，再由你确认上传。我会帮你抠图识别，收进个人衣橱。'));
       if(!ambiguous){const list=el('ol','journey-card-steps');for(const text of ['选择照片','预览并确认','抠图入衣橱'])list.append(el('li','',text));card.append(list);}
-      card.append(button(ambiguous?'上传衣物照片':explicit?'好，选择衣物照片':'上传一件衣服',()=>upload('garment'),explicit));
+      card.append(button(attachment?'选择单张衣物照片':ambiguous?'上传衣物照片':explicit?'好，选择衣物照片':'上传一件衣服',()=>upload('garment'),explicit));
       if(ambiguous)card.append(button('创建本人试穿形象',twins));
       card.append(el('small','journey-card-note','点击后先选图，未确认不会上传。'));node.append(card);
     },

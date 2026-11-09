@@ -462,7 +462,8 @@ function showReply(reply, request = null, previewNode = null) {
   if (productEntry || outfitEntry) {
     const entryCard = el('article', 'look subject-entry-card');
     const subject = productEntry || outfitEntry;
-    entryCard.append(el('h3', '', productEntry ? (subject.title || '单品详情') : (subject.title || '搭配详情')));
+    entryCard.append(el('h3', '', productEntry ? '当前单品' : (subject.title || '搭配详情')));
+    if (productEntry?.title) entryCard.append(el('p', 'subject-entry-title', productEntry.title));
     if (subject.image_url || subject.presentation?.canvas_image) {
       const image = el('img', 'subject-entry-image');
       image.src = subject.image_url || subject.presentation.canvas_image;
@@ -473,6 +474,35 @@ function showReply(reply, request = null, previewNode = null) {
     if (subject.description) entryCard.append(el('p', '', subject.description));
     if (outfitEntry?.items?.length) {
       entryCard.append(el('p', '', `这套搭配包含 ${outfitEntry.items.length} 件衣物，可以继续聊怎么调整。`));
+    }
+    if (productEntry) {
+      const owner = session?.access_token;
+      const actions = el('div', 'subject-entry-actions');
+      const current = () => {
+        if (busy || !requireLogin()) return false;
+        if (session?.access_token !== owner || conversation !== reply.conversation_id || version !== reply.version) {
+          notifyIssue('当前单品或账号已有变化，请重新打开这件单品。'); return false;
+        }
+        return true;
+      };
+      const pair = el('button', 'subtle', '用这件搭一套'); pair.type = 'button';
+      pair.onclick = async () => {
+        if (pair.disabled || !current()) return;
+        pair.disabled = true;
+        try { await sendMessage(false, null, null, null, null,
+          {owner, conversation_id:reply.conversation_id, version:reply.version, title:subject.title}); }
+        finally { pair.disabled = false; }
+      };
+      const tryon = el('button', 'subtle', '试穿这件'); tryon.type = 'button';
+      tryon.disabled = !reply.looks?.[0]?.items?.length;
+      tryon.onclick = async () => {
+        if (tryon.disabled || !current()) return;
+        tryon.disabled = true;
+        try { await window.WardrobeJourney.tryon({conversation_id:reply.conversation_id, version:reply.version, look_index:0}); }
+        catch (err) { notifyIssue(err.message); }
+        finally { tryon.disabled = false; }
+      };
+      actions.append(pair, tryon); entryCard.append(actions);
     }
     node.append(entryCard);
   }
@@ -497,7 +527,7 @@ function showReply(reply, request = null, previewNode = null) {
       el('p', '', '这些衣物仍按你的要求保留，还没有组成新的完整搭配。'), productGrid(reply.retained_items));
     node.append(retained);
   }
-  const looks = reply.looks || [], tabs = [], panels = [];
+  const looks = productEntry ? [] : reply.looks || [], tabs = [], panels = [];
   const options = el('div', 'outfit-options');
   const tabList = el('div', 'outfit-tabs');
   tabList.setAttribute('role', 'tablist'); tabList.setAttribute('aria-label', '本轮搭配风格');
@@ -675,15 +705,19 @@ function savePending(value) {
   if (value && !value.request?.chat_image) sessionStorage.setItem(PENDING_KEY, JSON.stringify(value));
   else sessionStorage.removeItem(PENDING_KEY);
 }
-async function sendMessage(resuming = false, outfitAction = null, cityAction = null, explorationAction = null, subjectEntry = null) {
+async function sendMessage(resuming = false, outfitAction = null, cityAction = null, explorationAction = null, subjectEntry = null, pairAction = null) {
   const saved = resuming && pendingRun?.owner === session?.user?.id ? pendingRun : null;
   const attachmentOwner = session?.access_token;
   const inputValue = $('message').value;
-  const draftImage = !subjectEntry && !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
-  const text = subjectEntry ? '' : (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
+  const draftImage = !pairAction && !subjectEntry && !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
+  const text = pairAction ? `用当前这件「${pairAction.title || '衣物'}」，从我的衣橱搭一套。${inputValue.trim() ? '\n'+inputValue.trim() : ''}` : subjectEntry ? '' : (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
   const displayText = subjectEntry?.subject_product ? '打开单品详情' : subjectEntry?.subject_outfit ? '打开搭配详情' : text;
   if ((!text && !subjectEntry) || busy || !requireLogin()) return;
   if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
+  if (subjectEntry && attachmentOwner !== session?.access_token) return;
+  if (pairAction && (session?.access_token !== pairAction.owner || conversation !== pairAction.conversation_id || version !== pairAction.version)) {
+    notifyIssue('当前单品已有变化，请重新打开后搭配。'); return;
+  }
   if (draftImage && (attachmentOwner !== session?.access_token || draftImage !== window.ChatAttachments?.get())) return;
   if (outfitAction && (session.user.id !== outfitAction.owner || conversation !== outfitAction.conversation_id)) {
     notifyIssue('账号或搭配已有更新，请从当前最新结果重新生成。'); return;
@@ -703,7 +737,8 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   if (!saved && !subjectEntry && selectedCity) request.location = selectedCity;
   if (!saved && !subjectEntry && !cityAction && selectedLook?.conversationId === conversation) request.selected_look_index = selectedLook.index;
   if (!saved && outfitAction) { request.regenerate_outfit = true; request.selected_look_index = outfitAction.look_index; request.regenerate_from_version = outfitAction.version; }
-  const uploadAnchorForRequest = !saved && !subjectEntry && !cityAction && !explorationAction
+  if (pairAction) { request.pair_subject_product = true; request.selected_look_index = 0; }
+  const uploadAnchorForRequest = !pairAction && !saved && !subjectEntry && !cityAction && !explorationAction
     && !request.regenerate_outfit ? pendingUploadAnchor : null;
   if (uploadAnchorForRequest) request.upload_action_id = uploadAnchorForRequest;
   if (!saved && draftImage) request.chat_image = draftImage;
@@ -723,7 +758,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
     let received = false;
     while (!received) {
       try {
-        const fundsOk=!window.AppPayment||await Promise.race([window.AppPayment.checkFunds(null,'agent',()=>!run.cancelled&&session?.access_token===run.token),run.cancelWait]);
+        const fundsOk=!!subjectEntry||!window.AppPayment||await Promise.race([window.AppPayment.checkFunds(null,'agent',()=>!run.cancelled&&session?.access_token===run.token),run.cancelWait]);
         if(run.cancelled)return;
         if(!fundsOk){trackingOutcome=true;track('AgentSendBlocked');savePending(null);return;}
         if(run.cancelled||session?.user.id!==chatOwner)return;
@@ -759,7 +794,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
                 if(run.cancelled||session?.user.id!==chatOwner)return;
                 completeReplyAtReadingPosition(reply,request,textPreview?.node,pending);replyCommitted=true;received=true;run.completed=true;setBusy(true);trackingOutcome=true;track('AgentResult',{elapsed_ms:performance.now()-trackingStart,delivery:reply.delivery,look_count:reply.looks?.length||0,retry_count:trackingRetries});
                 if (reply.pending_confirmation) showPlanApproval(request);
-                else { savePending(null); dailyCheckin.completeChat(chatOwner); }
+                else { savePending(null); if(!subjectEntry)dailyCheckin.completeChat(chatOwner); }
               }
             }
             if (done) break;
@@ -776,7 +811,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
       }
     }
     if(run.cancelled)return;
-    if (!cityAction && !explorationAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
+    if (!pairAction && !subjectEntry && !cityAction && !explorationAction && !request.regenerate_outfit && $('message').value === inputValue) $('message').value = '';
     if(request.chat_image) window.ChatAttachments?.ack(request.chat_image);
     if (uploadAnchorForRequest && pendingUploadAnchor === uploadAnchorForRequest) {
       pendingUploadAnchor = null; pendingAnchorOwner = null; updateUploadAnchor();
@@ -980,6 +1015,37 @@ loginStatus(); updateCityLabel(); if (session) { refreshHistory(); if (selectedC
 
 if (pendingRun && session && pendingRun.owner === session.user.id) sendMessage(true);
 
+window.openSubjectConversation = async function(entry) {
+  if (busy) { notifyIssue('请等当前回复结束，再打开这件单品或搭配。'); return; }
+  const product = entry?.subject_product, outfit = entry?.subject_outfit;
+  const discussion = entry?.discussion;
+  if ([product,outfit,discussion].filter(Boolean).length !== 1
+      || (discussion && (typeof discussion.title !== 'string' || typeof discussion.description !== 'string' || !(discussion.title+discussion.description).trim()))
+      || (product && (product.source !== 'user' || !/^[1-9][0-9]{0,19}$/.test(product.product_id)))
+      || (outfit && (outfit.source !== 'user' || !Number.isSafeInteger(outfit.outfit_id) || outfit.outfit_id <= 0))) {
+    notifyIssue('这条单品或搭配信息暂不可用，请返回重新打开。'); return;
+  }
+  const owner = session?.access_token;
+  if (!requireLogin()) return;
+  await window.CompanionSettings?.ready;
+  if (busy || session?.access_token !== owner) return;
+  const context = discussion ? `我想聊聊这套「${discussion.title.slice(0,200)}」。${discussion.description ? '\n页面介绍：'+discussion.description.slice(0,2000) : ''}` : '';
+  const draft = $('message').value;
+  if (discussion && context.length + draft.length + 2 > 6000) { notifyIssue('草稿较长，请先整理后再带入这套介绍。'); return; }
+  savePending(null); conversation = null; version = 0; selectedLook = null;
+  pendingUploadAnchor = null; pendingAnchorOwner = null; updateUploadAnchor();
+  window.ChatAttachments?.clear();
+  $('feed').replaceChildren();
+  if (discussion) {
+    $('message').value = context + (draft ? '\n\n'+draft : '');
+    $('message').dispatchEvent(new Event('input', {bubbles:true}));
+    $('message').focus();
+    return;
+  }
+  return sendMessage(false, null, null, null, product
+    ? {subject_product: {source:'user',product_id:product.product_id}}
+    : {subject_outfit: {source:'user',outfit_id:outfit.outfit_id}});
+};
 function setupSubjectEntryDebug() {
   const panel = $('subject-entry-debug');
   if (!panel || new URLSearchParams(location.search).get('debug') !== 'subject-entry') return;

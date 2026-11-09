@@ -113,10 +113,12 @@ export function mountAgent(){
   })();
   return ready;
 }
-export async function openIntegratedAgent(action){
+export async function openIntegratedAgent(action,subjectEntry=null){
+  const owner=sessionToken();
   if(action==='login'||(!sessionToken()&&action!=='logout')){location.assign(loginURL());return;}
   if(action!=='logout'&&!await ensureOnboarded())return;
   const host=await mountAgent();
+  if(subjectEntry){if(sessionToken()!==owner||document.getElementById('agent-page').hidden)return;await window.openSubjectConversation(subjectEntry);return;}
   let authenticated=false;try{authenticated=!!JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token;}catch{}
   if(action==='city'){await document.querySelector('.y-agent-city-button')?.onclick({currentTarget:document.querySelector('.y-home-city-button')});return;}
   if(action==='person-upload'){

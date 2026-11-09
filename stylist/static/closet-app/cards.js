@@ -4,7 +4,7 @@ export function albumCard(item, { node, button, picture, openImage, assets }) {
   const multiple = products.length > 1;
   const title = item.title?.trim() || '试衣造型';
   const card = node('article', `album-card ${multiple ? 'album-multiple' : 'album-single'}`);
-  const tap = button('', () => openImage(title, item.fitting_image_url, item.description), 'album-tap');
+  const tap = button('', () => openImage(title, item.fitting_image_url, item.description, {title, description:item.description}), 'album-tap');
   tap.setAttribute('aria-label', `查看${title}`);
   const stage = node('div', 'album-stage');
   const result = picture(item.fitting_image_url, '试衣效果图'); result.classList.add('album-result');
@@ -43,7 +43,7 @@ export function albumCard(item, { node, button, picture, openImage, assets }) {
 
 export function inspirationCard(item, { node, button, picture, openImage }) {
   const src = item.cover_image || item.canvas_image || item.canvas_info?.canvas_image;
-  const card = button('', () => openImage(item.title || '搭配灵感', src, item.summary), 'inspiration-card');
+  const card = button('', () => openImage(item.title || '搭配灵感', src, item.summary, {title:item.title || '搭配灵感',description:item.summary}), 'inspiration-card');
   card.setAttribute('aria-label', item.title || '查看搭配灵感');
   const photo = picture(src, item.title || '搭配灵感');
   // A cover without dimensions is square in iOS; never force it into a 3:4 crop.

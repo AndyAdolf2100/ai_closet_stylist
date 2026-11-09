@@ -413,3 +413,13 @@ for(const transition of ['close','account','view'])test(`media polling discards 
  if(transition==='close')t.w.document.querySelector('#journey-dialog').close();else if(transition==='account')t.w.WardrobeJourney.setOwner('2');else t.w.WardrobeJourney.upload('person');
  resolve({...a,status:'completed'});await inflight;assert.notEqual(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');await assert.rejects(tick);t.close();
 });
+
+test('attachment execution guidance opens one fresh single-garment picker and never transfers the chat image',async()=>{
+ const calls=[];const t=setup(async(...args)=>calls.push(args));
+ const host=t.w.document.getElementById('feed');t.w.WardrobeJourney.offer({upload_intent:'garment',attachment_wardrobe_required:true},host);
+ assert.match(host.textContent,/单张上传到个人衣橱/);assert.match(host.textContent,/重新选择.*单件衣物/);
+ assert.equal(host.querySelectorAll('button').length,1);assert.equal(calls.length,0);
+ assert(!byText(t.w,'创建本人试穿形象'));byText(t.w,'选择单张衣物照片').click();
+ const input=t.w.document.querySelector('#journey-photo-input');assert(input);assert.equal(input.multiple,false);assert.equal(input.files.length,0);
+ assert.equal(calls.length,0);assert(byText(t.w,'确认上传'));t.close();
+});
