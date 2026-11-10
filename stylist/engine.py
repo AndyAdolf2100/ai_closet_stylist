@@ -38,7 +38,7 @@ from .memory import (
     strip_save_claims,
     verified_memory_save,
 )
-from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Slot, Task
+from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionState, Slot, Task
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
@@ -101,6 +101,7 @@ class RunState(TypedDict, total=False):
     problems: list
     reply: dict
     cancelled: bool
+    text_reference_fallback: bool
 
 
 def last_business_intent(messages):
@@ -624,6 +625,27 @@ class Stylist:
             }
             return draft_payload
 
+        def candidate_free_reference(draft, data):
+            # An empty *filtered* pool is not proof that the wardrobe is empty.
+            # Model-provided IDs cannot bind a text reference to missing stock.
+            if (data["plan"].get("mode") != "consult" and data["plan"].get("use_inventory")
+                    and not data["pool"] and any(look.selected_keys for look in draft.looks)):
+                draft = draft.model_copy(deep=True)
+                for look in draft.looks:
+                    look.selected_keys = []
+                draft.message = service_notice(request.assistant_persona, "concept")
+            return draft
+
+        def reference_explanation(data):
+            if data.get("service_gap") or data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable"):
+                return "这次暂时没能读取到可用的衣橱单品，不能据此判断衣橱为空。"
+            reasons = list(data.get("rejected", {}))
+            if reasons:
+                return "这次候选未满足你的要求：" + "；".join(reasons[:3]) + "。"
+            if data["pool"]:
+                return "这次候选还没有组成符合要求的搭配，先不勉强使用这些单品。"
+            return "这次没有检索到可用单品，不代表整个衣橱为空。"
+
         async def style_node(data):
             if explicit_memory(request.message) is not None:
                 return {"draft": Draft(message="这条穿搭信息已整理好。").model_dump(mode="json")}
@@ -631,7 +653,7 @@ class Stylist:
                 return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
                 report("styling", progress_message(request.assistant_persona, "styling"))
-            draft = await self.llm.generate("style", await draft_payload(data), Draft)
+            draft = candidate_free_reference(await self.llm.generate("style", await draft_payload(data), Draft), data)
             if data["plan"].get("conversation_only") or data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"looks": []})
             if data["plan"].get("weather_only"):
@@ -707,6 +729,7 @@ class Stylist:
                            "只有确无适合单品时才留空selected_keys并说明unmatched_reason，不为凑齐整套丢掉已有单品。")
             draft = await self.llm.generate("style", {**(await draft_payload(data)), "validation_errors": data["problems"],
                 "previous_draft": data["draft"], "instruction": instruction}, Draft)
+            draft = candidate_free_reference(draft, data)
             if attribute_only:
                 original = Draft.model_validate(data["draft"])
                 if [look.selected_keys for look in draft.looks] != [look.selected_keys for look in original.looks]:
@@ -737,6 +760,18 @@ class Stylist:
                 if all(problem.startswith(ADVICE_PREFIX) for problem in problems):
                     draft = boundary_fallback(draft, request.message, Task.model_validate(data["effective_task"]))
                     return {"draft": draft.model_dump(mode="json"), "problems": []}
+                if (data["plan"]["mode"] in {"recommend", "weekly"}
+                        and data["plan"].get("use_inventory")
+                        and not data["frozen"] and not request.regenerate_outfit):
+                    task, plan = Task.model_validate(data["effective_task"]), Plan.model_validate(data["plan"])
+                    reason = reference_explanation(data)
+                    how = ["先用一件主体单品确定风格，其余配色尽量简洁，用相近色或中性色衔接。",
+                           "保留你明确的禁穿和穿法要求；衣物厚薄、尺码及鞋子的脚感都以实物和试穿为准。"]
+                    draft = Draft(message=reason + "先给你文字穿搭思路：" + "".join(how), looks=[LookDraft(
+                        title="文字穿搭思路", unmatched_reason=reason, why=["先围绕本次场景和限制整理穿法，不把参考当成已拥有的衣物。"], how=how)])
+                    draft = ensure_weather_references(draft, task, plan, data.get("weather"),
+                                                     schedule_dates(plan, Task.model_validate(data["task"])))
+                    return {"draft": draft.model_dump(mode="json"), "problems": [], "text_reference_fallback": True}
                 if request.regenerate_outfit and any(problem.startswith(REGENERATION_PREFIX) for problem in problems):
                     raise StylistError("outfit_regeneration_unavailable", "这次候选里还没找到不同且符合要求的穿搭，原搭配已保留。", 422)
                 retained = bool(source_session(data).looks)
@@ -792,10 +827,12 @@ class Stylist:
             if delivery == "concept":
                 reference_reason = ("unavailable" if data.get("service_gap") or
                                     data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable")
-                                    else "no_match" if pool else "no_candidates")
+                                    else "no_match" if pool or data.get("rejected") or data.get("text_reference_fallback") else "no_candidates")
+                if not data.get("text_reference_fallback"):
+                    draft.message = reference_explanation(data) + "\n\n" + draft.message
                 warnings.append(service_notice(request.assistant_persona, "concept"))
             gap = (plan.mode != "consult" and plan.use_inventory and not plan.weather_only
-                   and not data.get("service_gap")
+                   and (not data.get("service_gap") or delivery == "concept")
                    and (not looks or any(not look.wardrobe_complete for look in looks)))
             reply = Reply(**exploration, wardrobe_gap=gap, retrieval_diagnostics=data.get("retrieval_diagnostics", {}),
                           conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
