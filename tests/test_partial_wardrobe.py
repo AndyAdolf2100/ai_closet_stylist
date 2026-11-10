@@ -63,12 +63,15 @@ async def test_empty_wardrobe_stays_text_only(tmp_path):
             if name == 'plan':
                 return Plan(mode='recommend', use_inventory=False)
             assert payload['candidates'] == []
+            assert payload['reference_context']['has_candidates'] is False
+            assert payload['reference_context']['inventory_read_failed'] is False
             return Draft(message='本次衣橱没有返回衣物，先给文字参考。', looks=[LookDraft(
                 title='文字参考', pieces=['衬衫', '长裤', '平底鞋'], why=['日常组合'], how=['按已有单品调整'])])
     reply = await Stylist(Settings(), Store(str(tmp_path / 'empty.db')), Model()).chat(upstream, ChatRequest(
         message='帮我推荐一套，不考虑天气', request_id='empty-wardrobe-query', weather_policy='ignored'))
     assert '/api/user_product/quick_edit_list' in upstream.calls
     assert reply.delivery == 'concept' and not reply.looks[0].items
+    assert reply.reference_reason == 'no_candidates'
     assert not reply.upload_suggestion and reply.upload_intent is None
 
 
@@ -107,3 +110,25 @@ async def test_weather_failure_does_not_hide_available_personal_piece(tmp_path):
                                                   location=CitySelection(city_name='示例市')))
     assert reply.delivery == 'outfit' and reply.looks[0].items[0].key == 'user:101'
     assert reply.looks[0].wardrobe_complete is False
+
+
+@pytest.mark.asyncio
+async def test_unselected_candidates_are_not_reported_as_empty_wardrobe(tmp_path):
+    upstream = DialogueUpstream('partial_wardrobe')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend')
+            assert payload['reference_context']['has_candidates']
+            return Draft(message='先给文字思路。', looks=[LookDraft(
+                title='文字参考', pieces=['休闲上衣', '长裤'],
+                unmatched_reason='本次候选暂不符合要求。', why=['日常'], how=['按体感调整'])])
+
+    store = Store(str(tmp_path / 'unselected.db'))
+    reply = await Stylist(Settings(), store, Model()).chat(upstream, ChatRequest(
+        message='帮我搭一套，不考虑天气', request_id='concept-unselected'))
+    assert reply.delivery == 'concept' and reply.reference_reason == 'no_match'
+    saved = store.history(await upstream.identity(), reply.conversation_id)['messages'][0]['reply']
+    assert saved['reference_reason'] == 'no_match'
+    assert not reply.looks[0].items

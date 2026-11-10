@@ -142,6 +142,7 @@ async def test_inventory_failure_does_not_offer_a_false_gap(tmp_path):
     reply = await Stylist(Settings(), Store(str(tmp_path/'state.db')), Model()).chat(Broken(),
         ChatRequest(message='搭一套，不考虑天气', request_id='gap-read-failure'))
     assert not reply.wardrobe_gap and not reply.new_clothes
+    assert reply.reference_reason == "unavailable"
 
 
 def test_catalog_images_require_a_saved_selection_owned_by_the_account(tmp_path, monkeypatch):
