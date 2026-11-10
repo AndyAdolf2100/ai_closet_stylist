@@ -11,7 +11,7 @@ export function subjectChatButton(kind, item, {button, openAgent, readSession}) 
   const entry = discussion ? {discussion: {title: String(item.title || '').slice(0,200), description: String(item.description || '').slice(0,2000)}}
     : product ? {subject_product: {source: 'user', product_id: id}}
     : {subject_outfit: {source: 'user', outfit_id: id}};
-  const control = button(product ? '聊聊这件怎么搭' : '聊聊这套搭配', async () => {
+  const control = button(product ? '帮我查看下这件' : '帮我查看下搭配', async () => {
     if (!valid || control.disabled) return;
     if (!owner) { await openAgent('login'); return; }
     if (readSession()?.access_token !== owner) return;

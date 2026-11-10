@@ -910,7 +910,7 @@ class Stylist:
                 looks = [Look(title=product_entry["title"] or "当前单品", items=[item],
                               pieces=[item.display_name], wardrobe_complete=False)]
                 message = "已打开这件单品，可以继续聊怎么搭配。"
-                history_message = f"打开单品：{product_entry.get('title') or request.subject_product.product_id}"
+                history_message = "帮我查看下这件"
             else:
                 outfit_entry = await resolve_outfit_entry(upstream, request.subject_outfit)
                 items = [from_row(item, "user") for item in outfit_entry["items"]]
@@ -920,7 +920,7 @@ class Stylist:
                               pieces=[item.display_name for item in items],
                               wardrobe_complete=True, why=[], how=[], notes=[])]
                 message = "已打开这套搭配，可以继续聊怎么调整。"
-                history_message = f"打开搭配：{outfit_entry.get('title') or request.subject_outfit.outfit_id}"
+                history_message = "帮我查看下搭配"
             reply = Reply(
                 conversation_id=cid,
                 version=request.expected_version + 1,

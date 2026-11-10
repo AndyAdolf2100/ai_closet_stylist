@@ -151,6 +151,23 @@ class MediaActions:
         owner = await upstream.identity()
         row = self.get(owner, action)
         result = json.loads(row["result_json"] or "{}")
+        if row["kind"] == "generation" and row["status"] == "completed":
+            # Generation completion is immutable; candidate eligibility is not.
+            view = self.view(row)
+            view["result"]["can_confirm"] = False
+            if not result.get("task_id"):
+                return view
+            try:
+                async with upstream.mcp() as mcp:
+                    fresh = await mcp.call("digital_twin_generation_status", {"task_id": str(result["task_id"])})
+            except StylistError as exc:
+                if exc.status == 401:
+                    raise
+                view["result"]["cannot_confirm_reason"] = "STATUS_UNAVAILABLE"
+                return view
+            view["result"].update(fresh)
+            view["result"]["can_confirm"] = fresh.get("status") == "completed" and fresh.get("can_confirm") is True
+            return view
         if row["status"] not in {"processing", "unknown", "executing"}:
             return self.view(row)
         specs = {"garment": ("product_upload_status", "task_id"),
