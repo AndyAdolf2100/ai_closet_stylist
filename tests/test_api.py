@@ -33,6 +33,32 @@ def test_stylist_routes_leave_server_api_namespace_free(tmp_path):
         assert client.post("/stylist-api/auth/mobile-login", json={}).status_code == 422
 
 
+def test_delete_conversation_route_is_idempotent_and_blocks_history(tmp_path, monkeypatch):
+    async def identity(self):
+        return self.authorization.split()[-1]
+
+    monkeypatch.setattr("stylist.main.Upstream.identity", identity)
+    app = create_app(Settings(database=str(tmp_path / "delete-route.db")))
+    cid = "sty_" + "c" * 32
+    with app.state.engine.store.connection() as conn:
+        conn.execute("INSERT INTO stylist_sessions(id,owner_id,state_json,version) VALUES(?,?,?,?)",
+                     (cid, "owner", "{}", 1))
+        conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",
+                     (cid, "owner", 1, "日常穿搭", "{}"))
+    with TestClient(app) as client:
+        headers = {"Authorization": "Bearer owner"}
+        response = client.delete(f"/stylist-api/conversations/{cid}", headers=headers)
+        assert response.status_code == 200
+        assert response.json() == {"conversation_id": cid, "deleted": True}
+        assert client.get("/stylist-api/conversations", headers=headers).json() == []
+        history = client.get(f"/stylist-api/conversations/{cid}", headers=headers)
+        assert history.status_code == 404 and history.json()["code"] == "conversation_not_found"
+        repeat = client.delete(f"/stylist-api/conversations/{cid}", headers=headers)
+        assert repeat.status_code == 200 and repeat.json()["deleted"] is True
+        foreign = client.delete(f"/stylist-api/conversations/{cid}", headers={"Authorization": "Bearer other"})
+        assert foreign.status_code == 404
+
+
 def test_stream_delivers_structured_result_and_no_internal_details(tmp_path, monkeypatch):
     async def identity(self):
         return "1"

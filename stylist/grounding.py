@@ -7,7 +7,8 @@ from .personas import is_male_persona
 PREFIX = "属性依据不足："
 _PATTERNS = {
     "fit": re.compile(r"(?:不会|不易|不容易|不太会|不)(?:再|有|太|会)?(?:勒|贴身|贴肚|紧绷)|(?:没有|无|不会有)(?:任何|明显|一点)?(?:压迫感|压迫|束缚感)|(?:坐下|坐着|坐久|久坐|走路|活动|抬手|走动|吃饭).{0,8}(?:都|更|比较|也|很|会)?(?:自在|轻松|舒服|舒适|自如|放松)|(?:对腰腹|对肚子|对腹部).{0,16}(?:更友好|更轻松|更自在|更舒适|更舒服|无负担)|(?:腰腹|肚子|腹部|腰部).{0,16}(?:不|无|更|充足|足够|容易|友好|自在|舒服|舒适|宽松|空间|松量|余量|压迫|受压)|(?:不|不会)(?:压|勒)(?:肚|腹|腰)"),
-    "comfort": re.compile(r"(?:也|很|更|都|就|又)(?:舒服|舒适)|(?:鞋|乐福鞋|运动鞋).{0,5}(?:好走|不累)|久走不累"),
+    "comfort": re.compile(r"(?:也|很|更|都|就|又)(?:舒服|舒适)|(?:鞋|乐福鞋|运动鞋).{0,5}(?:好走|不累)|久走不累|(?:走路|走动|走一天|走沙滩|逛街).{0,12}(?:省心|稳当|轻快|好走)|(?:鞋|乐福鞋|运动鞋).{0,12}(?:省心|稳当|更好走)"),
+    "care": re.compile(r"(?:打理|护理|洗护).{0,8}(?:省心|简单|容易|不费)|(?:不用|不必|不需要).{0,6}(?:打理|护理)|抓起来就能穿|(?:好|易|容易)打理"),
     "design": re.compile(r"宽松|松紧腰|弹性腰头|弹力腰|腰头有弹性|有弹性|富有弹性|松紧设计|有伸缩余量"),
     "weather": re.compile(r"防水|防雨|防滑|挡雨|挡风|(?:更?不容易|不易|不会|不太会).{0,12}(?:湿|雨|水)|(?:防止|减少|少让|降低).{0,24}(?:湿|淋|雨|水)|(?:雨|雨水|雨点).{0,16}(?:面积|机会|概率).{0,8}(?:少|小|降低)"),
 }
@@ -95,7 +96,7 @@ def attribute_claim_problems(draft, pool):
             for path, text, products in _fields(draft, pool) if _issues(text, products)]
 
 
-def ground_attribute_fallback(draft: Draft, pool, persona):
+def ground_attribute_fallback(draft: Draft, pool, persona, *, preserve_references=False):
     """Remove unsupported sentences intact; put each necessary caveat in notes once."""
     male = is_male_persona(persona)
     fit = "是否合身、腰腹会不会受压，还要看尺寸和试穿感受。" if male else "这件穿着是否合身，还要试穿看看腰腹有没有受压。"
@@ -138,10 +139,12 @@ def ground_attribute_fallback(draft: Draft, pool, persona):
             look["notes"].append(fit)
         if "weather" in kinds and weather not in look["notes"]:
             look["notes"].append(weather)
-    return normalize_draft(Draft.model_validate(result))
+        if "care" in kinds:
+            look["notes"].append("具体洗护方式和熨烫要求，请以衣物洗护标签为准。")
+    return normalize_draft(Draft.model_validate(result), preserve_references=preserve_references)
 
 
-def normalize_draft(draft):
+def normalize_draft(draft, *, preserve_references=False):
     result = draft.model_copy(deep=True)
     result.follow_ups = [text for text in result.follow_ups if not re.search(
         r"我可以|我帮你|要不要我|告诉我你|需要我|让我帮你", text)]
@@ -155,7 +158,7 @@ def normalize_draft(draft):
             look.title = "+".join(clean)
         for field in ("pieces", "reference_pieces", "why", "how", "notes"):
             setattr(look, field, list(dict.fromkeys(getattr(look, field))))
-        if not look.selected_keys:
+        if not look.selected_keys and not preserve_references:
             # A wholly textual card has one garment list. References distinguish
             # missing pieces only when the card also contains owned items.
             look.pieces = list(dict.fromkeys(look.pieces + look.reference_pieces))

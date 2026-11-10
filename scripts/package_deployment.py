@@ -62,6 +62,8 @@ def public_bootstrap(config):
         values = {
             "STYLIST_SERVER_URL": f"{origin.scheme}://{origin.netloc}",
             "STYLIST_MCP_URL": upstream["url"],
+            "STYLIST_USAGE_CALLBACK_URL": f"{origin.scheme}://{origin.netloc}/api/internal/stylist/model-usage",
+            "STYLIST_USAGE_ENVIRONMENT": "test",
             "STYLIST_LLM_URL": llm["base_url"],
             "STYLIST_LLM_MODEL": llm["model"],
             "STYLIST_LOGIN_APP_VERSION": raw["upstream_auth"].get("app_version") or "1.2.0",

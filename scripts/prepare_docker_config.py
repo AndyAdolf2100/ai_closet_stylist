@@ -50,6 +50,8 @@ def prepare(legacy_config: Path, output: Path, database_config: Path | None = No
         values = {
             "STYLIST_SERVER_URL": f"{origin.scheme}://{origin.netloc}",
             "STYLIST_MCP_URL": mcp_url,
+            "STYLIST_USAGE_CALLBACK_URL": f"{origin.scheme}://{origin.netloc}/api/internal/stylist/model-usage",
+            "STYLIST_USAGE_ENVIRONMENT": "test",
             "STYLIST_LLM_URL": llm["base_url"],
             "STYLIST_LLM_MODEL": llm["model"],
             "STYLIST_LLM_KEY": llm["api_key"],

@@ -98,7 +98,7 @@ def create_app(settings=None):
     app.state.engine = engine
     app.state.runs = runs
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
-                       allow_methods=["GET", "POST", "PUT"], allow_headers=["Authorization", "Content-Type"])
+                       allow_methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["Authorization", "Content-Type"])
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request, exc):
@@ -133,6 +133,7 @@ def create_app(settings=None):
                                    authorization: str | None = Header(default=None)):
         upstream = Upstream(settings, require_token(authorization))
         owner = await upstream.identity()
+        await asyncio.to_thread(store.require_conversation, owner, cid)
         with store.connection() as conn:
             row = conn.execute("SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?",
                                (owner, cid, version)).fetchone()
@@ -335,17 +336,24 @@ def create_app(settings=None):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(store.history, owner, conversation_id)
 
+    @app.delete("/stylist-api/conversations/{conversation_id}")
+    async def delete_conversation(conversation_id: str, authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(store.delete_conversation, owner, conversation_id)
+
     @app.get("/stylist-api/conversations/{conversation_id}/feedback")
     async def outfit_feedback_get(conversation_id: str, version: int = Query(ge=1), look_index: int = Query(ge=0, le=6),
                                   authorization: str | None = Header(default=None)):
         request = OutfitFeedback(version=version, look_index=look_index)
         owner = await Upstream(settings, require_token(authorization)).identity()
+        await asyncio.to_thread(store.require_conversation, owner, conversation_id)
         return await asyncio.to_thread(read_feedback, store, owner, conversation_id, request.version, request.look_index)
 
     @app.put("/stylist-api/conversations/{conversation_id}/feedback")
     async def outfit_feedback_save(conversation_id: str, request: OutfitFeedback,
                                    authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
+        await asyncio.to_thread(store.require_conversation, owner, conversation_id)
         return await asyncio.to_thread(save_feedback, store, owner, conversation_id, request)
 
     @app.get("/stylist-api/conversations/{conversation_id}/saved-outfit")

@@ -162,6 +162,12 @@ def automatic_preference(message):
         return None
     if re.search(r"(?:别|不要|不用|无需|不必).{0,6}(?:写|记|存|收录)|(?:什么|是否|是不是)|[吗么](?:[。！!\s]|$)", message):
         return None
+    # A complete first-person long-term clothing instruction may precede the
+    # preference verb. Keep the original sentence, without inferring an object.
+    if re.fullmatch(r"以后(?:给我)?(?:搭衣服|搭配|穿搭)(?:尽量)?别选[^，。！？!?]{1,30}[，,]我(?:真|真的|很)?不喜欢[。！!]?", message):
+        content = clothing_content(message)
+        if content:
+            return MemoryEntry(id="pending", content=content, category="穿衣习惯")
     clauses = re.split(r"([，,。！!；;\n])", message)
     selected, own_subject = [], False
     for index in range(0, len(clauses), 2):
@@ -250,8 +256,8 @@ def strip_save_claims(text):
                 continue
             # Remove the receipt clause without discarding the user's clothing
             # information in the same sentence ("记住啦，日常走路多……").
-            cleaned = re.sub(r"^(?:我(?:已经|也)?)?(?:记住|记下|记着)(?:了|啦|着)?[：:，, ]*", "", sentence.strip())
-            cleaned = re.sub(r"我(?:已经|也)?(?:记住|记下)(?:了|啦)?(?=你|您|不喜欢|喜欢)", "", cleaned)
+            cleaned = re.sub(r"^(?:我(?:已经|也)?)?(?:记住|记下|记着)(?:了|啦|着)?[：:，, ]+", "", sentence.strip())
+            cleaned = re.sub(r"我(?:已经|也)?(?:记住|记下)(?:了|啦)?(?=(?:你|您)?(?:不穿|不喜欢|喜欢|平时|每天))", "", cleaned)
             clauses = re.split(r"[，,：:]", cleaned)
             cleaned = "，".join(clause.strip() for clause in clauses if not re.search(claims, clause))
             cleaned = cleaned.strip(" ，,：:")

@@ -50,7 +50,8 @@ export function mountAgent(){
     };
     updateWelcomePortrait();window.addEventListener('companion-profile-change',updateWelcomePortrait);
     document.getElementById('new-chat').textContent='＋ 新对话';
-    host.querySelector('.journey-entry')?.append(document.getElementById('journey-records-open'));
+    // 暂停生成记录入口，恢复按钮后再启用挂载。
+    // host.querySelector('.journey-entry')?.append(document.getElementById('journey-records-open'));
     const entry=host.querySelector('.journey-entry');
     if(entry){entry.setAttribute('role','group');entry.setAttribute('aria-label','衣橱与试穿快捷入口');
       const entries=[['welcome-upload','添加衣服','收进个人衣橱','m8 3-5 4 3 4 2-2v12h8V9l2 2 3-4-5-4a4 4 0 0 1-8 0'],['twin-open','试穿形象','遇见自己的新模样','M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-2a7 7 0 0 1 14 0v2'],['journey-records-open','生成记录','回看每次小尝试','M5 3h14v18H5zM9 7h6M9 11h6M9 15h4']];

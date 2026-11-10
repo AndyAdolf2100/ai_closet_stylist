@@ -15,7 +15,7 @@ from .errors import AuthenticationExpired, StylistError
 
 READ_TOOLS = {"city.resolve", "weather.get", "product.resolve", "outfit.search-saved", "outfit.resolve", "kb_search"}
 IMAGE_READ_TOOLS = {"digital_twin_overview", "digital_twin_tryon_quote", "product_beautify_quote"}
-MEDIA_READ_TOOLS = {"digital_twin_photo_check_status",
+MEDIA_READ_TOOLS = {"digital_twin_photo_check_status", "digital_twin_photo_check_receipt",
                     "digital_twin_generation_status", "digital_twin_tryon_status"}
 MEDIA_WRITE_TOOLS = {"digital_twin_photo_check", "digital_twin_generate",
                      "digital_twin_set_default", "digital_twin_confirm"}
@@ -275,11 +275,17 @@ class MCPReads:
                 raise AuthenticationExpired()
             message = {"product_upload_capacity_exhausted": "衣橱容量不足，请先在App整理衣橱或查看扩容方案。",
                        "digital_twin_points_insufficient": "账户积分不足，可在App查看积分和充值方案。",
+                       "digital_twin_photo_risk_rejected": "图片存在风险，请重新选择照片。",
+                       "digital_twin_photo_risk_unavailable": "图片合规检测暂时不可用，请使用新的请求编号稍后重试。",
                        "digital_twin_price_changed": "人物生成费用已变化，请重新查看费用并确认。",
                        "digital_twin_check_expired": "照片检查已过期，请重新检查后再生成。",
                        "tryon_points_insufficient": "账户积分不足，可在App查看积分和充值方案。",
                        "tryon_quota_exhausted": "当前试穿额度不足，可在App查看可用权益。"}.get(code,
                        "该服务暂时无法完成请求。")
+            if code == "digital_twin_photo_risk_rejected":
+                raise StylistError(code, message, 422)
+            if code == "digital_twin_photo_risk_unavailable":
+                raise StylistError(code, message, 503)
             raise StylistError(code, message)
         if not isinstance(value, dict):
             raise StylistError("tool_result_invalid", "工具返回结果不完整。")

@@ -66,3 +66,24 @@ async def test_tool_input_and_output_contracts_are_checked():
         await reads.call("weather.get", {"city_name": "北京"})
     with pytest.raises(StylistError, match="tool_not_allowed"):
         await reads.call("digital_twin_tryon", {})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("code,status", [
+    ("digital_twin_photo_risk_rejected", 422),
+    ("digital_twin_photo_risk_unavailable", 503),
+])
+async def test_photo_risk_errors_keep_typed_codes_and_status(code, status):
+    tool = SimpleNamespace(name="digital_twin_photo_check", inputSchema={"type": "object"}, outputSchema={"type": "object"})
+
+    class Session:
+        async def list_tools(self, cursor=None):
+            return SimpleNamespace(tools=[tool], nextCursor=None)
+
+        async def call_tool(self, *args, **kwargs):
+            return SimpleNamespace(structuredContent={"code": code, "message": "risk", "retryable": code.endswith("unavailable")},
+                                   content=[], isError=True)
+
+    with pytest.raises(StylistError) as raised:
+        await MCPReads(Session()).commit_media("digital_twin_photo_check", {"image_data": "x", "idempotency_key": "action"})
+    assert raised.value.code == code and raised.value.status == status

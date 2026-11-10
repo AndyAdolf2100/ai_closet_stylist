@@ -1,4 +1,6 @@
 """Only owned clothes enter images, even when an outfit needs more categories."""
+from datetime import timedelta
+
 import pytest
 
 from scripts.dialogue_validation import DialogueUpstream
@@ -9,6 +11,7 @@ from stylist.errors import StylistError
 from stylist.models import Change, ChatRequest, Draft, LookDraft, Plan, Product, Slot, Task
 from stylist.policy import validate_look
 from stylist.store import Store
+from stylist.weather import today
 
 
 @pytest.mark.asyncio
@@ -63,13 +66,71 @@ async def test_empty_wardrobe_stays_text_only(tmp_path):
             if name == 'plan':
                 return Plan(mode='recommend', use_inventory=False)
             assert payload['candidates'] == []
+            assert payload['reference_context']['has_candidates'] is False
+            assert payload['reference_context']['inventory_read_failed'] is False
             return Draft(message='本次衣橱没有返回衣物，先给文字参考。', looks=[LookDraft(
                 title='文字参考', pieces=['衬衫', '长裤', '平底鞋'], why=['日常组合'], how=['按已有单品调整'])])
     reply = await Stylist(Settings(), Store(str(tmp_path / 'empty.db')), Model()).chat(upstream, ChatRequest(
         message='帮我推荐一套，不考虑天气', request_id='empty-wardrobe-query', weather_policy='ignored'))
     assert '/api/user_product/quick_edit_list' in upstream.calls
     assert reply.delivery == 'concept' and not reply.looks[0].items
+    assert reply.reference_reason == 'no_candidates'
     assert not reply.upload_suggestion and reply.upload_intent is None
+
+
+@pytest.mark.asyncio
+async def test_empty_wardrobe_cold_weather_uses_safe_text_fallback(tmp_path):
+    class ColdUpstream(DialogueUpstream):
+        async def forecast(self, city):
+            self.calls.append('forecast')
+            return {'list': [{'data_format': (today() + timedelta(days=i)).isoformat(),
+                              'temp_day': 17, 'temp_night': 3,
+                              'condition_day': '多云', 'condition_night': '阴'} for i in range(14)]}
+
+    upstream = ColdUpstream('empty_wardrobe')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend', use_inventory=True)
+            return Draft(message='先穿这套，外套防风而且不会勒腰。', looks=[LookDraft(
+                title='文字参考', pieces=['衬衫', '长裤'], reference_pieces=['保暖外套'],
+                notes=['外套防风而且不会勒腰。'], why=['按日常场景组合'], how=['按体感调整层次'])])
+
+    reply = await Stylist(Settings(), Store(str(tmp_path / 'empty-cold.db')), Model()).chat(
+        upstream, ChatRequest(message='今天上海出门，帮我从衣橱搭一套', request_id='empty-cold-query'))
+    assert reply.delivery == 'concept'
+    assert reply.wardrobe_gap and not reply.new_clothes
+    assert not [item for look in reply.looks for item in look.items]
+    assert reply.looks[0].reference_pieces == ['保暖外套']
+    assert all('防风而且不会勒腰' not in note for note in reply.looks[0].notes)
+    assert '/api/product/list' not in upstream.calls and 'kb_search' not in upstream.calls
+
+
+@pytest.mark.asyncio
+async def test_first_request_validation_failure_returns_text_reference_and_gap_card(tmp_path):
+    upstream = DialogueUpstream('partial-test')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend', use_inventory=True,
+                             changes={'weather_policy': Change(value='ignored', evidence='不考虑天气')})
+            return Draft(message='选款结果', looks=[LookDraft(title='无效搭配', selected_keys=['user:missing'],
+                                                              why=['测试'], how=['测试'])])
+
+    store = Store(str(tmp_path / 'failed-request.db'))
+    reply = await Stylist(Settings(), store, Model()).chat(
+        upstream, ChatRequest(message='帮我搭一套，不考虑天气', request_id='first-failed-query'))
+    assert reply.delivery == 'concept' and reply.reference_reason == 'no_match'
+    assert reply.wardrobe_gap and not reply.new_clothes
+    assert reply.looks and all(not look.items for look in reply.looks)
+    assert '文字' in reply.message and '候选' in reply.message
+    with store.connection() as row:
+        saved = row.execute("SELECT status,response_json FROM stylist_requests WHERE request_id=?",
+                            ('first-failed-query',)).fetchone()
+    assert saved['status'] == 'completed'
+    assert 'outfit_validation_failed' not in saved['response_json']
 
 
 def test_partial_selection_keeps_hard_rules_and_frozen_pieces():
@@ -107,3 +168,25 @@ async def test_weather_failure_does_not_hide_available_personal_piece(tmp_path):
                                                   location=CitySelection(city_name='示例市')))
     assert reply.delivery == 'outfit' and reply.looks[0].items[0].key == 'user:101'
     assert reply.looks[0].wardrobe_complete is False
+
+
+@pytest.mark.asyncio
+async def test_unselected_candidates_are_not_reported_as_empty_wardrobe(tmp_path):
+    upstream = DialogueUpstream('partial_wardrobe')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend')
+            assert payload['reference_context']['has_candidates']
+            return Draft(message='先给文字思路。', looks=[LookDraft(
+                title='文字参考', pieces=['休闲上衣', '长裤'],
+                unmatched_reason='本次候选暂不符合要求。', why=['日常'], how=['按体感调整'])])
+
+    store = Store(str(tmp_path / 'unselected.db'))
+    reply = await Stylist(Settings(), store, Model()).chat(upstream, ChatRequest(
+        message='帮我搭一套，不考虑天气', request_id='concept-unselected'))
+    assert reply.delivery == 'concept' and reply.reference_reason == 'no_match'
+    saved = store.history(await upstream.identity(), reply.conversation_id)['messages'][0]['reply']
+    assert saved['reference_reason'] == 'no_match'
+    assert not reply.looks[0].items

@@ -170,6 +170,9 @@ class Store:
             row = conn.execute("SELECT * FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, owner)).fetchone()
             if not row:
                 raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
+            if conn.execute("SELECT 1 FROM stylist_deleted_conversations WHERE owner_id=? AND conversation_id=?",
+                            (owner, cid)).fetchone():
+                raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
             if row["version"] != request.expected_version:
                 raise StylistError("stale_version", "对话已有更新，请刷新后继续。", 409)
             if row["active_claim"] and row["lease_until"] > time.time():
@@ -254,6 +257,13 @@ class Store:
                          "WHERE owner_id=? AND conversation_id=? AND request_id=?",
                          (reply.version, owner, reply.conversation_id, request.request_id))
 
+    def fail(self, owner, request, error):
+        response = json.dumps({"code": error.code, "message": error.message}, ensure_ascii=False)
+        with self.connection() as conn:
+            conn.execute("UPDATE stylist_requests SET status='failed',response_json=? "
+                         "WHERE owner_id=? AND request_id=? AND status='processing'",
+                         (response, owner, request.request_id))
+
     def release(self, owner, cid, claim):
         with self.connection() as conn:
             conn.execute("UPDATE stylist_sessions SET active_claim=NULL,lease_until=0 WHERE id=? AND owner_id=? AND active_claim=?",
@@ -269,6 +279,9 @@ class Store:
     def regeneration_source(self, owner, cid, version):
         """Read an owned, immutable result without rolling back the live conversation."""
         with self.connection() as conn:
+            if conn.execute("SELECT 1 FROM stylist_deleted_conversations WHERE owner_id=? AND conversation_id=?",
+                            (owner, cid)).fetchone():
+                raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
             row = conn.execute("SELECT reply_json FROM stylist_messages WHERE conversation_id=? AND owner_id=? AND version=?",
                                (cid, owner, version)).fetchone()
             if not row:
@@ -289,7 +302,9 @@ class Store:
 
     def history(self, owner, cid):
         with self.connection() as conn:
-            session = conn.execute("SELECT version FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, owner)).fetchone()
+            session = conn.execute("SELECT s.version FROM stylist_sessions s WHERE s.id=? AND s.owner_id=? "
+                                   "AND NOT EXISTS (SELECT 1 FROM stylist_deleted_conversations d "
+                                   "WHERE d.owner_id=s.owner_id AND d.conversation_id=s.id)", (cid, owner)).fetchone()
             if not session:
                 raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
             rows = conn.execute("SELECT user_message,reply_json FROM stylist_messages WHERE conversation_id=? AND owner_id=? ORDER BY version",
@@ -305,5 +320,44 @@ class Store:
                 "WHERE m.conversation_id=s.id AND m.owner_id=s.owner_id "
                 "ORDER BY m.version ASC LIMIT 1) AS title "
                 "FROM stylist_sessions s WHERE s.owner_id=? AND s.version>0 "
+                "AND NOT EXISTS (SELECT 1 FROM stylist_deleted_conversations d "
+                "WHERE d.owner_id=s.owner_id AND d.conversation_id=s.id) "
                 "ORDER BY s.updated_at DESC LIMIT 50", (owner,)).fetchall()
             return [dict(r) for r in rows]
+
+    def require_conversation(self, owner, cid):
+        """Require an owned, non-deleted conversation for a conversation-scoped action."""
+        with self.connection() as conn:
+            row = conn.execute("SELECT 1 FROM stylist_sessions s WHERE s.id=? AND s.owner_id=? "
+                               "AND NOT EXISTS (SELECT 1 FROM stylist_deleted_conversations d "
+                               "WHERE d.owner_id=s.owner_id AND d.conversation_id=s.id)",
+                               (cid, owner)).fetchone()
+        if not row:
+            raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
+
+    def delete_conversation(self, owner, cid):
+        """Soft-delete one owned conversation without touching its historical records."""
+        with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            session = conn.execute("SELECT active_claim,lease_until FROM stylist_sessions "
+                                   "WHERE id=? AND owner_id=?", (cid, owner)).fetchone()
+            if not session:
+                raise StylistError("conversation_not_found", "找不到当前账号的这条对话。", 404)
+            if conn.execute("SELECT 1 FROM stylist_deleted_conversations WHERE owner_id=? AND conversation_id=?",
+                            (owner, cid)).fetchone():
+                return {"conversation_id": cid, "deleted": True}
+            if session["active_claim"] and session["lease_until"] > time.time():
+                raise StylistError("conversation_delete_conflict", "这条对话正在生成，请结束当前操作后重试。", 409)
+            busy = conn.execute(
+                "SELECT 1 FROM stylist_requests WHERE owner_id=? AND conversation_id=? AND status='processing' "
+                "UNION ALL SELECT 1 FROM stylist_image_actions WHERE owner_id=? AND conversation_id=? "
+                "AND status IN ('processing','executing','unknown') "
+                "UNION ALL SELECT 1 FROM stylist_outfit_images WHERE owner_id=? AND conversation_id=? "
+                "AND status='processing' "
+                "UNION ALL SELECT 1 FROM stylist_outfit_saves WHERE owner_id=? AND conversation_id=? "
+                "AND status='saving' LIMIT 1",
+                (owner, cid, owner, cid, owner, cid, owner, cid)).fetchone()
+            if busy:
+                raise StylistError("conversation_delete_conflict", "这条对话有未结束操作，请结束当前操作后重试。", 409)
+            conn.execute("INSERT INTO stylist_deleted_conversations(owner_id,conversation_id) VALUES(?,?)", (owner, cid))
+        return {"conversation_id": cid, "deleted": True}

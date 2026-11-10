@@ -17,9 +17,9 @@ const byText=(w,text)=>[...w.document.querySelectorAll('button')].find(b=>b.text
 test('media history uses kind-specific letters and opens only the original read-only record',async()=>{
  const calls=[];const actions=[{action_id:'med_clothes',kind:'garment',status:'completed',result:{}},{action_id:'med_photo',kind:'person',status:'completed',result:{}},{action_id:'med_portrait',kind:'generation',status:'completed',result:{result_image_url:'https://example.test/portrait.png',can_confirm:true,task_id:'portrait-task'}}];
  const t=setup(async(path,options)=>{calls.push([path,options]);return path.endsWith('/media')?actions:path.endsWith('/images')?[]:actions[2];});
- await t.w.WardrobeJourney.history();const cards=t.w.document.querySelectorAll('.journey-media-letter');assert.equal(cards.length,3);
+ await t.w.WardrobeJourney.history();const cards=t.w.document.querySelectorAll('.journey-media-letter');assert.equal(cards.length,2);
  assert.equal(t.w.document.querySelector('.journey-body').textContent.includes('查看处理结果'),false);assert.equal(t.w.document.querySelector('.journey-body').textContent.includes('已完成'),false);
- assert.ok(t.w.document.querySelector('[aria-label="打开衣橱来信"]'));assert.ok(t.w.document.querySelector('[aria-label="读读照片回信"]'));
+ assert.ok(t.w.document.querySelector('[aria-label="打开衣橱来信"]'));assert.equal(t.w.document.querySelector('[aria-label="读读照片回信"]'),null);
  t.w.document.querySelector('[aria-label="看看新的模样"]').click();await flush();assert.match(t.w.document.querySelector('.journey-body .journey-image img').src,/portrait.png/);
  assert(byText(t.w,'确认使用这个试穿形象'));assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);assert.equal(calls.at(-1)[0],'/stylist-api/media/med_portrait');t.close();
 });
@@ -188,9 +188,9 @@ test('person generation has its own quote, and dismissing it sends only cancella
   if(path.endsWith('/generation-quote'))return {action_id:'med_quote',kind:'generation',status:'quoted',points_cost:20};
   return {status:'cancelled'};
  });
- t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();byText(t.w,'查看人物生成费用').click();await flush();
+ t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();await flush();
  assert.equal(t.w.document.querySelector('.journey-steps').hidden,false);
- assert.match(t.w.document.querySelector('.journey-body').textContent,/20 积分/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行报价/);
+ assert.match(t.w.document.querySelector('.journey-footer').textContent,/确认消耗 20 积分并生成/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行确认积分/);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);byText(t.w,'关闭 ×').click();await flush();
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&JSON.parse(o.body).confirmed).length,0);
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&!JSON.parse(o.body).confirmed).length,1);t.close();
@@ -353,7 +353,7 @@ test('history merges uploads, avatars and try-ons by creation time rather than k
  ];
  const t=setup(async path=>path.endsWith('/media')?uploads:images);await t.w.WardrobeJourney.history();
  const order=[...t.w.document.querySelectorAll('.journey-body>.journey-record')].map(c=>c.dataset.mediaAction||c.dataset.imageAction);
- assert.deepEqual(order,['img_new','med_upload','med_avatar','med_photo','img_old']);t.close();
+ assert.deepEqual(order,['img_new','med_upload','med_avatar','img_old']);t.close();
 });
 test('history preserves stable ties and places legacy undated records last',async()=>{
  const uploads=[{action_id:'med_unknown',kind:'person',status:'completed',result:{}},
@@ -361,7 +361,7 @@ test('history preserves stable ties and places legacy undated records last',asyn
  const images=[{action_id:'img_tie',status:'failed',created_at:'2026-11-03T02:00:00Z',result:{refunded:true}},
   {action_id:'img_invalid',status:'failed',created_at:'invalid',result:{refunded:true}}];
  const t=setup(async path=>path.endsWith('/media')?uploads:images);await t.w.WardrobeJourney.history();
- assert.deepEqual([...t.w.document.querySelectorAll('.journey-body>.journey-record')].map(c=>c.dataset.mediaAction||c.dataset.imageAction),['med_tie','img_tie','med_unknown','img_invalid']);t.close();
+ assert.deepEqual([...t.w.document.querySelectorAll('.journey-body>.journey-record')].map(c=>c.dataset.mediaAction||c.dataset.imageAction),['med_tie','img_tie','img_invalid']);t.close();
 });
 
 test('history filters keep each category descending, restore all records, and never refetch or write',async()=>{
@@ -373,7 +373,7 @@ test('history filters keep each category descending, restore all records, and ne
  const t=setup(async path=>{calls.push(path);return path.endsWith('/media')?uploads:images;});await t.w.WardrobeJourney.history();
  const shown=()=>[...t.w.document.querySelectorAll('.journey-body>.journey-record')].filter(c=>!c.hidden).map(c=>c.dataset.mediaAction||c.dataset.imageAction);
  assert.deepEqual(shown(),['img_latest','med_new','med_avatar','med_old']);
- for(const [kind,ids]of [['garment',['med_new','med_old']],['generation',['med_avatar']],['tryon',['img_latest']],['person',[]],['all',['img_latest','med_new','med_avatar','med_old']]]){
+ for(const [kind,ids]of [['garment',['med_new','med_old']],['generation',['med_avatar']],['tryon',['img_latest']],['all',['img_latest','med_new','med_avatar','med_old']]]){
   t.w.document.querySelector('.journey-history-filters [data-kind="'+kind+'"]').click();await flush();assert.deepEqual(shown(),ids);
   assert.equal(t.w.document.querySelector('.journey-history-filters [aria-pressed=true]').dataset.kind,kind);
   assert.equal(t.w.document.querySelector('.journey-history-empty').hidden,ids.length>0);
@@ -390,7 +390,7 @@ test('each try-on confirm checks current funds before consuming the quote or sub
  allowed=true;byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,1);assert.deepEqual(checks,[[8,'tryon'],[8,'tryon']]);t.close();
 });
 
-for(const kind of ['person','garment','generation'])test(kind==='garment'?'retired garment snapshots do not query or poll old endpoints':`${kind} media waits poll every two seconds read-only until terminal status`,async()=>{
+for(const kind of ['garment','generation'])test(kind==='garment'?'retired garment snapshots do not query or poll old endpoints':`${kind} media waits poll every two seconds read-only until terminal status`,async()=>{
  let status='processing',reads=0;const calls=[],pending=new Map();let serial=0;
  const action=()=>({action_id:'med_auto',kind,status,result:{}});
  const t=setup(async(path,options)=>{calls.push([path,options]);if(path.endsWith('/media'))return [action()];if(path.endsWith('/images'))return [];reads++;return action();});
@@ -403,12 +403,12 @@ for(const kind of ['person','garment','generation'])test(kind==='garment'?'retir
  assert.equal(pending.size,0);assert.equal(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');assert.equal(reads,34);assert(calls.every(([,o])=>!o?.method||o.method==='GET'));t.close();
 });
 test('media unknown status retries transient read failures, then stops on failed status',async()=>{
- let reads=0;const a={action_id:'med_retry',kind:'person',status:'unknown',result:{}};
+ let reads=0;const a={action_id:'med_retry',kind:'generation',status:'unknown',result:{}};
  const t=setup(async path=>{if(path.endsWith('/media'))return [a];if(path.endsWith('/images'))return [];if(++reads===2)throw Error('network');return reads>=3?{...a,status:'failed'}:a;});const tick=mockPolling(t.w);
  await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();await tick();assert.equal(t.w.document.querySelectorAll('.journey-poll-note').length,1);await tick();assert.equal(t.w.document.querySelector('#journey-dialog').dataset.status,'failed');assert.equal(t.w.document.querySelectorAll('.journey-poll-note').length,0);assert.deepEqual(t.notices,[]);await assert.rejects(tick);t.close();
 });
 for(const transition of ['close','account','view'])test(`media polling discards a late response after ${transition}`,async()=>{
- let reads=0,resolve;const a={action_id:'med_stale_poll',kind:'person',status:'processing',result:{}};
+ let reads=0,resolve;const a={action_id:'med_stale_poll',kind:'generation',status:'processing',result:{}};
  const t=setup(async path=>{if(path.endsWith('/media'))return [a];if(path.endsWith('/images'))return [];return ++reads===1?a:new Promise(done=>resolve=done);});const tick=mockPolling(t.w);
  await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();const inflight=tick();await flush();
  if(transition==='close')t.w.document.querySelector('#journey-dialog').close();else if(transition==='account')t.w.WardrobeJourney.setOwner('2');else t.w.WardrobeJourney.upload('person');

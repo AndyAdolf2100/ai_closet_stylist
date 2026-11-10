@@ -24,10 +24,12 @@ PHOTO = 'data:image/png;base64,iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAA'
 class Business:
     owner = '1'
     fail = False
+    failure_code = 'mcp_unavailable'
     def __init__(self):
         self.writes = []
         self.check = {'status': 'completed', 'check_id': '101', 'result': 'pass',
                       'allowed_hat_actions': ['none'], 'generation_cost_points': 20}
+        self.photo_receipt = None
         self.overview = {'selection_version': 3, 'system_twins': [{'twin_key': 'base'}],
                          'custom_twin': None, 'pending_task': {'task_id': '202', 'can_confirm': True}}
 
@@ -48,6 +50,10 @@ class Business:
         await asyncio.sleep(0)
         if name == 'digital_twin_photo_check_status':
             return self.check.copy()
+        if name == 'digital_twin_photo_check_receipt':
+            if self.photo_receipt is None:
+                raise StylistError('digital_twin_photo_check_not_found', '照片检查回执尚未创建', 503)
+            return self.photo_receipt.copy()
         if name == 'product_upload_status':
             return {'status': 'completed', 'task_id': args['task_id'], 'user_product_id': 17,
                     'class_name': '上衣', 'result_image_url': 'https://example.test/shirt.png'}
@@ -64,7 +70,7 @@ class Business:
         self.writes.append((name, args.copy()))
         await asyncio.sleep(0)
         if self.fail:
-            raise StylistError('mcp_unavailable', '提交结果未知')
+            raise StylistError(self.failure_code, '提交结果未知')
         if name == 'product_add':
             return {'status': 'processing', 'task_id': 'upload-task'}
         if name == 'digital_twin_photo_check':
@@ -118,6 +124,36 @@ async def test_unknown_upload_does_not_replay_or_claim_success(setup):
     assert len(business.writes) == 1
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize('code,retryable,next_action', [
+    ('digital_twin_photo_risk_rejected', False, 'reselect'),
+    ('digital_twin_photo_risk_unavailable', True, None),
+])
+async def test_photo_risk_failures_are_terminal_and_preserve_retry_policy(setup, code, retryable, next_action):
+    service, business = setup
+    business.fail = True
+    business.failure_code = code
+    with pytest.raises(StylistError) as raised:
+        await service.upload(business, upload('person'))
+    assert raised.value.code == code
+    action = service.list('1')[0]
+    assert action['status'] == 'failed'
+    assert action['result']['error_code'] == code
+    assert action['result']['retryable'] is retryable
+    if next_action:
+        assert action['result']['next_action'] == next_action
+    else:
+        assert action['result']['request_id_policy'] == 'new_request_id_required'
+    # Same request_id is an idempotent replay of the failed rejection.
+    assert (await service.upload(business, upload('person')))['status'] == 'failed'
+    assert len(business.writes) == 1
+    if code == 'digital_twin_photo_risk_unavailable':
+        business.fail = False
+        retried = await service.upload(business, upload('person', request_id='upload-case-002'))
+        assert retried['status'] == 'processing'
+        assert len(business.writes) == 2
+
+
 async def test_retired_garment_upload_is_blocked_and_old_records_are_snapshots(setup):
     service, business = setup
     with pytest.raises(StylistError, match='garment_upload_use_server'):
@@ -130,6 +166,18 @@ async def test_retired_garment_upload_is_blocked_and_old_records_are_snapshots(s
     snapshot = await service.refresh(business, row['id'])
     assert snapshot['status'] == 'unknown'
     assert business.writes == []
+
+
+async def test_lost_person_upload_response_recovers_read_only_photo_receipt(setup):
+    service, business = setup
+    business.fail = True
+    with pytest.raises(StylistError):
+        await service.upload(business, upload('person'))
+    action = service.list('1')[0]
+    business.photo_receipt = {'status': 'processing', 'check_id': '101'}
+    assert (await service.refresh(business, action['action_id']))['status'] == 'processing'
+    assert (await service.refresh(business, action['action_id']))['status'] == 'completed'
+    assert len(business.writes) == 1
 
 
 async def test_same_key_different_image_and_cross_account_reads_rejected(setup):
@@ -245,7 +293,8 @@ def test_media_api_rejects_spoofed_owner_cost_and_unconfirmed_photos(tmp_path, m
 async def test_generation_rechecks_live_balance_before_each_confirm(setup):
     service,business=setup
     _,q=await quoted(service,business)
-    values=[0,20];reads=[]
+    values=[0,20]
+    reads=[]
     async def balance(path):
         reads.append(path)
         return {'total_available':values.pop(0)}
@@ -257,3 +306,21 @@ async def test_generation_rechecks_live_balance_before_each_confirm(setup):
     await service.confirm_generation(business,q['action_id'],True)
     assert len(reads)==2 and all(p=='/api/vip_center/points_detail' for p in reads)
     assert sum(name=='digital_twin_generate' for name,_ in business.writes)==1
+
+
+async def test_lost_upload_response_recovers_original_receipt_without_another_upload(setup):
+    service, business = setup
+    business.fail = True
+    with pytest.raises(StylistError):
+        await service.upload(business, upload())
+    action = service.list('1')[0]
+    previous = business.call
+    async def read(name, args):
+        if name == 'digital_twin_photo_check_receipt':
+            assert args == {'idempotency_key': action['action_id']}
+            return {'status': 'processing', 'check_id': '101'}
+        return await previous(name, args)
+    business.call = read
+    assert (await service.refresh(business, action['action_id']))['status'] == 'processing'
+    assert (await service.refresh(business, action['action_id']))['status'] == 'completed'
+    assert len(business.writes) == 1

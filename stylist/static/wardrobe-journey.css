@@ -357,3 +357,11 @@
 .journey-batch-summary h3{font:23px/1.5 Georgia,'Songti SC',serif;margin:8px 0 14px}.journey-dialog[data-panel=upload] progress{display:block;width:100%;height:6px;accent-color:var(--accent)}
 @keyframes journey-sheet-rise{from{transform:translateY(100%);opacity:.5}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){.journey-dialog[data-panel=upload][open]{animation:none}}
+
+
+/* Keep the two-stage portrait flow together. */
+.journey-dialog[data-flow=person] .journey-steps{justify-content:flex-start;gap:0;padding-top:10px;padding-bottom:10px}
+.journey-dialog[data-flow=person] .journey-steps li{flex-shrink:0;white-space:nowrap}
+.journey-dialog[data-flow=person] .journey-steps li+li::before{content:"";width:28px;height:1px;background:var(--line);margin:0 12px 0 7px}
+.journey-dialog[data-flow=person] .journey-body{padding-top:8px}
+.journey-dialog[data-flow=person] .journey-intro{margin:0 0 12px;line-height:1.65}

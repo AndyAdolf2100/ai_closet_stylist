@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS stylist_sessions (
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   INDEX stylist_sessions_owner(owner_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE IF NOT EXISTS stylist_deleted_conversations (
+ owner_id VARCHAR(191) NOT NULL, conversation_id VARCHAR(191) NOT NULL,
+ deleted_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ PRIMARY KEY(owner_id,conversation_id),
+ INDEX stylist_deleted_conversations_owner(owner_id,deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 CREATE TABLE IF NOT EXISTS stylist_requests (
   owner_id VARCHAR(191) NOT NULL, request_id VARCHAR(191) NOT NULL,
   conversation_id VARCHAR(191) NOT NULL, digest VARCHAR(64) NOT NULL,

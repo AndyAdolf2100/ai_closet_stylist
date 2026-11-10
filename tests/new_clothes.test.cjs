@@ -65,3 +65,12 @@ test('six companion explanations are distinct and fallback is calm',()=>{
  assert.equal(new Set(roles.map(id=>t.w.newClothesExplanation(id))).size,6);
  assert.equal(t.w.newClothesExplanation(null),t.w.newClothesExplanation('male_calm_v1'));t.dom.window.close();
 });
+
+test('text references distinguish unmatched clothes from a partial outfit',()=>{
+ const t=setup();
+ assert(t.card.textContent.includes('还没有匹配到真实单品'));
+ assert(!t.card.textContent.includes('找到的衣物'));
+ const partial=t.w.wardrobeGapCard({conversation_id:'c',version:2,looks:[{items:[{source:'user'}]}]});
+ assert(partial.textContent.includes('找到的衣物还没能配齐'));
+ t.dom.window.close();
+});

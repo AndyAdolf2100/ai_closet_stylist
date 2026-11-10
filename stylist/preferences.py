@@ -19,7 +19,7 @@ def preferred_pool(pool, styles, frozen=()):
 def wardrobe_allowed(message, history=()):
     """Only explicit text/principle requests opt out of personal wardrobe reads."""
     explicit_inventory = re.search(r"(?:用|查|从|恢复|输出).{0,6}(?:衣橱|衣柜)|实际(?:选款|衣服)", message)
-    opt_out = re.compile(r"不(?:查|找|用|要|输出).{0,8}(?:衣橱|衣柜|商品)|只(?:讲|给|要|提供).{0,8}(?:文字|原理|口述)"
+    opt_out = re.compile(r"(?:不(?:用|要)?|先别|别)(?:查|找|翻|读|用|输出).{0,8}(?:衣橱|衣柜|商品)|不(?:要|用).{0,8}(?:衣橱|衣柜|商品)|只(?:讲|给|要|提供).{0,8}(?:文字|原理|口述)"
                          r"|只(?:咨询|按口述|记录|保存|记下)"
                          r"|(?:讲|聊|讨论).{0,6}(?:原理|原则)|不(?:用|要)?(?:搭配|推荐|选款)|只重新说")
     if opt_out.search(message):

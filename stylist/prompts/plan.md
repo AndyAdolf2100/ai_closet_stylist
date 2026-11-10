@@ -77,3 +77,7 @@ use_profile_preferences 控制是否使用本人保存的穿搭风格：为他�
 - 已有文字穿法后说“保持这三件，穿法再简洁一点，不找商品”：仍是consult、conversation_only=false；保留原衣物和限制。
 - “今天好累，先不说衣服了”：conversation_only=true，不修改原任务。
 - 本轮明确“一套/1套/两套/2套”等数量时填写requested_look_count及逐字来自本轮的look_count_evidence（含数字及“套”）。没有明确套数则null，不根据默认策略或历史无关方案推断；否定、转述、引用示例不算当前数量要求。weekly的天数交给planning_dates，不冒充套数。
+
+资料与本轮证据分流：companion_profile中的风格和穿衣优先项由style直接读取，不复制进changes；long_term_memory的已保存偏好只放memory_changes，引用手记原文。即使用户说“按刚才的喜好”，也不能把旧喜好引用为本轮changes证据。换穿衣对象时只提取本轮新对象和限制，不重抄旧轮天气指令；未明确本轮忽略天气就省略weather_policy。
+本轮只有“今天会下雨吗”等泛问且selected_location有值时，不在changes.city填旧城市并引用整个问题；由程序使用页面城市。明确“那里／刚才的城市”才承接旧地点。
+同一句含“绝对不穿高跟鞋”和“必须细高跟”等互斥要求时，先澄清冲突，不擅自把绝对禁穿解释为临时例外，不自动选被禁单品。

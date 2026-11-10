@@ -124,12 +124,18 @@ class MediaActions:
     def failed_dispatch(self, owner, action, exc):
         # Typed rejections establish non-acceptance; transport loss does not.
         rejected = {"product_upload_capacity_exhausted", "digital_twin_points_insufficient",
-                    "tool_input_invalid", "tool_missing", "invalid_arguments"}
+                    "tool_input_invalid", "tool_missing", "invalid_arguments",
+                    "digital_twin_photo_risk_rejected", "digital_twin_photo_risk_unavailable"}
         expired = {"digital_twin_price_changed", "digital_twin_check_expired"}
         code = getattr(exc, "code", "")
         state = "failed" if code in rejected else ("expired" if code in expired else "unknown")
         message = exc.message if state != "unknown" else "提交结果待核对，不会自动重复上传或扣费。"
-        return self.save(owner, action, {"message": message, "error_code": code}, state)
+        result = {"message": message, "error_code": code}
+        if code == "digital_twin_photo_risk_rejected":
+            result.update({"retryable": False, "next_action": "reselect"})
+        elif code == "digital_twin_photo_risk_unavailable":
+            result.update({"retryable": True, "request_id_policy": "new_request_id_required"})
+        return self.save(owner, action, result, state)
 
     async def upload(self, upstream, request):
         if request.kind == "garment" and request.confirmed:
@@ -157,12 +163,41 @@ class MediaActions:
             # Retired uploads are historical snapshots only; no old service calls.
             return self.view(row)
         result = json.loads(row["result_json"] or "{}")
+        if row["kind"] == "generation" and row["status"] == "completed":
+            # Generation completion is immutable; candidate eligibility is not.
+            view = self.view(row)
+            view["result"]["can_confirm"] = False
+            if not result.get("task_id"):
+                return view
+            try:
+                async with upstream.mcp() as mcp:
+                    fresh = await mcp.call("digital_twin_generation_status", {"task_id": str(result["task_id"])})
+            except StylistError as exc:
+                if exc.status == 401:
+                    raise
+                view["result"]["cannot_confirm_reason"] = "STATUS_UNAVAILABLE"
+                return view
+            view["result"].update(fresh)
+            view["result"]["can_confirm"] = fresh.get("status") == "completed" and fresh.get("can_confirm") is True
+            return view
         if row["status"] not in {"processing", "unknown", "executing"}:
             return self.view(row)
         specs = {"person": ("digital_twin_photo_check_status", "check_id"),
                  "generation": ("digital_twin_generation_status", "task_id")}
         tool, key = specs[row["kind"]]
         if not result.get(key):
+            # Reconcile a lost response by its original, owner-scoped request key.
+            if row["kind"] == "person":
+                try:
+                    async with upstream.mcp() as mcp:
+                        fresh = await mcp.call("digital_twin_photo_check_receipt", {"idempotency_key": action})
+                except StylistError as exc:
+                    # No row yet is still an uncertain write; keep the action
+                    # unknown and let the next explicit refresh try again.
+                    if exc.code == "digital_twin_photo_check_not_found":
+                        return self.view(row)
+                    raise
+                return self.save(owner, action, fresh)
             if row["kind"] == "generation":
                 overview = await upstream.get("/api/digital_twin/overview")
                 candidates = [overview.get("pending_task"), overview.get("latest_task")]

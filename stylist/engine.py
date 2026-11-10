@@ -14,6 +14,8 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, RetryPolicy, interrupt
 
+from .advice_boundaries import PREFIX as ADVICE_PREFIX
+from .advice_boundaries import boundary_fallback, boundary_problems, hypothetical_preference
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .grounding import (
@@ -23,7 +25,7 @@ from .grounding import (
     ground_attribute_fallback,
     normalize_draft,
 )
-from .layering import layering_problems, layering_requirements
+from .layering import ensure_weather_references, layering_problems, layering_requirements
 from .memory import (
     apply_memory,
     automatic_preference,
@@ -36,7 +38,7 @@ from .memory import (
     strip_save_claims,
     verified_memory_save,
 )
-from .models import Draft, Look, MemorySave, Plan, Reply, SessionState, Slot, Task
+from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionState, Slot, Task
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
@@ -99,6 +101,7 @@ class RunState(TypedDict, total=False):
     problems: list
     reply: dict
     cancelled: bool
+    text_reference_fallback: bool
 
 
 def last_business_intent(messages):
@@ -327,6 +330,11 @@ class Stylist:
                     and plan.mode in {"recommend", "modify", "weekly"}
                     and wardrobe_allowed(request.message, state.messages)):
                 plan.use_inventory = True
+            if not wardrobe_allowed(request.message, state.messages):
+                # An explicit opt-out must also override a model-enabled read.
+                plan.use_inventory = False
+                if not plan.conversation_only and not plan.weather_only and plan.mode in {"recommend", "modify"}:
+                    plan.mode = "consult"
             if (request.companion_profile and plan.use_profile_gender and task.gender is None
                     and not plan.conversation_only and not plan.weather_only):
                 task.gender = request.companion_profile.user_gender
@@ -478,7 +486,8 @@ class Stylist:
                                                                  allow_system=data.get("new_clothes", False), diagnostics=retrieval_diagnostics,
                                                                  style_preferences=(request.companion_profile.style_preferences
                                                                      if request.companion_profile and plan.use_profile_preferences else ()))
-                        frozen = [pool.get(p.key, p) for p in frozen]
+                        unavailable = {item['key'] for item in retrieval_diagnostics.get('unavailable_items', [])}
+                        frozen = [pool.get(p.key, p) for p in frozen if p.key not in unavailable]
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
                             try:
@@ -512,13 +521,14 @@ class Stylist:
                 async with upstream.mcp() as mcp:
                     anchors = await resolve_products(mcp, [ProductRef(source="user", product_id=str(result["user_product_id"]))])
                 if not anchors:
-                    raise StylistError("upload_product_unavailable", "刚上传的单品暂时无法读取，请先查看衣橱。", 409)
-                reasons, _ = suitability(anchors[0], effective_task)
-                if reasons:
-                    warnings.append("刚上传的单品与本轮要求冲突，本次先不强行选用：" + "；".join(reasons))
+                    warnings.append("这件单品已不可用，我会用当前衣橱继续搭配；缺少的部分给你文字参考。")
                 else:
-                    pool[anchors[0].key] = anchors[0]
-                    frozen.append(anchors[0])
+                    reasons, _ = suitability(anchors[0], effective_task)
+                    if reasons:
+                        warnings.append("刚上传的单品与本轮要求冲突，本次先不强行选用：" + "；".join(reasons))
+                    else:
+                        pool[anchors[0].key] = anchors[0]
+                        frozen.append(anchors[0])
             if pool and missing:
                 names = "、".join(missing)
                 warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
@@ -592,7 +602,14 @@ class Stylist:
                                for p in pool.values() if p.key not in original_targets],
                 "replacement_options": replacement_options,
                 "frozen_keys": [p.key for p in frozen], "replace_slots": plan.replace_slots,
-                "concept_fallback": concept, "warnings": warnings,
+                "concept_fallback": concept,
+                "reference_context": {
+                    "inventory_read_failed": bool(service_gap or data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable")),
+                    "has_candidates": bool(pool),
+                    "weather_available": bool(weather),
+                    "boundary": "未匹配不代表整个衣橱为空；文字参考不是已拥有的单品。没有实际天气时只给条件式建议，不按日期推断当地冷暖。",
+                },
+                "warnings": warnings,
                 "excluded_candidate_reasons": rejected,
                 "attribute_context": attribute_context(pool.values()),
                 "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
@@ -608,6 +625,27 @@ class Stylist:
             }
             return draft_payload
 
+        def candidate_free_reference(draft, data):
+            # An empty *filtered* pool is not proof that the wardrobe is empty.
+            # Model-provided IDs cannot bind a text reference to missing stock.
+            if (data["plan"].get("mode") != "consult" and data["plan"].get("use_inventory")
+                    and not data["pool"] and any(look.selected_keys for look in draft.looks)):
+                draft = draft.model_copy(deep=True)
+                for look in draft.looks:
+                    look.selected_keys = []
+                draft.message = service_notice(request.assistant_persona, "concept")
+            return draft
+
+        def reference_explanation(data):
+            if data.get("service_gap") or data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable"):
+                return "这次暂时没能读取到可用的衣橱单品，不能据此判断衣橱为空。"
+            reasons = list(data.get("rejected", {}))
+            if reasons:
+                return "这次候选未满足你的要求：" + "；".join(reasons[:3]) + "。"
+            if data["pool"]:
+                return "这次候选还没有组成符合要求的搭配，先不勉强使用这些单品。"
+            return "这次没有检索到可用单品，不代表整个衣橱为空。"
+
         async def style_node(data):
             if explicit_memory(request.message) is not None:
                 return {"draft": Draft(message="这条穿搭信息已整理好。").model_dump(mode="json")}
@@ -615,12 +653,15 @@ class Stylist:
                 return {"draft": Draft(message=technical_detail_message(request.assistant_persona)).model_dump(mode="json")}
             if not data["plan"].get("conversation_only"):
                 report("styling", progress_message(request.assistant_persona, "styling"))
-            draft = await self.llm.generate("style", await draft_payload(data), Draft)
+            draft = candidate_free_reference(await self.llm.generate("style", await draft_payload(data), Draft), data)
             if data["plan"].get("conversation_only") or data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"looks": []})
             if data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"follow_ups": []})
-            return {"draft": normalize_draft(draft).model_dump(mode="json")}
+            concept_fallback = (data["plan"].get("mode") != "consult"
+                                and data["plan"].get("use_inventory")
+                                and not data["pool"])
+            return {"draft": normalize_draft(draft, preserve_references=concept_fallback).model_dump(mode="json")}
 
         def validate_node(data):
             if not data["plan"].get("conversation_only"):
@@ -629,6 +670,9 @@ class Stylist:
                 {key: Product.model_validate(p) for key, p in data["pool"].items()},
                 Task.model_validate(data["effective_task"]),
                 [Product.model_validate(x) for x in data["frozen"]], data["plan"]["mode"])
+            if data["plan"]["mode"] == "consult" and not data["plan"].get("weather_only"):
+                problems.extend(boundary_problems(Draft.model_validate(data["draft"]), request.message,
+                                                  Task.model_validate(data["effective_task"])))
             if not data["plan"].get("conversation_only") and not data["plan"].get("weather_only"):
                 problems.extend(attribute_claim_problems(Draft.model_validate(data["draft"]),
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
@@ -653,12 +697,28 @@ class Stylist:
 
         async def repair_node(data):
             attribute_only = all(problem.startswith(PREFIX) for problem in data["problems"])
+            concept_fallback = (data["plan"].get("mode") != "consult"
+                                and data["plan"].get("use_inventory")
+                                and not data["pool"])
+            if concept_fallback:
+                draft = ground_attribute_fallback(
+                    Draft.model_validate(data["draft"]), {}, request.assistant_persona,
+                    preserve_references=True)
+                draft = ensure_weather_references(
+                    draft, Task.model_validate(data["effective_task"]),
+                    Plan.model_validate(data["plan"]), data.get("weather"),
+                    schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"])))
+                repaired = {**data, "draft": draft.model_dump(mode="json")}
+                problems = validate_node(repaired)["problems"]
+                if not problems:
+                    return {"draft": repaired["draft"], "problems": []}
             # Text-only unsupported claims need no second selection or full model rewrite.
             # Keep semantic title/style repairs and conversation expression with the model.
             if attribute_only and not data["plan"].get("conversation_only") and not any(
                     problem.removeprefix(PREFIX).split(" ", 1)[0].endswith((".title", ".style_name")) for problem in data["problems"]):
                 local = ground_attribute_fallback(Draft.model_validate(data["draft"]),
-                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona,
+                    preserve_references=concept_fallback)
                 candidate = {**data, "draft": local.model_dump(mode="json")}
                 if not validate_node(candidate)["problems"]:
                     return {"draft": candidate["draft"], "problems": []}
@@ -669,6 +729,7 @@ class Stylist:
                            "只有确无适合单品时才留空selected_keys并说明unmatched_reason，不为凑齐整套丢掉已有单品。")
             draft = await self.llm.generate("style", {**(await draft_payload(data)), "validation_errors": data["problems"],
                 "previous_draft": data["draft"], "instruction": instruction}, Draft)
+            draft = candidate_free_reference(draft, data)
             if attribute_only:
                 original = Draft.model_validate(data["draft"])
                 if [look.selected_keys for look in draft.looks] != [look.selected_keys for look in original.looks]:
@@ -680,7 +741,7 @@ class Stylist:
                         for field in ("title", "style_name", "pieces", "reference_pieces"):
                             if not any(path.startswith(f"looks.{i}.{field}") for path in bad_paths):
                                 setattr(new, field, getattr(old, field))
-            draft = normalize_draft(draft)
+            draft = normalize_draft(draft, preserve_references=concept_fallback)
             repaired = {**data, "draft": draft.model_dump(mode="json")}
             problems = validate_node(repaired)["problems"]
             if any(problem.startswith(REPLACEMENT_PREFIX) for problem in problems):
@@ -691,13 +752,32 @@ class Stylist:
                 problems = validate_node(repaired)["problems"]
             if problems and all(problem.startswith(PREFIX) for problem in problems):
                 draft = ground_attribute_fallback(draft,
-                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona,
+                    preserve_references=concept_fallback)
                 repaired["draft"] = draft.model_dump(mode="json")
                 problems = validate_node(repaired)["problems"]
             if problems:
+                if all(problem.startswith(ADVICE_PREFIX) for problem in problems):
+                    draft = boundary_fallback(draft, request.message, Task.model_validate(data["effective_task"]))
+                    return {"draft": draft.model_dump(mode="json"), "problems": []}
+                if (data["plan"]["mode"] in {"recommend", "weekly"}
+                        and data["plan"].get("use_inventory")
+                        and not data["frozen"] and not request.regenerate_outfit):
+                    task, plan = Task.model_validate(data["effective_task"]), Plan.model_validate(data["plan"])
+                    reason = reference_explanation(data)
+                    how = ["先用一件主体单品确定风格，其余配色尽量简洁，用相近色或中性色衔接。",
+                           "保留你明确的禁穿和穿法要求；衣物厚薄、尺码及鞋子的脚感都以实物和试穿为准。"]
+                    draft = Draft(message=reason + "先给你文字穿搭思路：" + "".join(how), looks=[LookDraft(
+                        title="文字穿搭思路", unmatched_reason=reason, why=["先围绕本次场景和限制整理穿法，不把参考当成已拥有的衣物。"], how=how)])
+                    draft = ensure_weather_references(draft, task, plan, data.get("weather"),
+                                                     schedule_dates(plan, Task.model_validate(data["task"])))
+                    return {"draft": draft.model_dump(mode="json"), "problems": [], "text_reference_fallback": True}
                 if request.regenerate_outfit and any(problem.startswith(REGENERATION_PREFIX) for problem in problems):
                     raise StylistError("outfit_regeneration_unavailable", "这次候选里还没找到不同且符合要求的穿搭，原搭配已保留。", 422)
-                raise StylistError("outfit_validation_failed", "这次选款未通过要求检查，原搭配已保留。", 422)
+                retained = bool(source_session(data).looks)
+                message = ("这次选款未通过要求检查，原搭配已保留。" if retained else
+                           "这次没有找到可用的衣橱单品，暂时无法完成文字搭配。")
+                raise StylistError("outfit_validation_failed", message, 422)
             return {"draft": repaired["draft"], "problems": []}
 
         def deliver_node(data):
@@ -743,15 +823,21 @@ class Stylist:
             if plan.mode == "modify" and not selected:
                 warnings.append(service_notice(request.assistant_persona, "original_retained"))
             delivery = "advice" if plan.mode == "consult" or not plan.use_inventory else ("outfit" if selected else "concept")
+            reference_reason = None
             if delivery == "concept":
+                reference_reason = ("unavailable" if data.get("service_gap") or
+                                    data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable")
+                                    else "no_match" if pool or data.get("rejected") or data.get("text_reference_fallback") else "no_candidates")
+                if not data.get("text_reference_fallback"):
+                    draft.message = reference_explanation(data) + "\n\n" + draft.message
                 warnings.append(service_notice(request.assistant_persona, "concept"))
             gap = (plan.mode != "consult" and plan.use_inventory and not plan.weather_only
-                   and not data.get("service_gap")
+                   and (not data.get("service_gap") or delivery == "concept")
                    and (not looks or any(not look.wardrobe_complete for look in looks)))
             reply = Reply(**exploration, wardrobe_gap=gap, retrieval_diagnostics=data.get("retrieval_diagnostics", {}),
                           conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
                           city_selection_required=needs_outfit_city(plan, task),
-                          delivery=delivery, conversation_only=plan.conversation_only,
+                          delivery=delivery, reference_reason=reference_reason, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,
                           message=draft.message, task=task, looks=looks, weather=weather,
                           retained_items=([Product.model_validate(p) for p in data["frozen"]]
@@ -860,6 +946,12 @@ class Stylist:
                 if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
                         "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
                     reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
+                # Receipt cleanup must not remove the hypothetical premise that
+                # the validated draft used to distinguish a condition from a fact.
+                if (plan.conversation_only and hypothetical_preference(request.message)
+                        and boundary_problems(Draft(message=reply.message), request.message, task)):
+                    reply.message = boundary_fallback(Draft(message=reply.message), request.message, Task()).message
+                    reply.follow_ups = []
                 # Validated, post-policy text preview; persistence and cards remain final-only.
                 report("reply_text", reply.message)
                 state.messages = (state.messages + [
@@ -876,6 +968,9 @@ class Stylist:
                     memory_save = None
                 await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply, memory_save)
                 return reply
+        except StylistError as exc:
+            await asyncio.to_thread(self.store.fail, owner, request, exc)
+            raise
         finally:
             usage_context.reset(usage_token)
             pulse.cancel()
@@ -892,14 +987,30 @@ class Stylist:
             outfit_entry = None
             looks = []
             if request.subject_product is not None:
-                product_entry = await resolve_product_entry(upstream, request.subject_product)
+                try:
+                    product_entry = await resolve_product_entry(upstream, request.subject_product)
+                except StylistError as exc:
+                    if exc.code != "product_entry_unavailable" or exc.status != 404:
+                        raise
+                    reply = Reply(conversation_id=cid, version=request.expected_version + 1,
+                                  mode="consult", delivery="advice", task=Task(),
+                                  message="这件单品已不可用，不过我们可以继续。你可以换一件，或让我从当前衣橱重新搭一套。",
+                                  follow_ups=["从当前衣橱帮我搭一套"], request_id=request.request_id)
+                    state.looks = []
+                    state.messages = (state.messages + [
+                        {"role": "user", "content": "帮我查看下这件"},
+                        {"role": "assistant", "content": json.dumps(reply.model_dump(mode="json"), ensure_ascii=False)},
+                    ])[-16:]
+                    await asyncio.to_thread(self.store.finish, owner,
+                        request.model_copy(update={"message": "帮我查看下这件"}), claim, state, reply)
+                    return reply
                 item = from_row(product_entry["product"], request.subject_product.source)
                 if item is None:
                     raise StylistError("product_entry_invalid_result", "这件单品的信息不完整，请重新打开。", 422)
                 looks = [Look(title=product_entry["title"] or "当前单品", items=[item],
                               pieces=[item.display_name], wardrobe_complete=False)]
                 message = "已打开这件单品，可以继续聊怎么搭配。"
-                history_message = f"打开单品：{product_entry.get('title') or request.subject_product.product_id}"
+                history_message = "帮我查看下这件"
             else:
                 outfit_entry = await resolve_outfit_entry(upstream, request.subject_outfit)
                 items = [from_row(item, "user") for item in outfit_entry["items"]]
@@ -909,7 +1020,7 @@ class Stylist:
                               pieces=[item.display_name for item in items],
                               wardrobe_complete=True, why=[], how=[], notes=[])]
                 message = "已打开这套搭配，可以继续聊怎么调整。"
-                history_message = f"打开搭配：{outfit_entry.get('title') or request.subject_outfit.outfit_id}"
+                history_message = "帮我查看下搭配"
             reply = Reply(
                 conversation_id=cid,
                 version=request.expected_version + 1,

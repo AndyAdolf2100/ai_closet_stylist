@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from stylist.errors import StylistError
@@ -58,3 +60,41 @@ def test_conversation_title_uses_first_saved_question_and_stays_owner_scoped(tmp
     assert [row["title"] for row in rows] == ["周末想去公园", "今天通勤怎么穿？", None]
     assert store.conversations("b")[0]["title"] == "其他账号提问"
     assert store.conversations("unknown") == []
+
+
+def test_delete_conversation_is_owner_scoped_idempotent_and_hides_history(tmp_path):
+    store = Store(str(tmp_path / "delete.db"))
+    cid = "sty_" + "a" * 32
+    with store.connection() as conn:
+        conn.execute("INSERT INTO stylist_sessions(id,owner_id,state_json,version) VALUES(?,?,?,?)",
+                     (cid, "a", "{}", 1))
+        conn.execute("INSERT INTO stylist_messages(conversation_id,owner_id,version,user_message,reply_json) VALUES(?,?,?,?,?)",
+                     (cid, "a", 1, "今天穿什么", "{}"))
+    assert store.conversations("a")[0]["id"] == cid
+    assert store.delete_conversation("a", cid) == {"conversation_id": cid, "deleted": True}
+    assert store.conversations("a") == []
+    with store.connection() as conn:
+        assert conn.execute("SELECT 1 FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, "a")).fetchone()
+        assert conn.execute("SELECT user_message FROM stylist_messages WHERE conversation_id=? AND owner_id=?", (cid, "a")).fetchone()["user_message"] == "今天穿什么"
+    assert Store(store.path).conversations("a") == []
+    with pytest.raises(StylistError, match="conversation_not_found"):
+        store.history("a", cid)
+    assert store.delete_conversation("a", cid) == {"conversation_id": cid, "deleted": True}
+    with pytest.raises(StylistError, match="conversation_not_found"):
+        store.delete_conversation("b", cid)
+
+
+def test_delete_conversation_rejects_active_or_unfinished_operations(tmp_path):
+    store = Store(str(tmp_path / "delete-busy.db"))
+    cid = "sty_" + "b" * 32
+    with store.connection() as conn:
+        conn.execute("INSERT INTO stylist_sessions(id,owner_id,state_json,version,active_claim,lease_until) VALUES(?,?,?,?,?,?)",
+                     (cid, "a", "{}", 1, "claim", time.time() + 60))
+    with pytest.raises(StylistError, match="conversation_delete_conflict"):
+        store.delete_conversation("a", cid)
+    with store.connection() as conn:
+        conn.execute("UPDATE stylist_sessions SET active_claim=NULL,lease_until=0 WHERE id=?", (cid,))
+        conn.execute("INSERT INTO stylist_requests(owner_id,request_id,conversation_id,digest,status) VALUES(?,?,?,?,?)",
+                     ("a", "request-1", cid, "digest", "processing"))
+    with pytest.raises(StylistError, match="conversation_delete_conflict"):
+        store.delete_conversation("a", cid)

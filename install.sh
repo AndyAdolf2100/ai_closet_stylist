@@ -24,7 +24,7 @@ if [[ "$preserve_nginx" == 1 && ! -f "$nginx_target" ]]; then
   fail "保留站点模式需要现有Nginx配置；首次安装请使用默认模式。"
 fi
 
-for program in docker tar curl sha256sum awk grep sed mktemp flock ss; do
+for program in docker tar curl sha256sum awk grep sed mktemp flock ss cmp; do
   command -v "$program" >/dev/null || fail "缺少命令：$program"
 done
 [[ -x "$nginx_bin" && -d "$vhost_dir" ]] || fail '找不到当前服务器的 Nginx 程序或站点目录。'
@@ -166,6 +166,37 @@ if [[ ! -f "$base/config/deploy.env" ]]; then
     mv "$base/config/.deploy.env.new" "$base/config/deploy.env"
     unset model_key
   fi
+fi
+# Fill usage reporting defaults for both first installs and upgrades. Never
+# evaluate private deploy.env as shell code or overwrite an explicit setting.
+awk '
+  /^STYLIST_SERVER_URL=/ {server=substr($0,index($0,"=")+1)}
+  /^STYLIST_USAGE_CALLBACK_URL=/ {callback=substr($0,index($0,"=")+1)}
+  /^STYLIST_USAGE_ENVIRONMENT=/ {environment=substr($0,index($0,"=")+1)}
+  {print}
+  END {
+    if (callback == "") {
+      if (server !~ /^https?:\/\//) server="https://aicloset-dev.wxbjq.top"
+      sub(/\/$/,"",server)
+      print "STYLIST_USAGE_CALLBACK_URL=" server "/api/internal/stylist/model-usage"
+    }
+    if (environment == "") print "STYLIST_USAGE_ENVIRONMENT=test"
+  }
+' "$base/config/deploy.env" >"$base/config/.usage-defaults.env"
+chmod 600 "$base/config/.usage-defaults.env"
+if ! cmp -s "$base/config/deploy.env" "$base/config/.usage-defaults.env"; then
+  if (( ! config_changed )); then
+    config_backup="$base/backups/config-$version"
+    mkdir -m 700 "$config_backup"
+    for name in deploy.env login-public.pem; do
+      [[ ! -f "$base/config/$name" ]] || cp -p "$base/config/$name" "$config_backup/$name"
+    done
+    config_changed=1
+  fi
+  mv "$base/config/.usage-defaults.env" "$base/config/deploy.env"
+  printf '已补齐用量回调默认配置；已有非空配置保持不变。\n'
+else
+  rm -f "$base/config/.usage-defaults.env"
 fi
 if [[ ! -f "$base/config/login-public.pem" ]]; then
   public_key="$release/deploy/docker/login-public.pem"

@@ -128,6 +128,11 @@ async def retrieve(upstream, mcp, task, query, frozen=(), persona_id=None, *, al
         extras.setdefault(product.key, product.model_dump())
     products = await resolve_products(mcp, refs, extras)
     frozen_keys = {p.key for p in frozen}
+    resolved_keys = {p.key for p in products}
+    unavailable = [p for p in frozen if p.key not in resolved_keys]
+    trace['unavailable_items'] = [{'key': p.key, 'title': p.display_name} for p in unavailable]
+    if unavailable:
+        warnings.append('原先选中的部分单品已不可用，本次先跳过，用当前可用单品继续搭配；缺少的部分会说明为文字参考。')
     valid = []
     for product in products:
         if product.key in frozen_keys and product_gender_problems(product, task):
@@ -190,4 +195,6 @@ async def saved_candidates(mcp, task):
             p = from_row(row, "user")
             if p and not suitability(p, task)[0]:
                 items.append(p)
-    return items
+    # Saved outfits are historical snapshots, not proof that an item still exists.
+    refs = [ProductRef(source=p.source, product_id=p.product_id) for p in items]
+    return [p for p in await resolve_products(mcp, refs) if not suitability(p, task)[0]]

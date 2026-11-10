@@ -169,7 +169,10 @@ def test_first_install_reads_existing_private_config_without_key_prompt(host):
     assert result.returncode == 0, result.stderr
     assert '请输入' not in result.stdout + result.stderr
     assert 'synthetic-preseeded-only' not in result.stdout + result.stderr
-    assert (config / 'deploy.env').read_bytes() == original
+    updated = (config / 'deploy.env').read_bytes()
+    assert updated.startswith(original)
+    assert b'STYLIST_USAGE_CALLBACK_URL=https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage\n' in updated
+    assert b'STYLIST_USAGE_ENVIRONMENT=test\n' in updated
 
 
 @pytest.mark.parametrize('failure', ['FAIL_BUILD', 'FAIL_UP', 'FAIL_NGINX', 'FAIL_PROXY'])
@@ -288,7 +291,8 @@ def test_private_bundle_is_automatic_and_failed_upgrade_restores_config(host):
     result = run(make_release(root, 'private-first', private=True), env)
     assert result.returncode == 0, result.stderr
     original = (root / 'deployment/config/deploy.env').read_bytes()
-    assert original == b'STYLIST_LLM_KEY=private-fixture\n'
+    assert original.startswith(b'STYLIST_LLM_KEY=private-fixture\n')
+    assert b'STYLIST_USAGE_ENVIRONMENT=test\n' in original
     assert 'private-fixture' not in result.stdout + result.stderr
     (root / 'deployment/config/deploy.env').write_text('old-config\n')
     failed = run(make_release(root, 'private-failed', private=True), {**env, 'FAIL_DATABASE': '1'})
@@ -319,3 +323,42 @@ def test_runtime_update_preserves_custom_docs_nginx(host):
     events = [json.loads(line) for line in (root / 'events').read_text().splitlines()]
     assert not any(event == ['nginx', ['-s', 'reload']] for event in events)
     assert any(event[0] == 'docker' and 'up' in event[1] for event in events)
+
+
+@pytest.mark.parametrize('usage_lines,expected_url,expected_environment', [
+    ('', 'https://business.invalid/api/internal/stylist/model-usage', 'test'),
+    ('STYLIST_USAGE_CALLBACK_URL=\nSTYLIST_USAGE_ENVIRONMENT=\n',
+     'https://business.invalid/api/internal/stylist/model-usage', 'test'),
+    ('STYLIST_USAGE_CALLBACK_URL=https://custom.invalid/usage\nSTYLIST_USAGE_ENVIRONMENT=production\n',
+     'https://custom.invalid/usage', 'production'),
+])
+def test_update_fills_usage_defaults_and_preserves_explicit_settings(host, usage_lines, expected_url, expected_environment):
+    root, env = host
+    first = run(make_release(root, 'usage-first'), env)
+    assert first.returncode == 0, first.stderr
+    config = root / 'deployment/config/deploy.env'
+    original = config.read_text()
+    assert 'STYLIST_USAGE_CALLBACK_URL=https://business.invalid/api/internal/stylist/model-usage' in original
+    assert 'STYLIST_USAGE_ENVIRONMENT=test' in original
+    config.write_text(''.join(line + '\n' for line in original.splitlines()
+                              if not line.startswith('STYLIST_USAGE_')) + usage_lines)
+    result = run(make_release(root, 'usage-update'), env)
+    assert result.returncode == 0, result.stderr
+    values = dict(line.split('=', 1) for line in config.read_text().splitlines() if '=' in line)
+    assert values['STYLIST_USAGE_CALLBACK_URL'] == expected_url
+    assert values['STYLIST_USAGE_ENVIRONMENT'] == expected_environment
+    assert values['STYLIST_LLM_KEY'] == 'synthetic-runtime$#key'
+    assert 'synthetic-runtime' not in result.stdout + result.stderr
+
+
+def test_failed_update_restores_config_before_usage_defaults(host):
+    root, env = host
+    first = run(make_release(root, 'usage-rollback-first'), env)
+    assert first.returncode == 0, first.stderr
+    config = root / 'deployment/config/deploy.env'
+    original = ''.join(line + '\n' for line in config.read_text().splitlines()
+                       if not line.startswith('STYLIST_USAGE_'))
+    config.write_text(original)
+    failed = run(make_release(root, 'usage-rollback-failed'), {**env, 'FAIL_DATABASE': '1'})
+    assert failed.returncode != 0
+    assert config.read_text() == original

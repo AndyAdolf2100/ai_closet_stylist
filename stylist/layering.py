@@ -57,3 +57,18 @@ def layering_problems(draft, pool, task, plan, weather, dates=()):
             problems.append(f'天气外层：第{i + 1}套需要外层，但本次候选没有合规外套；保留已有衣物，'
                             '把保暖外套列入reference_pieces并说明未匹配，不虚构衣物或图片。')
     return problems
+
+
+def ensure_weather_references(draft, task, plan, weather, dates=()):
+    """Keep a missing cold-weather layer explicit in a text-only fallback."""
+    requirements = layering_requirements(task, plan, weather)
+    if not requirements:
+        return draft
+    result = draft.model_copy(deep=True)
+    for i, look in enumerate(result.looks):
+        date = str(dates[i]) if i < len(dates) else ''
+        applicable = [r for r in requirements if plan.mode != 'weekly' or r['date'] == date]
+        if not applicable or any(OUTER_WORDS.search(piece) for piece in look.reference_pieces):
+            continue
+        look.reference_pieces.append('保暖外套（本次候选未匹配）')
+    return result
