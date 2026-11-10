@@ -22,6 +22,7 @@ class UploadInput(Model):
     kind: Literal["garment", "person"]
     image_data: str = Field(min_length=20, max_length=13981039)
     confirmed: StrictBool
+    protocol: Literal["legacy", "segmentation_v2"] | None = Field(default=None, exclude=True, deprecated=True)
 
 
 class GenerationInput(Model):
@@ -131,6 +132,8 @@ class MediaActions:
         return self.save(owner, action, {"message": message, "error_code": code}, state)
 
     async def upload(self, upstream, request):
+        if request.kind == "garment" and request.confirmed:
+            raise StylistError("garment_upload_use_server", "衣物上传已改为Server直连，请刷新页面后重新选择照片。", 409)
         owner = await upstream.identity()
         if request.confirmed is not True:
             return {"status": "cancelled"}
@@ -138,7 +141,7 @@ class MediaActions:
         row, claimed = self.reserve(owner, request.request_id, request.kind, hashed, {})
         if not claimed:
             return self.view(row)
-        tool = "product_add" if request.kind == "garment" else "digital_twin_photo_check"
+        tool = "digital_twin_photo_check"
         try:
             async with upstream.mcp(image=True) as mcp:
                 result = await mcp.commit_media(tool, {"image_data": request.image_data, "idempotency_key": row["id"]})
@@ -150,19 +153,16 @@ class MediaActions:
     async def refresh(self, upstream, action):
         owner = await upstream.identity()
         row = self.get(owner, action)
+        if row["kind"] == "garment":
+            # Retired uploads are historical snapshots only; no old service calls.
+            return self.view(row)
         result = json.loads(row["result_json"] or "{}")
         if row["status"] not in {"processing", "unknown", "executing"}:
             return self.view(row)
-        specs = {"garment": ("product_upload_status", "task_id"),
-                 "person": ("digital_twin_photo_check_status", "check_id"),
+        specs = {"person": ("digital_twin_photo_check_status", "check_id"),
                  "generation": ("digital_twin_generation_status", "task_id")}
         tool, key = specs[row["kind"]]
         if not result.get(key):
-            # Reconcile a lost response by its original, owner-scoped request key.
-            if row["kind"] == "garment":
-                async with upstream.mcp() as mcp:
-                    fresh = await mcp.call("product_upload_receipt", {"idempotency_key": action})
-                return self.save(owner, action, fresh)
             if row["kind"] == "generation":
                 overview = await upstream.get("/api/digital_twin/overview")
                 candidates = [overview.get("pending_task"), overview.get("latest_task")]

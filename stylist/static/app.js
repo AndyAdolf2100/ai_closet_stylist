@@ -1005,7 +1005,7 @@ async function regenerateOutfit(action) {
   }
   return sendMessage(false, {owner:session.user.id,conversation_id:conversation,version:action.version,look_index:index});
 }
-window.WardrobeJourney?.configure({api,notify:notifyIssue,getConversation:()=>conversation,getContext:()=>({conversation_id:conversation,version}),onNeedOutfit:()=>{
+window.WardrobeJourney?.configure({api,notify:notifyIssue,onProduct:async id=>{window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'chat'}));await window.openSubjectConversation({subject_product:{source:'user',product_id:String(id)}});},getConversation:()=>conversation,getContext:()=>({conversation_id:conversation,version}),onNeedOutfit:()=>{
   if(!$('message').value.trim())$('message').value='先从我的衣橱搭一套适合试穿的日常穿搭。';$('message').focus();
 },onRegenerate:regenerateOutfit,onStyle:action=>{
   pendingUploadAnchor=action;pendingAnchorOwner=session?.user?.id;updateUploadAnchor();

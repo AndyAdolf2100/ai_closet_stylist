@@ -1,5 +1,7 @@
 # 表结构与 API 映射
 
+2026-11-10新增：衣物segmentation_v2上传协议、候选selection与本地anchor适配，固定dev接口及2.1.0头。契约与状态／未知结果边界见[多照片拼图与多实例入柜](UPLOAD_SEGMENTATION.md)，不将本地Mock视为真实dev验收。
+
 2026-11-02对话回复新增 `city_selection_required: bool = false`，由程序根据已解析目的地及天气需求决定是否展示城市引导卡；不是定位授权或模型写权限。新网页请求固定 `confirm_plan=false`，旧待确认请求和审批接口保留恢复兼容。城市卡确认后使用原消息、新请求ID、当前会话版本及选定 `location` 继续对话；不调用收费图片接口。实现与边界见 [城市引导验收](CITY_INVITATION_QA.md)。
 
 详情页入口使用现有 `POST /stylist-api/chat` 或 `/chat/stream`，首轮 `message` 可为空并提交其一的 `subject_product={source,product_id}` 或 `subject_outfit={source:"user",outfit_id}`。Agent 通过 `product.resolve` / `outfit.resolve` 读取权威详情，不调用模型，回复中的 `product_entry` 或 `outfit_entry` 用于 H5/App 回显；搭配同时填充 `looks` 以复用现有搭配卡。入口请求仍使用现有 `request_id` 幂等，未增加对象绑定会话或数据库表。H5 调试入口为 `/app/?debug=subject-entry`。
@@ -57,7 +59,7 @@
 | `digital_twin_overview` | 无参数 | 只读检查默认形象，未准备好时引导回现有 App 完成 |
 | `digital_twin_tryon_quote` | 无参数 | 实时获取积分费用，不生成、不扣积分 |
 | `product_beautify_quote` | 本人上传的 user_product_id | 已做只读接口检查；本版 UI 不执行美化 |
-| `save_recommended_outfit` | sel_选择编号、真实 items | 仅试穿确认后调用，告知保存影响；当前只保存个人衣橱单品 |
+| `save_recommended_outfit` | sel_选择编号、真实 items | 用户点击「保存穿搭」或独立试穿确认后调用；系统参考款保存会加入个人衣橱，单独保存须明确确认，文字参考不参与 |
 | `digital_twin_tryon` | 已保存 outfit_id、固定 idempotency_key、可选 scene | 仅独立费用确认后调用，不由文字模型授权 |
 
 特意避开 `user_all_list` 和旧商品 `detail` 作为常规读取入口：前者有清理新增提示、特定参数更新优先级的逻辑，后者会清除新增／美化角标。新 Agent 不为选衣服触发这些界面状态变更。
@@ -158,3 +160,13 @@ Product新增可空gender，归一为男／女／男女同款／null。读取兼
 
 
 2026-11-03系统参考库扩展：邂逅新衣开启后新增固定VikingDB系统文档只读适配，复用原Agent的legacy检索配置和签名，按分类／性别查询并用Server product.resolve重读；不依赖kb_search必须已部署。新增Reply.retrieval_diagnostics保存非敏感计数与阶段。具体边界、有限列表回退、配置及真实／模拟证据见docs/NEW_CLOTHES.md最新集成章节；原个人衣物、上传与独立费用确认接口保持。
+
+## 2026-11-10 搭配卡保存
+
+GET/POST `/stylist-api/conversations/{id}/saved-outfit`，Bearer鉴权，参数version、look_index；POST额外include_system布尔确认，拒绝客户端items。服务端读取已完成历史方案并重读单品，调用save_recommended_outfit；返回saved/outfit_id/outfit_id_type=2，供既有我的搭配接口读取。重复请求只派发一次，超时／中断结果unknown不重放，详情见[OUTFIT_SAVE.md](OUTFIT_SAVE.md)。
+
+### H5分类衣橱适配（2026-11-10）
+
+GET `/stylist-api/app/closet-options`读Server all_list；POST `/closet-create`接name、remark、cover_image及预制is_family（当前true返回409，false不向旧Server发送该字段）；GET `/closet-items?wardrobe_id=&page=`返回分类内单品；POST `/closet-items/{id}`接正整数数组user_product_id并调用batch_create。沿用Bearer、固定路径和Server归属校验。普通分类只从自己的库存选入；家庭独立上传／系统搭配契约待Server接入。
+
+2026-11-10上传调用归属纠正：新衣物由浏览器直接访问dev Server `/api/upload/file`、`/api/user_product/upload`、task/detail、task/selection、task_product_detail，参数与头完全按upload_demo.html；此前新建的Stylist中转与anchor方案已撤除。旧Stylist衣物上传入口返回409要求刷新。当前实现与503证据见docs/UPLOAD_SEGMENTATION.md。

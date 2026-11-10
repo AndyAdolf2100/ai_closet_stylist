@@ -10,7 +10,7 @@ function setup(api,options={}){
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
  w.URL.createObjectURL=()=> 'blob:local-preview';w.URL.revokeObjectURL=()=>{};
  w.eval(fs.readFileSync('stylist/static/companion-loading.js','utf8'));
- w.eval(source);const notices=[];w.WardrobeJourney.configure({api,notify:text=>notices.push(text),getConversation:()=> 'current',...options});w.WardrobeJourney.setOwner('1');
+ w.ServerGarmentUpload={start:(image,id)=>api('/stylist-api/media/uploads',{method:'POST',body:JSON.stringify({request_id:id,kind:'garment',image_data:image,confirmed:true})}),clear:()=>{}};w.eval(source);const notices=[];w.WardrobeJourney.configure({api,notify:text=>notices.push(text),getConversation:()=> 'current',...options});w.WardrobeJourney.setOwner('1');
  return {dom,w,notices,close:()=>dom.window.close()};
 }
 const byText=(w,text)=>[...w.document.querySelectorAll('button')].find(b=>b.textContent===text);
@@ -157,11 +157,11 @@ test('photo remains local until explicit upload; cancel never sends or charges',
  t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();await flush();
  assert.equal(calls.length,1);assert.equal(JSON.parse(calls[0][1].body).confirmed,true);assert.ok(byText(t.w,'用这件搭一套'));t.close();
 });
-test('an upload cannot be double-submitted, and closing does not reopen on late response',async()=>{
+test('an upload cannot be double-submitted or closed while in flight, then unlocks on completion',async()=>{
  let done;let calls=0;const t=setup(()=>{calls++;return new Promise(resolve=>done=resolve);});
  t.w.WardrobeJourney.upload();await selectFile(t.w);const b=byText(t.w,'确认上传');b.click();b.click();assert.equal(calls,1);
- byText(t.w,'关闭 ×').click();done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:1}});await flush();
- assert.equal(t.w.document.querySelector('dialog').open,false);t.close();
+ assert.equal(byText(t.w,'关闭 ×').disabled,true);byText(t.w,'关闭 ×').click();assert.equal(t.w.document.querySelector('dialog').open,true);const cancel=new t.w.Event('cancel',{cancelable:true});t.w.document.querySelector('dialog').dispatchEvent(cancel);assert(cancel.defaultPrevented);done({action_id:'med_a',kind:'garment',status:'completed',result:{user_product_id:1}});await flush();
+ assert.equal(byText(t.w,'关闭 ×').disabled,false);byText(t.w,'关闭 ×').click();assert.equal(t.w.document.querySelector('dialog').open,false);t.close();
 });
 test('switching accounts discards a late upload response and clears preview',async()=>{
  let done;const t=setup(()=>new Promise(resolve=>done=resolve));t.w.WardrobeJourney.upload();await selectFile(t.w);byText(t.w,'确认上传').click();
@@ -390,13 +390,14 @@ test('each try-on confirm checks current funds before consuming the quote or sub
  allowed=true;byText(t.w,'确认消耗 8 积分并试穿').click();await flush();assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,1);assert.deepEqual(checks,[[8,'tryon'],[8,'tryon']]);t.close();
 });
 
-for(const kind of ['person','garment','generation'])test(`${kind} media waits poll every two seconds read-only until terminal status`,async()=>{
+for(const kind of ['person','garment','generation'])test(kind==='garment'?'retired garment snapshots do not query or poll old endpoints':`${kind} media waits poll every two seconds read-only until terminal status`,async()=>{
  let status='processing',reads=0;const calls=[],pending=new Map();let serial=0;
  const action=()=>({action_id:'med_auto',kind,status,result:{}});
  const t=setup(async(path,options)=>{calls.push([path,options]);if(path.endsWith('/media'))return [action()];if(path.endsWith('/images'))return [];reads++;return action();});
  t.w.setTimeout=(fn,delay)=>{assert.equal(delay,2000);pending.set(++serial,fn);return serial;};t.w.clearTimeout=id=>pending.delete(id);
  await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();
  assert.equal(byText(t.w,'查看当前处理结果'),undefined);
+ if(kind==='garment'){assert.equal(pending.size,0);assert.equal(reads,0);t.close();return;}
  for(let i=0;i<32;i++){assert.equal(pending.size,1);const [id,fn]=pending.entries().next().value;pending.delete(id);await fn();}
  status='completed';const [id,fn]=pending.entries().next().value;pending.delete(id);await fn();
  assert.equal(pending.size,0);assert.equal(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');assert.equal(reads,34);assert(calls.every(([,o])=>!o?.method||o.method==='GET'));t.close();

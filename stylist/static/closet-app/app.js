@@ -1,3 +1,4 @@
+import {createClosetSwitcher} from './closet-switcher.js';
 import {readAvailablePoints} from './points-balance.js';
 import {mountPaymentDemo,paymentDemoEnabled} from './payment-demo.js';
 import {skuDetail} from './sku-fusion.js';
@@ -12,23 +13,29 @@ import {subjectChatButton} from './subject-chat.js';
 const $ = id => document.getElementById(id);
 const ASSETS = '/static/closet-app/assets/';
 const KEY = 'ai-closet-stylist-session-v1';
-const state = { tab: 'home', feed: 'album', epoch: 0, page: 1, loading: false, feedVersion: 0, wardrobeVersion: 0, rows: [], products: [], session: '', controller: new AbortController() };
+const state = { activeCloset:null, tab: 'home', feed: 'album', epoch: 0, page: 1, loading: false, feedVersion: 0, wardrobeVersion: 0, rows: [], products: [], session: '', controller: new AbortController() };
 const node = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const readSession = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch { return null; } };
 const safeURL = value => { try { const u = new URL(value, location.origin); return ['https:', 'http:'].includes(u.protocol) ? u.href : ''; } catch { return ''; } };
 function picture(src, alt = '') { const img = node('img'); img.alt = alt; img.loading = 'lazy'; const url = safeURL(src || ''); if (src && url) img.src = url; else img.className = 'image-failed'; img.onerror = () => { img.removeAttribute('src'); img.alt = alt || '图片暂未载入'; img.classList.add('image-failed'); }; return img; }
 function button(text, action, cls = 'pill') { const b = node('button', cls, text); b.type = 'button'; b.onclick = action; return b; }
 function toast(text) { $('app-notice').textContent = text; $('app-notice').hidden = false; clearTimeout(toast.timer); toast.timer = setTimeout(() => { $('app-notice').hidden = true; }, 3500); }
-async function api(section, page = 1) {
+async function api(section, page = 1, extra = {}) {
   const session = readSession();
   if (!session?.access_token) throw Object.assign(new Error('登录后查看你的衣橱与造型记录'), { login: true });
   const epoch = state.epoch;
-  const response = await fetch(`/stylist-api/app/${section}?page=${page}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store', signal: state.controller.signal });
+  const response = await fetch(`/stylist-api/app/${section}?${new URLSearchParams({page,...extra})}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store', signal: state.controller.signal });
   const value = await response.json();
   if (epoch !== state.epoch) throw new DOMException('账号已切换', 'AbortError');
   if (!response.ok) throw Object.assign(new Error(response.status === 401 ? '登录已过期，请重新连接衣橱' : (value.message || '暂时没有加载成功，请重试')), { login: response.status === 401 });
   return value.data;
 }
+async function appWrite(section, body){
+ const token=readSession()?.access_token,epoch=state.epoch;if(!token)throw Error('请先登录。');
+ const response=await fetch('/stylist-api/app/'+section,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),signal:state.controller.signal});const result=await response.json();
+ if(epoch!==state.epoch||readSession()?.access_token!==token)throw new DOMException('账号已切换','AbortError');if(!response.ok)throw Error(result.message||'操作未完成，请重试。');return result.data;
+}
+const closetSwitcher=createClosetSwitcher({read:api,write:appWrite,onSelect:closet=>{state.activeCloset=closet;loadWardrobe();},getSelected:()=>state.activeCloset,getProducts:()=>state.products,reload:loadWardrobe,notify:text=>window.PreviewMessage.notify(text)});
 function showError(container, error, retry) {
   if (error.name === 'AbortError') return;
   const box = node('div', 'state'); box.append(node('p', '', error.message), button(error.login ? '连接衣橱' : '重新加载', error.login ? () => openAgent('login') : retry)); container.replaceChildren(box);
@@ -87,7 +94,7 @@ async function loadFeed(append = false) {
   finally { if (epoch === state.epoch && feed === state.feed && requestVersion === state.feedVersion) state.loading = false; }
 }
 function productCard(item) {
-  const title = item.title || item.name || item.product_name || item.brand_name || '衣橱单品';
+  const title = item.title || item.name || item.product_name || item.secondary_class_name || item.class_name || item.brand_name || '衣橱单品';
   const src = item.cutout_image || item.original_image || item.image_url || item.cover_image;
   const b = button('', () => {
     const body = node('div', 'detail-body');
@@ -95,7 +102,7 @@ function productCard(item) {
     if (item.last_add_time) body.append(node('p', '', `添加于 ${item.last_add_time}`));
     body.append(subjectChatButton('product', item, {button, openAgent, readSession}));
     detail(title, body);
-  }, 'product'); b.append(picture(src, title), node('span', '', title)); return b;
+  }, 'product'); b.append(picture(src, title), node('span', '', title));const description=[item.color,item.material].filter(Boolean).join(' · ');if(description)b.append(node('small','y-product-note',description));return b;
 }
 function wardrobeSection(title, count, action, label) {
   const section = node('section', 'wardrobe-section'), header = node('header', 'section-heading'); header.append(node('strong', '', title)); if (count != null) header.append(node('span', '', String(count))); if (action) header.append(button(label, action, '')); section.append(header); return section;
@@ -103,18 +110,33 @@ function wardrobeSection(title, count, action, label) {
 async function loadWardrobe() {
   const requestVersion = ++state.wardrobeVersion;
   const target = $('wardrobe-sections'), epoch = state.epoch; loading(target);
-  const results = await Promise.allSettled(['recent', 'closets', 'categories'].map(key => api(key)));
+  const modern=document.documentElement.dataset.appDesign==='yijian';
+  const selected=state.activeCloset;
+  const results=await Promise.allSettled([selected?api('closet-items',1,{wardrobe_id:selected.id}):api('recent'),api(modern?'closet-options':'closets'),selected?Promise.resolve({list:[]}):api('categories')]);
   if (epoch !== state.epoch || requestVersion !== state.wardrobeVersion) return;
   target.replaceChildren();
+  if(modern)closetSwitcher.update(results[1].status==='fulfilled'?results[1].value?.list||[]:[]);
   const names = ['所有单品', '分类衣橱', '单品分类'];
-  results.forEach((result, i) => {
+  (document.documentElement.dataset.appDesign==='yijian'?[0,2,1]:[0,1,2]).forEach(i => {
+    const result=results[i];
+    if(i===1&&modern){if(result.status==='rejected'){const error=node('section','wardrobe-section');showError(error,result.reason,loadWardrobe);target.append(error);}return;}
+    if(i===2&&document.documentElement.dataset.appDesign==='yijian'&&result.status==='fulfilled')return;
     if (result.status === 'rejected') { const section = wardrobeSection(names[i]); showError(section, result.reason, loadWardrobe); target.append(section); return; }
-    const data = result.value || {}, rows = data.list || [];
+    const data = result.value || {};let rows = data.list || [];
+    if(i===0&&!selected&&document.documentElement.dataset.appDesign==='yijian'){const categories=results[2].status==='fulfilled'?results[2].value?.list||[]:[];const seen=new Set();rows=[...rows,...categories.flatMap(c=>c.list||[])].filter(p=>{const id=p.user_product_id||p.id;if(!id)return true;if(seen.has(String(id)))return false;seen.add(String(id));return true;});}
     if (i === 0) {
       state.products = rows;
-      const section = wardrobeSection(names[i], data.page?.total ?? data.page_info?.total ?? rows.length, () => openAgent('upload'), '＋ 添加单品');
-      if (!rows.length) { const box = node('div', 'section-empty'); box.append(document.documentElement.dataset.appDesign==='yijian'?emptyArt('wardrobe'):picture(ASSETS + 'closet_recent_empty.svg'), node('p', '', '先收进一件喜欢的衣服吧')); section.append(box); }
-      else { const rail = node('div', 'product-rail'); rows.forEach(p => rail.append(productCard(p))); section.append(rail); section.append(button('查看最近添加 ›', () => showProducts(rows, '最近添加'))); }
+      const section = wardrobeSection(selected?.name||names[i], data.pagination?.total ?? data.page?.total ?? data.page_info?.total ?? rows.length, () => openAgent('upload'), '＋ 添加');
+      if (!rows.length) { const box = node('div', 'section-empty'); box.append(document.documentElement.dataset.appDesign==='yijian'?emptyArt('wardrobe'):picture(ASSETS + 'closet_recent_empty.svg'), node('p', '', selected?'这个衣橱还空着，从我的衣橱选几件加入吧。':'先收进一件喜欢的衣服吧'));if(selected)box.append(button('从我的衣橱选择',()=>closetSwitcher.addItems()));section.append(box); }
+      else if(document.documentElement.dataset.appDesign!=='yijian'){const rail=node('div','product-rail');rows.forEach(p=>rail.append(productCard(p)));section.append(rail,button('查看最近添加 ›',()=>showProducts(rows,'最近添加')));}
+      else { const rail = node('div', 'product-grid y-wardrobe-grid'),search=node('input','search');
+        search.type='search';search.placeholder='找一找，今天想穿的那件';search.setAttribute('aria-label','搜索已加载单品');
+        let category='全部';const tabs=node('div','y-wardrobe-tabs');tabs.setAttribute('aria-label','单品分类');
+        const categories=results[2].status==='fulfilled'?results[2].value?.list||[]:[];
+        for(const name of ['全部',...new Set(categories.map(c=>c.class_name).filter(Boolean))]){const tab=button(name,()=>{category=name;tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===tab)));render();},'');tab.setAttribute('aria-pressed',String(name==='全部'));tabs.append(tab);}
+        const render=()=>{const matches=rows.filter(p=>(category==='全部'||p.class_name===category||categories.some(c=>c.class_name===category&&(c.list||[]).some(item=>item===p)))&&[p.title,p.name,p.product_name,p.brand_name].join(' ').includes(search.value.trim()));rail.replaceChildren(...matches.map(productCard));if(!matches.length)rail.append(node('p','state','没有找到这件，换个关键词试试。'));};
+        search.oninput=render;render();section.append(search,tabs,rail);
+        if(selected&&rows.length<(data.pagination?.total??rows.length)){let page=1;const more=button('加载更多',async()=>{more.disabled=true;try{const next=await api('closet-items',page+1,{wardrobe_id:selected.id});if(epoch!==state.epoch||requestVersion!==state.wardrobeVersion)return;page++;const seen=new Set(rows.map(p=>String(p.user_product_id)));const added=(next.list||[]).filter(p=>!seen.has(String(p.user_product_id)));rows.push(...added);state.products=rows;render();if(!added.length||rows.length>=(next.pagination?.total??rows.length))more.remove();}catch(e){toast(e.message);}finally{more.disabled=false;}},'load-more pill');section.append(more);} }
       target.append(section);
     } else if (i === 1) {
       const section = wardrobeSection(names[i], data.page?.total ?? rows.length, () => openDetail('create-closet'), '＋ 创建衣橱');
@@ -215,7 +237,7 @@ function syncAccount() {
   const current = sessionStorage.getItem(KEY) || '';
   if (current === state.session) return;
   state.session = current; window.dispatchEvent(new Event('yijian-account-reset')); detailHistory.clear(); state.epoch++; state.controller.abort(); state.controller = new AbortController(); state.rows = []; state.products = []; state.loading = false;
-  $('home-feed').replaceChildren(); $('wardrobe-sections').replaceChildren(); $('detail-content').replaceChildren(); $('account-name').textContent = '未登录'; $('account-avatar').src = ASSETS + 'user_avatar_default_icon.png'; $('balance').textContent = '–'; document.querySelector('.memory-copy').textContent = ''; document.querySelector('.memory-card').onclick = () => openAgent('login');
+  state.activeCloset=null;$('home-feed').replaceChildren(); $('wardrobe-sections').replaceChildren(); $('detail-content').replaceChildren(); $('account-name').textContent = '未登录'; $('account-avatar').src = ASSETS + 'user_avatar_default_icon.png'; $('balance').textContent = '–'; document.querySelector('.memory-copy').textContent = ''; document.querySelector('.memory-card').onclick = () => openAgent('login');
   if (state.tab === 'home') loadFeed(); else if (state.tab === 'wardrobe') loadWardrobe(); else { loadProfile(); loadMemories(); }
 }
 $('create-toggle').onclick = () => setCreate($('create-overlay').hidden);

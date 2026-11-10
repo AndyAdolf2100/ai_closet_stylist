@@ -4,10 +4,10 @@ window.FirstVisitGuideContent={
   [
    "wardrobe",
    "#wardrobe-sections .wardrobe-section:first-child .section-heading button",
-   "添加单品",
-   "添加单品，从照片整理进我的衣橱，上传前由你确认。",
+   "添加",
+   "从照片整理进我的衣橱，上传前由你确认。",
    "看看试穿形象",
-   "添加单品"
+   "添加"
   ],
   [
    "profile",

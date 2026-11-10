@@ -79,7 +79,7 @@ def setup(tmp_path):
     return MediaActions(Store(str(tmp_path/'state.db'))), Business()
 
 
-def upload(kind='garment', confirmed=True, request_id='upload-case-001'):
+def upload(kind='person', confirmed=True, request_id='upload-case-001'):
     return UploadInput(kind=kind, image_data=PHOTO, confirmed=confirmed, request_id=request_id)
 
 
@@ -96,12 +96,12 @@ async def test_upload_only_after_confirmation_and_store_has_no_photo_bytes(setup
     assert business.writes == [] and service.list('1') == []
     first, second = await asyncio.gather(service.upload(business, upload()), service.upload(business, upload()))
     assert first['action_id'] == second['action_id']
-    assert [name for name, _ in business.writes] == ['product_add']
+    assert [name for name, _ in business.writes] == ['digital_twin_photo_check']
     with service.store.connection() as conn:
         row = dict(conn.execute('SELECT * FROM stylist_media_actions').fetchone())
     assert PHOTO not in json.dumps(row) and 'image_data' not in json.dumps(row)
     finished = await service.refresh(business, first['action_id'])
-    assert finished['result']['user_product_id'] == 17
+    assert finished['result']['check_id'] == '101'
     assert finished['status'] == 'completed'
     assert len(business.writes) == 1  # Status retrieval never uploads again.
 
@@ -118,22 +118,18 @@ async def test_unknown_upload_does_not_replay_or_claim_success(setup):
     assert len(business.writes) == 1
 
 
-async def test_lost_upload_response_recovers_original_receipt_without_another_upload(setup):
+async def test_retired_garment_upload_is_blocked_and_old_records_are_snapshots(setup):
     service, business = setup
-    business.fail = True
-    with pytest.raises(StylistError):
-        await service.upload(business, upload())
-    action = service.list('1')[0]
-    previous = business.call
-    async def read(name, args):
-        if name == 'product_upload_receipt':
-            assert args == {'idempotency_key': action['action_id']}
-            return {'status': 'processing', 'task_id': 'original-task'}
-        return await previous(name, args)
-    business.call = read
-    assert (await service.refresh(business, action['action_id']))['status'] == 'processing'
-    assert (await service.refresh(business, action['action_id']))['status'] == 'completed'
-    assert len(business.writes) == 1
+    with pytest.raises(StylistError, match='garment_upload_use_server'):
+        await service.upload(business, upload('garment'))
+    assert business.writes == []
+    row, _ = service.reserve('1', 'historic-clothes', 'garment', 'old-hash', {}, 'unknown')
+    async def never(*args):
+        pytest.fail('Retired garment endpoints must not be called')
+    business.call = never
+    snapshot = await service.refresh(business, row['id'])
+    assert snapshot['status'] == 'unknown'
+    assert business.writes == []
 
 
 async def test_same_key_different_image_and_cross_account_reads_rejected(setup):
@@ -240,6 +236,9 @@ def test_media_api_rejects_spoofed_owner_cost_and_unconfirmed_photos(tmp_path, m
             body = {**upload().model_dump(), **extra}
             assert client.post('/stylist-api/media/uploads', headers=h, json=body).status_code == 422
         assert client.post('/stylist-api/media/uploads', headers=h, json=upload(confirmed=False).model_dump()).json()['status'] == 'cancelled'
+        blocked = client.post('/stylist-api/media/uploads', headers=h, json=upload('garment').model_dump())
+        assert blocked.status_code == 409
+        assert blocked.json()['code'] == 'garment_upload_use_server'
     with pytest.raises(ValueError):
         ConfirmInput(confirmed='yes')
 

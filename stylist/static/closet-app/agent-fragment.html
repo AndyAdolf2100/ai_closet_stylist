@@ -29,6 +29,15 @@
       </div>
       <div class="journey-entry"><button type="button" id="welcome-upload">＋ 上传一件常穿的衣服</button><button type="button" id="twin-open">我的试穿形象</button></div>
     </section>
+    <section id="subject-entry-debug" hidden aria-label="单品和搭配入口调试">
+      <div class="eyebrow">DEBUG · SUBJECT ENTRY</div>
+      <h2>详情页进入 Agent</h2>
+      <p>仅在地址带有 <code>debug=subject-entry</code> 时显示，用于验证 App 入口回显。</p>
+      <label>单品 ID <input id="debug-product-id" inputmode="numeric" autocomplete="off"></label>
+      <button id="debug-product-open" type="button" class="subtle">打开单品</button>
+      <label>搭配 ID <input id="debug-outfit-id" inputmode="numeric" autocomplete="off"></label>
+      <button id="debug-outfit-open" type="button" class="subtle">打开搭配</button>
+    </section>
     <section id="weather-panel" hidden aria-label="穿搭天气预报"></section>
   </div>
   <footer><div id="notice" role="status"></div><div class="clothing-source-options" role="radiogroup" aria-label="搭配衣物范围"><label class="clothing-source-option" title="只从个人衣橱选款"><input id="personal-clothes" type="radio" name="clothing-source" value="wardrobe" checked><span>我的衣橱</span></label><label class="clothing-source-option" title="允许个人衣物与系统参考款一起搭配"><input id="new-clothes" type="radio" name="clothing-source" value="hybrid"><span><span aria-hidden="true">✧ </span>邂逅新衣</span></label><button id="scroll-bottom" type="button" aria-label="回到最新消息" title="回到最新消息" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v14m-5-5 5 5 5-5M6 21h12"/></svg></button></div><form id="chat-form"><textarea id="message" placeholder="和衣衣说说今天的安排、喜欢的风格…" rows="2" maxlength="6000" aria-label="穿搭需求"></textarea><div id="upload-anchor" class="journey-anchor" hidden></div><div class="composer-bottom"><div class="controls"><button type="button" id="upload-open" class="journey-composer" aria-haspopup="dialog">＋ 衣物</button><button type="button" id="journey-records-open" class="journey-composer" aria-haspopup="dialog">生成记录</button></div><button id="send" type="submit" class="primary">发送</button></div></form><p class="fine-print">慢慢聊，按你的喜欢来。</p></footer>

@@ -52,4 +52,5 @@ export function mountLocation(root,{live,getToken,ownerToken,getAccessToken=getT
   retry.onclick=locateCity;if(useLocation)await locateCity();
  }
  locate.onclick=()=>open(true,locate);
+ return {openManual:()=>open(false,locate),openLocation:()=>open(true,locate)};
 }

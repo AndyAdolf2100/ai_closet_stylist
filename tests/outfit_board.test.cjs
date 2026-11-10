@@ -9,6 +9,7 @@ function setup(){
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};
  w.Image=class {constructor(){this.complete=true;this.naturalWidth=1;}set src(value){this.value=value;queueMicrotask(()=>this.onload?.())}};
+ w.OutfitLibrary={status:async()=>({status:'missing'}),save:async()=>({status:'saved',outfit_id:123})};
  w.OutfitImages={get:async()=>({image_url:'https://photos.invalid/final.png'}),download:async()=>{}};
  w.eval(source);return {dom,w,board:w.OutfitBoard};
 }
@@ -77,14 +78,15 @@ test('closing on account clear removes all item details and does not leak anothe
  const next=board.create({title:'下一套',items:[item('bottom',{title:'长裤'})]});w.document.body.append(next);await ready();next.querySelector('.outfit-expand').click();
  assert.match(w.document.querySelector('dialog h2').textContent,/下一套/);assert.equal(w.document.querySelectorAll('dialog .outfit-thumbnail').length,1);dom.window.close();
 });
-test('half-processed clothes never render; display and download share the final saved image',async()=>{
- const {dom,w,board}=setup();let complete,downloaded;
- w.OutfitImages={get:()=>new Promise(resolve=>complete=resolve),download:async result=>{downloaded=result.image_url}};
+test('half-processed clothes never render; explicit save uses the authoritative card reference',async()=>{
+ const {dom,w,board}=setup();let complete,saved;
+ w.OutfitImages={get:()=>new Promise(resolve=>complete=resolve),download:async()=>{throw Error('must not download')}};
+ w.OutfitLibrary.save=async(ref,system)=>{saved={ref,system};return {status:'saved',outfit_id:123}};
  const root=board.create({items:[item('top'),item('outer')]},{conversationId:'owned',version:1,index:0});w.document.body.append(root);await ready();
  assert(root.querySelector('.outfit-placeholder'));assert(!root.querySelector('img'));assert(!root.querySelector('.outfit-piece'));assert(!root.textContent.includes('去背景'));
  complete({image_url:'https://photos.invalid/saved-oss.png'});await ready();
  assert.equal(root.querySelector('.outfit-final-image').src,'https://photos.invalid/saved-oss.png');
- root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.equal(downloaded,'https://photos.invalid/saved-oss.png');
+ root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.deepEqual(JSON.parse(JSON.stringify(saved)),{ref:{conversationId:'owned',version:1,index:0},system:false});assert.equal(root.querySelector('.outfit-save').textContent,'已保存');
  assert.equal(root.querySelectorAll('.outfit-hotspot').length,2);dom.window.close();
 });
 test('a five-piece suggestion renders only its one owned item and lists the other four as text',async()=>{
@@ -92,7 +94,7 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  const app=fs.readFileSync('stylist/static/app.js','utf8');
  const el=(tag,cls,text)=>{const n=w.document.createElement(tag);n.className=cls||'';if(text)n.textContent=text;return n;};
  const bubble=(role,text)=>{const n=el('article',role,text);w.document.body.append(n);return n;};
- const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const setNewClothes=()=>{};'+
+ const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const markNewContent=()=>{};const setNewClothes=()=>{};'+
    app.slice(app.indexOf('function bulletSection('),app.indexOf('function productGrid('))+
    app.slice(app.indexOf('function showReply('),app.indexOf('function setBusy('))+';return showReply;';
  const show=new Function('window','el','bubble','scrollBottom','outfitFeedback',code)(w,el,bubble,()=>{},()=>el('div','outfit-feedback'));
@@ -109,4 +111,29 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  assert.match(w.document.body.textContent,/衣橱部分搭配/);assert.match(w.document.body.textContent,/其余单品参考/);
  assert.match(w.document.body.textContent,/1 件衣橱单品/);
  dom.window.close();
+});
+
+test('saving is click-only and double clicks dispatch once; late reads cannot erase success',async()=>{
+ const {dom,w,board}=setup();let count=0,finish,read;
+ w.OutfitLibrary.status=()=>new Promise(r=>read=r);
+ w.OutfitLibrary.save=()=>{count++;return new Promise(r=>finish=r)};
+ const root=board.create({items:[item('top')]},{conversationId:'owned',version:1,index:0});w.document.body.append(root);await ready();
+ assert.equal(count,0);const b=root.querySelector('.outfit-save');b.click();b.click();assert.equal(count,1);assert(b.disabled);
+ finish({status:'saved',outfit_id:1});await ready();read({status:'missing'});await ready();assert.equal(b.textContent,'已保存');assert(b.disabled);dom.window.close();
+});
+test('system additions require consent and cancel sends nothing',async()=>{
+ const {dom,w,board}=setup();let count=0,confirmed;
+ w.confirm=()=>false;w.OutfitLibrary.save=async(ref,consent)=>{count++;confirmed=consent;return {status:'saved'}};
+ const root=board.create({items:[item('top',{source:'system'})]},{conversationId:'owned',version:1,index:0});w.document.body.append(root);await ready();
+ root.querySelector('.outfit-save').click();await ready();assert.equal(count,0);
+ w.confirm=()=>true;root.querySelector('.outfit-save').click();await ready();assert.equal(count,1);assert.equal(confirmed,true);dom.window.close();
+});
+test('unknown results do not replay; switching accounts discards late save notices',async()=>{
+ const {dom,w,board}=setup();let count=0,finish;const notices=[];w.CompanionSettings={notify:x=>notices.push(x)};
+ w.OutfitLibrary.save=async()=>{count++;throw Object.assign(Error('unknown'),{code:'outfit_save_unknown'})};
+ const root=board.create({items:[item('top')]},{conversationId:'owned',version:1,index:0});w.document.body.append(root);await ready();
+ const b=root.querySelector('.outfit-save');b.click();await ready();b.click();await ready();assert.equal(count,1);assert.equal(b.textContent,'结果待确认');
+ const other=board.create({items:[item('top')]},{conversationId:'owned',version:2,index:0});w.document.body.append(other);await ready();
+ w.OutfitLibrary.save=()=>new Promise(r=>finish=r);other.querySelector('.outfit-save').click();notices.length=0;
+ w.dispatchEvent(new w.CustomEvent('outfit-images-owner-change',{detail:false}));finish({status:'saved'});await ready();assert.equal(notices.length,0);assert(other.querySelector('.outfit-save').disabled);dom.window.close();
 });

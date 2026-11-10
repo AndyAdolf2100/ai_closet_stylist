@@ -385,7 +385,10 @@ def create_app(settings=None):
 
     @app.post("/stylist-api/media/uploads")
     async def upload_media(request: UploadInput, authorization: str | None = Header(default=None)):
-        return await media.upload(Upstream(settings, require_token(authorization)), request)
+        token = require_token(authorization)
+        if request.kind == "garment" and request.confirmed:
+            raise StylistError("garment_upload_use_server", "衣物上传已改为Server直连，请刷新页面后重新选择照片。", 409)
+        return await media.upload(Upstream(settings, token), request)
 
     @app.get("/stylist-api/media")
     async def media_history(authorization: str | None = Header(default=None)):

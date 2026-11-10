@@ -36,6 +36,14 @@ from test_memory import (  # noqa: F401
     test_unambiguous_natural_command_saves_even_if_model_would_omit_action,
     test_unresolved_save_never_returns_a_false_success,
 )
+from test_outfit_save import (  # noqa: F401
+    test_concurrent_requests_make_one_write,
+    test_http_auth_schema_and_my_outfit_identity,
+    test_ownership_version_and_index_are_authoritative,
+    test_save_calls_only_server_save_and_survives_reload,
+    test_system_clothes_require_explicit_separate_consent,
+    test_unknown_never_replays_including_restart,
+)
 from test_store import (  # noqa: F401
     test_conversation_title_uses_first_saved_question_and_stays_owner_scoped,
     test_replay_conflict_and_isolation,

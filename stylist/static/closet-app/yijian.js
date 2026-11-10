@@ -68,7 +68,24 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const feedCopy={album:['THE DAYS WE KEEP','把喜欢的搭配，收进这一页。'],inspiration:['A LITTLE INSPIRATION','看看别样的穿搭，遇见新的灵感。'],activity:['A LITTLE PLAYFULNESS','换一种玩法，发现不一样的自己。']};
   const syncFeedCopy=()=>{const key=document.querySelector('[data-feed][aria-selected="true"]')?.dataset.feed||'album';const text=feedCopy[key]||feedCopy.album;sectionTitle.querySelector('.y-eyebrow').textContent=text[0];sectionTitle.querySelector('h2').textContent=text[1];};
   const feedObserver=new MutationObserver(syncFeedCopy);document.querySelectorAll('[data-feed]').forEach(tab=>feedObserver.observe(tab,{attributes:true,attributeFilter:['aria-selected']}));syncFeedCopy(); $('home-feed').before(sectionTitle);
-  const wardrobeTitle=make('div','y-page-intro'); wardrobeTitle.append(make('span','y-eyebrow','YOUR OWN WARDROBE'),make('p','','让已有的衣服，穿出新的心情。')); document.querySelector('.wardrobe-scene h1').after(wardrobeTitle);
+  const wardrobeHeader=document.querySelector('.wardrobe-scene');
+  const wardrobeTitle=make('div','y-page-intro'); wardrobeTitle.append(make('span','y-eyebrow','YOUR PRIVATE WARDROBE'));
+  wardrobeHeader.querySelector('h1').textContent='我的衣橱';wardrobeHeader.prepend(wardrobeTitle);
+  const wardrobeAdd=make('button','y-wardrobe-add','＋ 添加');wardrobeAdd.type='button';wardrobeAdd.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'upload'}));wardrobeHeader.append(wardrobeAdd);
+  const wardrobeScene=make('div','y-wardrobe-companion'),wardrobeCopy=make('div','y-wardrobe-copy');
+  const wardrobeLines={
+    male_calm_v1:'不急着添新衣，先把已有的喜欢，穿得舒服又妥帖。',
+    male_artistic_v1:'把衣橱翻成一页风景，今天想穿哪一种心情？',
+    male_confident_v1:'喜欢的那件，今天就穿。剩下的搭配，我们一起想。',
+    female_warm_v1:'先挑一件让你安心的衣服，今天的搭配，我们慢慢来。',
+    female_sweet_v1:'让衣橱里的老朋友，今天也搭出一点新鲜感吧。',
+    female_regal_v1:'不必追着潮流走，选对一身，就有你自己的风格。'
+  };
+  const wardrobeBy=make('span','y-wardrobe-by'),wardrobeComment=make('p');wardrobeComment.setAttribute('aria-live','polite');
+  const wardrobeTalk=make('button','y-wardrobe-talk','听听搭配想法 ↗');wardrobeTalk.type='button';wardrobeTalk.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'chat'}));
+  wardrobeCopy.append(wardrobeBy,wardrobeComment,wardrobeTalk,wardrobeHeader.querySelector('.quick-actions'));
+  const wardrobePortrait=make('div','y-wardrobe-portrait');wardrobePortrait.setAttribute('role','img');
+  wardrobeScene.append(wardrobeCopy,wardrobePortrait);wardrobeHeader.append(wardrobeScene);
   document.querySelector('.profile-top h1').textContent='我的日常';
   document.querySelector('.profile-top [data-agent=checkin]')?.remove();
   const account=accountHeader({make,icon,forward});
@@ -140,6 +157,10 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     }
 
     const character=window.CompanionCharacters.find(persona);
+    wardrobeBy.textContent=`✧ ${name} · 陪你挑衣`;
+    wardrobeComment.textContent=wardrobeLines[persona]||wardrobeLines.male_calm_v1;
+    wardrobePortrait.style.backgroundImage=`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`;
+    wardrobePortrait.setAttribute('aria-label',`${name}，陪你挑衣`);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
     letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];

@@ -28,6 +28,24 @@ READ_PAGES = {
 }
 
 
+class ClosetCreateBody(BaseModel):
+    is_family: bool = False
+    name: str = Field(min_length=1, max_length=40)
+    remark: str = Field(default="", max_length=100)
+    cover_image: str = Field(default="", max_length=2048)
+
+
+class ClosetItemsBody(BaseModel):
+    user_product_id: list[int] = Field(min_length=1, max_length=200)
+
+    @field_validator("user_product_id")
+    @classmethod
+    def positive_ids(cls, values):
+        if any(v <= 0 for v in values):
+            raise ValueError("单品ID无效")
+        return list(dict.fromkeys(values))
+
+
 class FeedbackBody(BaseModel):
     content: str = Field(min_length=1, max_length=300)
     urls: list[str] = Field(default_factory=list, max_length=9)
@@ -192,6 +210,40 @@ def router(settings):
         if not isinstance(data, dict) or data.get("id") != message_id:
             raise StylistError("app_page_contract_error", "消息数据格式异常。", 502)
         return {"data": data}
+
+    @routes.get("/closet-options")
+    async def closet_options(response: Response, authorization: str | None = Header(default=None)):
+        response.headers["Cache-Control"] = "no-store"
+        return {"data": await fixed_request("GET", "/api/wardrobes/all_list", authorization)}
+
+    @routes.post("/closet-create")
+    async def closet_create(body: ClosetCreateBody, response: Response, authorization: str | None = Header(default=None)):
+        if not authorization or not authorization.startswith("Bearer ") or not authorization[7:].strip():
+            raise AuthenticationExpired()
+        response.headers["Cache-Control"] = "no-store"
+        if body.is_family:
+            raise StylistError("family_closet_not_supported", "家庭衣橱标识待Server接入，尚未创建。", 409)
+        payload = body.model_dump(exclude={"is_family"})
+        payload["name"] = payload["name"].strip()
+        if not payload["name"]:
+            raise StylistError("closet_name_required", "请填写衣橱名称。", 422)
+        return {"data": await fixed_request("POST", "/api/wardrobes/create", authorization, json=payload)}
+
+    @routes.get("/closet-items")
+    async def closet_items(response: Response, wardrobe_id: int = Query(ge=1), page: int = Query(default=1, ge=1),
+                           authorization: str | None = Header(default=None)):
+        response.headers["Cache-Control"] = "no-store"
+        return {"data": await fixed_request("GET", "/api/wardrobes_items/list", authorization,
+                                            params={"wardrobe_id": wardrobe_id, "page": page, "page_size": 50})}
+
+    @routes.post("/closet-items/{wardrobe_id}")
+    async def closet_add_items(body: ClosetItemsBody, wardrobe_id: int, response: Response,
+                               authorization: str | None = Header(default=None)):
+        response.headers["Cache-Control"] = "no-store"
+        if wardrobe_id <= 0:
+            raise StylistError("closet_id_invalid", "衣橱ID无效。", 422)
+        return {"data": await fixed_request("POST", "/api/wardrobes_items/batch_create", authorization,
+                                            json={"wardrobe_ids": [wardrobe_id], "user_product_id": body.user_product_id})}
 
     @routes.get("/{section}")
     async def read_page(section: str, response: Response,

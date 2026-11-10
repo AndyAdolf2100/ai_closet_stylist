@@ -1,0 +1,39 @@
+/* Selected v3: compact paper wardrobe, adapted to the existing native-size shell. */
+html[data-app-design=yijian] #wardrobe{--wardrobe-art:color-mix(in srgb,var(--y-soft) 45%,var(--y-paper));background:var(--y-bg)}
+html[data-app-design=yijian][data-app-palette=system] #wardrobe{--y-bg:#fffdf6;--y-paper:#fffefa;--y-line:#e8e1d0;--wardrobe-art:#eeeee7;--y-soft:#f5edda;--y-muted:#847f70;--y-ink:#37382f}
+html[data-app-design=yijian] #wardrobe .wardrobe-scene{position:relative;margin:0;padding:23px 20px 0;background:none;border:0;box-shadow:none}
+html[data-app-design=yijian] #wardrobe .y-page-intro{margin:0;padding:0}
+html[data-app-design=yijian] #wardrobe .y-eyebrow{font-size:8px;letter-spacing:1.7px;line-height:1.8}
+html[data-app-design=yijian] #wardrobe .wardrobe-scene h1{font:26px/1.4 var(--y-serif);margin:3px 0 16px;letter-spacing:2px}
+html[data-app-design=yijian] #wardrobe .wardrobe-scene h1:after{content:'✧';font-size:18px;color:var(--y-muted);margin-left:8px}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-add{position:absolute;right:20px;top:27px;border:0;border-radius:24px;background:var(--y-soft);color:var(--y-ink);min-height:44px;padding:0 13px;font-size:11px}
+html[data-app-design=yijian][data-app-palette=system] #wardrobe .y-wardrobe-add{background:#f5d879}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-companion{display:grid;grid-template-columns:minmax(0,1fr) 122px;gap:12px;border-block:1px solid var(--y-line);padding:13px 0 8px;min-height:0}
+.y-wardrobe-copy{min-width:0}.y-wardrobe-by{font-size:9px;color:var(--y-muted);letter-spacing:.5px;line-height:1.5}.y-wardrobe-copy>p{font:13px/1.75 var(--y-serif);color:var(--y-ink);margin:5px 0 0;min-height:45px;letter-spacing:.2px}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-talk{display:block;text-align:left;min-height:32px;padding:0;font-size:10px;color:var(--y-muted);border:0;background:none}
+html[data-app-design=yijian] #wardrobe .quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 9px;height:auto;margin:3px 0 0;padding:0;background:none;border:0;box-shadow:none}
+html[data-app-design=yijian] #wardrobe .quick-actions button{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;min-height:56px;padding:4px 0;background:none;border:0;border-bottom:1px solid var(--y-line);border-radius:0;font-size:13px;white-space:nowrap;color:var(--y-ink)}
+html[data-app-design=yijian] #wardrobe .quick-actions button:nth-last-child(-n+2){border-bottom:0}
+html[data-app-design=yijian] #wardrobe .quick-actions button :is(img,svg){width:22px;height:22px;margin:0;color:var(--y-muted)}
+.y-wardrobe-portrait{width:122px;height:200px;align-self:end;background-size:600px 400px;background-position:-38px 0;background-repeat:no-repeat;mask-image:linear-gradient(to right,transparent,#000 10%),linear-gradient(to bottom,#000 68%,transparent);mask-composite:intersect}
+html[data-app-design=yijian] #wardrobe #wardrobe-sections{padding:0 20px calc(100px + env(safe-area-inset-bottom))}
+html[data-app-design=yijian] #wardrobe .wardrobe-section{padding:21px 0 20px;margin:0;border:0;border-bottom:1px solid var(--y-line);background:none;border-radius:0}
+html[data-app-design=yijian] #wardrobe .section-heading{min-height:29px;margin:0 0 4px;padding:0;gap:8px}
+html[data-app-design=yijian] #wardrobe .section-heading strong{font:21px/1.4 var(--y-serif)}
+html[data-app-design=yijian] #wardrobe .section-heading>span{font-size:11px;margin:0}
+html[data-app-design=yijian] #wardrobe .wardrobe-section:first-child .section-heading>button{display:none}
+html[data-app-design=yijian] #wardrobe .wardrobe-section:first-child .section-heading:after{content:'日常收藏';margin-left:auto;color:var(--y-muted);font-size:10px}
+html[data-app-design=yijian] #wardrobe .search{display:block;width:100%;min-height:40px;margin:0;box-sizing:border-box;background:transparent;color:var(--y-ink);border:0;border-bottom:1px solid var(--y-line);border-radius:0;box-shadow:none;padding:8px 0;font:12px/1.6 -apple-system,'PingFang SC',sans-serif}
+html[data-app-design=yijian] #wardrobe .search:focus-visible{outline:0;border-bottom-color:var(--y-accent)}
+.y-wardrobe-tabs{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:6px 0 0;padding:0;min-height:44px;align-items:center}.y-wardrobe-tabs::-webkit-scrollbar{display:none}
+.y-wardrobe-tabs button{position:relative;flex-shrink:0;min-height:44px;padding:6px 14px;border:0;background:transparent;color:var(--y-muted);font-size:11px;isolation:isolate;white-space:nowrap}
+.y-wardrobe-tabs button:before{content:'';position:absolute;inset:6px 0;border:1px solid var(--y-line);border-radius:20px;background:var(--y-paper);z-index:-1}.y-wardrobe-tabs button[aria-pressed=true]{color:var(--y-ink)}.y-wardrobe-tabs button[aria-pressed=true]:before{background:var(--y-soft);border-color:var(--y-accent)}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px;padding:0;margin:5px 0 0}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-grid .product{min-width:0;width:100%;padding:0;text-align:left;background:none;border:0}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-grid img{display:block;width:100%;height:185px;box-sizing:border-box;padding:15px;object-fit:contain;background:#fff;border:0;border-radius:4px}
+html[data-app-design=yijian] #wardrobe .y-wardrobe-grid .product>span{display:block;margin:9px 2px 3px;font-size:12px;line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--y-ink)}
+.y-product-note{display:block;margin:0 2px;color:var(--y-muted);font-size:10px;line-height:1.6}
+@media(max-width:350px){html[data-app-design=yijian] #wardrobe .wardrobe-scene{padding-inline:16px}html[data-app-design=yijian] #wardrobe .y-wardrobe-add{right:16px;font-size:10px;padding-inline:10px}html[data-app-design=yijian] #wardrobe .y-wardrobe-companion{grid-template-columns:minmax(0,1fr) 106px;gap:9px}.y-wardrobe-portrait{width:106px;height:194px;background-size:582px 388px;background-position:-44px 0}html[data-app-design=yijian] #wardrobe .quick-actions button{font-size:12px;gap:5px}html[data-app-design=yijian] #wardrobe .quick-actions button :is(img,svg){width:20px;height:20px}html[data-app-design=yijian] #wardrobe #wardrobe-sections{padding-inline:16px}html[data-app-design=yijian] #wardrobe .y-wardrobe-grid img{height:165px;padding:12px}}
+@media(hover:hover){html[data-app-design=yijian] #wardrobe button:hover{filter:brightness(.98)}}
+
+html[data-app-design=yijian] #wardrobe .quick-actions button+button::before{content:none;display:none}

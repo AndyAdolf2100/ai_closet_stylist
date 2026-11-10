@@ -2,7 +2,7 @@
 const root=document.documentElement;
 if(root.dataset.appDesign==='yijian'&&!new URLSearchParams(location.search).has('screen'))mount();
 function mount(){
- const VERSION='v2',KEY='ai-closet-stylist-session-v1',labels={upload:'添加单品到合成试穿',profile:'我的页面',memory:'我们的手记',chat:'开始对话'};
+ const VERSION='v2',KEY='ai-closet-stylist-session-v1',labels={upload:'从添加到合成试穿',profile:'我的页面',memory:'我们的手记',chat:'开始对话'};
  let active=null,owner='',opener=null,profile=null,profileOwner=null,profileToken='',checkQueued=false;
  const sessionToken=()=>{try{return JSON.parse(sessionStorage.getItem(KEY)||'null')?.access_token||'';}catch{return '';}};
  const volatile=new Set();let unidentifiedToken='',unidentifiedVersion=0;
@@ -11,7 +11,7 @@ function mount(){
  function seen(who,tour){if(volatile.has(marker(who,tour)))return true;try{return localStorage.getItem(marker(who,tour))==='seen'}catch{return false}}
  function remember(who,tour){if(who===null)return;volatile.add(marker(who,tour));if(who.startsWith('session:'))return;try{localStorage.setItem(marker(who,tour),'seen')}catch{/* Optional local persistence never blocks the App. */}}
  const dialog=document.createElement('dialog');dialog.id='first-visit-guide';dialog.dataset.firstVisit='true';dialog.setAttribute('aria-label','功能引导');
- dialog.innerHTML='<div class="first-visit-picker" hidden><p>我陪你慢慢熟悉，先从哪件事开始？</p><button data-guide-tour="upload">添加单品 → 创建分身 → 合成试穿</button><button data-guide-tour="profile">我的页面 →</button><button data-guide-tour="memory">我们的手记 →</button><button data-guide-tour="chat">开始对话 →</button><button type="button" data-guide-close>先到这里</button></div><iframe title="功能操作引导" hidden></iframe>';
+ dialog.innerHTML='<div class="first-visit-picker" hidden><p>我陪你慢慢熟悉，先从哪件事开始？</p><button data-guide-tour="upload">添加 → 创建分身 → 合成试穿</button><button data-guide-tour="profile">我的页面 →</button><button data-guide-tour="memory">我们的手记 →</button><button data-guide-tour="chat">开始对话 →</button><button type="button" data-guide-close>先到这里</button></div><iframe title="功能操作引导" hidden></iframe>';
  document.body.append(dialog);const frame=dialog.querySelector('iframe'),picker=dialog.querySelector('.first-visit-picker');
  const style=document.createElement('link');style.rel='stylesheet';style.href='/static/closet-app/first-visit/integration.css';document.head.append(style);
  function sendProfile(){if(!frame.contentWindow||!active)return;const p=profileOwner===account()&&profileToken===sessionToken()?profile:null;frame.contentWindow.postMessage({type:'closet-guide-profile',profile:p||{},palette:root.dataset.appPalette},location.origin)}

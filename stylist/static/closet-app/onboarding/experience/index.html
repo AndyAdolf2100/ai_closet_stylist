@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>爱搭衣橱 · 第一套穿搭</title>
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="../yijian.css"><link rel="stylesheet" href="../closer.css"><link rel="stylesheet" href="experience.css">
+</head>
+<body data-edition="yijian" data-comparing="false" data-color="system">
+<header class="studio"><a href="../index.html">爱搭衣橱 <small>ONBOARDING CONCEPT</small></a><nav aria-label="预览配色"><button data-color="system" aria-pressed="true">系统黄</button><button data-color="male">雾蓝</button><button data-color="female">奶油绿</button></nav></header>
+<main>
+<aside class="concept-aside"><p class="eyebrow">OUR FIRST LOOK TOGETHER</p><h1>从一张照片，<br>到你的第一套穿搭。</h1><p class="aside-intro">认识彼此之后，<br>一起把喜欢的衣服，试着穿在身上。</p><div class="journey-nav" aria-label="查看提案步骤"><button data-step="3"><span>03</span><div><strong>把喜欢，拆成单品</strong><small>穿搭照片 → 单件衣服 → 一套搭配</small></div><i>↗</i></button><button data-step="4"><span>04</span><div><strong>留下你的试穿模样</strong><small>人物照片 → 确认数字形象</small></div><i>↗</i></button><button data-step="5"><span>05</span><div><strong>让这一套，遇见你</strong><small>定位天气 → 搭配 + 形象 → 试穿</small></div><i>↗</i></button></div><div class="concept-note"><strong>可点击的流程示意</strong><p>沿用现有 Onboarding 风格，保留前两步。<br>照片仅在本页预览；拆衣、形象和试穿使用示例。<br>不会上传、读取真实定位、保存或扣积分。</p><a href="../index.html">查看现有 Onboarding ↗</a></div></aside>
+<section class="device" aria-label="Onboarding 第3至5步交互示意">
+<header class="progress"><span class="closer-brand">A LITTLE CLOSER</span><button id="skip" type="button">稍后体验</button></header>
+<div id="dots" aria-label="流程进度"></div>
+<div class="closer-intro"><span class="closer-star" aria-hidden="true">✧</span><span id="counter">初识 · 03 / 05</span></div>
+<div id="screen"></div>
+<footer><div class="actions"><button id="back" aria-label="上一步">←</button><button id="next">选择穿搭照片</button></div><p class="footer-note">流程示意 · 不上传照片，不消耗积分</p></footer>
+</section>
+</main>
+<input id="source-file" type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="选择穿搭照片"><input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="选择人物照片">
+<dialog id="flow-dialog" aria-labelledby="dialog-title"></dialog><div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+<script src="experience.js"></script>
+</body></html>

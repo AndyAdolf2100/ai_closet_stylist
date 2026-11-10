@@ -357,3 +357,27 @@ def test_purchase_agreements_use_configured_ios_web_paths(monkeypatch):
     assert data['agreements'] == {'member': 'https://contracts.invalid/app/membershipService',
                                  'subscription': 'https://contracts.invalid/app/continuousSubscription',
                                  'points': 'https://contracts.invalid/app/pointsPurchase'}
+
+
+def test_classified_closet_fixed_routes_and_family_gate(monkeypatch):
+    import json
+    seen = []
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={'code': 0, 'data': {'id': 12, 'list': []}})
+    headers = {'Authorization': 'Bearer fixture'}
+    with client(monkeypatch, handler) as web:
+        assert web.get('/stylist-api/app/closet-options').status_code == 401
+        assert web.post('/stylist-api/app/closet-create', json={'name': '旅行', 'is_family': True}, headers=headers).status_code == 409
+        assert not seen
+        assert web.post('/stylist-api/app/closet-create', json={'name': ' 旅行 ', 'remark': '轻装出发'}, headers=headers).status_code == 200
+        assert seen[-1].url.path == '/api/wardrobes/create'
+        assert json.loads(seen[-1].content) == {'name': '旅行', 'remark': '轻装出发', 'cover_image': ''}
+        assert web.get('/stylist-api/app/closet-options', headers=headers).status_code == 200
+        assert seen[-1].url.path == '/api/wardrobes/all_list'
+        assert web.get('/stylist-api/app/closet-items?wardrobe_id=12&page=2', headers=headers).status_code == 200
+        assert dict(seen[-1].url.params) == {'wardrobe_id': '12', 'page': '2', 'page_size': '50'}
+        assert web.post('/stylist-api/app/closet-items/12', json={'user_product_id': [34, 34, 35]}, headers=headers).status_code == 200
+        assert json.loads(seen[-1].content) == {'wardrobe_ids': [12], 'user_product_id': [34, 35]}
+        assert web.post('/stylist-api/app/closet-items/12', json={'user_product_id': [-2]}, headers=headers).status_code == 422
+        assert all(r.headers['authorization'] == 'Bearer fixture' for r in seen)

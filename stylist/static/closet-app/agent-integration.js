@@ -5,7 +5,7 @@ import {emptyArt} from './empty-art.js';
 let ready;
 const triggers=new Map();
 const ids={login:'login-open',history:'mobile-history',upload:'upload-open',twins:'twin-open',records:'journey-records-open',memory:'memory-open',settings:'companion-open',preferences:'preferences-open',checkin:'checkin-open',logout:'logout'};
-const scripts=['appearance','companion-loading','wardrobe-journey','closet-app/checkin-direct','weather-visuals','product-preview','cutout-core','local-cutout','outfit-images','outfit-board','city-picker','companion-characters','companion-settings','fashion-preferences','preferences','memory','app'];
+const scripts=['appearance','companion-loading','server-garment-upload','wardrobe-journey','closet-app/checkin-direct','weather-visuals','product-preview','cutout-core','local-cutout','outfit-images','outfit-board','city-picker','companion-characters','companion-settings','fashion-preferences','preferences','memory','app'];
 export function mountAgent(){
   if(ready)return ready;
   ready=(async()=>{
@@ -21,7 +21,7 @@ export function mountAgent(){
     // Agent modules create their dialogs on body; keep App-owned dialogs in their native modal layer.
     const relocate=()=>{for(const child of [...document.body.children])if(child.matches('dialog:not([data-first-visit]):not([data-app-dialog]),#companion-notification'))host.append(child);};
     const observer=new MutationObserver(relocate);observer.observe(document.body,{childList:true});
-    for(const name of scripts){if(name==='app')for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/static/'+name+'.js';script.onload=resolve;script.onerror=()=>reject(Error('组件没能加载，请刷新页面。'));document.body.append(script);});relocate();}
+    for(const name of scripts){if(name==='app')for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/static/'+name+'.js?v=server-terminal-20261111';script.onload=resolve;script.onerror=()=>reject(Error('组件没能加载，请刷新页面。'));document.body.append(script);});relocate();}
     for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}
     const cityBar=document.createElement('div');cityBar.className='y-agent-city';
     const cityButton=document.createElement('button');cityButton.type='button';cityButton.className='y-agent-city-button';cityButton.setAttribute('aria-haspopup','dialog');cityButton.setAttribute('aria-controls','location-dialog');

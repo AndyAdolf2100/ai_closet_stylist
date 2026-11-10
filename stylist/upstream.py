@@ -15,9 +15,9 @@ from .errors import AuthenticationExpired, StylistError
 
 READ_TOOLS = {"city.resolve", "weather.get", "product.resolve", "outfit.search-saved", "outfit.resolve", "kb_search"}
 IMAGE_READ_TOOLS = {"digital_twin_overview", "digital_twin_tryon_quote", "product_beautify_quote"}
-MEDIA_READ_TOOLS = {"product_upload_status", "product_upload_receipt", "digital_twin_photo_check_status",
+MEDIA_READ_TOOLS = {"digital_twin_photo_check_status",
                     "digital_twin_generation_status", "digital_twin_tryon_status"}
-MEDIA_WRITE_TOOLS = {"product_add", "digital_twin_photo_check", "digital_twin_generate",
+MEDIA_WRITE_TOOLS = {"digital_twin_photo_check", "digital_twin_generate",
                      "digital_twin_set_default", "digital_twin_confirm"}
 READ_TOOLS |= IMAGE_READ_TOOLS
 READ_TOOLS |= MEDIA_READ_TOOLS
