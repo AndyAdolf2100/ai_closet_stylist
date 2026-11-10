@@ -1,0 +1,2230 @@
+{
+  "version": 1,
+  "images": {
+    "assets/characters/candidates-v1/yiyi-a-female-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/55ddb3f68d554c13900ddee8fc462ae4.png",
+      "sha256": "d47413c0c0d22b24cd6562c42a2ef179dcaea3c42bf4a1dd35f48b6b6e16768c",
+      "bytes": 1836231,
+      "remote_sha256": "d47413c0c0d22b24cd6562c42a2ef179dcaea3c42bf4a1dd35f48b6b6e16768c",
+      "remote_bytes": 1836231,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v1/yiyi-a-male-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9d855749807a4ee482d6160319be926e.png",
+      "sha256": "1d9a8d8cfe9e423ef40bd1187a128dc649046e644c82e172b16ef0b011b3a7a0",
+      "bytes": 1842926,
+      "remote_sha256": "1d9a8d8cfe9e423ef40bd1187a128dc649046e644c82e172b16ef0b011b3a7a0",
+      "remote_bytes": 1842926,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v1/yiyi-b-female-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d00de7aa1f794df39f4625ad6bbc5f90.png",
+      "sha256": "df62bbffafb410edefea46b7bae7814b1091b038fc9f03c84b76a6856b8a5a08",
+      "bytes": 1751138,
+      "remote_sha256": "df62bbffafb410edefea46b7bae7814b1091b038fc9f03c84b76a6856b8a5a08",
+      "remote_bytes": 1751138,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v1/yiyi-b-male-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/73722eaa70bd461fa26917cbf49b7306.png",
+      "sha256": "3f9dd3d95453d6fcd3181428b56116307cfd7659da47db8186fad2917a61ffa9",
+      "bytes": 1915040,
+      "remote_sha256": "3f9dd3d95453d6fcd3181428b56116307cfd7659da47db8186fad2917a61ffa9",
+      "remote_bytes": 1915040,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v1/yiyi-c-female-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/da614c309ac349139b15633cb9b1215a.png",
+      "sha256": "41f26f5ab0b059e6e6e2315c6d715eefbf22c00ffa16bf6762494965399b3ebc",
+      "bytes": 1830388,
+      "remote_sha256": "41f26f5ab0b059e6e6e2315c6d715eefbf22c00ffa16bf6762494965399b3ebc",
+      "remote_bytes": 1830388,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v1/yiyi-c-male-turnaround-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5f20aadb841e4a9b942ad972f90ab693.png",
+      "sha256": "9c185f98954940a0eb65396696176a16d29165ce6dcf6739c36c7f9165f90b3a",
+      "bytes": 1907996,
+      "remote_sha256": "9c185f98954940a0eb65396696176a16d29165ce6dcf6739c36c7f9165f90b3a",
+      "remote_bytes": 1907996,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-gentle-resolute-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1067cbbc7f18403d9dc4fbe0a38850b7.png",
+      "sha256": "a43ca8f0f3eb4ea4f4875243091df86e70855ac2073f14907697cefe8249f261",
+      "bytes": 1681623,
+      "remote_sha256": "a43ca8f0f3eb4ea4f4875243091df86e70855ac2073f14907697cefe8249f261",
+      "remote_bytes": 1681623,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-gentle-resolute-turnaround-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/57ba18ea4e884594bdcfaeefa84eb822.png",
+      "sha256": "49aaad7a14600b7b2af3c3482941cd09cfe8acc60657e47127e589f9ee8d796a",
+      "bytes": 1769713,
+      "remote_sha256": "49aaad7a14600b7b2af3c3482941cd09cfe8acc60657e47127e589f9ee8d796a",
+      "remote_bytes": 1769713,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-gentle-resolute-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b6dafa7de39746e3ad88c05ff76820ad.png",
+      "sha256": "da98dda09afdf9cc1957f9006527d02a1b5919449da001450a7c202672392d30",
+      "bytes": 1748792,
+      "remote_sha256": "da98dda09afdf9cc1957f9006527d02a1b5919449da001450a7c202672392d30",
+      "remote_bytes": 1748792,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-gentle-resolute-turnaround-v5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/fede4b3d97334da8b68dc5e45253ef76.png",
+      "sha256": "6b4d39ac6d9bbbc987404dbdb90984221ea21f58b27cfad747f5c01f75156ce5",
+      "bytes": 1749250,
+      "remote_sha256": "6b4d39ac6d9bbbc987404dbdb90984221ea21f58b27cfad747f5c01f75156ce5",
+      "remote_bytes": 1749250,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-introverted-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/37be6d28e9984944b3a00d4659693c40.png",
+      "sha256": "5f6ae0e3488c388f8c8e874a9d0e54d69eb0181dd28418897f7cacef4b8786f4",
+      "bytes": 1729563,
+      "remote_sha256": "5f6ae0e3488c388f8c8e874a9d0e54d69eb0181dd28418897f7cacef4b8786f4",
+      "remote_bytes": 1729563,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-lively-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2576070e230b4031b9be39328162a107.png",
+      "sha256": "3f53d4282873e250d2e137faf24d26d2c6469644a7963380776ae52eba80213b",
+      "bytes": 1764274,
+      "remote_sha256": "3f53d4282873e250d2e137faf24d26d2c6469644a7963380776ae52eba80213b",
+      "remote_bytes": 1764274,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-mature-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/15f8b7737bf249ae8d3758614587e13e.png",
+      "sha256": "e790aafbb44988e0337b006579ca904eed945d164fd44665ddec2c25a25e4de8",
+      "bytes": 1701011,
+      "remote_sha256": "e790aafbb44988e0337b006579ca904eed945d164fd44665ddec2c25a25e4de8",
+      "remote_bytes": 1701011,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-regal-confident-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2b9b59277cb24d96a9253482c46724ce.png",
+      "sha256": "54ed8728ae8b3ba402a7968d405250becf326746d5bfd4b9d0f38846a9153762",
+      "bytes": 1620557,
+      "remote_sha256": "54ed8728ae8b3ba402a7968d405250becf326746d5bfd4b9d0f38846a9153762",
+      "remote_bytes": 1620557,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-regal-confident-turnaround-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f87dec98329c4a52b8fecae07dc1770f.png",
+      "sha256": "7a4148f202facd8604378faee486b0ead17b8e86d1d3fef0e365f20102fa54d7",
+      "bytes": 1754108,
+      "remote_sha256": "7a4148f202facd8604378faee486b0ead17b8e86d1d3fef0e365f20102fa54d7",
+      "remote_bytes": 1754108,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-regal-confident-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/6c5c3f8d90574c209df3a62782873ec1.png",
+      "sha256": "85ad0cf0561bc81e98fc96d42a787d72e9abf47a9ff4df487a037f42d116fcff",
+      "bytes": 1704670,
+      "remote_sha256": "85ad0cf0561bc81e98fc96d42a787d72e9abf47a9ff4df487a037f42d116fcff",
+      "remote_bytes": 1704670,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-regal-confident-turnaround-v5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5a1a15562e3d47039fffe7b9864eb395.png",
+      "sha256": "614c56c415b8b6b4f381615cd17b23a7bb8060da598937e6084c2ce8bc1b92ba",
+      "bytes": 1692801,
+      "remote_sha256": "614c56c415b8b6b4f381615cd17b23a7bb8060da598937e6084c2ce8bc1b92ba",
+      "remote_bytes": 1692801,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-sweet-clever-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4cbc7d3ede474f3eaf6845f7a0086b11.png",
+      "sha256": "a95b42e118feb8b247a56e133f5a3e3ca16572bbe2b1cedba9e53aa1d1319b16",
+      "bytes": 1630173,
+      "remote_sha256": "a95b42e118feb8b247a56e133f5a3e3ca16572bbe2b1cedba9e53aa1d1319b16",
+      "remote_bytes": 1630173,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-sweet-clever-turnaround-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4d37a4e4a5b14b44ba2d953da14a4b4c.png",
+      "sha256": "98ad77509fda3cc71e59d4fe62d6c18cd72cdd848be2ade06eb8e0cc96f0c49c",
+      "bytes": 1738557,
+      "remote_sha256": "98ad77509fda3cc71e59d4fe62d6c18cd72cdd848be2ade06eb8e0cc96f0c49c",
+      "remote_bytes": 1738557,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-sweet-clever-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/532d8900bfc4483f9987bd674b7f5559.png",
+      "sha256": "abfd8e2c73a007794a5b5d1787df8f2f33931f1972102df7cf251254a25e14df",
+      "bytes": 1699738,
+      "remote_sha256": "abfd8e2c73a007794a5b5d1787df8f2f33931f1972102df7cf251254a25e14df",
+      "remote_bytes": 1699738,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-female-sweet-clever-turnaround-v5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/cf645be9b66e474d804da7712a6ada76.png",
+      "sha256": "4d084ecd4b517cad7603c486687a9c1b6d97e25c817cffebbe7ec083d4fa62f4",
+      "bytes": 1699001,
+      "remote_sha256": "4d084ecd4b517cad7603c486687a9c1b6d97e25c817cffebbe7ec083d4fa62f4",
+      "remote_bytes": 1699001,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-artistic-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/45b416a4e9f4459589ee975872a319ab.png",
+      "sha256": "62b4450bb62692d5392c88bb56c257f97137d7983a263b6bce2cb0edd6b3feea",
+      "bytes": 1692931,
+      "remote_sha256": "62b4450bb62692d5392c88bb56c257f97137d7983a263b6bce2cb0edd6b3feea",
+      "remote_bytes": 1692931,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-artistic-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/351ea7374f8848558214c8886316bb62.png",
+      "sha256": "82355f98bb574dcbfc9878fe9b36ae10736ff45a4d2d9daaa285c1d05f8890de",
+      "bytes": 1475424,
+      "remote_sha256": "82355f98bb574dcbfc9878fe9b36ae10736ff45a4d2d9daaa285c1d05f8890de",
+      "remote_bytes": 1475424,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-artistic-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/cd4f2800a19f422193c64ab637e28e2b.png",
+      "sha256": "14ee8cf90a2c75055ab1b667bd5f15e43d11ef0eca5daf5d34728c8f7323ff3f",
+      "bytes": 1666253,
+      "remote_sha256": "14ee8cf90a2c75055ab1b667bd5f15e43d11ef0eca5daf5d34728c8f7323ff3f",
+      "remote_bytes": 1666253,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-composed-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c1078799012a4097906a43f76f8e57a7.png",
+      "sha256": "071ee7a9352729bc51207baa1a09cc84cb98a1c5699f8fbb9ef5920e54a5961c",
+      "bytes": 1735016,
+      "remote_sha256": "071ee7a9352729bc51207baa1a09cc84cb98a1c5699f8fbb9ef5920e54a5961c",
+      "remote_bytes": 1735016,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-composed-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ffeac45a780a45c0b3a771d89d7812b4.png",
+      "sha256": "667a414f680f982d2dfa68c82662c155cc8551f5dd2f7e65ac5dabb24273d385",
+      "bytes": 1721847,
+      "remote_sha256": "667a414f680f982d2dfa68c82662c155cc8551f5dd2f7e65ac5dabb24273d385",
+      "remote_bytes": 1721847,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-composed-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/7c958010e67345fbacea6ce601b4c08e.png",
+      "sha256": "4ca98615380e81feb42f11df611f54e19e2bb0665c2289c6cc4e844d4eb4880e",
+      "bytes": 1658652,
+      "remote_sha256": "4ca98615380e81feb42f11df611f54e19e2bb0665c2289c6cc4e844d4eb4880e",
+      "remote_bytes": 1658652,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-composed-turnaround-v5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4e6a67e7199f42afb7ae843085768b3b.png",
+      "sha256": "99afdfec76eb7d6a86148ff8d61655a4cb237dfb2dbd0e54b7d0e0ef320c1c3d",
+      "bytes": 1847605,
+      "remote_sha256": "99afdfec76eb7d6a86148ff8d61655a4cb237dfb2dbd0e54b7d0e0ef320c1c3d",
+      "remote_bytes": 1847605,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-confident-turnaround-transparent-v6.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ee539186f759447d843780bb8d27567c.png",
+      "sha256": "976f4d76b02af7c6417c67e4c898d82c024b779394ff0f871ac066aec6c60289",
+      "bytes": 1687770,
+      "remote_sha256": "976f4d76b02af7c6417c67e4c898d82c024b779394ff0f871ac066aec6c60289",
+      "remote_bytes": 1687770,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-confident-turnaround-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9ef13f9546fa43fa8eddb230570496bb.png",
+      "sha256": "b0fd66459006f77480f4ec5a75c4d735c914b0f8c8dbf206b20fb286f64bb9e3",
+      "bytes": 1733723,
+      "remote_sha256": "b0fd66459006f77480f4ec5a75c4d735c914b0f8c8dbf206b20fb286f64bb9e3",
+      "remote_bytes": 1733723,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-confident-turnaround-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3ab98163e3484606b661be8e18c579e6.png",
+      "sha256": "f617a6cde71b927de30c490edbf97ba992e8df71d270e3a03c0465c8b0cf7a69",
+      "bytes": 1724655,
+      "remote_sha256": "f617a6cde71b927de30c490edbf97ba992e8df71d270e3a03c0465c8b0cf7a69",
+      "remote_bytes": 1724655,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/candidates-v2/yiyi-male-confident-turnaround-v5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/21ed754654a34aa7a1acca9a71b02170.png",
+      "sha256": "604124d07a61fcb16e096872daad4df78c1c6ece37d5b67e5d028b4d350617b7",
+      "bytes": 1792669,
+      "remote_sha256": "604124d07a61fcb16e096872daad4df78c1c6ece37d5b67e5d028b4d350617b7",
+      "remote_bytes": 1792669,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_regal_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/12c15a3bdf52482b87a2d15d025203b3.png",
+      "sha256": "dcfb9e2665bf5bea5ddb4107c38b1c1351b0f81da66d3ba9cfd5772a26e05926",
+      "bytes": 2316405,
+      "remote_sha256": "dcfb9e2665bf5bea5ddb4107c38b1c1351b0f81da66d3ba9cfd5772a26e05926",
+      "remote_bytes": 2316405,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_regal_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a108e09a176741589d1bf25871353ec9.png",
+      "sha256": "de666f3051d24c215eaf8963f5f404dafccb197b9dc2ac3080678e02532a5ed6",
+      "bytes": 2676460,
+      "remote_sha256": "de666f3051d24c215eaf8963f5f404dafccb197b9dc2ac3080678e02532a5ed6",
+      "remote_bytes": 2676460,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_regal_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/89c01b9a99974576aa0400a54656ed4e.png",
+      "sha256": "3a3d694271d9e635dad6c5850c72055a5df2655b446154c8eff92495a6bf81d4",
+      "bytes": 2235285,
+      "remote_sha256": "3a3d694271d9e635dad6c5850c72055a5df2655b446154c8eff92495a6bf81d4",
+      "remote_bytes": 2235285,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_sweet_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d16f165af72846b8bd3dd7400c9aef55.png",
+      "sha256": "be5b97fbd03ef14788ec0dc7a1b4b5309d730c9b2dd1ff5c7eae6f9b517722b0",
+      "bytes": 2320733,
+      "remote_sha256": "be5b97fbd03ef14788ec0dc7a1b4b5309d730c9b2dd1ff5c7eae6f9b517722b0",
+      "remote_bytes": 2320733,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_sweet_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e0a19c5579584b92b0d70ea33d68014a.png",
+      "sha256": "f021f5396d1eff439cbabc6568d5533a4d99c72950f7588144c777020593ab0d",
+      "bytes": 2838641,
+      "remote_sha256": "f021f5396d1eff439cbabc6568d5533a4d99c72950f7588144c777020593ab0d",
+      "remote_bytes": 2838641,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_sweet_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/12032b1e96b04e8da7181f1c86052be2.png",
+      "sha256": "59c32caf1250b3e4ff7ee31b610d4c38a4f2bb9c22083236862f2d059ec33bd7",
+      "bytes": 2419078,
+      "remote_sha256": "59c32caf1250b3e4ff7ee31b610d4c38a4f2bb9c22083236862f2d059ec33bd7",
+      "remote_bytes": 2419078,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_warm_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3b659e50e21e4c2ebe846e21d3332b9c.png",
+      "sha256": "d4387fdfe071c72beb7deafc9cc278950396b3be5c3757ef704fb576dd0426b4",
+      "bytes": 2521748,
+      "remote_sha256": "d4387fdfe071c72beb7deafc9cc278950396b3be5c3757ef704fb576dd0426b4",
+      "remote_bytes": 2521748,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_warm_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9bab92dcc1514f6581bcdfe7673efb60.png",
+      "sha256": "5537df27ba34389e22522497ba6f3051d44fac6c1c6571738249df68e6786ed4",
+      "bytes": 2665861,
+      "remote_sha256": "5537df27ba34389e22522497ba6f3051d44fac6c1c6571738249df68e6786ed4",
+      "remote_bytes": 2665861,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/female_warm_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/eea98bfcc44345d9854ab113ca2f9a79.png",
+      "sha256": "5bbc12ddf594668fd7b7682d2ff5f7f0104c5453dc012753a2cd16208746110e",
+      "bytes": 2326926,
+      "remote_sha256": "5bbc12ddf594668fd7b7682d2ff5f7f0104c5453dc012753a2cd16208746110e",
+      "remote_bytes": 2326926,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_artistic_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f8dc5ca882af4e9280d9decba908af5a.png",
+      "sha256": "077762c4e0cb7aa54cccde728b6fec98e16832d8b247ea72b0951667755ff984",
+      "bytes": 2358159,
+      "remote_sha256": "077762c4e0cb7aa54cccde728b6fec98e16832d8b247ea72b0951667755ff984",
+      "remote_bytes": 2358159,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_artistic_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/7e97e14240bb4e80b680fc6b0842adae.png",
+      "sha256": "32aa764173611ac3c742ad2c13623d3c5b824a0176d7458f88dc7ad222284a31",
+      "bytes": 2425830,
+      "remote_sha256": "32aa764173611ac3c742ad2c13623d3c5b824a0176d7458f88dc7ad222284a31",
+      "remote_bytes": 2425830,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_artistic_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/904f3a5df9eb457bbed9e6e117fef5a9.png",
+      "sha256": "fef487de2d78269777562ad617182b127246c9761c65ff035b417eaee29cacf4",
+      "bytes": 2233730,
+      "remote_sha256": "fef487de2d78269777562ad617182b127246c9761c65ff035b417eaee29cacf4",
+      "remote_bytes": 2233730,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_calm_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/520c992128b94ee4b640f7930b03a2be.png",
+      "sha256": "52a180152287150ce20d1e8d41a1108d6a776c9ad657cdbbe581f07e5dc66716",
+      "bytes": 2260291,
+      "remote_sha256": "52a180152287150ce20d1e8d41a1108d6a776c9ad657cdbbe581f07e5dc66716",
+      "remote_bytes": 2260291,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_calm_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9147b6dd9b5d468b9d550f12f4738f26.png",
+      "sha256": "a5ade12a3134bf2666668f3f95a659525c384838f758cc354f349274ee6c94c1",
+      "bytes": 2621124,
+      "remote_sha256": "a5ade12a3134bf2666668f3f95a659525c384838f758cc354f349274ee6c94c1",
+      "remote_bytes": 2621124,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_calm_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/86c7a69975464da0b7a91035d28131be.png",
+      "sha256": "8b4d92a65b96ab9dbe635625bdb00b248e1093cdad3a39eb7ee58c348ca51529",
+      "bytes": 2393568,
+      "remote_sha256": "8b4d92a65b96ab9dbe635625bdb00b248e1093cdad3a39eb7ee58c348ca51529",
+      "remote_bytes": 2393568,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_confident_v1-avatar.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/670b6a20e97d4fb2bb18c404dc71208f.png",
+      "sha256": "d09aff3ab6eade0e9a152edfd2feb23c77d2ba35f9618bfdc6f1d2b97d01154c",
+      "bytes": 2176174,
+      "remote_sha256": "d09aff3ab6eade0e9a152edfd2feb23c77d2ba35f9618bfdc6f1d2b97d01154c",
+      "remote_bytes": 2176174,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_confident_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/377cc64e7255490aa116e8d90b220ee6.png",
+      "sha256": "b393ae95bcbefb76aa00974e6f3416e540df17386629e8795a4fd764d2cdcfef",
+      "bytes": 2303751,
+      "remote_sha256": "b393ae95bcbefb76aa00974e6f3416e540df17386629e8795a4fd764d2cdcfef",
+      "remote_bytes": 2303751,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v1/male_confident_v1-weather.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/175c813ec79e401b9095da9c3075a81c.png",
+      "sha256": "b0b04507f1c616f96983b4495357b7a7ac4ea6a4d1d94af1dd3ff283ceea53db",
+      "bytes": 2285385,
+      "remote_sha256": "b0b04507f1c616f96983b4495357b7a7ac4ea6a4d1d94af1dd3ff283ceea53db",
+      "remote_bytes": 2285385,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/female_regal_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/27f82f3ec9e4487bb7ac30525ada211e.png",
+      "sha256": "5612718b0512442b6aa528d82c6998af64a16b95f89358a2647f3255166f25f1",
+      "bytes": 2594601,
+      "remote_sha256": "5612718b0512442b6aa528d82c6998af64a16b95f89358a2647f3255166f25f1",
+      "remote_bytes": 2594601,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/female_sweet_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/92f7d53594cf4f1faa718c718d1ce34d.png",
+      "sha256": "2e67ad3787630554b88722f6730edcf3731de04b4f85b68faea949d2b2e7c3f3",
+      "bytes": 2738274,
+      "remote_sha256": "2e67ad3787630554b88722f6730edcf3731de04b4f85b68faea949d2b2e7c3f3",
+      "remote_bytes": 2738274,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/female_warm_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ee50ae3b5b544a7bbb56c42a84f3e37a.png",
+      "sha256": "34a04862201b16fbe1db7676c0ef62cd979975f88b1afd742d8bc21ad9ba3443",
+      "bytes": 2572416,
+      "remote_sha256": "34a04862201b16fbe1db7676c0ef62cd979975f88b1afd742d8bc21ad9ba3443",
+      "remote_bytes": 2572416,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/male_artistic_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/6589edb0aa554572a6691e96629e6a89.png",
+      "sha256": "803dd1e6b831c7d2afaf21b7737fc7474914afc242bebffad655b26cd0246e09",
+      "bytes": 2405371,
+      "remote_sha256": "803dd1e6b831c7d2afaf21b7737fc7474914afc242bebffad655b26cd0246e09",
+      "remote_bytes": 2405371,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/male_calm_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3db4b5566dff4507be41e871dc28c8c4.png",
+      "sha256": "f5016c501b21b2ce23fccfc13dd26beeb2d2070fa71ef927757808c25120ce1a",
+      "bytes": 2501975,
+      "remote_sha256": "f5016c501b21b2ce23fccfc13dd26beeb2d2070fa71ef927757808c25120ce1a",
+      "remote_bytes": 2501975,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/companion-scenes-v2/male_confident_v1-hero.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/76c42acb6af34c45b6932880a11e6b09.png",
+      "sha256": "1ee5ca0e87aa1218ef1b30fcace06f1e703feedb6fdb019f68410bbe7c14a94c",
+      "bytes": 2215466,
+      "remote_sha256": "1ee5ca0e87aa1218ef1b30fcace06f1e703feedb6fdb019f68410bbe7c14a94c",
+      "remote_bytes": 2215466,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/sources/yiyi-female-background-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/dea4a02d767041618e84b2fe9dbe923e.png",
+      "sha256": "2291922b11e3afbd73398faab913d226fc74944863b023f6eb609fd6b1d7847f",
+      "bytes": 1927448,
+      "remote_sha256": "2291922b11e3afbd73398faab913d226fc74944863b023f6eb609fd6b1d7847f",
+      "remote_bytes": 1927448,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/sources/yiyi-female-blink-source-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f7854b7c26b74e0f87aa3a39af08de65.png",
+      "sha256": "20fc17914faffb1247b099a3d6ed840c8a1f079f06be863c44a60072a6cb8c76",
+      "bytes": 1959102,
+      "remote_sha256": "20fc17914faffb1247b099a3d6ed840c8a1f079f06be863c44a60072a6cb8c76",
+      "remote_bytes": 1959102,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/sources/yiyi-female-blink-source-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c350bcfa50c542249e229aeed4a03e51.png",
+      "sha256": "de6d791fb20efa5d9f7cba4a8ecaab91403d0de41d1af2ccec0af7ac117c77a3",
+      "bytes": 1997395,
+      "remote_sha256": "de6d791fb20efa5d9f7cba4a8ecaab91403d0de41d1af2ccec0af7ac117c77a3",
+      "remote_bytes": 1997395,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/sources/yiyi-male-blink-source-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ac326d0d9a0e475fb26e1293d64cf8f9.png",
+      "sha256": "9aa2234c38e3beb2cb67b1c285fa0a330c7c5350366c91b55a898a551016e1d3",
+      "bytes": 1944141,
+      "remote_sha256": "9aa2234c38e3beb2cb67b1c285fa0a330c7c5350366c91b55a898a551016e1d3",
+      "remote_bytes": 1944141,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/sources/yiyi-male-blink-source-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/98521373fe3142de8956244d3455817a.png",
+      "sha256": "745946ff508b8d8370a8f7c91d97cf3582085eba123a8aae8155b24cbcf06fa5",
+      "bytes": 1833914,
+      "remote_sha256": "745946ff508b8d8370a8f7c91d97cf3582085eba123a8aae8155b24cbcf06fa5",
+      "remote_bytes": 1833914,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-breeze-atlas-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/de311b09e2fa4a35b2dd90ac10d03989.png",
+      "sha256": "9d135c372a80b78b871fafd537d08bbd639b9ad186e77dd508e8ca73a2506015",
+      "bytes": 2038109,
+      "remote_sha256": "9d135c372a80b78b871fafd537d08bbd639b9ad186e77dd508e8ca73a2506015",
+      "remote_bytes": 2038109,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-breeze-atlas-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/19d8e29c2bf14ae9aa430133881dcbe3.png",
+      "sha256": "bbeca8533ac1926810ac16f1a517ff0afc0fc1e43323c432d2c58d06314e1380",
+      "bytes": 2627523,
+      "remote_sha256": "bbeca8533ac1926810ac16f1a517ff0afc0fc1e43323c432d2c58d06314e1380",
+      "remote_bytes": 2627523,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-chibi-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/063dcb263c7b4508ad95a602fb6f531b.png",
+      "sha256": "86d63b09bdaaa15bb09e444de12e4dbd61d2940ee64a0d4b0bbf9b865a36db0e",
+      "bytes": 1784146,
+      "remote_sha256": "86d63b09bdaaa15bb09e444de12e4dbd61d2940ee64a0d4b0bbf9b865a36db0e",
+      "remote_bytes": 1784146,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-fullbody-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/0eb4a342fa2f490f9ed3a86813af1a7e.png",
+      "sha256": "8f2a5f420ba6683ab371465094ceb49b1f0b260bf05521c950fba6b25045957f",
+      "bytes": 1786575,
+      "remote_sha256": "8f2a5f420ba6683ab371465094ceb49b1f0b260bf05521c950fba6b25045957f",
+      "remote_bytes": 1786575,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-standing-complete-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f7ef7f3f9492432ba2137579856a3658.png",
+      "sha256": "51c1cfeecab33205001b89a058e053536bd60fe7db7c73f2860c4a2e42836311",
+      "bytes": 2326330,
+      "remote_sha256": "51c1cfeecab33205001b89a058e053536bd60fe7db7c73f2860c4a2e42836311",
+      "remote_bytes": 2326330,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-standing-v1.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4d2de5bc8b41477abe61d8fca5daa077.jpeg",
+      "sha256": "e6fa1b9dc4812c9e622a54be96c1ca26e19182793e1c7bb5bf61ee8894008dfd",
+      "bytes": 218615,
+      "remote_sha256": "e6fa1b9dc4812c9e622a54be96c1ca26e19182793e1c7bb5bf61ee8894008dfd",
+      "remote_bytes": 218615,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-standing-v2.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/208c64cf76a140e989c30b732fc3eb12.jpeg",
+      "sha256": "1525d912cb30c096fefed5e85b6e24e043e87fb7293fab0417d524fbc10b09cf",
+      "bytes": 46144,
+      "remote_sha256": "1525d912cb30c096fefed5e85b6e24e043e87fb7293fab0417d524fbc10b09cf",
+      "remote_bytes": 46144,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-female-standing-v3.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d41d10b5db64448aa781873288425020.jpeg",
+      "sha256": "c35a2ba0d6f0f3d1e9a2f6728ad03a4938dee9bb06821732e95d93e8b4b13fdb",
+      "bytes": 71257,
+      "remote_sha256": "c35a2ba0d6f0f3d1e9a2f6728ad03a4938dee9bb06821732e95d93e8b4b13fdb",
+      "remote_bytes": 71257,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-breeze-atlas-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f009f274e0c94451bb8180caff12b626.png",
+      "sha256": "cd37d1f9f58fca782e3c6db7f348523744bf7531b898a336521ceff58f753e6b",
+      "bytes": 2219457,
+      "remote_sha256": "cd37d1f9f58fca782e3c6db7f348523744bf7531b898a336521ceff58f753e6b",
+      "remote_bytes": 2219457,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-breeze-atlas-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/179a4c4d7aaf40d884130396b09aed72.png",
+      "sha256": "fc1c86d63d88c767db8cafcd4993d0099b963306f9f16f07df901c1cfbbb97e2",
+      "bytes": 2217443,
+      "remote_sha256": "fc1c86d63d88c767db8cafcd4993d0099b963306f9f16f07df901c1cfbbb97e2",
+      "remote_bytes": 2217443,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-chibi-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f82413d6d59e459fa24a7eb6d7d6f27d.png",
+      "sha256": "48a1cf55205d1f6436c6d16f95fc7960a4d69c4a6ac9f1dd750dddbb5d30785d",
+      "bytes": 1870401,
+      "remote_sha256": "48a1cf55205d1f6436c6d16f95fc7960a4d69c4a6ac9f1dd750dddbb5d30785d",
+      "remote_bytes": 1870401,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-fullbody-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e8d44dbfdb6549aa8bc8da720048d0fd.png",
+      "sha256": "c0d6c1342099c1af75bdaaf11617cb972066b8a69fa016b56fb0b37239f55dc4",
+      "bytes": 1886973,
+      "remote_sha256": "c0d6c1342099c1af75bdaaf11617cb972066b8a69fa016b56fb0b37239f55dc4",
+      "remote_bytes": 1886973,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-standing-complete-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ab3a2a2e5d124cd295b5a04f5cfa1820.png",
+      "sha256": "91485ff4e55753f358257e366bab27db83914cd1f7e31333de8cff5db3dcff42",
+      "bytes": 2356087,
+      "remote_sha256": "91485ff4e55753f358257e366bab27db83914cd1f7e31333de8cff5db3dcff42",
+      "remote_bytes": 2356087,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-standing-v1.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/efc61545b5814bf2b333cee362fdd05c.jpeg",
+      "sha256": "b10189766e0e597fb98b7213d228ab3c45d7af07b1feca8b0fac54bde37147f4",
+      "bytes": 201638,
+      "remote_sha256": "b10189766e0e597fb98b7213d228ab3c45d7af07b1feca8b0fac54bde37147f4",
+      "remote_bytes": 201638,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-standing-v2.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e96abc6aff834672b1882e1f3d5d95d7.jpeg",
+      "sha256": "2c39af3afcfe9e8da09b25f1c7d30bf738da2acaaf1c97ecaa4b1d2565667780",
+      "bytes": 56331,
+      "remote_sha256": "2c39af3afcfe9e8da09b25f1c7d30bf738da2acaaf1c97ecaa4b1d2565667780",
+      "remote_bytes": 56331,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/characters/yiyi-male-standing-v3.jpg": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e96abc6aff834672b1882e1f3d5d95d7.jpeg",
+      "sha256": "2c39af3afcfe9e8da09b25f1c7d30bf738da2acaaf1c97ecaa4b1d2565667780",
+      "bytes": 56331,
+      "remote_sha256": "2c39af3afcfe9e8da09b25f1c7d30bf738da2acaaf1c97ecaa4b1d2565667780",
+      "remote_bytes": 56331,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "assets/mbti-companion-exploration-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d90611d07e4248fe81abbad10dc40a66.png",
+      "sha256": "4f016b6300023d740d5f1356e80c10267f0d253aa616f791cd4a07fe1f58351c",
+      "bytes": 2923097,
+      "remote_sha256": "4f016b6300023d740d5f1356e80c10267f0d253aa616f791cd4a07fe1f58351c",
+      "remote_bytes": 2923097,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/mbti-female-types-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f5eb55cf88094a9cad51bfbf12e2c376.png",
+      "sha256": "d187447d13a0e6b18d42c51f22796c3b0ddfcbf8192f4acc5e43238125040964",
+      "bytes": 3442316,
+      "remote_sha256": "d187447d13a0e6b18d42c51f22796c3b0ddfcbf8192f4acc5e43238125040964",
+      "remote_bytes": 3442316,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/mbti-male-types-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e5f8f4a4750f4603bd05587945b0190c.png",
+      "sha256": "0d249096b3edbce20be6ee395c00eb2963485d5616407ee0ab049550ffed444c",
+      "bytes": 3187770,
+      "remote_sha256": "0d249096b3edbce20be6ee395c00eb2963485d5616407ee0ab049550ffed444c",
+      "remote_bytes": 3187770,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/preference-fashion-female-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/cb698b9faf9e4303a8ae0088cc69879f.png",
+      "sha256": "09ec30cac7dca81ffb318161321ef65047e29f12541afbf1c172b964ed308a25",
+      "bytes": 2366400,
+      "remote_sha256": "09ec30cac7dca81ffb318161321ef65047e29f12541afbf1c172b964ed308a25",
+      "remote_bytes": 2366400,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/preference-fashion-male-v4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/713283045a8d483b8b16936e235878df.png",
+      "sha256": "af3a54d4e29dba1fd856d459b3d7dbfb9a1658db1b9ec571330a4e98a4050366",
+      "bytes": 2808228,
+      "remote_sha256": "af3a54d4e29dba1fd856d459b3d7dbfb9a1658db1b9ec571330a4e98a4050366",
+      "remote_bytes": 2808228,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/preference-fashion-photo-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/697f88b97f044fca9560e609c3d826bf.png",
+      "sha256": "33864863bf362535343b35f0de29d9e942a9faeb22991e9e8fd827844b244700",
+      "bytes": 2442416,
+      "remote_sha256": "33864863bf362535343b35f0de29d9e942a9faeb22991e9e8fd827844b244700",
+      "remote_bytes": 2442416,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/preference-fashion-priorities-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2c19dcf12f8c4f5699be45af32b18701.png",
+      "sha256": "a863aba8e2326760355ff8f8299f347ad77d46be860bee8cd87b3d6199ea9f68",
+      "bytes": 2260117,
+      "remote_sha256": "a863aba8e2326760355ff8f8299f347ad77d46be860bee8cd87b3d6199ea9f68",
+      "remote_bytes": 2260117,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/preference-fashion-sprites-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ca23950d18b44dc99c3604e5a9ca538d.png",
+      "sha256": "a22a572d7b79b399323f4190a35db4ec3fd373e45d485cea0ad5da2b7590f3eb",
+      "bytes": 2151565,
+      "remote_sha256": "a22a572d7b79b399323f4190a35db4ec3fd373e45d485cea0ad5da2b7590f3eb",
+      "remote_bytes": 2151565,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-cloudy-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1a00f42d9b414862996db5b777c032b4.png",
+      "sha256": "2bd062fe106c5dead3f20e7b74bc09cb30d03ac5a4fae68deadb16b604e8c7bc",
+      "bytes": 2016180,
+      "remote_sha256": "2bd062fe106c5dead3f20e7b74bc09cb30d03ac5a4fae68deadb16b604e8c7bc",
+      "remote_bytes": 2016180,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-fog-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/25fa8e3cf0024e4e8374337ab99514d0.png",
+      "sha256": "55e51d7df4a48843da7fca98e9bb29a0b32fd7303542b4192236a8a0d7729e6c",
+      "bytes": 2030066,
+      "remote_sha256": "55e51d7df4a48843da7fca98e9bb29a0b32fd7303542b4192236a8a0d7729e6c",
+      "remote_bytes": 2030066,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-heavy-rain-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4c495eac98e94f7f92decfcb663cf955.png",
+      "sha256": "5f2f9429e10e8b3521d7cbb747e24c4882d26da2baf5ad59110737b33720d60a",
+      "bytes": 2657444,
+      "remote_sha256": "5f2f9429e10e8b3521d7cbb747e24c4882d26da2baf5ad59110737b33720d60a",
+      "remote_bytes": 2657444,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-rain-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5fe1850e3599462c974be9ed65e6b9db.png",
+      "sha256": "63423cbfc6f54fd0b4285d484e00af0dff4e5d709ef3be0d1dc02b94038e7891",
+      "bytes": 2080992,
+      "remote_sha256": "63423cbfc6f54fd0b4285d484e00af0dff4e5d709ef3be0d1dc02b94038e7891",
+      "remote_bytes": 2080992,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-snow-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/fbe4f7f36fe44eb7aed468704a223179.png",
+      "sha256": "76e12c121f6fc4f53f0cd9b71b7de0d1aa2a8fa81e221bbfa4f32abece43589e",
+      "bytes": 2095635,
+      "remote_sha256": "76e12c121f6fc4f53f0cd9b71b7de0d1aa2a8fa81e221bbfa4f32abece43589e",
+      "remote_bytes": 2095635,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-sunny-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d8b479b7280445de9cec96fb9f3323f2.png",
+      "sha256": "f11b3501b23025716cbb1d997c98398000cb3d1887dcca000739c3d87cc16faf",
+      "bytes": 2103633,
+      "remote_sha256": "f11b3501b23025716cbb1d997c98398000cb3d1887dcca000739c3d87cc16faf",
+      "remote_bytes": 2103633,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-thunder-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/252b4f42c62248ecb0297273fa514535.png",
+      "sha256": "48adc4934b563a030d54d7840ddf1ee0da0e92471650936587651f48f2a4b609",
+      "bytes": 2379552,
+      "remote_sha256": "48adc4934b563a030d54d7840ddf1ee0da0e92471650936587651f48f2a4b609",
+      "remote_bytes": 2379552,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/weather-wind-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f0da10a269604d85a88f8077d1fed024.png",
+      "sha256": "87c21313ada0aac2fa67ae53ba3d6fab37eec90aac56d72a8a62d6b8807b4eb8",
+      "bytes": 2234211,
+      "remote_sha256": "87c21313ada0aac2fa67ae53ba3d6fab37eec90aac56d72a8a62d6b8807b4eb8",
+      "remote_bytes": 2234211,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-expressions-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/89bd09af7cbb41f881accfa186b5f1e8.png",
+      "sha256": "3babbfe1f486fdb4b10378d80d8eeaa87be694322b3bbafd69042dd85a7f1c87",
+      "bytes": 2147253,
+      "remote_sha256": "3babbfe1f486fdb4b10378d80d8eeaa87be694322b3bbafd69042dd85a7f1c87",
+      "remote_bytes": 2147253,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-expressions-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5b77e06c6eac41da8fa83eee69bb9fa4.png",
+      "sha256": "e6ed094d36dab1d69dc3950bf1fa121deaa2e5ef095f9e1b8c1eaddb40cc4c8d",
+      "bytes": 1826402,
+      "remote_sha256": "e6ed094d36dab1d69dc3950bf1fa121deaa2e5ef095f9e1b8c1eaddb40cc4c8d",
+      "remote_bytes": 1826402,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-activity-v2.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/43f61f2f4cdc471298676ce3e2629e41.png",
+      "sha256": "083c9c57ae8672139d4f195646c4e96a27b891872d34ae7a084e14c6fe23f8ec",
+      "bytes": 438016,
+      "remote_sha256": "f98a1745893df4b6a7cc3b2ce91ea914e2e57cfd3c42397911195fd3738e4f45",
+      "remote_bytes": 2421017,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-blink-v4.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/98c6f16c2f87439d9035939318ca09cb.png",
+      "sha256": "602c5da345a8ddf1dfb73ff45c3f9481ec8a195c9f9d249d6eb282e3f0e891a6",
+      "bytes": 426558,
+      "remote_sha256": "09ef8600ddb3442363a8a6acabf2a1106a7705dab1fe5c2e273ae1daa2553c65",
+      "remote_bytes": 543774,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-blink-v5.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/11ed6e5518f14862b5a7ff2cb7e9dcff.png",
+      "sha256": "dfbf793ccde67a17415890e55c4e18b92a4fe493fd6503d25494ae5ac5afccca",
+      "bytes": 293996,
+      "remote_sha256": "466b62b0cf68a68c0f37197ac36e187944a8c3f0503699a47244d2cc77c98609",
+      "remote_bytes": 342690,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-companion-v1.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f10d792b45154c2db3638d288eb62f22.png",
+      "sha256": "73e6c02e89ea7a7503d17ae0d64b078f3839607482dc5827afdf7b4e88ea4e03",
+      "bytes": 374792,
+      "remote_sha256": "16a1c2e5a2ed22f48bf713e871cb57be815aa8641b07d9ed3621d8e7dea63bec",
+      "remote_bytes": 2189084,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-window-blink-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/587a205f7286497d81a41a3316e571d7.png",
+      "sha256": "22f3f45623212025f5778a64e614efee5eb358b13d89c1c1dd39a14f24bbcac1",
+      "bytes": 2507087,
+      "remote_sha256": "22f3f45623212025f5778a64e614efee5eb358b13d89c1c1dd39a14f24bbcac1",
+      "remote_bytes": 2507087,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-window-blink-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1b15299034f640668c34dae075881fac.png",
+      "sha256": "5a6b419a1ced56465d7d5e58b39452f003f3ff26e7bcb649ea8ecba1932754dc",
+      "bytes": 2341797,
+      "remote_sha256": "5a6b419a1ced56465d7d5e58b39452f003f3ff26e7bcb649ea8ecba1932754dc",
+      "remote_bytes": 2341797,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-female-window-blink-v4.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c5f328d111d545288d7f1272eaa0796a.png",
+      "sha256": "1f662237091f8f0248cc0bf656ce00e56d1d3a43968a6dd02f1e063fdc21125f",
+      "bytes": 1527476,
+      "remote_sha256": "3aa1a151e2d2868f211a3b0c2fad80818f5abfb4bcd8d82f4c0f1714467555c9",
+      "remote_bytes": 2123970,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-greeting-loop-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9f025a5e6e434947b008e67a9ea2d6ec.png",
+      "sha256": "822b5e65d1d013dcb6b3e87205c08d63ffda1fb3567b7cb8f13266ba1be5eaf1",
+      "bytes": 1695906,
+      "remote_sha256": "822b5e65d1d013dcb6b3e87205c08d63ffda1fb3567b7cb8f13266ba1be5eaf1",
+      "remote_bytes": 1695906,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-hazards-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bad5dbbfab964878b31184a4d0cab2b4.png",
+      "sha256": "2110d3fe5eaf97c8bf3741478fab5a8b9857c260c1bb9aa1a90290cb9b32c8da",
+      "bytes": 2641940,
+      "remote_sha256": "2110d3fe5eaf97c8bf3741478fab5a8b9857c260c1bb9aa1a90290cb9b32c8da",
+      "remote_bytes": 2641940,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-activity-v2.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/30198fa470294a93924650cd6db5944f.png",
+      "sha256": "ba8cd941318338769e72338cbf1d0a5276448b37d47fb2e8bff76bac05e0bb97",
+      "bytes": 394390,
+      "remote_sha256": "2a055aaa4ccd6cf28145c68467d520c7b3ff03ca66c240cc3f3104e69c16ad80",
+      "remote_bytes": 2160963,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-blink-v4.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/42b355dafcc242ef8e0f2d4dda90f619.png",
+      "sha256": "2976052d876101c64d437b10d9444779b070f1a453de6d72399aebeb505ba80a",
+      "bytes": 421990,
+      "remote_sha256": "2ccd9063c38a7b1591785462ff1bfbcd16c0698a47bfe1b219e46e6c9ccde47d",
+      "remote_bytes": 537069,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-blink-v5.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b962557db23141369a29dd0fc16ff34c.png",
+      "sha256": "b052bd4f7da390f6ffa268e01dba9c618ebbb5cf68a05b4093a13f680d358bfb",
+      "bytes": 276794,
+      "remote_sha256": "18dd564a775730a4f41baba01adaf4010046599a23353fdf8b65d6c642ed5569",
+      "remote_bytes": 322940,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-companion-v1.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1fcb7754666f436baf0f65b660cb74cd.png",
+      "sha256": "79866cf26b64132b2e3da061264fd38beaf9508be00a0304b1d91b8aff3ffbd0",
+      "bytes": 314744,
+      "remote_sha256": "c8ca79118cf2b09f1bab184b4c7fb70a4d03aeaf6aec38db5f7e4373254ac9f6",
+      "remote_bytes": 1877164,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-expressions-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/0078bf4153454bb7b21cd8ea42c8b946.png",
+      "sha256": "1d15a2d3af7594b28f3996897aa6a1f92caf8bc6bfc90a0f95a598b06bbfb30d",
+      "bytes": 1735475,
+      "remote_sha256": "1d15a2d3af7594b28f3996897aa6a1f92caf8bc6bfc90a0f95a598b06bbfb30d",
+      "remote_bytes": 1735475,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-weather-blink-v6.webp": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/6f0d6a6eb1bd4532b6042e1474d2b4ac.png",
+      "sha256": "d0a99795386ebddd7d4a7022a894192bb15e026650d5fdbf11c112344678440a",
+      "bytes": 432876,
+      "remote_sha256": "214fe37c5ecf13f7a885d52293f2ab0b131047399c916f17545b8d7101ab0521",
+      "remote_bytes": 600686,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-male-window-blink-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c2d2ccff88dc404cb28fd9e155698549.png",
+      "sha256": "286f2419b7bcd749f37410936ef1ac2eca10f707e015ad084ed0196e5ef80e50",
+      "bytes": 2314473,
+      "remote_sha256": "286f2419b7bcd749f37410936ef1ac2eca10f707e015ad084ed0196e5ef80e50",
+      "remote_bytes": 2314473,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/yiyi-window-blink-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1922ec9d2150426a8a52cd285e187562.png",
+      "sha256": "e463ba95c8bb80ba52944157427115cdd9bd63e065562b7161932f513734cb25",
+      "bytes": 2071076,
+      "remote_sha256": "e463ba95c8bb80ba52944157427115cdd9bd63e065562b7161932f513734cb25",
+      "remote_bytes": 2071076,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/zodiac-illustrated-starfields-v3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/dfb87ac5a33448588719a810280f0a46.png",
+      "sha256": "58f22284fd12aaf10f118fe663f07d2e1fc1a60cb754f7282ce3886cab8e49fc",
+      "bytes": 2782475,
+      "remote_sha256": "58f22284fd12aaf10f118fe663f07d2e1fc1a60cb754f7282ce3886cab8e49fc",
+      "remote_bytes": 2782475,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/zodiac-palaces-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/508566577d9941eb99804b66085a0ec7.png",
+      "sha256": "6728c126879a90144f4e001f49d79b7108c7bdf25d460aa326662b271a4a62ef",
+      "bytes": 3296475,
+      "remote_sha256": "6728c126879a90144f4e001f49d79b7108c7bdf25d460aa326662b271a4a62ef",
+      "remote_bytes": 3296475,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "assets/zodiac-starfields-v2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/41326d77f04a47378c6c03c7707a9b7c.png",
+      "sha256": "abe76633f9b2896a5b4e74908b75dcf54deb8a27d5938d6069a5336f44fcc791",
+      "bytes": 2296645,
+      "remote_sha256": "abe76633f9b2896a5b4e74908b75dcf54deb8a27d5938d6069a5336f44fcc791",
+      "remote_bytes": 2296645,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/activity-app-1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5c587f0c89d34260b481ef40e61c1bbe.png",
+      "sha256": "b91962054ba0a80552245598b1ef634443f664a1d13d65317d42003c33af89f2",
+      "bytes": 818346,
+      "remote_sha256": "b91962054ba0a80552245598b1ef634443f664a1d13d65317d42003c33af89f2",
+      "remote_bytes": 818346,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/activity-app-3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/85b569e6a1a548a997bc0603fc46887b.png",
+      "sha256": "42c59b2dc80a1b5bd622015d84f77aa5e27c8eda54110a58b2846e1c407c7045",
+      "bytes": 947010,
+      "remote_sha256": "42c59b2dc80a1b5bd622015d84f77aa5e27c8eda54110a58b2846e1c407c7045",
+      "remote_bytes": 947010,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/activity-app-4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/269cda750cd34cfb95254f9c237605f9.png",
+      "sha256": "ef3dfb95f5fac4ff835a6ba76f75b9ca3123f6b559fcbbedfa228cee33f15b72",
+      "bytes": 814330,
+      "remote_sha256": "ef3dfb95f5fac4ff835a6ba76f75b9ca3123f6b559fcbbedfa228cee33f15b72",
+      "remote_bytes": 814330,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/activity-app-5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/87db7b5d58b74b7ca083b8b178645dee.png",
+      "sha256": "ed5e127b7144156015259dbfffa3c9fee9d9f292405e39f7343aeade53642041",
+      "bytes": 689106,
+      "remote_sha256": "ed5e127b7144156015259dbfffa3c9fee9d9f292405e39f7343aeade53642041",
+      "remote_bytes": 689106,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/female_regal_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/961843dc9b2e4ca5b189b6758588e5b6.png",
+      "sha256": "6116c7fa526516205a31c2ab644d4c59ae902897b46bb7fb075e902be7b211c2",
+      "bytes": 2327145,
+      "remote_sha256": "6116c7fa526516205a31c2ab644d4c59ae902897b46bb7fb075e902be7b211c2",
+      "remote_bytes": 2327145,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/female_sweet_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/72bf2a6941f54dd9a67b081e727a3b1f.png",
+      "sha256": "fe64ab8dd50432ca9dfb914cfedb107a0465de86a1e6a13156a98b2f67ee9b88",
+      "bytes": 2351676,
+      "remote_sha256": "fe64ab8dd50432ca9dfb914cfedb107a0465de86a1e6a13156a98b2f67ee9b88",
+      "remote_bytes": 2351676,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/female_warm_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ee8eb4104311492682d78dd9fa0f0416.png",
+      "sha256": "3cfc250ef2ce33bc945978e405097fbd1e3ac6611ad69ebfc0b1d7fc8a921578",
+      "bytes": 2451277,
+      "remote_sha256": "3cfc250ef2ce33bc945978e405097fbd1e3ac6611ad69ebfc0b1d7fc8a921578",
+      "remote_bytes": 2451277,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/male_artistic_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/353496ec56814f3394556bc0042a940f.png",
+      "sha256": "ce38b818d3a30a28d796cb0f1ca74ec9b56309cb67f0b4042d09638aa9c367ca",
+      "bytes": 2255130,
+      "remote_sha256": "ce38b818d3a30a28d796cb0f1ca74ec9b56309cb67f0b4042d09638aa9c367ca",
+      "remote_bytes": 2255130,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/male_calm_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/dd707e9d153440c5a60c23cde810ba41.png",
+      "sha256": "791972da05b2aaa841c059be75bbe0ababcdc09d3b11df6d5176e6ca936dbb79",
+      "bytes": 2192988,
+      "remote_sha256": "791972da05b2aaa841c059be75bbe0ababcdc09d3b11df6d5176e6ca936dbb79",
+      "remote_bytes": 2192988,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/care-portraits/male_confident_v1-closeup.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/72c437cee7cc4dfebdf12948664183fc.png",
+      "sha256": "a0c5bfff8416714f8252faa7de5ee73926eda414618c5d45fbd611e959e7f861",
+      "bytes": 2256017,
+      "remote_sha256": "a0c5bfff8416714f8252faa7de5ee73926eda414618c5d45fbd611e959e7f861",
+      "remote_bytes": 2256017,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/create2_ai_arrow.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/600e227b66084a3581151671fc81c586.png",
+      "sha256": "ede91cf5013a079e29d346468e172f1c2d4c574fea10a870bebd7155c164e101",
+      "bytes": 461,
+      "remote_sha256": "ede91cf5013a079e29d346468e172f1c2d4c574fea10a870bebd7155c164e101",
+      "remote_bytes": 461,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/create2_close.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/59748f07e754487993985e754a8253b0.png",
+      "sha256": "b3417ba22f023def8bab15802f30bfa03df6b89cb2acdb51dc4e83e550d6a4ce",
+      "bytes": 336,
+      "remote_sha256": "b3417ba22f023def8bab15802f30bfa03df6b89cb2acdb51dc4e83e550d6a4ce",
+      "remote_bytes": 336,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/create2_orb.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b50df8c07b2d450087f8cb7b20ccdf1a.png",
+      "sha256": "a97390ce45da0c834e2cb13cce394a859625f92db9576b6df9f9406d20a41a31",
+      "bytes": 2218,
+      "remote_sha256": "a97390ce45da0c834e2cb13cce394a859625f92db9576b6df9f9406d20a41a31",
+      "remote_bytes": 2218,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/empty-stationery-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ec15f50f21194103ba7f8dbb469f3c56.png",
+      "sha256": "46e8b53327bbc74e885b6baba58f762303a46dc1251cbb8c1144f6e622e29a96",
+      "bytes": 1728956,
+      "remote_sha256": "46e8b53327bbc74e885b6baba58f762303a46dc1251cbb8c1144f6e622e29a96",
+      "remote_bytes": 1728956,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/home_agent_card_orb.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/9a3d1d162f304f28b77534f2086acba5.png",
+      "sha256": "09b52f0cfd67dd088fdc95c12caf2b8d16639c75edf108a12e965f9fa46d8e1c",
+      "bytes": 65532,
+      "remote_sha256": "09b52f0cfd67dd088fdc95c12caf2b8d16639c75edf108a12e965f9fa46d8e1c",
+      "remote_bytes": 65532,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/home_album_empty.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f1839be658b5402093600e4b89031bdd.png",
+      "sha256": "a4c8c1fd8ce979fe93381e1b76b80a29759740489d49d5ba497e8e13b2de4aab",
+      "bytes": 310676,
+      "remote_sha256": "a4c8c1fd8ce979fe93381e1b76b80a29759740489d49d5ba497e8e13b2de4aab",
+      "remote_bytes": 310676,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-agent/attachment.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/928f2cf430144203b3aa1cc51ed3ab79.png",
+      "sha256": "5da7f419a5d13ddaaf99f1101623221a90d3274f7428d7eee05be453e2b7bf67",
+      "bytes": 3266,
+      "remote_sha256": "5da7f419a5d13ddaaf99f1101623221a90d3274f7428d7eee05be453e2b7bf67",
+      "remote_bytes": 3266,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-agent/send.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ab444200645246f18c786b0811c999f7.png",
+      "sha256": "d54a136f14ab209d85e6635ed074a226fc901cb1a90ec2cda00981ef36979639",
+      "bytes": 4189,
+      "remote_sha256": "d54a136f14ab209d85e6635ed074a226fc901cb1a90ec2cda00981ef36979639",
+      "remote_bytes": 4189,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-agent/stop.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d0b5dd1451354c45927f2525b6f8b4ab.png",
+      "sha256": "dc35ae5f69e2c26e3048e5fe969a0f762813f0e177acc8ef057a436519c0de1a",
+      "bytes": 3176,
+      "remote_sha256": "dc35ae5f69e2c26e3048e5fe969a0f762813f0e177acc8ef057a436519c0de1a",
+      "remote_bytes": 3176,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-contact-logo.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1ad3865e698241a39a7994edcacde636.png",
+      "sha256": "87085774bff1e9237985968071d1bbf3771d416ca7ebae16b24298a73fad2729",
+      "bytes": 16819,
+      "remote_sha256": "87085774bff1e9237985968071d1bbf3771d416ca7ebae16b24298a73fad2729",
+      "remote_bytes": 16819,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-contact-wordmark.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/34719fbc2f5c4597a6f03cf8bc37e281.png",
+      "sha256": "ec1f5a4e7314f9f8fa67d592c816c727b668f0aa979f4d064fc355e8e2c009b1",
+      "bytes": 2667,
+      "remote_sha256": "ec1f5a4e7314f9f8fa67d592c816c727b668f0aa979f4d064fc355e8e2c009b1",
+      "remote_bytes": 2667,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/ios-order-empty.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/28cf873e66984b9c8800d1c071008cf8.png",
+      "sha256": "a3d8e2e1bc0ecd7740450d5ae25e286e820608cb8bcb7b2af83d653d82efee4a",
+      "bytes": 69360,
+      "remote_sha256": "a3d8e2e1bc0ecd7740450d5ae25e286e820608cb8bcb7b2af83d653d82efee4a",
+      "remote_bytes": 69360,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/female_regal_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/95c0051dd1fa483f83149270871b25fd.png",
+      "sha256": "4fbb0599b6758e833a1da03aa9d8a66180c8ead9b0fc92e43c9552170155343c",
+      "bytes": 1893817,
+      "remote_sha256": "4fbb0599b6758e833a1da03aa9d8a66180c8ead9b0fc92e43c9552170155343c",
+      "remote_bytes": 1893817,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/female_sweet_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ddb579405ad740f7bab7cc1fb202bbf8.png",
+      "sha256": "bd5c903661daadb590e1d9c1cbfda207cc132f4546561ba7499054ba9dd01ef9",
+      "bytes": 1838401,
+      "remote_sha256": "bd5c903661daadb590e1d9c1cbfda207cc132f4546561ba7499054ba9dd01ef9",
+      "remote_bytes": 1838401,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/female_warm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e5aeba8bf818414f9ae12bc723d1c185.png",
+      "sha256": "8d8f1adecae1790eb003bb69cf3245b80858ad29b75d5f5e233b2ecafa91ca45",
+      "bytes": 1954743,
+      "remote_sha256": "8d8f1adecae1790eb003bb69cf3245b80858ad29b75d5f5e233b2ecafa91ca45",
+      "remote_bytes": 1954743,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/male_artistic_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bccf79820f2d4e0aa94aa19133a2ef24.png",
+      "sha256": "f1d8d685bdc5baee7c8e8abb64fd0fd94fc74bdb145a606727a069b4c57c27a6",
+      "bytes": 1842068,
+      "remote_sha256": "f1d8d685bdc5baee7c8e8abb64fd0fd94fc74bdb145a606727a069b4c57c27a6",
+      "remote_bytes": 1842068,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/male_calm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/73944a5c6b1c41c1893eefc1b5da01b9.png",
+      "sha256": "1d87178f401e1b32c3128c36c6d68036a14c7570d84c4af13ce9e20b6f557abb",
+      "bytes": 1836944,
+      "remote_sha256": "1d87178f401e1b32c3128c36c6d68036a14c7570d84c4af13ce9e20b6f557abb",
+      "remote_bytes": 1836944,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-banners/male_confident_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/18ff0bc600154fcfa3ce6217a2b12469.png",
+      "sha256": "f7e5430b0e9dde6ddc8a6a9fe7b2d8c6beee1c436e1103346f1f1615b446cc31",
+      "bytes": 1846833,
+      "remote_sha256": "f7e5430b0e9dde6ddc8a6a9fe7b2d8c6beee1c436e1103346f1f1615b446cc31",
+      "remote_bytes": 1846833,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/membership-companion-banner.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/73944a5c6b1c41c1893eefc1b5da01b9.png",
+      "sha256": "1d87178f401e1b32c3128c36c6d68036a14c7570d84c4af13ce9e20b6f557abb",
+      "bytes": 1836944,
+      "remote_sha256": "1d87178f401e1b32c3128c36c6d68036a14c7570d84c4af13ce9e20b6f557abb",
+      "remote_bytes": 1836944,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_add_open.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/0b51f94b57fe4b4780fbca2001956931.png",
+      "sha256": "1a46020661373e63410eaa736acdb2bb3bc273c5049cdae8860cc65a8be1f539",
+      "bytes": 66134,
+      "remote_sha256": "1a46020661373e63410eaa736acdb2bb3bc273c5049cdae8860cc65a8be1f539",
+      "remote_bytes": 66134,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_home_normal.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/48e1b3dc9bf14aec90645e4b06c94299.png",
+      "sha256": "43a5e8a6855e306267a097e5e71d3a0d7b2da87e560d0d7cdca782da3ff15e76",
+      "bytes": 1109,
+      "remote_sha256": "43a5e8a6855e306267a097e5e71d3a0d7b2da87e560d0d7cdca782da3ff15e76",
+      "remote_bytes": 1109,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_home_selected.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b3b27c6ff1ce4b6e9f53e90e693c905b.png",
+      "sha256": "34410f546422eb3c67cc101b0460648dd2478c2f0c26d4b32a65ec80416b046e",
+      "bytes": 3681,
+      "remote_sha256": "34410f546422eb3c67cc101b0460648dd2478c2f0c26d4b32a65ec80416b046e",
+      "remote_bytes": 3681,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_profile_normal.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/565f47444bf64cd0b17c3487f910c1e8.png",
+      "sha256": "c7d69371ab4695488a43854eb9518df7bb747fe7ad724e44aeb30553ac096afd",
+      "bytes": 1296,
+      "remote_sha256": "c7d69371ab4695488a43854eb9518df7bb747fe7ad724e44aeb30553ac096afd",
+      "remote_bytes": 1296,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_profile_selected.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/35ed3654bbdf4bf9b428f1f096d2eb2e.png",
+      "sha256": "7282e11f47dd06d788d03d50aaef70f1ddf750f2b10aa5ee307227e8e1120267",
+      "bytes": 3864,
+      "remote_sha256": "7282e11f47dd06d788d03d50aaef70f1ddf750f2b10aa5ee307227e8e1120267",
+      "remote_bytes": 3864,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_wardrobe_normal.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b904ef1cdf14442ab1b679bf69e7a5f7.png",
+      "sha256": "099b9a431178a16b2442a847d8022798aa1319c895e56cede9c4ddf257d61738",
+      "bytes": 1070,
+      "remote_sha256": "099b9a431178a16b2442a847d8022798aa1319c895e56cede9c4ddf257d61738",
+      "remote_bytes": 1070,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/navigation_wardrobe_selected.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/00455b5ffc864a859c7b16b4ca2b3b0d.png",
+      "sha256": "daf6dcc1ffd60d911b5604e321a0a716b738cd288d61edd1e06895b21cd6b79e",
+      "bytes": 3761,
+      "remote_sha256": "daf6dcc1ffd60d911b5604e321a0a716b738cd288d61edd1e06895b21cd6b79e",
+      "remote_bytes": 3761,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/private-tryon-portrait-male-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/369ccd7a8c214380b6580dcccee8ad11.png",
+      "sha256": "5c6cb7c5f909404ef365311ead83d2321850eabd0407994f2c16f375cff9b878",
+      "bytes": 1894138,
+      "remote_sha256": "5c6cb7c5f909404ef365311ead83d2321850eabd0407994f2c16f375cff9b878",
+      "remote_bytes": 1894138,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/private-tryon-portrait-v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/99fb6e927275443f9aa0c1af99dd890b.png",
+      "sha256": "414ca8865e19221a80950c3e44ffffb6325acd97e65a4a7463439f37f91d00a6",
+      "bytes": 1967201,
+      "remote_sha256": "414ca8865e19221a80950c3e44ffffb6325acd97e65a4a7463439f37f91d00a6",
+      "remote_bytes": 1967201,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_background_glow.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/290340a2e96d4c5e9e47b4840126ec71.png",
+      "sha256": "994e46ede1a680ccba27038eae05b106dcc622b9c6f3ea833bba80ce4d277102",
+      "bytes": 334746,
+      "remote_sha256": "994e46ede1a680ccba27038eae05b106dcc622b9c6f3ea833bba80ce4d277102",
+      "remote_bytes": 334746,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_edit_badge.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/383931579005428081d7fb89387a7123.png",
+      "sha256": "a8ead185f7a66ff0cb600bf9a442270a13f448ef6043a8b84311f3e5f4caa1b0",
+      "bytes": 4430,
+      "remote_sha256": "a8ead185f7a66ff0cb600bf9a442270a13f448ef6043a8b84311f3e5f4caa1b0",
+      "remote_bytes": 4430,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_memory_art.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/174c3827130949f690f12029450f84ec.png",
+      "sha256": "674345d88661db3568f09e10d99d632a244faed33cdd583a60251e5770ab693b",
+      "bytes": 34430,
+      "remote_sha256": "674345d88661db3568f09e10d99d632a244faed33cdd583a60251e5770ab693b",
+      "remote_bytes": 34430,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_message.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/efae6be76ffb4ccc9d9ad13af40b827d.png",
+      "sha256": "d9d9e4519e6472852a7d9c291118c1e0f6d9da077db2e5256ca5365694b44e00",
+      "bytes": 1087,
+      "remote_sha256": "d9d9e4519e6472852a7d9c291118c1e0f6d9da077db2e5256ca5365694b44e00",
+      "remote_bytes": 1087,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_outfit_empty.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c669023045e14caea0262bdeb80f780e.png",
+      "sha256": "3a32754514fda2d62377943449369012581de0ad3b2b221c1c2020f4a0445e6e",
+      "bytes": 1249106,
+      "remote_sha256": "3a32754514fda2d62377943449369012581de0ad3b2b221c1c2020f4a0445e6e",
+      "remote_bytes": 1249106,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_top_points.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ff7df84a3e5540829605a558836d9bb4.png",
+      "sha256": "943d839c453bcc4323d46645781d8d95bf105bc5bc7009b5d334b582aa96bbfe",
+      "bytes": 592,
+      "remote_sha256": "943d839c453bcc4323d46645781d8d95bf105bc5bc7009b5d334b582aa96bbfe",
+      "remote_bytes": 592,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/profile_top_statistics.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ec10853a040f44d189349665ce03a52d.png",
+      "sha256": "e74eae984a71b1fd992af5f6eaa46965f1ccf03997ed6ef9daee5b5edd76afc7",
+      "bytes": 482,
+      "remote_sha256": "e74eae984a71b1fd992af5f6eaa46965f1ccf03997ed6ef9daee5b5edd76afc7",
+      "remote_bytes": 482,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/user_avatar_default_icon.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a1a77cf723664f2ea4f8a4a8ee5afda0.png",
+      "sha256": "b26737856a4e4f9370edd82112d13069c06cbfd9a8f85a7d80898dc914db31b4",
+      "bytes": 14762,
+      "remote_sha256": "b26737856a4e4f9370edd82112d13069c06cbfd9a8f85a7d80898dc914db31b4",
+      "remote_bytes": 14762,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/wardrobe_action_diy.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3b1f7c07da89480f8cce176693818ac2.png",
+      "sha256": "d1a6ecb4fb0251bd03084c9a5e7f46a7d9e10754fb5b88ccb4f8c23699cab91a",
+      "bytes": 1605,
+      "remote_sha256": "d1a6ecb4fb0251bd03084c9a5e7f46a7d9e10754fb5b88ccb4f8c23699cab91a",
+      "remote_bytes": 1605,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/wardrobe_action_ootd.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c50b728de41e412895c077ce096add41.png",
+      "sha256": "14814e21f9c9a42f41aa2e079c1fc09abed252bf54752b31cef79db56d1eb84a",
+      "bytes": 1542,
+      "remote_sha256": "14814e21f9c9a42f41aa2e079c1fc09abed252bf54752b31cef79db56d1eb84a",
+      "remote_bytes": 1542,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/wardrobe_action_products.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e8ba3a0430a64c3691469a5988ada50a.png",
+      "sha256": "4e4b02ba96c64fed7a600cb8769f016f5d000360d5239fa873e9590dc6e48e0b",
+      "bytes": 1347,
+      "remote_sha256": "4e4b02ba96c64fed7a600cb8769f016f5d000360d5239fa873e9590dc6e48e0b",
+      "remote_bytes": 1347,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/wardrobe_action_stats.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/79d3e3b75eea4ddeb99b232cc5737098.png",
+      "sha256": "16d3c568da15869ed288f277d0c842e65b6bc947eff2613d36ec8723efeb53af",
+      "bytes": 1773,
+      "remote_sha256": "16d3c568da15869ed288f277d0c842e65b6bc947eff2613d36ec8723efeb53af",
+      "remote_bytes": 1773,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/wardrobe_title_bg.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d5744b17a8b540e29f04f1ee2d54185c.png",
+      "sha256": "146579660adba32fb6ae31b74f46d59db29c6e0d075f3845de777a9fd15f330f",
+      "bytes": 819998,
+      "remote_sha256": "146579660adba32fb6ae31b74f46d59db29c6e0d075f3845de777a9fd15f330f",
+      "remote_bytes": 819998,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/ios-home-empty.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a4a06105f37b4ae2825605a51ac1b664.png",
+      "sha256": "7169f422e37de934e1a043c403d5b7982c9a72e6942d7d65b516badec8a7ac49",
+      "bytes": 183616,
+      "remote_sha256": "7169f422e37de934e1a043c403d5b7982c9a72e6942d7d65b516badec8a7ac49",
+      "remote_bytes": 183616,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-home-empty.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bd2b72d5ca9e4a2595f4e2794f70d978.png",
+      "sha256": "72dcae21435c387f6501e0e483508ec6992414259f376f0c3e6b53dbc55a7cac",
+      "bytes": 319386,
+      "remote_sha256": "72dcae21435c387f6501e0e483508ec6992414259f376f0c3e6b53dbc55a7cac",
+      "remote_bytes": 319386,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/ios-html-home.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3769781b05694c148afd5cb101b6a1f2.png",
+      "sha256": "5f43a75bb8655775d9de7b3d2523c76060e944679bd48db82fecbec6f1fbe978",
+      "bytes": 54080,
+      "remote_sha256": "5f43a75bb8655775d9de7b3d2523c76060e944679bd48db82fecbec6f1fbe978",
+      "remote_bytes": 54080,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/ios-html-profile.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/188b43ec4ceb44c1a8b8786694699b46.png",
+      "sha256": "dcca408a37bb32dde32e90272320e0a1f5917b46a2ea95dbc7ea28591f4e0dfb",
+      "bytes": 188635,
+      "remote_sha256": "dcca408a37bb32dde32e90272320e0a1f5917b46a2ea95dbc7ea28591f4e0dfb",
+      "remote_bytes": 188635,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/yijian-agent.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4d579e335adb417db173df021d39ecf9.png",
+      "sha256": "cdda6ec4d540d2a937864b37a2b2c9ee61c0ee5c45fe12847ae3215288532baf",
+      "bytes": 100891,
+      "remote_sha256": "cdda6ec4d540d2a937864b37a2b2c9ee61c0ee5c45fe12847ae3215288532baf",
+      "remote_bytes": 100891,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/yijian-home.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/6dd12208024c4feb8035feb431e7ecd1.png",
+      "sha256": "aa6c4a7a2b854394b76eff868dcede1e815c95b008f46ad338bed59131e06c91",
+      "bytes": 111386,
+      "remote_sha256": "aa6c4a7a2b854394b76eff868dcede1e815c95b008f46ad338bed59131e06c91",
+      "remote_bytes": 111386,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/yijian-profile-services.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/953d8fb6968a49f19791b8fbcec6a344.png",
+      "sha256": "73215a7d30eee385d4fa1404170224ca279c5b48766ca0be2aecf074376c79bf",
+      "bytes": 62446,
+      "remote_sha256": "73215a7d30eee385d4fa1404170224ca279c5b48766ca0be2aecf074376c79bf",
+      "remote_bytes": 62446,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/yijian-profile.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/abb79b3cabfd49fca61f837f6b30f3ee.png",
+      "sha256": "54240a0dcf768decf69f7c37b2211b61d1f8d8990a79631ad03a290b346406f4",
+      "bytes": 95037,
+      "remote_sha256": "54240a0dcf768decf69f7c37b2211b61d1f8d8990a79631ad03a290b346406f4",
+      "remote_bytes": 95037,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-login.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2397539fcdab48fdbd4dcd5242420231.png",
+      "sha256": "2eda0d776c01e68d57048303dc0bf3a3e5fb6ec6eb37ba6dd094c554808dfaf9",
+      "bytes": 34810,
+      "remote_sha256": "2eda0d776c01e68d57048303dc0bf3a3e5fb6ec6eb37ba6dd094c554808dfaf9",
+      "remote_bytes": 34810,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-onboarding.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/db9b9a7d248f4db4a7e493d180d841dc.png",
+      "sha256": "2834366fff8c12a626720f2adda1b4aa870b8127f028fb4bb705d7bd423cab68",
+      "bytes": 57212,
+      "remote_sha256": "2834366fff8c12a626720f2adda1b4aa870b8127f028fb4bb705d7bd423cab68",
+      "remote_bytes": 57212,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-step-1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/759d6e0fe5254c3eb5048d4cd33668ca.png",
+      "sha256": "4f8ac9bf52823385d1720f3b34b08d8001baf816f41f68869377132855415f49",
+      "bytes": 60564,
+      "remote_sha256": "4f8ac9bf52823385d1720f3b34b08d8001baf816f41f68869377132855415f49",
+      "remote_bytes": 60564,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-step-2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/87ddc4ad32844fd0a1d911604d38c71f.png",
+      "sha256": "3e0a6f4c08dfb41ddb2f7b5b4f020aa5b6f06856c379e1c4a3d52e446c1eb991",
+      "bytes": 85145,
+      "remote_sha256": "3e0a6f4c08dfb41ddb2f7b5b4f020aa5b6f06856c379e1c4a3d52e446c1eb991",
+      "remote_bytes": 85145,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-step-3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/fbe72b1c1c0c4b898d82323706b1e1d8.png",
+      "sha256": "f308dd173bdbb8277e6f412d9bed12265e19b8f43116c52ec695278a5c7d566b",
+      "bytes": 61241,
+      "remote_sha256": "f308dd173bdbb8277e6f412d9bed12265e19b8f43116c52ec695278a5c7d566b",
+      "remote_bytes": 61241,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-step-4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bd6fdcdad8dd473ebdebc13716bdc970.png",
+      "sha256": "1d2ecbf987edcd274f76c9d2a733f8fe4ed6e86ab6c1112cd71df6e50c67abe3",
+      "bytes": 61278,
+      "remote_sha256": "1d2ecbf987edcd274f76c9d2a733f8fe4ed6e86ab6c1112cd71df6e50c67abe3",
+      "remote_bytes": 61278,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/ios-step-5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/7b4d1d48799d492490a6a03b04d4139b.png",
+      "sha256": "4b94b0b9a7b52c164af7d92adbaa4038e6c35c49d5c6ee18b2163a13618096f7",
+      "bytes": 65183,
+      "remote_sha256": "4b94b0b9a7b52c164af7d92adbaa4038e6c35c49d5c6ee18b2163a13618096f7",
+      "remote_bytes": 65183,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/login.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5f058f967934474ebbeba82310bc17b6.png",
+      "sha256": "9ba9a6ea4d4e7927f4bfa69451110abfac3f3021aeb7b543ce759e415162bc36",
+      "bytes": 46532,
+      "remote_sha256": "9ba9a6ea4d4e7927f4bfa69451110abfac3f3021aeb7b543ce759e415162bc36",
+      "remote_bytes": 46532,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/onboarding.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/0cef8d8c28174f32b00b22bf9e29b90e.png",
+      "sha256": "381b327fc85f189dfad415d7a4b00b19149971e62fd2e86df19b5887b9e98588",
+      "bytes": 40953,
+      "remote_sha256": "381b327fc85f189dfad415d7a4b00b19149971e62fd2e86df19b5887b9e98588",
+      "remote_bytes": 40953,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/verification.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e0e3862ea1c64c8086b856bf6c8fbf65.png",
+      "sha256": "aaebe847551ee40a379f4a1346c738ace3178aee9cc9941c864ecc68e63c7a30",
+      "bytes": 30967,
+      "remote_sha256": "aaebe847551ee40a379f4a1346c738ace3178aee9cc9941c864ecc68e63c7a30",
+      "remote_bytes": 30967,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/yijian-step-1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4dc59035f99a40499243fbb60a6e99f5.png",
+      "sha256": "5cc4cf113e550b05a808de47cf4f7c2cf31eb97bd72214e57cfd5c25eee28416",
+      "bytes": 41485,
+      "remote_sha256": "5cc4cf113e550b05a808de47cf4f7c2cf31eb97bd72214e57cfd5c25eee28416",
+      "remote_bytes": 41485,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/yijian-step-2.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/46eac009d0704603bdd9a49fbf5ba5c9.png",
+      "sha256": "f70eaa67fbe5cdee775f2d14bf13e5a44d48c940b166fdae2401420813361014",
+      "bytes": 114632,
+      "remote_sha256": "f70eaa67fbe5cdee775f2d14bf13e5a44d48c940b166fdae2401420813361014",
+      "remote_bytes": 114632,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/yijian-step-3.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/3c0af20973f14b1e8e9a7242efc9a384.png",
+      "sha256": "77e1e5d2c4fc64fdd67fe3320f3349859125dd7b639f434b852e11b16ca937fe",
+      "bytes": 208784,
+      "remote_sha256": "77e1e5d2c4fc64fdd67fe3320f3349859125dd7b639f434b852e11b16ca937fe",
+      "remote_bytes": 208784,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/yijian-step-4.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a0cefa1e6dd54da39a0795252037f8cd.png",
+      "sha256": "6b01680034102671911ea349833f38494b1306c7d17bc1acfe82f5ebf284a699",
+      "bytes": 75215,
+      "remote_sha256": "6b01680034102671911ea349833f38494b1306c7d17bc1acfe82f5ebf284a699",
+      "remote_bytes": 75215,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/screenshots/yijian-step-5.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ff380cc7599c4a8799e1c569ecb87018.png",
+      "sha256": "31ada16c83591a1fe6dbcb991bf56418ce2fd0484796b9fe5da8f5592cf6ef48",
+      "bytes": 71019,
+      "remote_sha256": "31ada16c83591a1fe6dbcb991bf56418ce2fd0484796b9fe5da8f5592cf6ef48",
+      "remote_bytes": 71019,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/first-visit/assets/jeans-example.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c7c3959a7a57455e91e4bfa8b1ec2485.png",
+      "sha256": "fa9cbe89409a392671f4a4c858cccf4fa7981d2c199ded6216563d4ee64f7bef",
+      "bytes": 533548,
+      "remote_sha256": "fa9cbe89409a392671f4a4c858cccf4fa7981d2c199ded6216563d4ee64f7bef",
+      "remote_bytes": 533548,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/first-visit/assets/outfit-example.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/eece176d78e249e9a4791af67bd84f5d.png",
+      "sha256": "b103de9dd3387ad5ecca608092973611c9463ed889de1f67883dac7794953fc9",
+      "bytes": 306420,
+      "remote_sha256": "b103de9dd3387ad5ecca608092973611c9463ed889de1f67883dac7794953fc9",
+      "remote_bytes": 306420,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/first-visit/assets/shirt-example.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/15fdd53066754cb5addd65079503f11d.png",
+      "sha256": "fe202bac3a9279e7a0004aefc7ee4cafa73a0609af12c93f23c1e32a2dff1180",
+      "bytes": 501087,
+      "remote_sha256": "fe202bac3a9279e7a0004aefc7ee4cafa73a0609af12c93f23c1e32a2dff1180",
+      "remote_bytes": 501087,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/first-visit/assets/tryon-example.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/77cc3e9e2323406a9931a28ccd9867a5.png",
+      "sha256": "0826ec76dd10f11f22de73ea4ca2de8138088505aed35404d7ac4a159f0bed98",
+      "bytes": 5085399,
+      "remote_sha256": "0826ec76dd10f11f22de73ea4ca2de8138088505aed35404d7ac4a159f0bed98",
+      "remote_bytes": 5085399,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/ios-home.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a4a06105f37b4ae2825605a51ac1b664.png",
+      "sha256": "7169f422e37de934e1a043c403d5b7982c9a72e6942d7d65b516badec8a7ac49",
+      "bytes": 183616,
+      "remote_sha256": "7169f422e37de934e1a043c403d5b7982c9a72e6942d7d65b516badec8a7ac49",
+      "remote_bytes": 183616,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/ios-profile.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ff4aaca2889f41d3a1bde00d056f2232.png",
+      "sha256": "7384279d9cbdbe8425b4571b86907846947affd382c3c38b4a23267e3e78dd2f",
+      "bytes": 504543,
+      "remote_sha256": "7384279d9cbdbe8425b4571b86907846947affd382c3c38b4a23267e3e78dd2f",
+      "remote_bytes": 504543,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/ios-agent.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a38730fcd1864b7aac0596dabab679e5.png",
+      "sha256": "34a306078bdd6e9e32c21c97dfa5349bfc3783647d85a8b215d9fd0cbfacdaa1",
+      "bytes": 307029,
+      "remote_sha256": "34a306078bdd6e9e32c21c97dfa5349bfc3783647d85a8b215d9fd0cbfacdaa1",
+      "remote_bytes": 307029,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-home.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bd2b72d5ca9e4a2595f4e2794f70d978.png",
+      "sha256": "72dcae21435c387f6501e0e483508ec6992414259f376f0c3e6b53dbc55a7cac",
+      "bytes": 319386,
+      "remote_sha256": "72dcae21435c387f6501e0e483508ec6992414259f376f0c3e6b53dbc55a7cac",
+      "remote_bytes": 319386,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-profile.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a76e0573dbef436593c4bfe891b54259.png",
+      "sha256": "7d47e78dc20eb55de261d94b88accbbe2ae7b0d2e914e5c1f727c4d4a79aee62",
+      "bytes": 278491,
+      "remote_sha256": "7d47e78dc20eb55de261d94b88accbbe2ae7b0d2e914e5c1f727c4d4a79aee62",
+      "remote_bytes": 278491,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-agent.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/cb1692abcad043e7b0c5f2d817e73f67.png",
+      "sha256": "5ccbc2ebb6d79b9d63e6bf03bd168b98d663f49cb9a6f6ea49fa6eb8f5823763",
+      "bytes": 276412,
+      "remote_sha256": "5ccbc2ebb6d79b9d63e6bf03bd168b98d663f49cb9a6f6ea49fa6eb8f5823763",
+      "remote_bytes": 276412,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-home-feed.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/088756ed3a264d37959f17df930ec575.png",
+      "sha256": "7f39e1611d53e54151e730bab85e6c06fbb985c56022573e34de52929d9eea00",
+      "bytes": 316842,
+      "remote_sha256": "7f39e1611d53e54151e730bab85e6c06fbb985c56022573e34de52929d9eea00",
+      "remote_bytes": 316842,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-profile-identity.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/06272ad800e34626b3655808cf3b08e4.png",
+      "sha256": "3714997a961508305e48f3260322e4477a4ba1ff78873c9b6906758d1ea89fcb",
+      "bytes": 233646,
+      "remote_sha256": "3714997a961508305e48f3260322e4477a4ba1ff78873c9b6906758d1ea89fcb",
+      "remote_bytes": 233646,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/yijian-profile-services.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a56e8e4fb2f34aec99f2a2c14c5b1fb7.png",
+      "sha256": "878410c5feea575b060705ba79982a8a4e405bafe4b8704cdd126d3e8a3370f5",
+      "bytes": 212115,
+      "remote_sha256": "878410c5feea575b060705ba79982a8a4e405bafe4b8704cdd126d3e8a3370f5",
+      "remote_bytes": 212115,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/twin-private-female.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b03d99038dae440996c5cdc6922f0ead.png",
+      "sha256": "26c90864c65649812c6c62aed2f36139e1860dcd84cd3672797429da317ee79a",
+      "bytes": 94516,
+      "remote_sha256": "26c90864c65649812c6c62aed2f36139e1860dcd84cd3672797429da317ee79a",
+      "remote_bytes": 94516,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/twin-private-male.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/7711ec0cdd6e469bbd5a34098dc16dc1.png",
+      "sha256": "b6f2e9e234e4776f615df795e7f4acc6ac7258189bdb9d71c11bbea0b7933f6e",
+      "bytes": 93441,
+      "remote_sha256": "b6f2e9e234e4776f615df795e7f4acc6ac7258189bdb9d71c11bbea0b7933f6e",
+      "remote_bytes": 93441,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/comparison/evolution/screenshots/demo/composer-attachments.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/74dd43f52651419695f699be44612947.png",
+      "sha256": "cc06689a9c18f2f8afebcb9a1f0b78953473eb1ee41256e302884e61116d4f78",
+      "bytes": 260958,
+      "remote_sha256": "cc06689a9c18f2f8afebcb9a1f0b78953473eb1ee41256e302884e61116d4f78",
+      "remote_bytes": 260958,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "agent-tracking-images/01-agent-entry.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/ea0b788fa41546e7bd7330677c0c955b.png",
+      "sha256": "cd05acc8cdba238740555b7a34be566aa35612683640a00bf4e2780a90c04a68",
+      "bytes": 448949,
+      "remote_sha256": "cd05acc8cdba238740555b7a34be566aa35612683640a00bf4e2780a90c04a68",
+      "remote_bytes": 448949,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "agent-tracking-images/02-attachment.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/1b06912446f14e0c80882cf31ac80e4a.png",
+      "sha256": "21d5dd272de33074f971588276cdd9919bde90add3324fef70056d80c0139e1c",
+      "bytes": 464181,
+      "remote_sha256": "21d5dd272de33074f971588276cdd9919bde90add3324fef70056d80c0139e1c",
+      "remote_bytes": 464181,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "agent-tracking-images/03-waiting.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/60de39325547433bb11bb18f952a5f3c.png",
+      "sha256": "462c60bc2656d610fe9ca25ce3ea069435e32bc14027da7c9a5bf90d7aec12cd",
+      "bytes": 243174,
+      "remote_sha256": "462c60bc2656d610fe9ca25ce3ea069435e32bc14027da7c9a5bf90d7aec12cd",
+      "remote_bytes": 243174,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "agent-tracking-images/04-reply.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/4437394597ad45838a9ec9395c997a56.png",
+      "sha256": "0c31e3f7d770e2629f838d4a2e4787489369c47040e54c6ffea211e6eb896ca7",
+      "bytes": 236006,
+      "remote_sha256": "0c31e3f7d770e2629f838d4a2e4787489369c47040e54c6ffea211e6eb896ca7",
+      "remote_bytes": 236006,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "agent-tracking-images/05-new-content.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/3ec38bae748448cf8c9f05bb4a424050.png",
+      "sha256": "86320234d0587141e57097a957cc54b53df564c6385283d5e5087a3ce7f276ef",
+      "bytes": 287919,
+      "remote_sha256": "86320234d0587141e57097a957cc54b53df564c6385283d5e5087a3ce7f276ef",
+      "remote_bytes": 287919,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "agent-tracking-images/06-history.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/6259569f6fbe49b88cc1f9e5a5a73776.png",
+      "sha256": "c8da5659b66ec7970e1fc6666db4d629d0629ed2def50d7c7c585fb5d94bf8cd",
+      "bytes": 325807,
+      "remote_sha256": "c8da5659b66ec7970e1fc6666db4d629d0629ed2def50d7c7c585fb5d94bf8cd",
+      "remote_bytes": 325807,
+      "content_type": "image/png",
+      "cors_required": false
+    },
+    "closet-app/onboarding/experience/avatar-sample.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c8ee10e310c44da8a77b7f0174329c9e.png",
+      "sha256": "d328f5a0d904f1002acd34a30d93dcce8230fe3ba4da17578f3a8dd9f6c0211c",
+      "bytes": 1791824,
+      "remote_sha256": "d328f5a0d904f1002acd34a30d93dcce8230fe3ba4da17578f3a8dd9f6c0211c",
+      "remote_bytes": 1791824,
+      "content_type": "image/png",
+      "cors_required": true
+    }
+  },
+  "embedded": {
+    "30f88c697495de8e4c79ecb7aa460f3ae5a8968505ee7a934f6a37a269f588e5": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c5275f97e81a44c6b9559d848e7ea68f.png",
+      "sha256": "30f88c697495de8e4c79ecb7aa460f3ae5a8968505ee7a934f6a37a269f588e5",
+      "bytes": 62743,
+      "remote_sha256": "30f88c697495de8e4c79ecb7aa460f3ae5a8968505ee7a934f6a37a269f588e5",
+      "remote_bytes": 62743,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "99a5c36bc5b2c54c97a40bfeb967d422b013cb8173a0e3016b9bb349314cebef": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/43f77fcca70d4db096ebca72159d47d4.png",
+      "sha256": "99a5c36bc5b2c54c97a40bfeb967d422b013cb8173a0e3016b9bb349314cebef",
+      "bytes": 1982,
+      "remote_sha256": "99a5c36bc5b2c54c97a40bfeb967d422b013cb8173a0e3016b9bb349314cebef",
+      "remote_bytes": 1982,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "4116bfb28ad990d4a9b8b44ab539fe994390df5f5c2a2cbe64e789ca92785385": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bdf3694353924e24b4e368de3bb8d83f.png",
+      "sha256": "4116bfb28ad990d4a9b8b44ab539fe994390df5f5c2a2cbe64e789ca92785385",
+      "bytes": 1728,
+      "remote_sha256": "4116bfb28ad990d4a9b8b44ab539fe994390df5f5c2a2cbe64e789ca92785385",
+      "remote_bytes": 1728,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "83a312e60b2d738dd7f7f0f83bbbdf5541f3778d6a5c669b13080dcb55b351be": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/7edf7d03592e4f479ac45d3af7438c8b.png",
+      "sha256": "83a312e60b2d738dd7f7f0f83bbbdf5541f3778d6a5c669b13080dcb55b351be",
+      "bytes": 1150044,
+      "remote_sha256": "83a312e60b2d738dd7f7f0f83bbbdf5541f3778d6a5c669b13080dcb55b351be",
+      "remote_bytes": 1150044,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "75453d4c79d36396f5d6ef679f6094506db19e7cd030858d4c0bd160acd80e40": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d7dd6b3436e54b7492d0538f4e5c205c.png",
+      "sha256": "75453d4c79d36396f5d6ef679f6094506db19e7cd030858d4c0bd160acd80e40",
+      "bytes": 1088004,
+      "remote_sha256": "75453d4c79d36396f5d6ef679f6094506db19e7cd030858d4c0bd160acd80e40",
+      "remote_bytes": 1088004,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "54d8e6e327844c531b2066c18f0725a8b7212ece435a6e6e01b2b66e969711bf": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/5b497d39ee04488caad4552871c7af06.png",
+      "sha256": "54d8e6e327844c531b2066c18f0725a8b7212ece435a6e6e01b2b66e969711bf",
+      "bytes": 795575,
+      "remote_sha256": "54d8e6e327844c531b2066c18f0725a8b7212ece435a6e6e01b2b66e969711bf",
+      "remote_bytes": 795575,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "5602f7a2118af040fff411103708c343704825a55b7388252918c71c5a911573": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4a7139a221294dcd871028b690e41fe8.jpeg",
+      "sha256": "5602f7a2118af040fff411103708c343704825a55b7388252918c71c5a911573",
+      "bytes": 299107,
+      "remote_sha256": "5602f7a2118af040fff411103708c343704825a55b7388252918c71c5a911573",
+      "remote_bytes": 299107,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "ec22e9934604e646cc201a6a2f0ad763e344420a3f99828c85b95fdce5e14b0a": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e2a38a56497245bf8b526364ae78ec73.jpeg",
+      "sha256": "ec22e9934604e646cc201a6a2f0ad763e344420a3f99828c85b95fdce5e14b0a",
+      "bytes": 164659,
+      "remote_sha256": "ec22e9934604e646cc201a6a2f0ad763e344420a3f99828c85b95fdce5e14b0a",
+      "remote_bytes": 164659,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "4e214eb654ea574bc804151161713c7880af046943e9d68eeba6a74195ee35ab": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e28904a751774ac59efece5b724f77c7.jpeg",
+      "sha256": "4e214eb654ea574bc804151161713c7880af046943e9d68eeba6a74195ee35ab",
+      "bytes": 306910,
+      "remote_sha256": "4e214eb654ea574bc804151161713c7880af046943e9d68eeba6a74195ee35ab",
+      "remote_bytes": 306910,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "4b6665330a6aa2d083315eaa040855bce5b938dfeab1f9754f726cd54cc3e52e": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/59e69ec6b31b4092ad77ec7653c6568b.jpeg",
+      "sha256": "4b6665330a6aa2d083315eaa040855bce5b938dfeab1f9754f726cd54cc3e52e",
+      "bytes": 331727,
+      "remote_sha256": "4b6665330a6aa2d083315eaa040855bce5b938dfeab1f9754f726cd54cc3e52e",
+      "remote_bytes": 331727,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "4983e2b34de7e2dd9b7115e838922d09fce687059e8d554da1037b0924a349db": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/96b9e58ec96f4e98a225085ac9bc9523.jpeg",
+      "sha256": "4983e2b34de7e2dd9b7115e838922d09fce687059e8d554da1037b0924a349db",
+      "bytes": 163953,
+      "remote_sha256": "4983e2b34de7e2dd9b7115e838922d09fce687059e8d554da1037b0924a349db",
+      "remote_bytes": 163953,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "de7de3e919e53f13f35b5a648369ff0056c2281ee61848cede7ceaf4196701dd": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2da1cf63d6264196b76c03ce34dacc1c.jpeg",
+      "sha256": "de7de3e919e53f13f35b5a648369ff0056c2281ee61848cede7ceaf4196701dd",
+      "bytes": 129382,
+      "remote_sha256": "de7de3e919e53f13f35b5a648369ff0056c2281ee61848cede7ceaf4196701dd",
+      "remote_bytes": 129382,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "554a8fc151fa80201ea7041fd4ded3947068f21a9136835323ff881eeeb32291": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ef1af45dd09e4438954d231d75c35b85.jpeg",
+      "sha256": "554a8fc151fa80201ea7041fd4ded3947068f21a9136835323ff881eeeb32291",
+      "bytes": 152681,
+      "remote_sha256": "554a8fc151fa80201ea7041fd4ded3947068f21a9136835323ff881eeeb32291",
+      "remote_bytes": 152681,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "3831838939f742f8e71abe24efd3e77abdc85a59938c0322d1db73b906a3aebe": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/4b2d3885372e4b6e88aadb1c8c1e22bd.jpeg",
+      "sha256": "3831838939f742f8e71abe24efd3e77abdc85a59938c0322d1db73b906a3aebe",
+      "bytes": 50370,
+      "remote_sha256": "3831838939f742f8e71abe24efd3e77abdc85a59938c0322d1db73b906a3aebe",
+      "remote_bytes": 50370,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "77e384f061038616ce8c3cdbcbd8cc408a17dc339a197878faaa26283d74903a": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/c3d2dde047264c35852078bd8ca6323a.png",
+      "sha256": "77e384f061038616ce8c3cdbcbd8cc408a17dc339a197878faaa26283d74903a",
+      "bytes": 959055,
+      "remote_sha256": "77e384f061038616ce8c3cdbcbd8cc408a17dc339a197878faaa26283d74903a",
+      "remote_bytes": 959055,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "125ea8d94834dde8d6d2ca3c49b08f9e743d2362efc5b630ea9e6f0fc7bcaec0": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/e58ae18342724800b9ce605781bced3f.png",
+      "sha256": "125ea8d94834dde8d6d2ca3c49b08f9e743d2362efc5b630ea9e6f0fc7bcaec0",
+      "bytes": 1006301,
+      "remote_sha256": "125ea8d94834dde8d6d2ca3c49b08f9e743d2362efc5b630ea9e6f0fc7bcaec0",
+      "remote_bytes": 1006301,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "da6f451e86c23f78282e888e194e8e1040a6a2e8af1f1215f1e6a6d115689fcd": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d8e69426b9bc43268f94eebfa3111363.png",
+      "sha256": "da6f451e86c23f78282e888e194e8e1040a6a2e8af1f1215f1e6a6d115689fcd",
+      "bytes": 819776,
+      "remote_sha256": "da6f451e86c23f78282e888e194e8e1040a6a2e8af1f1215f1e6a6d115689fcd",
+      "remote_bytes": 819776,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "b8d2044e1a44085c29b46f12594557f76ac9c7060cb9bec83c02ce5bf29a939e": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/bb548046b74c4353b056554fa6bdfb3d.jpeg",
+      "sha256": "b8d2044e1a44085c29b46f12594557f76ac9c7060cb9bec83c02ce5bf29a939e",
+      "bytes": 144244,
+      "remote_sha256": "b8d2044e1a44085c29b46f12594557f76ac9c7060cb9bec83c02ce5bf29a939e",
+      "remote_bytes": 144244,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "c3ef4ae28cc92f9654af64a4e7c60c78692e85037b8cf2620d6378979adcae85": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/53628dad807a472c97637956f2cc5aa3.jpeg",
+      "sha256": "c3ef4ae28cc92f9654af64a4e7c60c78692e85037b8cf2620d6378979adcae85",
+      "bytes": 134057,
+      "remote_sha256": "c3ef4ae28cc92f9654af64a4e7c60c78692e85037b8cf2620d6378979adcae85",
+      "remote_bytes": 134057,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "2ee8ffe35da400b27e1a0a10bb019737b31b3df7fd23878da5e68879c97c96d8": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/2e54b6d4a46d4660a6cc852024362486.jpeg",
+      "sha256": "2ee8ffe35da400b27e1a0a10bb019737b31b3df7fd23878da5e68879c97c96d8",
+      "bytes": 134366,
+      "remote_sha256": "2ee8ffe35da400b27e1a0a10bb019737b31b3df7fd23878da5e68879c97c96d8",
+      "remote_bytes": 134366,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "c0d1d8d434fed545f42d7dd08dc9babb9d9173ea9b1d98e4bb57290dc89a2b73": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b7fa4cc5ce474548b57f2dda01ead181.jpeg",
+      "sha256": "c0d1d8d434fed545f42d7dd08dc9babb9d9173ea9b1d98e4bb57290dc89a2b73",
+      "bytes": 229079,
+      "remote_sha256": "c0d1d8d434fed545f42d7dd08dc9babb9d9173ea9b1d98e4bb57290dc89a2b73",
+      "remote_bytes": 229079,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "955645170ebbf9f8c1be109227d4cc05fd7efc0cfe55107dc4fb595afac01f10": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/b0603b3348f442caa6cae03b9b847742.jpeg",
+      "sha256": "955645170ebbf9f8c1be109227d4cc05fd7efc0cfe55107dc4fb595afac01f10",
+      "bytes": 189619,
+      "remote_sha256": "955645170ebbf9f8c1be109227d4cc05fd7efc0cfe55107dc4fb595afac01f10",
+      "remote_bytes": 189619,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "5cd1c52cf11795781dbab824395d4bb2942c24824b56d2df5e817884828a64df": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/486178e5e82d4586b035681d27f81e93.jpeg",
+      "sha256": "5cd1c52cf11795781dbab824395d4bb2942c24824b56d2df5e817884828a64df",
+      "bytes": 205798,
+      "remote_sha256": "5cd1c52cf11795781dbab824395d4bb2942c24824b56d2df5e817884828a64df",
+      "remote_bytes": 205798,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "4ebe4ff962767ee8176fb1b57a50814a17f8d6571ccd6c52dde4ede17782870a": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/0a033fffd8b14518aed62b9233bcc9c5.jpeg",
+      "sha256": "4ebe4ff962767ee8176fb1b57a50814a17f8d6571ccd6c52dde4ede17782870a",
+      "bytes": 188566,
+      "remote_sha256": "4ebe4ff962767ee8176fb1b57a50814a17f8d6571ccd6c52dde4ede17782870a",
+      "remote_bytes": 188566,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "27844b760e31736c392da26c746505d758cfedf6905a3b1c57c4bb18132b64b0": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/991a2d0a6ea64440afca77089dd72a5a.jpeg",
+      "sha256": "27844b760e31736c392da26c746505d758cfedf6905a3b1c57c4bb18132b64b0",
+      "bytes": 204226,
+      "remote_sha256": "27844b760e31736c392da26c746505d758cfedf6905a3b1c57c4bb18132b64b0",
+      "remote_bytes": 204226,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "7ea5a6484231d1393113d0ae1ae91a1965e94253f1bb0e02790462e346d31f42": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f8265ebec24048baa1343f3355be27bd.jpeg",
+      "sha256": "7ea5a6484231d1393113d0ae1ae91a1965e94253f1bb0e02790462e346d31f42",
+      "bytes": 194540,
+      "remote_sha256": "7ea5a6484231d1393113d0ae1ae91a1965e94253f1bb0e02790462e346d31f42",
+      "remote_bytes": 194540,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "e8250dfe2fb290a5658a12915ad4d95ae98b1de02ca762eaa186e282028a450d": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/8a0635e5724e4aed8a8eb588e6ec3e7e.jpeg",
+      "sha256": "e8250dfe2fb290a5658a12915ad4d95ae98b1de02ca762eaa186e282028a450d",
+      "bytes": 20807,
+      "remote_sha256": "e8250dfe2fb290a5658a12915ad4d95ae98b1de02ca762eaa186e282028a450d",
+      "remote_bytes": 20807,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "f0e1bbd1d20d0275544d0a26779c540f920f8bbeece0b76b592bbf4580507cae": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/467e18b18e2a4bb1a931b4c0b47b440a.jpeg",
+      "sha256": "f0e1bbd1d20d0275544d0a26779c540f920f8bbeece0b76b592bbf4580507cae",
+      "bytes": 315903,
+      "remote_sha256": "f0e1bbd1d20d0275544d0a26779c540f920f8bbeece0b76b592bbf4580507cae",
+      "remote_bytes": 315903,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "796cdbdc42fdbdb09aa1053a89ead64fa3f80f194369f1b98c99c94750f4f254": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/1e709ffc2d9a4f61bde225ffe2b6b8f1.jpeg",
+      "sha256": "796cdbdc42fdbdb09aa1053a89ead64fa3f80f194369f1b98c99c94750f4f254",
+      "bytes": 92520,
+      "remote_sha256": "796cdbdc42fdbdb09aa1053a89ead64fa3f80f194369f1b98c99c94750f4f254",
+      "remote_bytes": 92520,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "c5898427ff1388b440be7bd14dae857abebb42a82f3fbb223f7d65d45a28547d": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ca259eca2b864b458ce2908df631ae5c.jpeg",
+      "sha256": "c5898427ff1388b440be7bd14dae857abebb42a82f3fbb223f7d65d45a28547d",
+      "bytes": 302032,
+      "remote_sha256": "c5898427ff1388b440be7bd14dae857abebb42a82f3fbb223f7d65d45a28547d",
+      "remote_bytes": 302032,
+      "content_type": "image/jpeg",
+      "cors_required": true
+    },
+    "697c14fcfeea43d150373d69224b01a214e4e236ee4f5fd794ae42b901f2c0dd": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/d8b6fed48ac64bec9076f401ca1f493d.png",
+      "sha256": "697c14fcfeea43d150373d69224b01a214e4e236ee4f5fd794ae42b901f2c0dd",
+      "bytes": 307986,
+      "remote_sha256": "697c14fcfeea43d150373d69224b01a214e4e236ee4f5fd794ae42b901f2c0dd",
+      "remote_bytes": 307986,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "2aca49774d8a98a6767be8d3555d051fbb7a15a991c67aa36a813f913a657925": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ee7a3f6a43a849468f68072e1f7755b1.png",
+      "sha256": "2aca49774d8a98a6767be8d3555d051fbb7a15a991c67aa36a813f913a657925",
+      "bytes": 311497,
+      "remote_sha256": "2aca49774d8a98a6767be8d3555d051fbb7a15a991c67aa36a813f913a657925",
+      "remote_bytes": 311497,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "cd9635cdf07a32778f508b90a0fb195d8572a514a3397af561971c0cb212dede": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/a637fcedf8474396b777a3f06b1a6053.png",
+      "sha256": "cd9635cdf07a32778f508b90a0fb195d8572a514a3397af561971c0cb212dede",
+      "bytes": 403547,
+      "remote_sha256": "cd9635cdf07a32778f508b90a0fb195d8572a514a3397af561971c0cb212dede",
+      "remote_bytes": 403547,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "51c1cfeecab33205001b89a058e053536bd60fe7db7c73f2860c4a2e42836311": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/f7ef7f3f9492432ba2137579856a3658.png",
+      "sha256": "51c1cfeecab33205001b89a058e053536bd60fe7db7c73f2860c4a2e42836311",
+      "bytes": 2326330,
+      "remote_sha256": "51c1cfeecab33205001b89a058e053536bd60fe7db7c73f2860c4a2e42836311",
+      "remote_bytes": 2326330,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "91485ff4e55753f358257e366bab27db83914cd1f7e31333de8cff5db3dcff42": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/6/1256/ab3a2a2e5d124cd295b5a04f5cfa1820.png",
+      "sha256": "91485ff4e55753f358257e366bab27db83914cd1f7e31333de8cff5db3dcff42",
+      "bytes": 2356087,
+      "remote_sha256": "91485ff4e55753f358257e366bab27db83914cd1f7e31333de8cff5db3dcff42",
+      "remote_bytes": 2356087,
+      "content_type": "image/png",
+      "cors_required": true
+    }
+  }
+}

@@ -2,15 +2,21 @@
 import argparse
 import hashlib
 import io
+import json
 import shlex
+import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import yaml
 from cryptography.hazmat.primitives import serialization
+
+from stylist.image_assets import validate_release_images
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ["Dockerfile", ".dockerignore", "compose.yaml", "install.sh", "pyproject.toml", "uv.lock", "README.md",
@@ -22,7 +28,7 @@ FILES = ["Dockerfile", ".dockerignore", "compose.yaml", "install.sh", "pyproject
          "deploy/docker/Dockerfile.compact", "deploy/docker/start.sh", "deploy/docker/deploy.sh", "deploy/docker/deploy.env.example",
          "deploy/nginx/aicloset-assistant.conf", "deploy/nginx/aicloset-assistant.http.conf",
          "deploy/nginx/aicloset-assistant.centos7.conf"]
-ASSET_SUFFIXES = {".py", ".sql", ".md", ".css", ".js", ".json", ".html", ".svg", ".png", ".jpg", ".webp", ".mjs", ".wasm", ".onnx", ".txt"}
+ASSET_SUFFIXES = {".py", ".sql", ".md", ".css", ".js", ".json", ".html", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".mjs", ".wasm", ".onnx", ".txt"}
 
 
 def release_files(root):
@@ -33,7 +39,16 @@ def release_files(root):
     for path in paths:
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root.resolve()):
             raise ValueError("Release input is missing or a symlink: " + str(path.relative_to(root)))
-    return sorted(paths)
+    remote = validate_release_images(root / "stylist/static")
+    result = []
+    for path in paths:
+        try:
+            name = path.relative_to(root / "stylist/static").as_posix()
+        except ValueError:
+            name = None
+        if name not in remote:
+            result.append(path)
+    return sorted(result)
 
 
 def public_bootstrap(config):
@@ -70,8 +85,18 @@ def public_bootstrap(config):
     return {"deploy/docker/runtime.defaults": defaults.encode(), "deploy/docker/login-public.pem": pem}
 
 
-def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_config_dir=None, runtime_only=False):
+def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_config_dir=None, runtime_only=False, image_archive=None, compression_level=9):
+    if compression_level not in range(1, 10):
+        raise ValueError("Compression level must be between 1 and 9")
     paths = release_files(root)
+    if image_archive:
+        image_archive = Path(image_archive)
+        if not image or image_archive.is_symlink() or not image_archive.is_file():
+            raise ValueError("A local image archive requires --image and a regular archive file")
+        with tarfile.open(image_archive) as saved:
+            entries = json.loads(saved.extractfile("manifest.json").read())
+            if not any(image in entry.get("RepoTags", []) for entry in entries):
+                raise ValueError("Local image archive tag does not match --image")
     if runtime_only:
         if not image:
             raise ValueError("Runtime-only package requires an image")
@@ -88,9 +113,12 @@ def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_con
         image_tar = Path(temp) / "image.tar"
         archive_path = Path(temp) / "release.tar.gz"
         if image:
-            subprocess.run(["docker", "image", "save", "--output", str(image_tar), image], check=True)
+            if image_archive:
+                shutil.copyfile(image_archive, image_tar)
+            else:
+                subprocess.run(["docker", "image", "save", "--output", str(image_tar), image], check=True)
         manifest = []
-        with tarfile.open(archive_path, "w:gz", compresslevel=1) as archive:
+        with tarfile.open(archive_path, "w:gz", compresslevel=compression_level) as archive:
             def add_bytes(name, content, mode=0o644):
                 info = tarfile.TarInfo("aicloset-assistant/" + name)
                 info.size, info.mode = len(content), mode
@@ -125,10 +153,12 @@ def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_con
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("var/releases/aicloset-assistant-source.tar.gz"))
+    parser.add_argument("--compression-level", type=int, choices=range(1, 10), default=9, help="gzip level; default 9 minimizes delivery size")
     parser.add_argument("--image", help="Optionally embed an already built single-platform image for docker load")
+    parser.add_argument("--image-archive", type=Path, help="Use an already verified Docker/OCI archive with --image; no daemon required")
     parser.add_argument("--bootstrap-config", type=Path, help="Bundle public endpoints/model ID/public key only; never the API key")
     parser.add_argument("--private-config-dir", type=Path, help="Explicit private bundle: include credentials, never distribute publicly")
     parser.add_argument("--runtime-only", action="store_true", help="Omit duplicate application source when an image is embedded")
     args = parser.parse_args()
-    count = package(args.output, args.image, bootstrap_config=args.bootstrap_config, private_config_dir=args.private_config_dir, runtime_only=args.runtime_only)
+    count = package(args.output, args.image, bootstrap_config=args.bootstrap_config, private_config_dir=args.private_config_dir, runtime_only=args.runtime_only, image_archive=args.image_archive, compression_level=args.compression_level)
     print(f"Packaged {count} files into {args.output}; " + ("PRIVATE bundle includes deployment credentials." if args.private_config_dir else "runtime config and data excluded."))

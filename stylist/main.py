@@ -19,7 +19,6 @@ from fastapi.responses import (
     Response,
     StreamingResponse,
 )
-from fastapi.staticfiles import StaticFiles
 
 from .auth import GenderLoginRequest, LoginRequest, finish_gender_login, login
 from .composition import CompositionInput, Compositions
@@ -28,6 +27,7 @@ from .engine import Stylist
 from .errors import AuthenticationExpired, StylistError
 from .export import export_wardrobe
 from .feedback import OutfitFeedback, read_feedback, save_feedback
+from .image_assets import ImageStaticFiles
 from .images import ImageConfirmRequest, ImageQuoteRequest, ImageService
 from .llm import LanguageModel
 from .media import (
@@ -482,7 +482,7 @@ def create_app(settings=None):
         # Legacy PC/mobile entry is retired; retain static source for compatibility.
         return RedirectResponse("/app/?design=yijian", status_code=307)
 
-    app.mount("/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static")
+    app.mount("/static", ImageStaticFiles(directory=Path(__file__).with_name("static")), name="static")
 
     return app
 

@@ -6,6 +6,7 @@ COPY stylist ./stylist
 COPY deploy/docker/start.sh /usr/local/bin/stylist-start
 # Install the runtime from the checked-in lockfile.
 RUN pip install --no-cache-dir uv==0.10.10 && uv sync --frozen --no-dev
+RUN /app/.venv/bin/python -m stylist.image_assets
 RUN groupadd --gid 10001 stylist && useradd --uid 10001 --gid stylist --no-create-home stylist \
     && mkdir -p var && chown stylist:stylist var
 USER 10001:10001

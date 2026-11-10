@@ -5,6 +5,8 @@ from pathlib import Path
 
 from package_deployment import ROOT, release_files
 
+from stylist.image_assets import image_assets, validate_source_image
+
 DEMO_IMAGES = [f'{v}-{page}.png' for v in ['ios', 'yijian'] for page in ['home', 'profile', 'agent']] + [
     'yijian-home-feed.png', 'yijian-profile-identity.png', 'yijian-profile-services.png',
     'twin-private-female.png', 'twin-private-male.png', 'composer-attachments.png']
@@ -22,8 +24,13 @@ def prepare(destination, demos, include_comparison_evidence=False):
         shutil.copy2(source, target)
     target = destination / 'stylist/static/closet-app/comparison/evolution/screenshots/demo'
     target.mkdir(parents=True, exist_ok=True)
+    remote = image_assets(destination / "stylist/static")
     for name in DEMO_IMAGES:
-        shutil.copyfile(demos / name, target / name)
+        key = "closet-app/comparison/evolution/screenshots/demo/" + name
+        if key in remote:
+            validate_source_image(demos / name, remote[key])
+        else:
+            shutil.copyfile(demos / name, target / name)
     evidence = [f'{version}-home-populated{suffix}.png' for version in ['ios', 'yijian'] for suffix in ['', '-feed']]
     if include_comparison_evidence:
         for name in evidence:
