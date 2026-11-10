@@ -66,3 +66,9 @@ CREATE TABLE IF NOT EXISTS stylist_outfit_feedback (
  PRIMARY KEY(owner_id,conversation_id,version,look_index),
  FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 );
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_saves (
+ id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, conversation_id TEXT NOT NULL,
+ status VARCHAR(16) NOT NULL, outfit_id BIGINT, created_at REAL NOT NULL,
+ FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+);

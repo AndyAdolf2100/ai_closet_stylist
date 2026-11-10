@@ -143,11 +143,23 @@
     text.append(make('span','outfit-kicker',`${look.items.length} 件${partial ? '衣橱单品 · 部分搭配' : '单品 · 一起穿'}`),
       make('p','',system ? '含衣橱之外的参考款，尚未确认拥有；其余文字参考不在图中。' : partial ? '图片仅展示衣橱已选单品，其余为文字参考。' : '把喜欢的衣服，放在一起看看。'));
     const actions=make('div','outfit-board-actions');
-    const expand=make('button','outfit-expand','展开看看 ↗'),download=make('button','subtle','下载');
-    expand.type=download.type='button';actions.append(download,expand);footer.append(text,actions);root.append(stage,footer);
-    let sequence=0,started=false,result=null;
+    const expand=make('button','outfit-expand','展开看看 ↗'),save=make('button','subtle outfit-save','保存穿搭');
+    expand.type=save.type='button';actions.append(save,expand);footer.append(text,actions);root.append(stage,footer);
+    let sequence=0,started=false,result=null,saveState='missing',saving=false,saveEpoch=0,savePoll=null;
+    const updateSave=()=>{
+      save.textContent={saved:'已保存',saving:'保存中…',unknown:'结果待确认'}[saveState]||'保存穿搭';
+      save.disabled=!ref||!window.OutfitLibrary||saving||['saved','saving'].includes(saveState);
+      save.title=!ref?'请在已保存的对话中保存搭配':partial?'仅保存图中实际单品，文字参考不包含在内':'';
+    };
+    const loadSave=async()=>{
+      const current=saveEpoch;
+      if(!ref||!window.OutfitLibrary)return;
+      try{const value=await window.OutfitLibrary.status(ref);if(current===saveEpoch&&root.isConnected){saveState=value.status;updateSave();if(saveState==='saving')savePoll=setTimeout(loadSave,2000);}}
+      catch(error){/* A read failure never triggers a write; the explicit save revalidates ownership. */}
+    };
+    updateSave();queueMicrotask(loadSave);
     const render=async(retry=false)=>{
-      started=true;const current=++sequence;result=null;expand.disabled=download.disabled=true;
+      started=true;const current=++sequence;result=null;expand.disabled=true;
       const placeholder=make('div','outfit-placeholder');placeholder.setAttribute('role','status');placeholder.setAttribute('aria-label','搭配图准备中');
       const dots=make('span','outfit-preparing-dots');dots.setAttribute('aria-hidden','true');dots.textContent='· · ·';placeholder.append(dots);stage.replaceChildren(placeholder);
       try{
@@ -157,7 +169,7 @@
         const image=new Image();image.src=ready.image_url;
         await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('搭配图暂时无法加载，请重试。'));if(image.complete&&image.naturalWidth)resolve();});
         if(current!==sequence||!root.isConnected)return;
-        result=ready;stage.replaceChildren(board(look.items,index=>open(look,expand,index,result),-1,result.image_url));expand.disabled=download.disabled=false;
+        result=ready;stage.replaceChildren(board(look.items,index=>open(look,expand,index,result),-1,result.image_url));expand.disabled=false;
       }catch(error){
         if(current!==sequence||!root.isConnected||error.message==='cancelled')return;
         const state=make('div','outfit-placeholder');state.append(make('p','','搭配图暂未准备好'));
@@ -166,8 +178,25 @@
       }
     };
     expand.onclick=()=>{if(result)open(look,expand,0,result)};
-    download.onclick=async()=>{if(!result)return;download.disabled=true;try{await OutfitImages.download(result)}catch(error){window.CompanionSettings?.notify(error.message||'下载未完成，请重试。')}finally{download.disabled=false}};
-    const entry={root,render,started:()=>started};cards.add(entry);
+    save.onclick=async()=>{
+      if(save.disabled)return;
+      if(saveState==='unknown'){window.CompanionSettings?.notify('保存结果暂未确认，请到「我的搭配」查看，暂不重复提交。');return;}
+      if(system&&!window.confirm('保存这套搭配会将其中的参考款加入你的个人衣橱，并保存到「我的搭配」。是否继续？'))return;
+      const current=++saveEpoch;clearTimeout(savePoll);saving=true;updateSave();
+      try{
+        const value=await window.OutfitLibrary.save(ref,system);
+        if(current!==saveEpoch||!root.isConnected)return;
+        saveState=value.status;
+        if(saveState==='saved')window.CompanionSettings?.notify(partial?'图中所选单品已保存，可在「我的搭配」查看；文字参考未保存。':'穿搭已保存，可在「我的搭配」查看。');
+        else if(saveState==='unknown')window.CompanionSettings?.notify('保存结果暂未确认，请到「我的搭配」查看，暂不重复提交。');
+        else {window.CompanionSettings?.notify('搭配正在保存，请稍后查看。');savePoll=setTimeout(loadSave,2000);}
+      }catch(error){
+        if(current!==saveEpoch||!root.isConnected||error.code==='stale_account')return;
+        if(error.code==='outfit_save_unknown')saveState='unknown';
+        window.CompanionSettings?.notify(error.message||'保存未完成，请稍后查看「我的搭配」。');
+      }finally{if(current===saveEpoch){saving=false;updateSave();}}
+    };
+    const entry={root,render,started:()=>started,resetSave:()=>{saveEpoch++;clearTimeout(savePoll);saving=false;saveState="missing";save.disabled=true;}};cards.add(entry);
     if(typeof IntersectionObserver==='function'){
       const observer=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)){observer.disconnect();render();}},{rootMargin:'120px'});observer.observe(root);
     }else queueMicrotask(()=>{if(root.isConnected)render()});
@@ -176,8 +205,7 @@
 
   window.OutfitBoard = { create, layout, role, close: () => modal?.close() };
   window.addEventListener('outfit-images-owner-change',event=>{
-    if(!event.detail)return;
-    for(const card of cards){if(!card.root.isConnected)cards.delete(card);else if(card.started())card.render();}
+    for(const card of cards){if(!card.root.isConnected)cards.delete(card);else{card.resetSave();if(event.detail&&card.started())card.render();}}
   });
   window.addEventListener('companion-profile-change', event => { if (!event.detail) modal?.close(); });
 })();

@@ -92,3 +92,10 @@ CREATE TABLE IF NOT EXISTS stylist_outfit_feedback (
  PRIMARY KEY(owner_id,conversation_id,version,look_index),
  FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS stylist_outfit_saves (
+ id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+ owner_id VARCHAR(191) NOT NULL, conversation_id VARCHAR(191) NOT NULL,
+ status VARCHAR(16) NOT NULL, outfit_id BIGINT, created_at DOUBLE NOT NULL,
+ FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

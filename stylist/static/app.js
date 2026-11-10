@@ -131,6 +131,11 @@ window.OutfitImages?.configure({
     return response.blob();
   }
 });
+const savedOutfitPath = ref => '/stylist-api/conversations/' + encodeURIComponent(ref.conversationId) + '/saved-outfit';
+window.OutfitLibrary = {
+  status: ref => api(savedOutfitPath(ref)+'?'+new URLSearchParams({version:ref.version,look_index:ref.index})),
+  save: (ref, includeSystem) => api(savedOutfitPath(ref), {method:'POST',body:JSON.stringify({version:ref.version,look_index:ref.index,include_system:includeSystem})})
+};
 const feed = $('feed');
 let followLatest = false, bottomFrame = null, unreadContent = false;
 const bottomButton = $('scroll-bottom');

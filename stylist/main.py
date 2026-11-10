@@ -49,6 +49,7 @@ from .models import (
     LocateRequest,
     Model,
 )
+from .outfit_save import OutfitSaveRequest, OutfitSaves
 from .personas import progress_message
 from .progress import events as progress_events
 from .runtime import RunManager
@@ -90,6 +91,7 @@ def create_app(settings=None):
     images = ImageService(store)
     media = MediaActions(store)
     app.state.media = media
+    outfit_saves = OutfitSaves(store)
     compositions = Compositions(store)
     app.state.compositions = compositions
     alerts = engine.alerts
@@ -345,6 +347,17 @@ def create_app(settings=None):
                                    authorization: str | None = Header(default=None)):
         owner = await Upstream(settings, require_token(authorization)).identity()
         return await asyncio.to_thread(save_feedback, store, owner, conversation_id, request)
+
+    @app.get("/stylist-api/conversations/{conversation_id}/saved-outfit")
+    async def saved_outfit_get(conversation_id: str, version: int = Query(ge=1), look_index: int = Query(ge=0, le=6),
+                               authorization: str | None = Header(default=None)):
+        owner = await Upstream(settings, require_token(authorization)).identity()
+        return await asyncio.to_thread(outfit_saves.get, owner, conversation_id, version, look_index)
+
+    @app.post("/stylist-api/conversations/{conversation_id}/saved-outfit")
+    async def saved_outfit_post(conversation_id: str, request: OutfitSaveRequest,
+                                authorization: str | None = Header(default=None)):
+        return await outfit_saves.save(Upstream(settings, require_token(authorization)), conversation_id, request)
 
     @app.get("/stylist-api/conversations/{conversation_id}/composition")
     async def composition_get(conversation_id: str, version: int, look_index: int, theme: str,

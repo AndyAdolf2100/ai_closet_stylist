@@ -243,6 +243,10 @@ class MCPReads:
             raise StylistError("tool_not_allowed", "该图像操作未接入。", 400)
         return await self._validated_call(name, arguments, timeout=self.image_timeout)
 
+    async def commit_outfit(self, arguments):
+        # Only an authenticated, explicit card save; never exposed to model calls.
+        return await self._validated_call("save_recommended_outfit", arguments, timeout=self.image_timeout)
+
     async def commit_media(self, name, arguments):
         # MediaActions calls this only from explicit, authenticated UI actions.
         if name not in MEDIA_WRITE_TOOLS:
