@@ -441,7 +441,8 @@
       if(dialog.contains(card))dialog.close();
       return onRegenerate?.(action);
     },true));
-    if(options.records&&action.status==='failed')actions.append(button('查看生成记录',history));
+    // 暂停生成记录入口。
+    // if(options.records&&action.status==='failed')actions.append(button('查看生成记录',history));
     if(actions.childElementCount)card.append(actions);
     if(focused){
       const target=[...actions.querySelectorAll('button')].find(b=>b.textContent===focusedLabel)||lead;
@@ -463,7 +464,8 @@
     dialog.dataset.panel='tryon-result';dialog.dataset.status=action.status;
     const letter=refresh&&body.querySelector('.journey-tryon-letter')||el('section');
     fillTryonLetter(letter,action,{regenerate:sameConversation(action)});if(!letter.isConnected)body.replaceChildren(letter);
-    dock(button('查看生成记录',history),button('回到对话',()=>dialog.close()));
+    // 暂停生成记录入口：button('查看生成记录',history)
+    dock(button('回到对话',()=>dialog.close()));
   }
   function stopWatcher(id){const w=watchers.get(id);if(w)clearTimeout(w.timer);watchers.delete(id);}
   function monitorTryon(action){

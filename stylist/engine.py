@@ -478,7 +478,8 @@ class Stylist:
                                                                  allow_system=data.get("new_clothes", False), diagnostics=retrieval_diagnostics,
                                                                  style_preferences=(request.companion_profile.style_preferences
                                                                      if request.companion_profile and plan.use_profile_preferences else ()))
-                        frozen = [pool.get(p.key, p) for p in frozen]
+                        unavailable = {item['key'] for item in retrieval_diagnostics.get('unavailable_items', [])}
+                        frozen = [pool.get(p.key, p) for p in frozen if p.key not in unavailable]
                         warnings.extend(cautions)
                         if plan.mode == "recommend" and not task.target_description:
                             try:
@@ -512,13 +513,14 @@ class Stylist:
                 async with upstream.mcp() as mcp:
                     anchors = await resolve_products(mcp, [ProductRef(source="user", product_id=str(result["user_product_id"]))])
                 if not anchors:
-                    raise StylistError("upload_product_unavailable", "刚上传的单品暂时无法读取，请先查看衣橱。", 409)
-                reasons, _ = suitability(anchors[0], effective_task)
-                if reasons:
-                    warnings.append("刚上传的单品与本轮要求冲突，本次先不强行选用：" + "；".join(reasons))
+                    warnings.append("这件单品已不可用，我会用当前衣橱继续搭配；缺少的部分给你文字参考。")
                 else:
-                    pool[anchors[0].key] = anchors[0]
-                    frozen.append(anchors[0])
+                    reasons, _ = suitability(anchors[0], effective_task)
+                    if reasons:
+                        warnings.append("刚上传的单品与本轮要求冲突，本次先不强行选用：" + "；".join(reasons))
+                    else:
+                        pool[anchors[0].key] = anchors[0]
+                        frozen.append(anchors[0])
             if pool and missing:
                 names = "、".join(missing)
                 warnings.append((f"这次候选里暂未找到明确标为{names}的衣物，我会用现有单品给你接近的搭配参考。"
@@ -929,7 +931,23 @@ class Stylist:
             outfit_entry = None
             looks = []
             if request.subject_product is not None:
-                product_entry = await resolve_product_entry(upstream, request.subject_product)
+                try:
+                    product_entry = await resolve_product_entry(upstream, request.subject_product)
+                except StylistError as exc:
+                    if exc.code != "product_entry_unavailable" or exc.status != 404:
+                        raise
+                    reply = Reply(conversation_id=cid, version=request.expected_version + 1,
+                                  mode="consult", delivery="advice", task=Task(),
+                                  message="这件单品已不可用，不过我们可以继续。你可以换一件，或让我从当前衣橱重新搭一套。",
+                                  follow_ups=["从当前衣橱帮我搭一套"], request_id=request.request_id)
+                    state.looks = []
+                    state.messages = (state.messages + [
+                        {"role": "user", "content": "帮我查看下这件"},
+                        {"role": "assistant", "content": json.dumps(reply.model_dump(mode="json"), ensure_ascii=False)},
+                    ])[-16:]
+                    await asyncio.to_thread(self.store.finish, owner,
+                        request.model_copy(update={"message": "帮我查看下这件"}), claim, state, reply)
+                    return reply
                 item = from_row(product_entry["product"], request.subject_product.source)
                 if item is None:
                     raise StylistError("product_entry_invalid_result", "这件单品的信息不完整，请重新打开。", 422)
