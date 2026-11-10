@@ -208,10 +208,13 @@ curl -i --resolve aicloset-assistant.wxbjq.top:443:127.0.0.1 \
 
 ### 日志
 
+实时查看当前运行的Agent最近200行日志，无需切换目录：
+
 ```bash
-cd /opt/aicloset-assistant/current
-sudo docker compose -p aicloset-assistant logs --tail=80 stylist
+sudo sh -c 'docker logs --tail=200 -f "$(docker ps -q --filter label=com.docker.compose.project=aicloset-assistant --filter label=com.docker.compose.service=stylist)"'
 ```
+
+按Ctrl+C结束查看；部署替换容器后重新执行。该命令按项目／服务标签定位运行容器，不依赖当前目录或Compose配置文件。`sudo cd`不会切换当前终端目录。若找不到容器，先检查 `sudo docker ps -a --filter label=com.docker.compose.project=aicloset-assistant --filter label=com.docker.compose.service=stylist`。
 
 Nginx 日志路径以 `nginx -T` 中 `access_log`／`error_log` 为准，不假设发行版默认路径。
 排错时不贴 Token、手机号、验证码、模型 Key 或用户图片。

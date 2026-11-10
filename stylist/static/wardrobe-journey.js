@@ -132,7 +132,7 @@
       const frame=el('figure','journey-letter-photo'),picture=photo(action.result?.result_image_url,'已入柜的衣物抠图');
       frame.append(picture||el('p','journey-note','衣物已入柜，暂时没有可用预览。'),el('figcaption','','衣橱里，又多了一种喜欢的可能'));card.append(frame);
       card.append(el('p','journey-upload-note',male?'用它和衣橱里的衣服，试试新的组合。':'从这一件出发，一起看看它的新搭配吧。'));
-      actions.append(button('用这件搭一套',()=>{if(dialog.open)dialog.close();onStyle?.(action.action_id);},true));
+      actions.append(button('用这件搭配下',()=>{if(dialog.open)dialog.close();onStyle?.(action.action_id);},true));
     }else actions.append(button('查看上传结果',async()=>{const token=epoch;const next=await api('/stylist-api/media/'+action.action_id);if(current(token))renderMedia(next);}));
     card.append(actions);
   }
@@ -170,7 +170,7 @@
     if(action.status==='unknown'||action.status==='executing')body.append(el('p','journey-note','尚未确认最终结果。请查看原任务或App记录，不要重复提交。'));
     if(action.kind==='garment'&&action.status==='completed'){
       body.append(el('p','',result.class_name?'已识别为'+result.class_name+'，已保存到个人衣橱。':'已保存到个人衣橱，可以从这件开始搭配。'));
-      dock(button('用这件搭一套',()=>{dialog.close();onStyle?.(action.action_id);},true));
+      dock(button('用这件搭配下',()=>{dialog.close();onStyle?.(action.action_id);},true));
       body.append(el('p','journey-note','若识别的类别不准确，可以先在App衣橱修改，再回来搭配。'));
     }
     if(action.kind==='person'&&action.status==='completed'&&result.allowed_hat_actions?.length){
@@ -186,15 +186,18 @@
         if(!current(token)||!dialog.open)return;generationQuote(q);
       },true));
     }
-    if(action.kind==='generation'&&action.status==='completed'&&result.can_confirm){
+    if(action.kind==='generation'&&action.status==='completed'&&result.can_confirm===true){
       body.append(button('确认使用这个试穿形象',async()=>{
         const overview=await api('/stylist-api/twins');if(!current(token))return;
-        await api('/stylist-api/twins/use-candidate',{method:'POST',body:JSON.stringify({task_id:String(result.task_id),expected_version:overview.selection_version})});
+        try{await api('/stylist-api/twins/use-candidate',{method:'POST',body:JSON.stringify({task_id:String(result.task_id),expected_version:overview.selection_version})});}
+        catch(err){
+          if(current(token)&&dialog.open&&['twin_changed','digital_twin_candidate_unavailable','digital_twin_version_conflict'].includes(err.code))renderMedia({...action,result:{...result,can_confirm:false}},false);
+          throw err;
+        }
         if(current(token)&&dialog.open){notify?.('已确认使用这个试穿形象。');await twins();}
       },true));
     }
     if(action.status==='failed')body.append(button(action.kind==='garment'?'重新选择衣物照片':'重新选择人物照片',()=>upload(action.kind==='garment'?'garment':'person')));
-    body.append(button('查看我的上传与生成记录',history));
     if(startPolling)pollMedia(action,token);
   }
   function generationQuote(q){
@@ -547,6 +550,7 @@
     filters.setAttribute('role','group');filters.setAttribute('aria-label','记录分类');empty.setAttribute('role','status');
     const records=[];
     for(const action of uploads){
+      if(action.kind==='person')continue;
       const copy=mediaRecordCopy(action),card=el('section','journey-record journey-media-letter'),head=el('div','journey-record-heading'),mark=el('span','journey-record-mark','✧'),text=el('div','journey-record-copy');
       mark.setAttribute('aria-hidden','true');text.append(el('span','journey-record-kicker',copy.kicker),el('h3','',copy.lead));head.append(mark,text);
       const open=button(copy.cta,async()=>{
@@ -568,7 +572,7 @@
       let count=0;for(const record of records){record.card.hidden=kind!=='all'&&record.kind!==kind;if(!record.card.hidden)count++;}
       empty.hidden=count>0;empty.textContent=kind==='all'?'还没有记录，可以先上传一件常穿的衣服。':`这一页还没有「${label}」记录。`;
     };
-    for(const [kind,label] of [['all','全部'],['garment','衣物入柜'],['person','照片检查'],['generation','数字人生成'],['tryon','试穿']]){
+    for(const [kind,label] of [['all','全部'],['garment','衣物入柜'],['generation','数字人生成'],['tryon','试穿']]){
       const tab=button(label,()=>select(kind,label));tab.dataset.kind=kind;filters.append(tab);
     }
     body.append(filters,empty,...records.map(record=>record.card));select('all','全部');

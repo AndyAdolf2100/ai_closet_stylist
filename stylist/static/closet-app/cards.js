@@ -4,7 +4,7 @@ export function albumCard(item, { node, button, picture, openImage, assets }) {
   const multiple = products.length > 1;
   const title = item.title?.trim() || '试衣造型';
   const card = node('article', `album-card ${multiple ? 'album-multiple' : 'album-single'}`);
-  const tap = button('', () => openImage(title, item.fitting_image_url, item.description, {title, description:item.description}), 'album-tap');
+  const tap = button('', () => openImage(title, item.fitting_image_url, item.description), 'album-tap');
   tap.setAttribute('aria-label', `查看${title}`);
   const stage = node('div', 'album-stage');
   const result = picture(item.fitting_image_url, '试衣效果图'); result.classList.add('album-result');

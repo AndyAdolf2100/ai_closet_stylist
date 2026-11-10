@@ -209,6 +209,7 @@ class Reply(Model):
     new_clothes: bool = False
     new_clothes_auto_enabled: bool = False
     new_clothes_notice: str | None = None
+    reference_reason: Literal["no_candidates", "no_match", "unavailable"] | None = None
     wardrobe_gap: bool = False
     city_selection_required: bool = False
     avatar_intent: Literal["upload", "view", "tryon"] | None = None

@@ -777,3 +777,11 @@ footer>#notice:empty{display:none}
 .reply-text-part{animation:reply-text-fade 240ms ease-out both}
 @keyframes reply-text-fade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.reply-text-part{animation:none}}
+
+/* Conversation history: preserve full title access beside the hide action. */
+#history .history-conversation-row,#mobile-history-list .history-conversation-row{display:flex;align-items:center;gap:0;min-width:0;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--paper);overflow:hidden}
+#history .history-conversation-title,#mobile-history-list .history-conversation-title{flex:1;min-width:0;width:auto;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+#history .history-conversation-row:has([aria-current=true]),#mobile-history-list .history-conversation-row:has([aria-current=true]){border-color:var(--accent);background:var(--soft)}
+#history .history-conversation-delete,#mobile-history-list .history-conversation-delete{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;min-height:44px;margin:0;padding:0;border:0;background:transparent;color:var(--muted);box-shadow:none}
+#history .history-conversation-delete:hover,#mobile-history-list .history-conversation-delete:hover{background:var(--soft);color:var(--ink)}
+#history .history-conversation-delete:focus-visible,#mobile-history-list .history-conversation-delete:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
