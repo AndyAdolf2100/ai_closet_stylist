@@ -108,7 +108,7 @@ async def test_empty_wardrobe_cold_weather_uses_safe_text_fallback(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_first_request_validation_failure_is_terminal_without_retained_outfit(tmp_path):
+async def test_first_request_validation_failure_returns_text_reference_and_gap_card(tmp_path):
     upstream = DialogueUpstream('partial-test')
 
     class Model:
@@ -120,15 +120,17 @@ async def test_first_request_validation_failure_is_terminal_without_retained_out
                                                               why=['测试'], how=['测试'])])
 
     store = Store(str(tmp_path / 'failed-request.db'))
-    with pytest.raises(StylistError) as error:
-        await Stylist(Settings(), store, Model()).chat(
-            upstream, ChatRequest(message='帮我搭一套，不考虑天气', request_id='first-failed-query'))
-    assert error.value.message == '这次没有找到可用的衣橱单品，暂时无法完成文字搭配。'
+    reply = await Stylist(Settings(), store, Model()).chat(
+        upstream, ChatRequest(message='帮我搭一套，不考虑天气', request_id='first-failed-query'))
+    assert reply.delivery == 'concept' and reply.reference_reason == 'no_match'
+    assert reply.wardrobe_gap and not reply.new_clothes
+    assert reply.looks and all(not look.items for look in reply.looks)
+    assert '文字' in reply.message and '候选' in reply.message
     with store.connection() as row:
         saved = row.execute("SELECT status,response_json FROM stylist_requests WHERE request_id=?",
                             ('first-failed-query',)).fetchone()
-    assert saved['status'] == 'failed'
-    assert 'outfit_validation_failed' in saved['response_json']
+    assert saved['status'] == 'completed'
+    assert 'outfit_validation_failed' not in saved['response_json']
 
 
 def test_partial_selection_keeps_hard_rules_and_frozen_pieces():
