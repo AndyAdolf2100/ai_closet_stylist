@@ -245,27 +245,66 @@ function updateCityLabel(confirmed=false,forecast=null) { $('location-open').tex
 async function loadForecast(location = selectedCity) {
   const explicitlySelected=arguments.length>0;
   if (!location || !requireLogin()) return false;
-  const sequence = ++forecastSequence;
+  const sequence = ++forecastSequence, owner = session?.access_token;
+  const current = () => sequence === forecastSequence && session?.access_token === owner;
   forecastBusy = true;
   $('location-label').textContent = agentText('衣衣正在看看天气…');
-  try {
-    const data = await api('/stylist-api/weather/forecast', { method: 'POST', body: JSON.stringify({ location, scope: forecastScope }) });
-    if (sequence !== forecastSequence) return false;
-    selectedCity = { city_name: data.city_name, province_name: data.province_name }; sessionStorage.setItem(CITY_KEY, JSON.stringify(selectedCity)); updateCityLabel(explicitlySelected,data);
-    let panel = $('weather-panel'); if (!panel) { panel = el('section'); panel.id = 'weather-panel'; $('feed').prepend(panel); }
-    panel.hidden = false; panel.replaceChildren();
-    const tabs = el('div', 'weather-tabs');
-    for (const [scope, label] of [['day', '今天 · 早晚'], ['week', '本周 · 逐日']]) { const button = el('button', forecastScope === scope ? 'active' : '', label); button.onclick = () => { if (forecastBusy) return; forecastScope = scope; loadForecast(); }; tabs.append(button); }
-    panel.append(tabs, forecastCard(data, true)); $('location-label').textContent = '出门前，再照顾一下天气';
+  let panel = $('weather-panel');
+  if (!panel) { panel = el('section'); panel.id = 'weather-panel'; $('feed').prepend(panel); }
+  panel.hidden = false; panel.replaceChildren();
+  const tabs = el('div', 'weather-tabs'), views = new Map(), buttons = new Map();
+  tabs.setAttribute('role', 'tablist');
+  const select = scope => {
+    if (!current()) return;
+    forecastScope = scope;
+    for (const [key, view] of views) {
+      view.hidden = key !== scope;
+      buttons.get(key).classList.toggle('active', key === scope);
+      buttons.get(key).setAttribute('aria-selected', String(key === scope));
+    }
+  };
+  panel.append(tabs);
+  for (const [scope, label] of [['day', '今天 · 早晚'], ['week', '本周 · 逐日']]) {
+    const button = el('button', '', label), view = el('div', 'weather-scope');
+    button.type = 'button'; button.setAttribute('role', 'tab');
+    button.setAttribute('aria-controls', 'weather-scope-' + scope);
+    view.id = 'weather-scope-' + scope; view.setAttribute('role', 'tabpanel');
+    view.append(el('p', 'weather-loading', '天气正在加载…'));
+    views.set(scope, view); buttons.set(scope, button);
+    button.onclick = () => select(scope);
+    tabs.append(button); panel.append(view);
+  }
+  select(forecastScope);
+  const results = await Promise.allSettled(['day', 'week'].map(async scope => {
+    try {
+      const data = await api('/stylist-api/weather/forecast', {
+        method: 'POST', body: JSON.stringify({ location, scope })
+      });
+      if (current()) views.get(scope).replaceChildren(forecastCard(data, true));
+      return data;
+    } catch (err) {
+      if (current()) views.get(scope).replaceChildren(el('p', 'weather-unavailable',
+        '这部分天气暂未取到，可以先查看另一页，或重新选择城市重试。'));
+      throw err;
+    }
+  }));
+  if (!current()) return false;
+  forecastBusy = false;
+  const success = results.find(result => result.status === 'fulfilled');
+  if (success) {
+    const data = success.value;
+    selectedCity = { city_name: data.city_name, province_name: data.province_name };
+    sessionStorage.setItem(CITY_KEY, JSON.stringify(selectedCity));
+    updateCityLabel(explicitlySelected, data);
+    $('location-label').textContent = '出门前，再照顾一下天气';
     return true;
-  } catch (err) {
-    if (sequence !== forecastSequence) return false;
-    $('location-label').textContent = '天气暂未取到，可重新选择城市重试'; $('location-status').textContent = '';
-    notifyIssue(err.message);
-    if ($('weather-panel')) { $('weather-panel').replaceChildren(el('p', 'weather-unavailable', '这次没有取到最新天气，先不显示旧预报。可以稍后重新选择城市重试。')); }
-    return false;
-  } finally { if (sequence === forecastSequence) { forecastBusy = false; } }
+  }
+  $('location-label').textContent = '天气暂未取到，可重新选择城市重试';
+  $('location-status').textContent = '';
+  notifyIssue(results[0].reason.message);
+  return false;
 }
+
 function pendingBubble(persona) {
   const node = bubble('assistant', ''); node.classList.add('pending');
   const lines = {
