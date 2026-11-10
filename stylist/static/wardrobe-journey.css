@@ -330,3 +330,10 @@
 
 /* Keep the missing-photo label legible inside compact portrait tiles. */
 .journey-portrait .journey-portrait-missing{padding:2px;white-space:nowrap;font-size:10px;letter-spacing:0}
+
+/* Keep the two-stage portrait flow together. */
+.journey-dialog[data-flow=person] .journey-steps{justify-content:flex-start;gap:0;padding-top:10px;padding-bottom:10px}
+.journey-dialog[data-flow=person] .journey-steps li{flex-shrink:0;white-space:nowrap}
+.journey-dialog[data-flow=person] .journey-steps li+li::before{content:"";width:28px;height:1px;background:var(--line);margin:0 12px 0 7px}
+.journey-dialog[data-flow=person] .journey-body{padding-top:8px}
+.journey-dialog[data-flow=person] .journey-intro{margin:0 0 12px;line-height:1.65}

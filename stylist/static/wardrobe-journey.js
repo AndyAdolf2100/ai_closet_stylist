@@ -30,7 +30,8 @@
     const copy=el('div','journey-scene-copy');
     const lines={garment:male?'从一件熟悉的衣服开始，慢慢整理你的日常。':'喜欢的衣服，值得在这里拥有自己的位置。',person:male?'选好试穿的模样，再看看这套衣服。':'先选一个喜欢的模样，再一起看看上身的感觉。',quote:'这一次需要的积分，都写在这里。你决定好了，我们再开始。',history:'每一件新衣、每一次尝试，都收在这里。'};
     copy.append(el('span','journey-speaker',name+' 的小笺'),el('p','',lines[kind]||lines.garment));scene.replaceChildren(portrait,copy,el('span','journey-scene-flower','✧'));
-    const labels=kind==='garment'?['选一张照片','整理入衣橱','开始新搭配']:['选择形象','确认积分','查看新模样'];
+    const labels=kind==='garment'?['选一张照片','整理入衣橱','开始新搭配']:['选择形象','查看新模样'];
+    if(kind!=='garment')step=step>0?1:0;
     steps.replaceChildren();steps.hidden=kind==='history';
     labels.forEach((label,i)=>{const item=el('li',i===step?'is-current':i<step?'is-done':'');item.append(el('span','journey-step-number',i<step?'✓':String(i+1).padStart(2,'0')),el('span','',label));if(i===step)item.setAttribute('aria-current','step');steps.append(item);});
   }
@@ -75,7 +76,7 @@
   function upload(kind='garment'){
     show(kind==='garment'?'把喜欢的衣服带进来':'创建我的试穿形象');const token=epoch,view=viewSequence;
     atmosphere(kind);
-    body.append(el('p','journey-intro',kind==='garment'?'先从常穿的一件开始。平铺、悬挂照片更清楚；整身照可能识别出多件衣物。':'选择本人的清晰正面照片，避免遮挡。照片检查后，会单独展示人物生成所需积分。'));
+    body.append(el('p','journey-intro',kind==='garment'?'先从常穿的一件开始。平铺、悬挂照片更清楚；整身照可能识别出多件衣物。':'选择本人的清晰正面照片，避免遮挡。照片检查后，生成按钮会展示所需积分，由你确认后开始。'));
     const input=el('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';input.setAttribute('aria-label',kind==='garment'?'选择衣物照片':'选择本人照片');
     input.id='journey-photo-input';input.className='journey-file-input';
     const pocket=el(kind==='garment'?'div':'label','journey-photo-pocket');if(kind!=='garment')pocket.htmlFor=input.id;
@@ -116,7 +117,7 @@
         if(current(token)&&dialog.open&&view===viewSequence&&selectedFile===fileSequence){data=photoDataURL(read);submit.disabled=false;}
       }catch(e){if(current(token)&&dialog.open&&view===viewSequence&&selectedFile===fileSequence)notify?.(e.message);}
     };
-    actions.append(submit);body.append(pocket,preview,el('p','journey-note',kind==='garment'?'确认后会上传照片，帮你抠图、识别，再收进个人衣橱。':'确认后会上传并检查照片。人物生成的费用，会在下一步单独确认。'));dock(actions);
+    actions.append(submit);body.append(pocket,preview,el('p','journey-note',kind==='garment'?'确认后会上传照片，帮你抠图、识别，再收进个人衣橱。':'确认后会上传并检查照片。人物生成所需积分会显示在生成按钮上，点击确认后才开始。'));dock(actions);
   }
   function renderUpload(action){
     if(action.kind!=='garment'||!owner)return;
@@ -173,19 +174,7 @@
       dock(button('用这件搭配下',()=>{dialog.close();onStyle?.(action.action_id);},true));
       body.append(el('p','journey-note','若识别的类别不准确，可以先在App衣橱修改，再回来搭配。'));
     }
-    if(action.kind==='person'&&action.status==='completed'&&result.allowed_hat_actions?.length){
-      const hats=el('div','journey-actions');let selected=result.allowed_hat_actions[0];
-      const hair=el('textarea');hair.maxLength=500;hair.placeholder='摘帽后希望保留的发型，例如：黑色短发（可选）';hair.setAttribute('aria-label','人物发型说明');
-      for(const value of result.allowed_hat_actions){
-        const b=button({none:'保持原样',keep:'保留帽子',remove:'摘掉帽子'}[value]||value,()=>{selected=value;for(const other of hats.children)other.setAttribute('aria-pressed',String(other===b));});
-        b.setAttribute('aria-pressed',String(value===selected));hats.append(b);
-      }
-      body.append(hats,hair,el('p','journey-note','生成个人形象与穿搭试穿分别计费。你可以先查看费用，再决定是否生成。'));
-      dock(button('查看人物生成费用',async()=>{
-        const q=await api('/stylist-api/media/'+action.action_id+'/generation-quote',{method:'POST',body:JSON.stringify({request_id:crypto.randomUUID(),hat_action:selected,hair_description:hair.value})});
-        if(!current(token)||!dialog.open)return;generationQuote(q);
-      },true));
-    }
+    if(action.kind==='person'&&action.status==='completed'&&result.allowed_hat_actions?.length)inlineGeneration(action,token);
     if(action.kind==='generation'&&action.status==='completed'&&result.can_confirm===true){
       body.append(button('确认使用这个试穿形象',async()=>{
         const overview=await api('/stylist-api/twins');if(!current(token))return;
@@ -200,18 +189,64 @@
     if(action.status==='failed')body.append(button(action.kind==='garment'?'重新选择衣物照片':'重新选择人物照片',()=>upload(action.kind==='garment'?'garment':'person')));
     if(startPolling)pollMedia(action,token);
   }
-  function generationQuote(q){
-    show('确认人物生成费用');const token=epoch;activeQuote={id:q.action_id,kind:'generation'};
-    atmosphere('quote',1);
-    body.append(el('p','journey-cost',`本次生成人物形象：${points(q.points_cost)} 积分`),el('p','','此费用仅包含人物形象生成。之后选择搭配试穿时，会另行报价。'));
-    dock(button(`确认消耗 ${points(q.points_cost)} 积分并生成`,async()=>{
-      const pendingQuote=activeQuote;
-      if(window.AppPayment&&!await window.AppPayment.checkFunds(q.points_cost,'twin'))return;
-      if(!current(token)||!dialog.open||activeQuote!==pendingQuote)return;
-      const quote=activeQuote;activeQuote=null;
-      const result=await api('/stylist-api/media/'+quote.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:true})});
-      if(current(token)&&dialog.open)renderMedia(result);
-    },true),button('暂不生成',()=>cancelQuote()));
+  function inlineGeneration(action,token){
+    const view=viewSequence,hats=el('div','journey-actions'),hair=el('textarea');
+    let selected=action.result.allowed_hat_actions[0],ticket=0,quoted=null,submitting=false;
+    const live=()=>current(token)&&dialog.open&&view===viewSequence;
+    const cancel=q=>{if(q&&current(token))api('/stylist-api/media/'+q.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:false})}).catch(()=>{});};
+    const lock=value=>{hair.disabled=value;for(const b of hats.children)b.disabled=value;};
+    const confirm=button('正在读取生成积分…',async()=>{
+      if(!live()||submitting)return;
+      if(!quoted){await readQuote();return;}
+      if(Date.now()>=quoted.expires){invalidate();await readQuote();return;}
+      const pending=quoted;submitting=true;lock(true);
+      try{
+        if(window.AppPayment&&!await window.AppPayment.checkFunds(pending.cost,'twin'))return;
+        if(!live()||quoted!==pending||activeQuote!==pending)return;
+        activeQuote=null;quoted=null;
+        try{
+          const result=await api('/stylist-api/media/'+pending.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:true})});
+          if(live())renderMedia(result);
+        }catch(e){
+          if(!live())return;
+          if(['image_quote_expired','image_quote_changed'].includes(e.code)){await readQuote();throw e;}
+          if(e.paymentHandled||e.code==='digital_twin_points_insufficient'){quoted=pending;activeQuote=pending;throw e;}
+          // A lost response is not evidence that generation never started.
+          renderMedia({action_id:pending.id,kind:'generation',status:'unknown',result:{message:'生成结果暂未确认，正在查询原任务，请勿重复提交。'}});
+          throw e;
+        }
+      }finally{if(live()){submitting=false;lock(false);}}
+    },true);
+    confirm.disabled=true;
+    const invalidate=()=>{
+      clearTimer();ticket++;const old=quoted;quoted=null;if(activeQuote===old)activeQuote=null;cancel(old);
+      confirm.textContent='正在读取生成积分…';confirm.disabled=true;
+    };
+    async function readQuote(){
+      if(!live())return;
+      const request=++ticket;
+      try{
+        const q=await api('/stylist-api/media/'+action.action_id+'/generation-quote',{method:'POST',body:JSON.stringify({request_id:crypto.randomUUID(),hat_action:selected,hair_description:hair.value})});
+        if(!live()||request!==ticket){cancel({id:q.action_id});return;}
+        if(!q.action_id||!Number.isInteger(q.points_cost)||q.points_cost<0)throw Error('暂时无法读取生成积分，请重试。');
+        quoted={id:q.action_id,kind:'generation',cost:q.points_cost,expires:Date.now()+290000};activeQuote=quoted;
+        confirm.textContent=`确认消耗 ${points(q.points_cost)} 积分并生成`;confirm.disabled=false;
+      }catch(e){
+        if(!live()||request!==ticket)return;
+        confirm.textContent='重新读取生成积分';confirm.disabled=false;notify?.(e.message||'暂时无法读取生成积分。');
+      }
+    }
+    hair.maxLength=500;hair.placeholder='摘帽后希望保留的发型，例如：黑色短发（可选）';hair.setAttribute('aria-label','人物发型说明');
+    hair.oninput=()=>{if(!live()||submitting)return;invalidate();timer=setTimeout(readQuote,350);};
+    for(const value of action.result.allowed_hat_actions){
+      const b=button({none:'保持原样',keep:'保留帽子',remove:'摘掉帽子'}[value]||value,()=>{
+        if(!live()||submitting||selected===value)return;
+        selected=value;for(const other of hats.children)other.setAttribute('aria-pressed',String(other===b));invalidate();return readQuote();
+      });
+      b.setAttribute('aria-pressed',String(value===selected));hats.append(b);
+    }
+    body.append(hats,hair,el('p','journey-note','按钮中显示本次人物生成所需积分，点击确认后才开始生成；搭配试穿另行确认积分。'));
+    dock(confirm);readQuote();
   }
   async function cancelQuote(){
     const q=activeQuote;activeQuote=null;if(q)await api((q.kind==='generation'?'/stylist-api/media/':'/stylist-api/images/')+q.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:false})});

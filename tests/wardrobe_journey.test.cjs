@@ -188,9 +188,9 @@ test('person generation has its own quote, and dismissing it sends only cancella
   if(path.endsWith('/generation-quote'))return {action_id:'med_quote',kind:'generation',status:'quoted',points_cost:20};
   return {status:'cancelled'};
  });
- t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();byText(t.w,'查看人物生成费用').click();await flush();
+ t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();await flush();
  assert.equal(t.w.document.querySelector('.journey-steps').hidden,false);
- assert.match(t.w.document.querySelector('.journey-body').textContent,/20 积分/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行报价/);
+ assert.match(t.w.document.querySelector('.journey-footer').textContent,/确认消耗 20 积分并生成/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行确认积分/);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);byText(t.w,'关闭 ×').click();await flush();
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&JSON.parse(o.body).confirmed).length,0);
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&!JSON.parse(o.body).confirmed).length,1);t.close();
