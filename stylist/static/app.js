@@ -676,8 +676,7 @@ async function refreshHistory() {
   if (!session) return;
   const owner = session.user.id, sequence = ++historySequence;
   try {
-    const allRows = await api('/stylist-api/conversations');
-    const rows=allRows;
+    const rows = await api('/stylist-api/conversations');
     if (session?.user.id !== owner || sequence !== historySequence) return;
     $('history-status').textContent = rows.length ? '' : '还没有聊过的日常，开始聊聊吧。';
     for (const container of [$('history'), $('mobile-history-list')]) {
@@ -722,6 +721,12 @@ async function refreshHistory() {
           try{
             await api('/stylist-api/conversations/'+encodeURIComponent(row.id),{method:'DELETE'});
           }catch(err){notifyIssue(err.message);return;}
+          if(session?.user.id!==owner)return;
+          if(conversation===row.id){
+            savePending(null);conversation=null;version=0;selectedLook=null;
+            pendingUploadAnchor=null;pendingAnchorOwner=null;updateUploadAnchor();
+            window.ChatAttachments?.clear();$('feed').replaceChildren();
+          }
           await refreshHistory();
         };
         entry.append(button,remove);container.append(entry);

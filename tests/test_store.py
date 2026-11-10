@@ -73,6 +73,10 @@ def test_delete_conversation_is_owner_scoped_idempotent_and_hides_history(tmp_pa
     assert store.conversations("a")[0]["id"] == cid
     assert store.delete_conversation("a", cid) == {"conversation_id": cid, "deleted": True}
     assert store.conversations("a") == []
+    with store.connection() as conn:
+        assert conn.execute("SELECT 1 FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, "a")).fetchone()
+        assert conn.execute("SELECT user_message FROM stylist_messages WHERE conversation_id=? AND owner_id=?", (cid, "a")).fetchone()["user_message"] == "今天穿什么"
+    assert Store(store.path).conversations("a") == []
     with pytest.raises(StylistError, match="conversation_not_found"):
         store.history("a", cid)
     assert store.delete_conversation("a", cid) == {"conversation_id": cid, "deleted": True}

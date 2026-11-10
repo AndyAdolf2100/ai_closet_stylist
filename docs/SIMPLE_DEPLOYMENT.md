@@ -157,3 +157,14 @@ sudo docker compose --project-directory /opt/aicloset-assistant/current \
 数据库备份使用目标PostgreSQL实例的备份能力或授权的逻辑备份流程；备份恢复尚未实测。配置和证书另行私密备份，不能把应用目录归档当作数据库备份。回退不回滚数据库，需先核对旧版本兼容性。完整服务器路径和站点边界见 [部署总文档](TEST_SERVER_DEPLOYMENT.md)。
 
 2026-11-10图片瘦身：公开PNG/JPEG/WebP使用OSS映射，发布验证拒绝遗漏或变更的源图；默认gzip级别9，可用`--compression-level 1`换取更快打包。当前通用完整更新包73.28MiB，详见`docs/STATIC_IMAGE_OSS.md`。
+
+### 用量回调默认配置
+
+2026-11-10起，发布包的示例配置和配置生成器默认开启用量回调；首次安装或升级时，安装器自动补齐缺失／空的两项配置。回调地址跟随现有`STYLIST_SERVER_URL`，当前默认值为：
+
+```env
+STYLIST_USAGE_CALLBACK_URL=https://aicloset-dev.wxbjq.top/api/internal/stylist/model-usage
+STYLIST_USAGE_ENVIRONMENT=test
+```
+
+已有非空回调地址或环境保持原样；更新失败时恢复原配置。`test`上报真实用量但不扣积分，安装不会自动切到`production`。无需另加部署命令参数；用户Token仍由实际对话请求在内存提供，包中不保存Token。运行时直接启动而不经过安装器时仍需自行配置环境变量。

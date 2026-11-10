@@ -49,7 +49,7 @@ async def test_product_detail_entry_echoes_authoritative_product_without_model(t
     assert reply.subject_product.product_id == "12"
     assert reply.version == 1 and reply.conversation_id.startswith("sty_")
     assert upstream.calls[1][0] == "product.resolve"
-    assert engine.store.history("1", reply.conversation_id)["messages"][0]["user"] == "打开单品：白衬衫"
+    assert engine.store.history("1", reply.conversation_id)["messages"][0]["user"] == "帮我查看下这件"
     replay = await engine.chat(upstream, ChatRequest(
         subject_product={"source": "user", "product_id": "12"}, request_id="product-entry-001"))
     assert replay.conversation_id == reply.conversation_id

@@ -37,6 +37,8 @@ from test_memory import (  # noqa: F401
     test_unresolved_save_never_returns_a_false_success,
 )
 from test_store import (  # noqa: F401
+    test_delete_conversation_is_owner_scoped_idempotent_and_hides_history,
+    test_delete_conversation_rejects_active_or_unfinished_operations,
     test_conversation_title_uses_first_saved_question_and_stays_owner_scoped,
     test_replay_conflict_and_isolation,
     test_stale_head_and_expired_worker_cannot_overwrite,
