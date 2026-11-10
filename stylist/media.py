@@ -123,12 +123,18 @@ class MediaActions:
     def failed_dispatch(self, owner, action, exc):
         # Typed rejections establish non-acceptance; transport loss does not.
         rejected = {"product_upload_capacity_exhausted", "digital_twin_points_insufficient",
-                    "tool_input_invalid", "tool_missing", "invalid_arguments"}
+                    "tool_input_invalid", "tool_missing", "invalid_arguments",
+                    "digital_twin_photo_risk_rejected", "digital_twin_photo_risk_unavailable"}
         expired = {"digital_twin_price_changed", "digital_twin_check_expired"}
         code = getattr(exc, "code", "")
         state = "failed" if code in rejected else ("expired" if code in expired else "unknown")
         message = exc.message if state != "unknown" else "提交结果待核对，不会自动重复上传或扣费。"
-        return self.save(owner, action, {"message": message, "error_code": code}, state)
+        result = {"message": message, "error_code": code}
+        if code == "digital_twin_photo_risk_rejected":
+            result.update({"retryable": False, "next_action": "reselect"})
+        elif code == "digital_twin_photo_risk_unavailable":
+            result.update({"retryable": True, "request_id_policy": "new_request_id_required"})
+        return self.save(owner, action, result, state)
 
     async def upload(self, upstream, request):
         owner = await upstream.identity()
@@ -179,6 +185,17 @@ class MediaActions:
             if row["kind"] == "garment":
                 async with upstream.mcp() as mcp:
                     fresh = await mcp.call("product_upload_receipt", {"idempotency_key": action})
+                return self.save(owner, action, fresh)
+            if row["kind"] == "person":
+                try:
+                    async with upstream.mcp() as mcp:
+                        fresh = await mcp.call("digital_twin_photo_check_receipt", {"idempotency_key": action})
+                except StylistError as exc:
+                    # No row yet is still an uncertain write; keep the action
+                    # unknown and let the next explicit refresh try again.
+                    if exc.code == "digital_twin_photo_check_not_found":
+                        return self.view(row)
+                    raise
                 return self.save(owner, action, fresh)
             if row["kind"] == "generation":
                 overview = await upstream.get("/api/digital_twin/overview")
