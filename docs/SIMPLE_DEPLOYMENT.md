@@ -123,6 +123,14 @@ sudo docker compose --project-directory /opt/aicloset-assistant/current \
   -p aicloset-assistant -f /opt/aicloset-assistant/current/compose.yaml logs --tail=80 stylist
 ```
 
+远程测试服务器实时查看当前运行的 Agent 日志（2026-11-09记录，推荐）：
+
+```bash
+sudo sh -c 'docker logs --tail=200 -f "$(docker ps -q --filter label=com.docker.compose.project=aicloset-assistant --filter label=com.docker.compose.service=stylist)"'
+```
+
+此命令按 Compose 项目与服务标签定位当前运行容器，显示最近200行并持续跟踪，无需切换目录或读取Compose配置；按Ctrl+C结束查看。容器被部署替换后需重新执行。`sudo cd`不会切换当前终端目录；没有匹配的运行容器时，先检查 `sudo docker ps -a --filter label=com.docker.compose.project=aicloset-assistant --filter label=com.docker.compose.service=stylist`。
+
 健康接口应返回 `{"ready":true}`。最终需看到安装器“部署成功”，仅数据库预检成功不代表应用已部署。
 
 只重启应用：
