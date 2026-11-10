@@ -14,6 +14,8 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, RetryPolicy, interrupt
 
+from .advice_boundaries import PREFIX as ADVICE_PREFIX
+from .advice_boundaries import boundary_fallback, boundary_problems, hypothetical_preference
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
 from .grounding import (
@@ -327,6 +329,11 @@ class Stylist:
                     and plan.mode in {"recommend", "modify", "weekly"}
                     and wardrobe_allowed(request.message, state.messages)):
                 plan.use_inventory = True
+            if not wardrobe_allowed(request.message, state.messages):
+                # An explicit opt-out must also override a model-enabled read.
+                plan.use_inventory = False
+                if not plan.conversation_only and not plan.weather_only and plan.mode in {"recommend", "modify"}:
+                    plan.mode = "consult"
             if (request.companion_profile and plan.use_profile_gender and task.gender is None
                     and not plan.conversation_only and not plan.weather_only):
                 task.gender = request.companion_profile.user_gender
@@ -641,6 +648,9 @@ class Stylist:
                 {key: Product.model_validate(p) for key, p in data["pool"].items()},
                 Task.model_validate(data["effective_task"]),
                 [Product.model_validate(x) for x in data["frozen"]], data["plan"]["mode"])
+            if data["plan"]["mode"] == "consult" and not data["plan"].get("weather_only"):
+                problems.extend(boundary_problems(Draft.model_validate(data["draft"]), request.message,
+                                                  Task.model_validate(data["effective_task"])))
             if not data["plan"].get("conversation_only") and not data["plan"].get("weather_only"):
                 problems.extend(attribute_claim_problems(Draft.model_validate(data["draft"]),
                     {key: Product.model_validate(p) for key, p in data["pool"].items()}))
@@ -724,6 +734,9 @@ class Stylist:
                 repaired["draft"] = draft.model_dump(mode="json")
                 problems = validate_node(repaired)["problems"]
             if problems:
+                if all(problem.startswith(ADVICE_PREFIX) for problem in problems):
+                    draft = boundary_fallback(draft, request.message, Task.model_validate(data["effective_task"]))
+                    return {"draft": draft.model_dump(mode="json"), "problems": []}
                 if request.regenerate_outfit and any(problem.startswith(REGENERATION_PREFIX) for problem in problems):
                     raise StylistError("outfit_regeneration_unavailable", "这次候选里还没找到不同且符合要求的穿搭，原搭配已保留。", 422)
                 retained = bool(source_session(data).looks)
@@ -896,6 +909,12 @@ class Stylist:
                 if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
                         "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
                     reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
+                # Receipt cleanup must not remove the hypothetical premise that
+                # the validated draft used to distinguish a condition from a fact.
+                if (plan.conversation_only and hypothetical_preference(request.message)
+                        and boundary_problems(Draft(message=reply.message), request.message, task)):
+                    reply.message = boundary_fallback(Draft(message=reply.message), request.message, Task()).message
+                    reply.follow_ups = []
                 # Validated, post-policy text preview; persistence and cards remain final-only.
                 report("reply_text", reply.message)
                 state.messages = (state.messages + [

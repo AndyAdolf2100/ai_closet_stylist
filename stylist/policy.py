@@ -90,6 +90,43 @@ def explicit_look_count(message):
     return values[-1] if values else (None, "")
 
 
+def separate_context_defaults(plan, payload, message):
+    """Keep trusted defaults out of current-message changes; never invent evidence."""
+    changes = dict(plan.changes)
+    memory_changes = dict(plan.memory_changes)
+    profile = payload.get("companion_profile") or {}
+    profile_values = set(profile.get("style_preferences") or []) | set(profile.get("dressing_priorities") or [])
+    notes = [note["content"] for note in payload.get("long_term_memory", [])]
+    for field, change in plan.changes.items():
+        spans = [change.evidence] if isinstance(change.evidence, str) else change.evidence
+        verified = bool(spans) and all(s and s in message for s in spans)
+        if verified or change.operation != "update":
+            continue
+        if field == "weather_policy":
+            # Weather opts out only on this turn. Stale citations cannot authorize it.
+            changes.pop(field)
+        elif (field == "preferences" and isinstance(change.value, list) and change.value
+              and all(isinstance(v, str) and v in profile_values for v in change.value)
+              and spans and all(s and (s in message or s in profile_values) for s in spans)):
+            changes.pop(field)  # Profile is already supplied separately to styling.
+        elif (field in {"style", "no_heels", "no_bare_shoulders", "excluded_materials",
+                        "excluded_colors", "excluded_categories", "preferences"}
+              and spans and all(s and (s in message or any(s in note for note in notes)) for s in spans)):
+            memory_spans = [s for s in spans if any(s in note for note in notes)]
+            if memory_spans:
+                # apply_memory still validates source, field, target and current-task priority.
+                memory_changes[field] = change.model_copy(update={"evidence": memory_spans}).model_dump()
+                changes.pop(field)
+    city = changes.get("city")
+    if (plan.weather_only and payload.get("selected_location") and city
+            and isinstance(city.value, str) and city.value.removesuffix("市") not in message
+            and city.value == (payload.get("current_task") or {}).get("city")
+            and not re.search(r"那里|那边|当地|那座|刚才|之前|原来|目的地", message)):
+        # Citing a generic weather question does not establish an old city as a new destination.
+        changes.pop("city")
+    return plan.model_copy(update={"changes": changes, "memory_changes": memory_changes})
+
+
 def weather_adjustment_requested(plan, state, message):
     """Weather-wide adjustment of an existing look does not require a garment slot."""
     if plan.replace_slots or not any(look.items for look in state.looks):
@@ -207,7 +244,13 @@ async def interpret_task(llm, payload, state, message):
                     and (not spans or any(not span or span not in message for span in spans))):
                 # This default is supplied by the trusted request, not a fabricated user citation.
                 previous = previous.model_copy(update={"changes": {field: change for field, change in previous.changes.items() if field != "city"}})
+        previous = separate_context_defaults(previous, payload, message)
         previous = discard_stale_restatements(state, previous, message)
+        city_change = previous.changes.get("city")
+        if previous.weather_only and previous.conversation_only and city_change:
+            spans = [city_change.evidence] if isinstance(city_change.evidence, str) else city_change.evidence
+            if spans and all(span and span in message for span in spans):
+                previous.conversation_only = False
         if previous.technical_question:
             previous = previous.model_copy(update={"conversation_only": True})
         if previous.conversation_only:
@@ -232,6 +275,16 @@ async def interpret_task(llm, payload, state, message):
                 weather_state = state.model_copy(update={"task": state.task.model_copy(update={
                     "weather_policy": "auto", "temp_min": None, "temp_max": None, "weather_description": ""})})
             task = merge_task(weather_state, previous, message)
+            # “两地各搭一套” is two looks, not the single-look cap inside that phrase.
+            if len(task.itinerary) > 1:
+                plain = re.sub(r'“[^”]*”|「[^」]*」|"[^\"]*"', '', message)
+                each = re.search(r"各(?:搭|来|给|要|安排)?([1-7一二两三四五六七])套", plain)
+                if each and not re.search(r"不|别|假设|比如|举例|转述", plain):
+                    numbers = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
+                    count = numbers.get(each[1], int(each[1]) if each[1].isdigit() else 0) * len(task.itinerary)
+                    if 1 <= count <= 7:
+                        previous.requested_look_count = count
+                        previous.look_count_evidence = each[0]
             if (weather_adjustment and 'event_date' not in previous.changes
                     and re.search(r'今天|今日', message)
                     and not re.search(r'明天|后天|昨天|前天|不是今天|不按今天|不要.{0,3}今天', message)
