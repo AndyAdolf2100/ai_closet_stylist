@@ -592,7 +592,14 @@ class Stylist:
                                for p in pool.values() if p.key not in original_targets],
                 "replacement_options": replacement_options,
                 "frozen_keys": [p.key for p in frozen], "replace_slots": plan.replace_slots,
-                "concept_fallback": concept, "warnings": warnings,
+                "concept_fallback": concept,
+                "reference_context": {
+                    "inventory_read_failed": bool(service_gap or data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable")),
+                    "has_candidates": bool(pool),
+                    "weather_available": bool(weather),
+                    "boundary": "未匹配不代表整个衣橱为空；文字参考不是已拥有的单品。没有实际天气时只给条件式建议，不按日期推断当地冷暖。",
+                },
+                "warnings": warnings,
                 "excluded_candidate_reasons": rejected,
                 "attribute_context": attribute_context(pool.values()),
                 "current_selection": [{"key": p.key, "slot": p.slot, "title": p.title}
@@ -743,7 +750,11 @@ class Stylist:
             if plan.mode == "modify" and not selected:
                 warnings.append(service_notice(request.assistant_persona, "original_retained"))
             delivery = "advice" if plan.mode == "consult" or not plan.use_inventory else ("outfit" if selected else "concept")
+            reference_reason = None
             if delivery == "concept":
+                reference_reason = ("unavailable" if data.get("service_gap") or
+                                    data.get("retrieval_diagnostics", {}).get("personal", {}).get("unavailable")
+                                    else "no_match" if pool else "no_candidates")
                 warnings.append(service_notice(request.assistant_persona, "concept"))
             gap = (plan.mode != "consult" and plan.use_inventory and not plan.weather_only
                    and not data.get("service_gap")
@@ -751,7 +762,7 @@ class Stylist:
             reply = Reply(**exploration, wardrobe_gap=gap, retrieval_diagnostics=data.get("retrieval_diagnostics", {}),
                           conversation_id=cid, version=request.expected_version + 1, mode=plan.mode,
                           city_selection_required=needs_outfit_city(plan, task),
-                          delivery=delivery, conversation_only=plan.conversation_only,
+                          delivery=delivery, reference_reason=reference_reason, conversation_only=plan.conversation_only,
                           weather_only=plan.weather_only,
                           message=draft.message, task=task, looks=looks, weather=weather,
                           retained_items=([Product.model_validate(p) for p in data["frozen"]]

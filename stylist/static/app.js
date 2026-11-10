@@ -373,8 +373,13 @@ function wardrobeGapCard(reply, request) {
   const owner = session?.user?.id, cid = reply.conversation_id, turn = reply.version;
   const card = el('section', 'journey-invite new-clothes-invite');
   card.setAttribute('aria-label', '搭配还差一点的选择');
+  const hasItems = reply.looks?.some(look => look.items?.length);
+  const gapText = hasItems ? '这次找到的衣物还没能配齐。' : '这份文字参考还没有匹配到真实单品。';
+  const nextText = reply.new_clothes
+    ? '可以添加你已有的衣物，或补充具体单品与穿搭要求后再试。'
+    : '可以添加你已有的衣物，或开启「邂逅新衣」寻找衣橱之外的参考款。';
   card.append(el('span','journey-card-label','衣橱小笺'), el('strong','','让这次搭配，多一点可能'),
-    el('p','','这次找到的衣物还没能配齐。可以添入你已有的衣服，也可以一起邂逅衣橱之外的新选择。'));
+    el('p','',gapText + nextText));
   const current = () => {
     if (busy) return false;
     if (!card.isConnected || session?.user?.id !== owner || conversation !== cid || version !== turn) {
@@ -462,6 +467,16 @@ function showReply(reply, request = null, previewNode = null) {
   else if (selectedLook?.conversationId !== conversation) selectedLook = null;
   const node = previewNode || bubble('assistant', reply.message);
   if(previewNode){node.classList.remove('reply-preview');node.lastElementChild.textContent=reply.message;}
+  if (reply.delivery === 'concept') {
+    const reasons = {
+      no_candidates: '这次没有查到可用于搭配的单品。',
+      no_match: '这次候选中暂时没选出符合要求的单品。',
+      unavailable: '这次衣物信息读取不完整，不能据此判断衣橱是否为空。'
+    };
+    const notice = el('p', 'warning concept-notice', (reasons[reply.reference_reason] || '这份建议尚未匹配真实单品。') +
+      '以下是穿搭思路，不代表你已拥有这些衣物，目前不能保存或试穿。');
+    node.insertBefore(notice, node.children[1] || null);
+  }
   const productEntry = reply.product_entry;
   const outfitEntry = reply.outfit_entry;
   if (productEntry || outfitEntry) {
@@ -514,7 +529,7 @@ function showReply(reply, request = null, previewNode = null) {
   markNewContent();
   const systemItems = reply.looks?.some(look => look.items?.some(item => item.source === 'system'));
   const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
-  const label = { advice: '穿法建议', outfit: systemItems ? '邂逅新衣 · 含未拥有的参考款' : partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 未完成商品匹配', clarification: '需要你确认' };
+  const label = { advice: '穿法建议', outfit: systemItems ? '邂逅新衣 · 含未拥有的参考款' : partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 非已有单品', clarification: '需要你确认' };
   if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
   if (reply.city_selection_required && !selectedCity) node.append(cityInvitation(reply, request));
   if (reply.weather?.source === 'itinerary_forecast') {
