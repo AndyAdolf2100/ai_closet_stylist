@@ -23,6 +23,7 @@ class OutfitSaves:
         self.store = store
 
     def context(self, owner, cid, version, index):
+        self.store.require_conversation(owner, cid)
         with self.store.connection() as conn:
             _, look = owned_look(conn, owner, cid, version, index)
         if not look.items:

@@ -75,6 +75,7 @@ class Compositions:
     def _key(self, owner, cid, version, index, theme):
         if theme not in {"female", "male"} or version < 1 or not 0 <= index <= 6:
             raise StylistError("invalid_composition", "搭配图参数不正确。", 422)
+        self.store.require_conversation(owner, cid)
         with self.store.connection() as conn:
             row = conn.execute("SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?",
                                (owner, cid, version)).fetchone()

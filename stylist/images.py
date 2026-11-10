@@ -40,6 +40,7 @@ class ImageService:
         self.store = store
 
     def context(self, owner, cid, version):
+        self.store.require_conversation(owner, cid)
         with self.store.connection() as conn:
             row = conn.execute("SELECT * FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, owner)).fetchone()
             if not row:

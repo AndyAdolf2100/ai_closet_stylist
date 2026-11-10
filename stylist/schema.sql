@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS stylist_sessions (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS stylist_sessions_owner ON stylist_sessions(owner_id, updated_at);
+CREATE TABLE IF NOT EXISTS stylist_deleted_conversations (
+ owner_id TEXT NOT NULL, conversation_id TEXT NOT NULL,
+ deleted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(owner_id, conversation_id)
+);
+CREATE INDEX IF NOT EXISTS stylist_deleted_conversations_owner ON stylist_deleted_conversations(owner_id, deleted_at);
 CREATE TABLE IF NOT EXISTS stylist_requests (
   owner_id TEXT NOT NULL, request_id TEXT NOT NULL, conversation_id TEXT NOT NULL,
   digest TEXT NOT NULL, status TEXT NOT NULL, response_json TEXT,

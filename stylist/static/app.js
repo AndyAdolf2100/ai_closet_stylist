@@ -677,10 +677,7 @@ async function refreshHistory() {
   const owner = session.user.id, sequence = ++historySequence;
   try {
     const allRows = await api('/stylist-api/conversations');
-    const hiddenKey='stylist-hidden-conversations-v1:'+String(owner);
-    let hidden;
-    try{const saved=JSON.parse(localStorage.getItem(hiddenKey)||'[]');hidden=new Set(Array.isArray(saved)?saved:[]);}catch{hidden=new Set();}
-    const rows=allRows.filter(row=>!hidden.has(row.id));
+    const rows=allRows;
     if (session?.user.id !== owner || sequence !== historySequence) return;
     $('history-status').textContent = rows.length ? '' : '还没有聊过的日常，开始聊聊吧。';
     for (const container of [$('history'), $('mobile-history-list')]) {
@@ -719,14 +716,12 @@ async function refreshHistory() {
         const cross=document.createElementNS('http://www.w3.org/2000/svg','path');
         cross.setAttribute('d','M6 6l12 12M18 6L6 18');cross.setAttribute('fill','none');cross.setAttribute('stroke','currentColor');cross.setAttribute('stroke-width','1.6');cross.setAttribute('stroke-linecap','round');
         icon.append(cross);remove.append(icon);
-        remove.setAttribute('aria-label','删除对话：'+title);remove.title='只从列表隐藏，保留对话内容';
+        remove.setAttribute('aria-label','删除对话：'+title);remove.title='从当前账号删除这条对话';
         remove.onclick=async()=>{
           if(busy||session?.user.id!==owner||sequence!==historySequence||!entry.isConnected)return;
           try{
-            const saved=JSON.parse(localStorage.getItem(hiddenKey)||'[]');
-            const next=new Set(Array.isArray(saved)?saved:[]);next.add(row.id);
-            localStorage.setItem(hiddenKey,JSON.stringify([...next]));
-          }catch{notifyIssue('暂时无法保存隐藏状态，请稍后再试。');return;}
+            await api('/stylist-api/conversations/'+encodeURIComponent(row.id),{method:'DELETE'});
+          }catch(err){notifyIssue(err.message);return;}
           await refreshHistory();
         };
         entry.append(button,remove);container.append(entry);

@@ -73,6 +73,7 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 | --- | --- |
 | `stylist_companion_profiles` | 当前账号称呼、角色与显式定制偏好 |
 | `stylist_sessions` | owner、当前 version、任务与方案、当前执行 claim／租约；防止旧请求覆盖新结果 |
+| `stylist_deleted_conversations` | 账号级会话软删除标记；不级联删除消息、上下文、试穿、保存搭配或其他业务记录 |
 | `stylist_requests` | `(owner_id,request_id)` 唯一；内容摘要、状态与响应；同请求重放返回同一结果 |
 | `stylist_messages` | 每轮原输入和完整结构化回复；`(conversation_id,version)` 唯一 |
 | `stylist_image_actions` | 用户、搭配版本、费用／人物／契约快照、有效期、确认及执行结果 |
@@ -96,6 +97,7 @@ SQLite 定义见 [`stylist/schema.sql`](../stylist/schema.sql)，默认创建在
 | `GET/PUT /stylist-api/memories` | 当前账号手记，保存校验版本 |
 | `GET /stylist-api/conversations` | 本账号最近对话 |
 | `GET /stylist-api/conversations/{id}` | 本账号历史及当前版本 |
+| `DELETE /stylist-api/conversations/{id}` | 软删除本账号对话；成功返回 `{"conversation_id":"sty_...","deleted":true}`，重复删除幂等；进行中操作返回 409 `conversation_delete_conflict` |
 | `POST /stylist-api/wardrobe/export` | 导出当前账号可见的全部正常衣橱图片与清单到本机私有目录；只读业务数据，图片优先抠图、原图兜底 |
 | `POST /stylist-api/integrations/check` | 当前登录态逐项真实只读检查，包含模型小请求；不执行生图、保存或扣费 |
 | `POST /stylist-api/images/quote` | 根据当前搭配版本、look_index，生成有期限的费用确认 |
