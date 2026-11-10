@@ -1,4 +1,6 @@
 """Only owned clothes enter images, even when an outfit needs more categories."""
+from datetime import timedelta
+
 import pytest
 
 from scripts.dialogue_validation import DialogueUpstream
@@ -9,6 +11,7 @@ from stylist.errors import StylistError
 from stylist.models import Change, ChatRequest, Draft, LookDraft, Plan, Product, Slot, Task
 from stylist.policy import validate_look
 from stylist.store import Store
+from stylist.weather import today
 
 
 @pytest.mark.asyncio
@@ -70,6 +73,59 @@ async def test_empty_wardrobe_stays_text_only(tmp_path):
     assert '/api/user_product/quick_edit_list' in upstream.calls
     assert reply.delivery == 'concept' and not reply.looks[0].items
     assert not reply.upload_suggestion and reply.upload_intent is None
+
+
+@pytest.mark.asyncio
+async def test_empty_wardrobe_cold_weather_uses_safe_text_fallback(tmp_path):
+    class ColdUpstream(DialogueUpstream):
+        async def forecast(self, city):
+            self.calls.append('forecast')
+            return {'list': [{'data_format': (today() + timedelta(days=i)).isoformat(),
+                              'temp_day': 17, 'temp_night': 3,
+                              'condition_day': '多云', 'condition_night': '阴'} for i in range(14)]}
+
+    upstream = ColdUpstream('empty_wardrobe')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend', use_inventory=True)
+            return Draft(message='先穿这套，外套防风而且不会勒腰。', looks=[LookDraft(
+                title='文字参考', pieces=['衬衫', '长裤'], reference_pieces=['保暖外套'],
+                notes=['外套防风而且不会勒腰。'], why=['按日常场景组合'], how=['按体感调整层次'])])
+
+    reply = await Stylist(Settings(), Store(str(tmp_path / 'empty-cold.db')), Model()).chat(
+        upstream, ChatRequest(message='今天上海出门，帮我从衣橱搭一套', request_id='empty-cold-query'))
+    assert reply.delivery == 'concept'
+    assert reply.wardrobe_gap and not reply.new_clothes
+    assert not [item for look in reply.looks for item in look.items]
+    assert reply.looks[0].reference_pieces == ['保暖外套']
+    assert all('防风而且不会勒腰' not in note for note in reply.looks[0].notes)
+    assert '/api/product/list' not in upstream.calls and 'kb_search' not in upstream.calls
+
+
+@pytest.mark.asyncio
+async def test_first_request_validation_failure_is_terminal_without_retained_outfit(tmp_path):
+    upstream = DialogueUpstream('partial-test')
+
+    class Model:
+        async def generate(self, name, payload, result_type):
+            if name == 'plan':
+                return Plan(mode='recommend', use_inventory=True,
+                             changes={'weather_policy': Change(value='ignored', evidence='不考虑天气')})
+            return Draft(message='选款结果', looks=[LookDraft(title='无效搭配', selected_keys=['user:missing'],
+                                                              why=['测试'], how=['测试'])])
+
+    store = Store(str(tmp_path / 'failed-request.db'))
+    with pytest.raises(StylistError) as error:
+        await Stylist(Settings(), store, Model()).chat(
+            upstream, ChatRequest(message='帮我搭一套，不考虑天气', request_id='first-failed-query'))
+    assert error.value.message == '这次没有找到可用的衣橱单品，暂时无法完成文字搭配。'
+    with store.connection() as row:
+        saved = row.execute("SELECT status,response_json FROM stylist_requests WHERE request_id=?",
+                            ('first-failed-query',)).fetchone()
+    assert saved['status'] == 'failed'
+    assert 'outfit_validation_failed' in saved['response_json']
 
 
 def test_partial_selection_keeps_hard_rules_and_frozen_pieces():

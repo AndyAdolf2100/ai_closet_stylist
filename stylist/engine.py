@@ -23,7 +23,7 @@ from .grounding import (
     ground_attribute_fallback,
     normalize_draft,
 )
-from .layering import layering_problems, layering_requirements
+from .layering import ensure_weather_references, layering_problems, layering_requirements
 from .memory import (
     apply_memory,
     automatic_preference,
@@ -620,7 +620,10 @@ class Stylist:
                 draft = draft.model_copy(update={"looks": []})
             if data["plan"].get("weather_only"):
                 draft = draft.model_copy(update={"follow_ups": []})
-            return {"draft": normalize_draft(draft).model_dump(mode="json")}
+            concept_fallback = (data["plan"].get("mode") != "consult"
+                                and data["plan"].get("use_inventory")
+                                and not data["pool"])
+            return {"draft": normalize_draft(draft, preserve_references=concept_fallback).model_dump(mode="json")}
 
         def validate_node(data):
             if not data["plan"].get("conversation_only"):
@@ -653,12 +656,28 @@ class Stylist:
 
         async def repair_node(data):
             attribute_only = all(problem.startswith(PREFIX) for problem in data["problems"])
+            concept_fallback = (data["plan"].get("mode") != "consult"
+                                and data["plan"].get("use_inventory")
+                                and not data["pool"])
+            if concept_fallback:
+                draft = ground_attribute_fallback(
+                    Draft.model_validate(data["draft"]), {}, request.assistant_persona,
+                    preserve_references=True)
+                draft = ensure_weather_references(
+                    draft, Task.model_validate(data["effective_task"]),
+                    Plan.model_validate(data["plan"]), data.get("weather"),
+                    schedule_dates(Plan.model_validate(data["plan"]), Task.model_validate(data["task"])))
+                repaired = {**data, "draft": draft.model_dump(mode="json")}
+                problems = validate_node(repaired)["problems"]
+                if not problems:
+                    return {"draft": repaired["draft"], "problems": []}
             # Text-only unsupported claims need no second selection or full model rewrite.
             # Keep semantic title/style repairs and conversation expression with the model.
             if attribute_only and not data["plan"].get("conversation_only") and not any(
                     problem.removeprefix(PREFIX).split(" ", 1)[0].endswith((".title", ".style_name")) for problem in data["problems"]):
                 local = ground_attribute_fallback(Draft.model_validate(data["draft"]),
-                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona,
+                    preserve_references=concept_fallback)
                 candidate = {**data, "draft": local.model_dump(mode="json")}
                 if not validate_node(candidate)["problems"]:
                     return {"draft": candidate["draft"], "problems": []}
@@ -680,7 +699,7 @@ class Stylist:
                         for field in ("title", "style_name", "pieces", "reference_pieces"):
                             if not any(path.startswith(f"looks.{i}.{field}") for path in bad_paths):
                                 setattr(new, field, getattr(old, field))
-            draft = normalize_draft(draft)
+            draft = normalize_draft(draft, preserve_references=concept_fallback)
             repaired = {**data, "draft": draft.model_dump(mode="json")}
             problems = validate_node(repaired)["problems"]
             if any(problem.startswith(REPLACEMENT_PREFIX) for problem in problems):
@@ -691,13 +710,17 @@ class Stylist:
                 problems = validate_node(repaired)["problems"]
             if problems and all(problem.startswith(PREFIX) for problem in problems):
                 draft = ground_attribute_fallback(draft,
-                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona)
+                    {key: Product.model_validate(p) for key, p in data["pool"].items()}, request.assistant_persona,
+                    preserve_references=concept_fallback)
                 repaired["draft"] = draft.model_dump(mode="json")
                 problems = validate_node(repaired)["problems"]
             if problems:
                 if request.regenerate_outfit and any(problem.startswith(REGENERATION_PREFIX) for problem in problems):
                     raise StylistError("outfit_regeneration_unavailable", "这次候选里还没找到不同且符合要求的穿搭，原搭配已保留。", 422)
-                raise StylistError("outfit_validation_failed", "这次选款未通过要求检查，原搭配已保留。", 422)
+                retained = bool(source_session(data).looks)
+                message = ("这次选款未通过要求检查，原搭配已保留。" if retained else
+                           "这次没有找到可用的衣橱单品，暂时无法完成文字搭配。")
+                raise StylistError("outfit_validation_failed", message, 422)
             return {"draft": repaired["draft"], "problems": []}
 
         def deliver_node(data):
@@ -876,6 +899,9 @@ class Stylist:
                     memory_save = None
                 await asyncio.to_thread(self.store.finish, owner, request, claim, state, reply, memory_save)
                 return reply
+        except StylistError as exc:
+            await asyncio.to_thread(self.store.fail, owner, request, exc)
+            raise
         finally:
             usage_context.reset(usage_token)
             pulse.cancel()

@@ -254,6 +254,13 @@ class Store:
                          "WHERE owner_id=? AND conversation_id=? AND request_id=?",
                          (reply.version, owner, reply.conversation_id, request.request_id))
 
+    def fail(self, owner, request, error):
+        response = json.dumps({"code": error.code, "message": error.message}, ensure_ascii=False)
+        with self.connection() as conn:
+            conn.execute("UPDATE stylist_requests SET status='failed',response_json=? "
+                         "WHERE owner_id=? AND request_id=? AND status='processing'",
+                         (response, owner, request.request_id))
+
     def release(self, owner, cid, claim):
         with self.connection() as conn:
             conn.execute("UPDATE stylist_sessions SET active_claim=NULL,lease_until=0 WHERE id=? AND owner_id=? AND active_claim=?",

@@ -95,7 +95,7 @@ def attribute_claim_problems(draft, pool):
             for path, text, products in _fields(draft, pool) if _issues(text, products)]
 
 
-def ground_attribute_fallback(draft: Draft, pool, persona):
+def ground_attribute_fallback(draft: Draft, pool, persona, *, preserve_references=False):
     """Remove unsupported sentences intact; put each necessary caveat in notes once."""
     male = is_male_persona(persona)
     fit = "是否合身、腰腹会不会受压，还要看尺寸和试穿感受。" if male else "这件穿着是否合身，还要试穿看看腰腹有没有受压。"
@@ -138,10 +138,10 @@ def ground_attribute_fallback(draft: Draft, pool, persona):
             look["notes"].append(fit)
         if "weather" in kinds and weather not in look["notes"]:
             look["notes"].append(weather)
-    return normalize_draft(Draft.model_validate(result))
+    return normalize_draft(Draft.model_validate(result), preserve_references=preserve_references)
 
 
-def normalize_draft(draft):
+def normalize_draft(draft, *, preserve_references=False):
     result = draft.model_copy(deep=True)
     result.follow_ups = [text for text in result.follow_ups if not re.search(
         r"我可以|我帮你|要不要我|告诉我你|需要我|让我帮你", text)]
@@ -155,7 +155,7 @@ def normalize_draft(draft):
             look.title = "+".join(clean)
         for field in ("pieces", "reference_pieces", "why", "how", "notes"):
             setattr(look, field, list(dict.fromkeys(getattr(look, field))))
-        if not look.selected_keys:
+        if not look.selected_keys and not preserve_references:
             # A wholly textual card has one garment list. References distinguish
             # missing pieces only when the card also contains owned items.
             look.pieces = list(dict.fromkeys(look.pieces + look.reference_pieces))
