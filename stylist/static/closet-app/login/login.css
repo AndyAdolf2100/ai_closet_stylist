@@ -63,8 +63,8 @@ form input::placeholder{color:var(--muted)}
 .login-portrait-clipdefs{position:absolute;pointer-events:none}
 .login-portrait-frame{position:absolute;inset:0;display:block;opacity:0;transition:opacity 1.4s cubic-bezier(.45,0,.55,1);pointer-events:none}
 .login-portrait-frame.is-current{opacity:1}
-.login-portrait-stage .login-portrait-frame img{position:absolute;max-width:none;inset:auto;width:var(--portrait-width);height:auto;left:var(--portrait-left);top:var(--portrait-top);transform:rotate(var(--portrait-angle,0deg)) scale(1.02);transform-origin:var(--portrait-origin-x) var(--portrait-origin-y);transition:transform 5.2s ease;pointer-events:none}
-.login-portrait-stage .login-portrait-frame.is-current img{transform:rotate(var(--portrait-angle,0deg)) scale(1)}
+.login-portrait-stage .login-portrait-frame img{position:absolute;max-width:none;inset:auto;width:var(--portrait-width);height:auto;left:var(--portrait-left);top:var(--portrait-top);transform:scale(1.02);transform-origin:var(--portrait-origin-x) var(--portrait-origin-y);transition:transform 5.2s ease;pointer-events:none}
+.login-portrait-stage .login-portrait-frame.is-current img{transform:scale(1)}
 .quick-welcome>.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--muted);margin:4px 0 0}
 .quick-welcome h2{font:600 27px/1.5 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;letter-spacing:.02em;margin:12px 0 8px}
 .quick-welcome .intro{font-size:12px;margin:0 0 26px;line-height:1.8}
@@ -96,3 +96,9 @@ form input::placeholder{color:var(--muted)}
 .quick-actions .carrier-number{margin:6px 0 0;text-align:center}
 .quick-actions .carrier-number strong{font-size:20px;line-height:1.4;letter-spacing:1px}
 .quick-actions .carrier-number p{font-size:11px;margin:3px 0 0}
+
+/* Center the brand above the portrait, keeping the shared back entry. */
+.login-page:has(.quick-login:not([hidden])) .login-top>span{visibility:hidden}
+.login-brand{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 28px;color:var(--accent);font:12px/1.5 'Songti SC',serif;letter-spacing:3px}
+.login-brand::before,.login-brand::after{content:'';width:25px;height:1px;background:var(--line)}
+@media(max-height:780px){.login-brand{margin-bottom:20px}}
