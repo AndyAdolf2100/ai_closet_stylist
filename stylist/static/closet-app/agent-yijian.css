@@ -253,4 +253,4 @@ html[data-app-design=yijian] #agent-page>header .y-agent-city-caption[hidden]{di
 #yijian-agent-root #chat-form.y-compact-composer #send:disabled{opacity:.45;cursor:default}
 #yijian-agent-root .reply-stopped{display:block;margin-top:8px;font-size:11px;color:var(--y-muted)}
 
-#yijian-agent-root .subject-entry-image{display:block;width:auto;max-width:100%;max-height:320px;object-fit:contain;border-radius:12px;margin:12px 0}#yijian-agent-root .subject-entry-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}#yijian-agent-root .subject-entry-actions>button{flex:1;min-height:44px;min-width:120px;margin:0}#yijian-agent-root .subject-entry-title{overflow-wrap:anywhere}
+#yijian-agent-root .subject-entry-image{display:block;width:auto;max-width:100%;max-height:320px;object-fit:contain;border-radius:12px;margin:12px auto}#yijian-agent-root .subject-entry-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}#yijian-agent-root .subject-entry-actions>button{flex:1;min-height:44px;min-width:120px;margin:0}#yijian-agent-root .subject-entry-title{overflow-wrap:anywhere}
