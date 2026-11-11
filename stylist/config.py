@@ -10,6 +10,11 @@ from .catalog_config import CatalogConfig
 
 @dataclass(frozen=True)
 class Settings:
+    langfuse_enabled: bool = False
+    langfuse_base_url: str = ""
+    langfuse_public_key: str = field(default="", repr=False)
+    langfuse_secret_key: str = field(default="", repr=False)
+    langfuse_environment: str = "development"
     catalog: CatalogConfig = field(default_factory=CatalogConfig, repr=False)
     server_url: str = "http://127.0.0.1:8080"
     mcp_url: str = "http://127.0.0.1:8080/mcp"
@@ -53,6 +58,12 @@ class Settings:
         origin = urlsplit(mcp_url)
         server_url = os.getenv("STYLIST_SERVER_URL", f"{origin.scheme}://{origin.netloc}")
         return cls(
+            langfuse_enabled=os.getenv("LANGFUSE_TRACING_ENABLED", "true").lower() in {"1", "true", "yes"}
+                and bool(os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY")),
+            langfuse_base_url=os.getenv("LANGFUSE_BASE_URL", "").rstrip("/"),
+            langfuse_public_key=os.getenv("LANGFUSE_PUBLIC_KEY", ""),
+            langfuse_secret_key=os.getenv("LANGFUSE_SECRET_KEY", ""),
+            langfuse_environment=os.getenv("LANGFUSE_TRACING_ENVIRONMENT", "development"),
             purchase_web_url=os.getenv("STYLIST_PURCHASE_WEB_URL", "").rstrip("/"),
             usage_callback_url=os.getenv("STYLIST_USAGE_CALLBACK_URL", ""),
             usage_environment=os.getenv("STYLIST_USAGE_ENVIRONMENT", "test"),

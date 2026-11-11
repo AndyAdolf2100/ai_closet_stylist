@@ -77,6 +77,7 @@ def create_app(settings=None):
                 yield
             finally:
                 await runs.close()
+                await asyncio.to_thread(engine.tracing.close)
                 if sender_task:
                     sender_task.cancel()
                     await asyncio.gather(sender_task, return_exceptions=True)

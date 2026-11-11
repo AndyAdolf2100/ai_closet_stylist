@@ -21,6 +21,7 @@ dependencies = [
   "langgraph-checkpoint-postgres>=3,<4",
   "psycopg[binary]>=3.2,<4",
   "pymysql[rsa]>=1.1,<2",
+  "langfuse>=4.7,<5",
 ]
 
 [project.optional-dependencies]

@@ -73,6 +73,8 @@ from .product_search import search_products
 from .progress import report
 from .retrieval import from_row, resolve_products, retrieve, saved_candidates, weather_for
 from .subject_entry import resolve_outfit_entry, resolve_product_entry
+from .tracing import Tracing, observation
+from .tracing import text as trace_text
 from .usage import UsageContext, UsageTokens
 from .usage import context as usage_context
 from .weather import WeatherService, apply_forecast
@@ -137,6 +139,7 @@ def needs_outfit_city(plan: Plan, task: Task) -> bool:
 class Stylist:
     def __init__(self, settings, store, llm, usage_tokens=None):
         self.settings, self.store, self.llm = settings, store, llm
+        self.tracing = Tracing(settings)
         self.usage_tokens = usage_tokens if usage_tokens is not None else UsageTokens()
         if store.postgres and settings.checkpoint_database and not settings.checkpoint_database.startswith(("postgres://", "postgresql://")):
             raise ValueError("PostgreSQL 会话必须搭配共享 PostgreSQL 检查点。")
@@ -891,7 +894,8 @@ class Stylist:
             async def tracked(data, _node=node, _name=name):
                 import inspect
                 value = _node(data)
-                result = await value if inspect.isawaitable(value) else value
+                with observation("agent-" + _name):
+                    result = await value if inspect.isawaitable(value) else value
                 return {**result, "completed_nodes": [_name]}
             builder.add_node(name, tracked, retry_policy=RetryPolicy(max_attempts=2, retry_on=retryable)
                              if name in {"understand", "style", "repair"} else None)
@@ -912,6 +916,15 @@ class Stylist:
         return [entry.model_dump() for entry in book.entries] if book.enabled else []
 
     async def chat(self, upstream, request, decision=None):
+        with self.tracing.bind(), observation("stylist-chat", input=trace_text(request.message),
+                metadata={"request_id": request.request_id, "conversation_id": request.conversation_id,
+                          "assistant_persona": request.assistant_persona, "has_attachment": bool(request.chat_image)}) as trace:
+            reply = await self._chat(upstream, request, decision)
+            trace.update(output=trace_text(reply.message), metadata={"request_id": request.request_id,
+                "conversation_id": reply.conversation_id, "version": reply.version, "delivery": reply.delivery})
+            return reply
+
+    async def _chat(self, upstream, request, decision=None):
         owner = await upstream.identity()
         self.usage_tokens.register(owner, getattr(upstream, 'authorization', None))
         if decision is not None and (request.subject_product is not None or request.subject_outfit is not None):

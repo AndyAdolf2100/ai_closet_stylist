@@ -8,6 +8,8 @@ from pydantic import ValidationError
 
 from .errors import StylistError
 from .personas import persona_instructions
+from .tracing import observation
+from .tracing import text as trace_text
 from .usage import action
 from .usage import context as usage_context
 
@@ -41,6 +43,12 @@ class LanguageModel:
                 yield client
 
     async def generate(self, prompt_name, payload, result_type):
+        with observation("model-" + prompt_name, kind="generation", model=self.settings.llm_model,
+                input=trace_text(payload.get("message") or payload.get("request")),
+                metadata={"prompt": prompt_name, "has_attachment": bool(payload.get("chat_image"))}) as generation:
+            return await self._generate(prompt_name, payload, result_type, generation)
+
+    async def _generate(self, prompt_name, payload, result_type, generation):
         settings = self.settings
         if not (settings.llm_key and settings.llm_model and settings.llm_url):
             raise StylistError("llm_not_configured", "搭配模型尚未配置。")
@@ -102,6 +110,12 @@ class LanguageModel:
                     if metering and prompt_name == "plan" and metering.business_action != "outfit_regenerate":
                         metering.business_action = action(result)
                     usage_status = "succeeded"
+                    usage = envelope.get("usage") or {}
+                    details = {target: usage[source] for source, target in
+                               [("prompt_tokens", "input"), ("completion_tokens", "output")]
+                               if type(usage.get(source)) is int and usage[source] >= 0}
+                    generation.update(output=trace_text(value), usage_details=details,
+                                      metadata={"prompt": prompt_name, "attempts": attempt + 1})
                     return result
                 except (ValidationError, ValueError, KeyError, IndexError, TypeError) as exc:
                     if attempt == 0:

@@ -54,6 +54,11 @@ class Upstream:
         self._catalog_identity_lock = asyncio.Lock()
 
     async def get(self, path: str, params=None):
+        from .tracing import observation
+        with observation("server-read", metadata={"path": path}):
+            return await self._get(path, params)
+
+    async def _get(self, path: str, params=None):
         allowed = {"/api/user/info", "/api/user_product/quick_edit_list", "/api/product/list", "/api/memories",
                    "/api/digital_twin/overview", "/api/digital_twin/profile/options", "/api/vip_center/points_detail"}
         if path not in allowed:
@@ -233,6 +238,15 @@ class MCPReads:
             raise StylistError("tool_catalog_truncated", "工具目录读取不完整。")
 
     async def call(self, name, arguments):
+        from .tracing import observation
+        with observation("mcp-" + name, kind="tool", metadata={"tool": name},
+                input={key: arguments[key] for key in ("source", "product_id", "items") if key in arguments}) as trace:
+            result = await self._read_call(name, arguments)
+            if isinstance(result, dict):
+                trace.update(output={"returned_items": len(result.get("items") or [])})
+            return result
+
+    async def _read_call(self, name, arguments):
         if name not in READ_TOOLS:
             raise StylistError("tool_not_allowed", "该操作未接入，不会执行。", 400)
         return await self._validated_call(name, arguments)
