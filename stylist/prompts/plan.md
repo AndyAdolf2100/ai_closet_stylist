@@ -81,3 +81,6 @@ use_profile_preferences 控制是否使用本人保存的穿搭风格：为他�
 资料与本轮证据分流：companion_profile中的风格和穿衣优先项由style直接读取，不复制进changes；long_term_memory的已保存偏好只放memory_changes，引用手记原文。即使用户说“按刚才的喜好”，也不能把旧喜好引用为本轮changes证据。换穿衣对象时只提取本轮新对象和限制，不重抄旧轮天气指令；未明确本轮忽略天气就省略weather_policy。
 本轮只有“今天会下雨吗”等泛问且selected_location有值时，不在changes.city填旧城市并引用整个问题；由程序使用页面城市。明确“那里／刚才的城市”才承接旧地点。
 同一句含“绝对不穿高跟鞋”和“必须细高跟”等互斥要求时，先澄清冲突，不擅自把绝对禁穿解释为临时例外，不自动选被禁单品。
+
+
+单件查找分流：用户想从个人衣柜找／筛选／查看一件单品、某类鞋包配饰，product_search=true，product_search_evidence必须逐字引用本轮意图，mode=recommend，use_inventory=true，weather_scope=none，clarification=null。例如“我想要一件黑色的衣服，帮我从衣柜里找找”“有没有黑鞋”“看看衣柜里的包”“帮我挑件通勤外套”。整套／整身／套装商品／如何搭配／用这件搭一套仍product_search=false，沿用搭配流程；不能因为句中出现单品名就当作单品查询。“黑色衣服怎么搭”“用黑鞋搭一套”是搭配。“衣柜有黑衣服真方便”等陈述、否定查询、引用他人、假设举例、购买或系统参考款查询不属于个人单品查找。“还有其他黑色的呢”在已有单品查询历史时延续查找；“这件”无法唯一指向候选时clarification自然澄清，不能随机指定商品。

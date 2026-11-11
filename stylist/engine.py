@@ -69,6 +69,7 @@ from .policy import (
     validate_look,
 )
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
+from .product_search import search_products
 from .progress import report
 from .retrieval import from_row, resolve_products, retrieve, saved_candidates, weather_for
 from .subject_entry import resolve_outfit_entry, resolve_product_entry
@@ -261,6 +262,18 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            if (plan.product_search and plan.product_search_evidence.strip()
+                    and plan.product_search_evidence.strip() in request.message
+                    and not request.regenerate_outfit and not request.pair_subject_product
+                    and not request.upload_action_id and not request.chat_image
+                    and not plan.upload_intent and not plan.avatar_intent
+                    and not plan.technical_question and not plan.weather_only
+                    and not plan.conversation_only and not plan.clarification
+                    and wardrobe_allowed(request.message, state.messages)):
+                plan.mode, plan.use_inventory, plan.weather_scope = "recommend", True, "none"
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"),
+                        "frozen": []}
+            plan.product_search = False
             upload_anchor_pairing = bool(request.upload_action_id and wardrobe_requested(request.message))
             if upload_anchor_pairing or request.pair_subject_product:
                 # The upload card is an explicit user action. Keep this request on
@@ -845,8 +858,34 @@ class Stylist:
                           warnings=list(dict.fromkeys(warnings)), follow_ups=draft.follow_ups)
             return {"reply": reply.model_dump(mode="json")}
 
+        async def product_search_node(data):
+            state = source_session(data)
+            profile_gender = request.companion_profile.user_gender if request.companion_profile else None
+            plan = Plan.model_validate(data["plan"])
+            gender_change = plan.changes.get("gender")
+            search_task = Task(gender=gender_change.value if gender_change else profile_gender if plan.use_profile_gender else None)
+            report("wardrobe", progress_message(request.assistant_persona, "wardrobe"))
+            try:
+                products, partial = await search_products(upstream, self.llm, request, search_task, state.messages)
+                message = "找到这些单品，你可以点开看看，再决定怎么搭。" if products else "这次查询暂时没找到符合条件的单品，不代表整个衣橱里没有；可以换个描述，或添加想找的单品。"
+                warnings = ["这次查询覆盖前150件单品，未检索全部衣橱。"] if partial else []
+                reason = None if products else "no_match"
+            except AuthenticationExpired:
+                raise
+            except StylistError as exc:
+                if exc.code == "product_search_invalid_selection":
+                    raise
+                products, warnings, reason = [], [], "unavailable"
+                message = "这次单品查询没有完成，还不能判断有没有符合条件的单品，请稍后再试。"
+            reply = Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                mode="recommend", delivery="advice", task=state.task, message=message,
+                product_search=True, product_results=products, warnings=warnings,
+                reference_reason=reason, wardrobe_gap=not products and reason != "unavailable",
+                new_clothes=data.get("new_clothes", False))
+            return {"reply": reply.model_dump(mode="json")}
+
         builder = StateGraph(RunState)
-        for name, node in [("understand", understand), ("approval", approval), ("weather", weather_node),
+        for name, node in [("understand", understand), ("product_search", product_search_node), ("approval", approval), ("weather", weather_node),
                            ("retrieve", retrieve_node), ("style", style_node), ("validate", validate_node),
                            ("repair", repair_node), ("deliver", deliver_node)]:
             async def tracked(data, _node=node, _name=name):
@@ -857,13 +896,14 @@ class Stylist:
             builder.add_node(name, tracked, retry_policy=RetryPolicy(max_attempts=2, retry_on=retryable)
                              if name in {"understand", "style", "repair"} else None)
         builder.add_edge(START, "understand")
-        builder.add_conditional_edges("understand", lambda d: "deliver" if d["plan"]["clarification"] else "approval")
+        builder.add_conditional_edges("understand", lambda d: "deliver" if d["plan"]["clarification"] else "product_search" if d["plan"].get("product_search") else "approval")
         builder.add_conditional_edges("approval", lambda d: "deliver" if d["cancelled"] else "weather")
         builder.add_conditional_edges("weather", lambda d: "deliver" if d["plan"]["clarification"] else "retrieve")
         builder.add_edge("retrieve", "style")
         builder.add_edge("style", "validate")
         builder.add_conditional_edges("validate", lambda d: "repair" if d["problems"] else "deliver")
         builder.add_edge("repair", "deliver")
+        builder.add_edge("product_search", END)
         builder.add_edge("deliver", END)
         return builder.compile(checkpointer=saver)
 
@@ -928,11 +968,11 @@ class Stylist:
                         task=Task.model_validate(output["task"]), pending_confirmation=True, request_id=request.request_id)
                 reply = Reply.model_validate(output["reply"])
                 task, plan = Task.model_validate(output["task"]), Plan.model_validate(output["plan"])
-                if not plan.conversation_only:
+                if not plan.conversation_only and not plan.product_search:
                     state.task = task
                     if not plan.weather_only:
                         state.mode = plan.mode
-                if reply.delivery != "clarification" and not plan.conversation_only and not plan.weather_only:
+                if reply.delivery != "clarification" and not plan.conversation_only and not plan.weather_only and not plan.product_search:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
@@ -958,6 +998,8 @@ class Stylist:
                     {"role": "user", "content": request.message},
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
                         "new_clothes": reply.new_clothes,
+                        "product_search": reply.product_search,
+                        "product_results": [p.model_dump(exclude={"original_image", "cutout_image"}) for p in reply.product_results],
                         "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
                         "looks": [{"title": x.title, "style_name": x.style_name, "pieces": x.pieces, "how": x.how,

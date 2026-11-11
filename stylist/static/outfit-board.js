@@ -47,8 +47,8 @@
       return { kind, x: x + delta, y: y + n * 2, w: w * (count > 2 ? .84 : 1), h, z: z + n };
     });
   }
-  function photo(item, original = false, failed) {
-    const urls = (original ? [item.original_image, item.cutout_image] : [item.cutout_image, item.original_image]).map(safe).filter(Boolean);
+  function photo(item, failed) {
+    const urls = [item.cutout_image, item.original_image].map(safe).filter(Boolean);
     const image = make('img'); image.alt = name(item); image.referrerPolicy = 'no-referrer'; image.draggable = false;
     if (!urls.length) return make('span', 'outfit-missing', '暂无图片');
     let attempt = 0;
@@ -99,10 +99,10 @@
       [...strip.children].forEach((button, i) => button.setAttribute('aria-pressed', String(index === i)));
       detail.replaceChildren();
       const imageStage = make('button', 'outfit-original'); imageStage.type = 'button'; imageStage.setAttribute('aria-label', '预览单品大图');
-      const image = photo(item, true); imageStage.append(image);
-      imageStage.disabled = !safe(item.original_image || item.cutout_image);
+      const image = photo(item); imageStage.append(image);
+      imageStage.disabled = !(safe(item.cutout_image) || safe(item.original_image));
       imageStage.onclick = () => window.ProductPreview?.open(
-        items.map(piece => ({src: safe(piece.original_image || piece.cutout_image), alt: name(piece)})), index, imageStage);
+        items.map(piece => ({src: safe(piece.cutout_image) || safe(piece.original_image), alt: name(piece)})), index, imageStage);
       const info = make('div', 'outfit-item-info');
       info.append(make('span', 'outfit-kicker', `${index + 1} / ${items.length} · ${item.source === 'user' ? '个人衣橱' : '参考款 · 未确认拥有'}`), make('h3', '', name(item)));
       const attrs = make('dl', 'outfit-attributes');
