@@ -522,4 +522,7 @@ companion配色跟随assistant_persona的助理性别（男灰蓝／女暖白绿
 接口依据：iOS `GarmentDetailPageViewController.openTryOn/startGarmentFitting`、`InlineFittingController.start`、`FittingTaskCreate`；单品读取 `/api/user_product/fitting_status`，确认后 POST `/algorithm/api/fitting/start_garment`（source_type=garment、user_product_id、client_request_id）；我的搭配读取 `/api/user_outfit/detail`，确认后 POST `/algorithm/api/fitting/start_fitting`（fitting_type=1、outfit_id），POST `/algorithm/api/fitting/progress` 只查询任务。前置 GET `/algorithm/api/fitting/count` 与 `/api/app_config/config_check` 读取限制与 fitting_cost，不硬编码费用。接口以当前 iOS 源码为接入依据，不等同远端可用性或真实收费验收。
 
 
-2026-11-11｜PRD-03 女王角色衣橱三视图轮播（本地已完成）：female_regal_v1在衣橱右侧按侧身／正面／整理衣物循环，每幅停留5.2秒、交叠淡化1.4秒；保留原尺寸与底部15%渐隐。其他五位角色保持侧身图；页面后台或人物不可见时暂停，减少动态时回到侧身静态图。320／393／1440px布局、三姿态、过渡透明度与减少动态检查通过，未涉及业务请求。
+2026-11-11｜PRD-03 女王角色衣橱三视图轮播（本地已完成）：female_regal_v1在衣橱右侧按侧身／正面／整理衣物循环，每幅停留5.2秒、交叠淡化1.4秒；保留原尺寸与底部15%渐隐。（该范围已由后续六角色轮播规则替代）；页面后台或人物不可见时暂停，减少动态时回到侧身静态图。320／393／1440px布局、三姿态、过渡透明度与减少动态检查通过，未涉及业务请求。
+
+
+2026-11-11｜PRD-03 六角色衣橱三视图轮播（本地已完成）：六位角色均按侧身／正面／整理衣物自动循环，每幅停留5.2秒、交叠淡化1.4秒；更换角色重置到该角色侧身图，保留原尺寸及底部渐隐。离屏／后台暂停，减少动态时固定侧身。替代此前仅女王轮播、其余角色静态的范围。六角色×三屏宽18组检查通过，含三个姿态、更换角色重置、减少动态及无横向溢出。

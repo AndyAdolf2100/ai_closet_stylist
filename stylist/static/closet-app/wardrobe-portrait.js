@@ -1,8 +1,8 @@
-// Crossfade only the selected regal triptych; other companions retain their side view.
+// Each companion cycles their own triptych, resetting to the side view on persona changes.
 export function wardrobePortraitMotion(node){
  const overlay=document.createElement('span');overlay.className='y-wardrobe-portrait-fade';overlay.setAttribute('aria-hidden','true');node.append(overlay);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),positions=[50,0,100];
- let enabled=false,visible=false,index=0,timer,settle;
+ let enabled=false,visible=false,index=0,timer,settle,currentPersona;
  const finish=()=>{clearTimeout(settle);node.style.backgroundPosition=positions[index]+'% 0';overlay.style.transition='none';overlay.style.opacity='0';};
  const pause=()=>{clearTimeout(timer);finish();};
  const active=()=>enabled&&visible&&!document.hidden&&!reduced.matches;
@@ -13,5 +13,5 @@ export function wardrobePortraitMotion(node){
  function sync(){pause();if(reduced.matches){index=0;finish();}schedule();}
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync();}).observe(node);
  document.addEventListener('visibilitychange',sync);reduced.addEventListener('change',sync);
- return persona=>{const next=persona==='female_regal_v1';if(next===enabled)return;pause();enabled=next;index=0;finish();schedule();};
+ return persona=>{if(persona===currentPersona)return;pause();currentPersona=persona;enabled=/^(male_(calm|artistic|confident)|female_(sweet|warm|regal))_v1$/.test(persona);index=0;finish();schedule();};
 }

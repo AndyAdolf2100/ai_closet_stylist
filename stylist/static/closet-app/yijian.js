@@ -165,7 +165,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     wardrobeComment.textContent=wardrobeLines[persona]||wardrobeLines.male_calm_v1;
     wardrobePortrait.style.backgroundImage=`url("/static/closet-app/assets/wardrobe-scenes-v1/${persona}-triptych.png")`;
     updatePortraitMotion(persona);
-    wardrobePortrait.setAttribute('aria-label',`${name}，${persona==='female_regal_v1'?'陪你挑选和整理衣服':'侧身为你挑选衣服'}`);
+    wardrobePortrait.setAttribute('aria-label',`${name}，陪你挑选和整理衣服`);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
     letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];
