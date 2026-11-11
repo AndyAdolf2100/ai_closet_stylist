@@ -51,8 +51,8 @@ test('validation, conflict and load retry remain recoverable; content renders as
  let failed=true;const {w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT')throw Object.assign(Error('手记已有新的修改'),{code:'memory_conflict'});if(failed)throw Error('读取失败');return {...initial,entries:[{...initial.entries[0],content:'<img src=x onerror=alert(1)>'}]};});
  await w.LongTermMemory.open();assert(!$('memory-retry').hidden);assert($('memory-save').disabled);
  failed=false;$('memory-retry').click();await tick();assert.equal($('memory-list').querySelector('img'),null);
- $('memory-add').click();submit();assert($('companion-notification').textContent.includes('1—240'));
- $('memory-list').querySelectorAll('.memory-remove')[1].click();submit();await tick();
+ const original=$('memory-text-a').value;$('memory-text-a').value='衣'.repeat(241);$('memory-text-a').dispatchEvent(new w.Event('input'));submit();assert($('companion-notification').textContent.includes('最多可写 240'));
+ $('memory-text-a').value=original;$('memory-text-a').dispatchEvent(new w.Event('input'));$('memory-add').click();submit();await tick();
  assert(!$('memory-conflict').hidden);assert($('memory-save').disabled);assert.equal($('memory-text-a').value,'<img src=x onerror=alert(1)>');dom.window.close();
 });
 
@@ -75,4 +75,23 @@ test('scope validation failure from API preserves clothing draft and retry',asyn
  assert($('memory-dialog').open);assert.equal($('memory-text-a').value,'我喜欢乌龙茶');assert($('companion-notification').textContent.includes('只记录穿搭'));
  $('memory-text-a').value='我喜欢羊毛外套';$('memory-text-a').dispatchEvent(new w.Event('input'));fail=false;submit();await tick();
  assert.equal(writes[1].entries[0].category,'穿衣习惯');assert(!$('memory-dialog').open);dom.window.close();
+});
+
+test('saving drops empty new and cleared existing notes while preserving valid content and book settings',async()=>{
+ const writes=[];const book={...initial,entries:[...initial.entries,{id:'cleared',category:'穿衣习惯',content:'以前喜欢羊毛'}]};
+ const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return writes.at(-1)}return book});
+ await w.LongTermMemory.open();$('memory-text-a').value='  喜欢棉质衬衫  ';$('memory-text-a').dispatchEvent(new w.Event('input'));
+ $('memory-text-cleared').value=' \n\t\u3000 ';$('memory-text-cleared').dispatchEvent(new w.Event('input'));
+ $('memory-add').click();$('memory-add').click();$('memory-enabled').checked=false;$('memory-enabled').dispatchEvent(new w.Event('change'));submit();await tick();
+ assert.equal(writes.length,1);assert.equal(writes[0].revision,initial.revision);assert.equal(writes[0].enabled,false);assert.deepEqual(writes[0].entries,[{id:'a',category:'穿衣习惯',content:'喜欢棉质衬衫'}]);assert(!$('memory-dialog').open);assert(!$('companion-notification').textContent.includes('1—240'));dom.window.close();
+});
+test('saving an entirely blank notebook submits an empty list and reopens with no pages',async()=>{
+ const writes=[];let book=initial;const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));book={...writes.at(-1),revision:2};return book}return book});
+ await w.LongTermMemory.open();$('memory-text-a').value=' \n\t ';$('memory-text-a').dispatchEvent(new w.Event('input'));$('memory-add').click();submit();await tick();
+ assert.deepEqual(writes[0].entries,[]);assert.equal(writes[0].enabled,true);await w.LongTermMemory.open();assert.equal($('memory-list').children.length,0);assert.equal($('memory-empty').hidden,false);dom.window.close();
+});
+test('failed filtered saves retain the complete draft and retry with the same revision',async()=>{
+ let fail=true;const writes=[];const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));if(fail)throw Error('模拟保存失败');return writes.at(-1)}return initial});
+ await w.LongTermMemory.open();$('memory-add').click();submit();await tick();assert($('memory-dialog').open);assert.equal($('memory-list').children.length,2);assert.equal(writes[0].entries.length,1);assert($('companion-notification').textContent.includes('模拟保存失败'));
+ fail=false;submit();await tick();assert.deepEqual(writes[1],writes[0]);assert(!$('memory-dialog').open);dom.window.close();
 });
