@@ -82,9 +82,10 @@
   $('memory-reload').onclick = read; $('memory-retry').onclick = read;
   $('memory-form').onsubmit = async event => {
     event.preventDefault(); if (busy || !draft || conflict) return;
-    const saved = copy(draft); saved.entries.forEach(x => { x.content = x.content.trim(); });
-    const invalid = saved.entries.find(x => !x.content || Array.from(x.content).length > 240);
-    if (invalid) { $(`memory-text-${invalid.id}`).focus(); notify('每一页请留下 1—240 字；空白页也可以先删去。'); return; }
+    const saved = copy(draft);
+    saved.entries = saved.entries.map(entry => ({...entry, content:entry.content.trim()})).filter(entry => entry.content.length > 0);
+    const invalid = saved.entries.find(x => Array.from(x.content).length > 240);
+    if (invalid) { $(`memory-text-${invalid.id}`).focus(); notify('每一页最多可写 240 字。'); return; }
     if (new Set(saved.entries.map(x => x.content)).size !== saved.entries.length) { notify('这件事已经在手记里了，不必再写一遍。'); return; }
     const current = generation, api = client; busy = true; controls();
     try {
