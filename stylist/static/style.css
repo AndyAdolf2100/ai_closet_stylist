@@ -519,11 +519,10 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 #preferences-speaker{font-size:11px;color:var(--pref-detail);letter-spacing:1px}
 #preferences-dialog #preferences-letter-copy{font-size:13px;line-height:1.8;margin:5px 0 0;color:var(--muted);max-width:510px}
 .preferences-letter-star{margin-left:auto;color:var(--pref-detail);font-size:35px;opacity:.5}
-.preferences-tabs{display:flex;justify-content:flex-start;margin:0 36px;border-bottom:1px solid var(--line);flex-shrink:0;gap:24px}
+.preferences-tabs{display:flex;justify-content:flex-start;margin:0 36px;border:0;flex-shrink:0;gap:0}
 .preferences-tabs button{position:relative;border:0;border-radius:0;background:transparent;padding:12px 0 15px;color:var(--muted);font-size:13px;min-height:44px;letter-spacing:.4px}
-.preferences-tabs button small{font:italic 12px Georgia,serif;opacity:.6;margin-right:6px}
 .preferences-tabs button[aria-selected=true]{color:var(--accent-ink,var(--accent))}
-.preferences-tabs button[aria-selected=true]::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent)}
+.preferences-tabs button[aria-selected=true]::after{content:'';position:absolute;left:50%;bottom:0;width:24px;height:2px;border-radius:2px;background:var(--accent);transform:translateX(-50%)}
 .preferences-scroll{padding:24px 36px 28px;overflow:auto;min-height:0;overscroll-behavior:contain}
 .preferences-scroll [role=tabpanel]{outline-offset:4px}
 .preferences-page-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-bottom:8px}
@@ -560,7 +559,7 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 #preferences-save span{margin-left:16px}#preferences-reset{min-height:44px;padding:8px 0;color:var(--muted);font-size:11px}
 #preferences-dialog button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(hover:hover){.zodiac-card:hover .zodiac-art{transform:translateY(-3px);filter:saturate(.95)}#preferences-dialog .preference-chip:hover{border-color:var(--pref-detail)}}
-@media(max-width:760px){#preferences-dialog{position:fixed;inset:var(--preferences-top,0px) 0 auto;width:100%;height:var(--preferences-height,100dvh);max-height:none;border:0;border-radius:0;margin:0}#preferences-form{height:100%;max-height:100%;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.preferences-heading{padding:calc(22px + env(safe-area-inset-top)) 22px 15px}#preferences-dialog h2{font-size:22px;letter-spacing:.5px}.preferences-heading .eyebrow{font-size:7px;letter-spacing:1.7px}.preferences-letter{margin:0 22px 18px;gap:12px}.preferences-letter .mascot{width:42px;height:42px}#preferences-dialog #preferences-letter-copy{font-size:12px}.preferences-letter-star{display:none}.preferences-tabs{margin:0 22px;gap:16px;justify-content:flex-start}.preferences-tabs button{font-size:12px}.preferences-tabs button small{font-size:10px;margin-right:3px}.preferences-scroll{flex:1;padding:18px 22px 24px}.zodiac-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 14px}.zodiac-card strong{font-size:13px}.zodiac-card small{font-size:8px}.preferences-footer{padding:12px 22px max(14px,env(safe-area-inset-bottom))}.preferences-save-note{display:none}#preferences-save{padding:11px 18px}#preferences-dialog legend{font-size:17px}[data-preference-group=reply_detail]{grid-template-columns:1fr}#preferences-dialog [data-preference-group=reply_detail] .preference-chip{display:flex;align-items:center;justify-content:space-between;gap:10px}.preference-chip small{font-size:10px}#preferences-dialog [data-preference-group=reply_detail] small{margin:0}#preferences-dialog [data-preference-group=conversation_style] .preference-chip{padding:16px 12px}#preferences-dialog .preference-chip{padding:11px 14px}}
+@media(max-width:760px){#preferences-dialog{position:fixed;inset:var(--preferences-top,0px) 0 auto;width:100%;height:var(--preferences-height,100dvh);max-height:none;border:0;border-radius:0;margin:0}#preferences-form{height:100%;max-height:100%;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.preferences-heading{padding:calc(22px + env(safe-area-inset-top)) 22px 15px}#preferences-dialog h2{font-size:22px;letter-spacing:.5px}.preferences-heading .eyebrow{font-size:7px;letter-spacing:1.7px}.preferences-letter{margin:0 22px 18px;gap:12px}.preferences-letter .mascot{width:42px;height:42px}#preferences-dialog #preferences-letter-copy{font-size:12px}.preferences-letter-star{display:none}.preferences-tabs{margin:0 22px;gap:0;justify-content:flex-start}.preferences-tabs button{font-size:12px}.preferences-scroll{flex:1;padding:18px 22px 24px}.zodiac-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 14px}.zodiac-card strong{font-size:13px}.zodiac-card small{font-size:8px}.preferences-footer{padding:12px 22px max(14px,env(safe-area-inset-bottom))}.preferences-save-note{display:none}#preferences-save{padding:11px 18px}#preferences-dialog legend{font-size:17px}[data-preference-group=reply_detail]{grid-template-columns:1fr}#preferences-dialog [data-preference-group=reply_detail] .preference-chip{display:flex;align-items:center;justify-content:space-between;gap:10px}.preference-chip small{font-size:10px}#preferences-dialog [data-preference-group=reply_detail] small{margin:0}#preferences-dialog [data-preference-group=conversation_style] .preference-chip{padding:16px 12px}#preferences-dialog .preference-chip{padding:11px 14px}}
 @media(prefers-reduced-motion:reduce){.zodiac-art::after{animation:none}.zodiac-art{transition:none}.zodiac-card:hover .zodiac-art{transform:none}}
 
 /* Stable chapter header: reserve the tallest copy at every viewport width. */
@@ -581,9 +580,9 @@ header .stylist-switch{display:flex;align-items:center;gap:3px;flex-shrink:0;mar
 /* A message hosted by a modal keeps the shared notification typography. */
 #companion-notification .companion-notification-copy p{color:inherit}
 
-/* Chapter tabs keep their width and scroll horizontally on narrow screens. */
+/* Equal-width chapter tabs with a short active indicator. */
 .preferences-tabs{min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
-.preferences-tabs button{flex:0 0 auto;white-space:nowrap}
+.preferences-tabs button{flex:1 1 0;min-width:0;white-space:nowrap;text-align:center}
 
 .product-image-missing{display:grid;place-items:center;min-height:120px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:var(--soft);color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:760px){.product-image-missing{min-height:92px}}

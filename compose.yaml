@@ -10,6 +10,9 @@ services:
     env_file:
       - path: ./config/deploy.env
         format: raw
+      - path: ./config/ops.env
+        required: false
+        format: raw
       - path: ./config/langfuse.env
         required: false
         format: raw

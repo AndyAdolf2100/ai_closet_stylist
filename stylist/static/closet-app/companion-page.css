@@ -1,0 +1,31 @@
+/* Front view is the first third of the existing three-view character atlas. */
+html[data-app-design=yijian] .y-welcome{position:relative}
+.y-companion-entry{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:inherit;background:transparent;cursor:pointer;z-index:1}
+.y-companion-entry:focus-visible{outline:2px solid var(--y-accent);outline-offset:4px}
+.y-welcome .y-talk,.y-welcome .y-home-checkin{position:relative;z-index:2}
+html[data-app-design=yijian] #detail-page:has(.companion-page){background:var(--y-bg);padding-bottom:0}
+html[data-app-design=yijian] #detail-page:has(.companion-page) .detail-header{position:absolute;inset:env(safe-area-inset-top) 0 auto;background:transparent;border:0;z-index:3;height:64px}
+html[data-app-design=yijian] #detail-page:has(.companion-page) .detail-header h2{font:12px var(--y-serif);letter-spacing:.2em;margin-left:auto;color:var(--y-muted)}
+html[data-app-design=yijian] #detail-page:has(.companion-page) #detail-back{border:1px solid var(--y-line);border-radius:50%;width:44px;background:color-mix(in srgb,var(--y-paper) 75%,transparent)}
+.companion-page{position:relative;isolation:isolate;overflow:hidden;min-height:calc(100dvh - env(safe-area-inset-top));display:flex;flex-direction:column;background:radial-gradient(ellipse at 75% 22%,color-mix(in srgb,var(--y-accent) 16%,transparent),transparent 55%),linear-gradient(155deg,var(--y-paper),var(--y-bg));color:var(--y-ink)}
+.companion-page-orbit{position:absolute;top:108px;left:26px;width:340px;height:440px;border:1px solid var(--y-line);border-radius:50%;transform:rotate(-24deg);opacity:.65;z-index:-2}
+.companion-fullbody{position:absolute;top:82px;left:50%;transform:translateX(-42%);height:640px;width:320px;background-image:var(--assistant-fullbody);background-size:300% 100%;background-position:left top;background-repeat:no-repeat;z-index:-1;filter:drop-shadow(12px 20px 24px #423b2d14)}
+.companion-page-intro{position:relative;padding:96px 26px 0;pointer-events:none}
+.companion-page-eyebrow{display:block;font-size:9px;letter-spacing:.18em;color:var(--y-muted);max-width:130px;line-height:1.8}
+.companion-page-name{font:36px var(--y-serif);margin:20px 0 8px;letter-spacing:.08em;max-width:45%;overflow-wrap:anywhere}
+.companion-page-footer{margin-top:auto;padding:320px 20px max(16px,env(safe-area-inset-bottom));background:linear-gradient(transparent 0%,transparent 48%,color-mix(in srgb,var(--y-bg) 90%,transparent) 67%,var(--y-bg) 90%)}
+.companion-page-letter{display:flex;align-items:flex-start;gap:12px;margin:0 6px 20px;position:relative}
+.companion-page-mark{color:var(--y-accent);font-size:25px;line-height:1.3}
+.companion-page-greeting{font:16px/1.8 var(--y-serif);margin:0;max-width:270px;text-shadow:0 1px 12px var(--y-paper)}
+.companion-page-actions{display:grid;gap:10px}
+.companion-page-action{display:flex;align-items:center;text-align:left;gap:14px;min-height:76px;width:100%;padding:13px 17px;border:1px solid var(--y-line);border-radius:18px;color:var(--y-ink);background:color-mix(in srgb,var(--y-paper) 90%,transparent);backdrop-filter:blur(16px);box-shadow:0 4px 24px #302a1905;cursor:pointer}
+.companion-page-action:focus-visible{outline:2px solid var(--y-accent);outline-offset:3px}
+.companion-action-mark{font:24px var(--y-serif);color:var(--y-accent)}
+.companion-action-copy{display:grid;gap:5px;flex:1}
+.companion-action-copy strong{font:17px var(--y-serif)}
+.companion-action-copy small{font-size:11px;color:var(--y-muted)}
+.companion-action-arrow{font-size:18px;color:var(--y-muted)}
+.companion-page-footnote{text-align:center;letter-spacing:.12em;font-size:10px;color:var(--y-muted);margin:18px 0 0}
+@media(max-width:359px){.companion-fullbody{left:47%;height:580px;width:290px}.companion-page-intro{padding-left:20px}.companion-page-footer{padding-left:16px;padding-right:16px;padding-top:300px}.companion-page-name{font-size:30px}}
+@media(min-height:900px){.companion-fullbody{height:720px;width:360px}.companion-page-footer{padding-top:400px}}
+@media(max-height:600px){.companion-page{min-height:780px}.companion-page-footer{padding-top:300px}}

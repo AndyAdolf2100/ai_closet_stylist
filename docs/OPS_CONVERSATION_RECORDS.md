@@ -84,3 +84,35 @@ uv run python scripts/ops_conversation_records.py show --conversation sty_xxx --
   同时间再按会话 ID 倒序兜底，保证分页稳定。
 - **连通性**：本地机器不在 RDS 白名单内，真实库连通性需在服务器（同 VPC）验证；
   server 侧 `stylist_postgresql` 段 DSN 走私有配置，不入 Git。
+
+## 四、独立PC查询界面（2026-11-11）
+
+本地地址：`http://127.0.0.1:8466/ops/conversations`。独立于App，普通用户菜单不增加入口。
+
+默认输入手机号，也可显式切换正整数用户ID；两种方式不按数字长度猜测，11位ID不会误认手机号。手机号先经MySQL解析账号ID，然后分页浏览会话，可勾选已软删除会话。选择后，中间显示历史用户原话、回复、单品／搭配／天气以及上传／形象引导的只读卡片；右侧显示会话元信息、请求ID／状态／错误码与可展开原始JSON。错误原因提示仅根据已保存状态和明确错误码，不用状态推断收费，不补造日志或模型调用。
+
+所有消息为只读：不挂载实时聊天控制器，不发送消息，不重试生成、保存、上传、试穿、评价或删除。图片细节复用现有OutfitBoard只读入口，可放大与切换图片；直接使用历史快照，不重新查询衣橱或创建合成图，不重建已失效图片。
+
+回复JSON、卡片数组、单品字段或请求响应格式错误时，逐消息／卡片／字段局部显示“结构异常”、字段路径和原始片段；有效部分及后续轮次继续展示。整个HTTP读取失败则单独显示查询错误，不冒充空记录。会话归属无法核对时不展示详情。
+
+页面使用同源只读桥接：
+
+- `GET /stylist-api/ops/records/resolve-user?mobile={手机号}`：通过参数绑定及MySQL只读事务精确查询用户ID，仅返回ID和脱敏手机号；无匹配404、多账号409，连接未配或失败503。
+- `GET /stylist-api/ops/records/users/{user_id}/conversations`，查询参数沿用limit／offset／include_deleted。
+- `GET /stylist-api/ops/records/conversations/{conversation_id}?user_id={user_id}`，核对Server返回的owner_id与当前查询用户，防止错配。
+
+桥接仅访问已配置的STYLIST_SERVER_URL，不接受浏览器指定目标URL、不转发App Bearer。手机号映射单独只读查询原MySQL用户域；消息仍由Server查Agent PostgreSQL，不直连会话库。沿用既有运维接口的访问范围，未新增运维登录或角色鉴权机制。响应no-store，查询结果只在页面内存，不存localStorage／sessionStorage，不接入对话埋点或Langfuse。
+
+`stylist/ops_records.py`及`stylist/static/ops/`已被现有Docker源码COPY与发布暂存递归白名单覆盖，6个运行文件纳入检查。助理站点既有`location /`代理可访问此路由；仅代理API的其他站点需自行转发新页面及静态资源。此轮只实现界面，未重新打包或部署。
+
+验证：后台专项及既有API／单品入口共25项通过；局部容错／文本注入／请求结构3项前端通过，OutfitBoard只读及必要详情5项通过。Chrome1280／1440／1920px验证分页、软删筛选、4轮消息／4处局部错误、图片详情和用户切换竞态，16次业务请求全部GET（含手机号解析）、无页面错误或横向溢出。截图为合成用户及模拟业务，报告在本地reports/26-11-11/ops-console/，不含真实用户资料。真实Server仅无效用户0列表探测200确认响应结构；真实用户完整记录、远端实际部署均未验。
+
+### 手机号查询的私有连接
+
+用户后续明确不改Server代码：手机号映射由本服务使用现有pymysql完成。`STYLIST_OPS_MYSQL_DSN=mysql://USER:PASSWORD@HOST:3306/DATABASE`仅放私有`config/ops.env`（600权限、Git忽略），Compose已支持可选加载。用户名／密码中保留字符须URL编码；raw env格式不加额外引号。本机已准备此私有文件，不随源码、镜像或报告提交；下一次部署需将该文件单独安装到服务器配置目录。ID查询不依赖此连接。
+
+实际SQL为只读事务中的参数绑定SELECT id，按mobile精确匹配、排除注销status=3、LIMIT 2。无匹配不伪造ID，多账号不静默选择；始终rollback并关闭连接，不修改用户或会话数据。连接错误不输出DSN／密码。已使用现有私有连接验证只读事务和id／mobile／status字段访问，LIMIT 0未读取真实账号行。真实手机号映射与真实用户完整会话还没有执行；界面验证均为合成资料。
+
+### 消息区域按手机排版
+
+外层保持PC查询三栏，中栏每轮消息与卡片最大440px居中，窄栏按可用宽度收缩；用户气泡最大87%靠右。不改变左右列表／请求面板，不改变查询和只读行为。三PC宽度检查及原有容错、分页、软删、竞态用例通过。修改前截图仅作本地过程取证，最终报告继续以dd02eb5无此页面为基线，展示最终手机消息效果。

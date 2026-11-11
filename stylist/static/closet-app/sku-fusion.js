@@ -14,6 +14,10 @@ customElements.define('sku-purchase-center',class extends HTMLElement{
 });
 function el(tag,cls,text){const e=document.createElement(tag);e.className=cls;if(text)e.textContent=text;return e;}
 function button(text,action,cls=''){const b=el('button',cls,text);b.type='button';b.onclick=action;return b;}
+// Only a successful empty catalog means memberships are unavailable.
+function memberAvailable(){const member=catalogState().member;return member.status!=='ready'||member.data.length>0;}
+function ensureGroup(){if(group==='member'&&!memberAvailable())group='points';}
+function keyboardGroup(key){if(!memberAvailable())return 'points';return key==='Home'?'member':key==='End'?'points':group==='member'?'points':'member';}
 function items(){const entry=catalogState()[group];return entry.status==='ready'?entry.data:[];}
 function current(){const list=items();let p=list.find(p=>p.id===selected[group]);if(!p){p=(group==='points'&&requiredPoints>0?(list.find(p=>p.points>=requiredPoints)||list.reduce((a,b)=>!a||b.points>a.points?b:a,null)):null)||list.find(p=>p.recommended)||list[0];selected[group]=p?.id??null;}return p;}
 function active(){return account?.vip_info?.is_vip===true||account?.vip_info?.is_vip===1;}
@@ -29,7 +33,7 @@ function benefitsTable(){
  for(const text of [t.name_column_header||'权益',...t.columns.map(c=>c.header)]){const th=el('th','',text);th.scope='col';tr.append(th);}head.append(tr);table.append(head);
  const body=el('tbody','');for(const row of rows){const tr=el('tr',''),th=el('th','',row.name);th.scope='row';if(row.tooltip){th.append(el('small','sku-benefit-tooltip',' · '+row.tooltip));}tr.append(th);for(const value of row.values){const td=el('td','',value.type==='check'?'✓':value.type==='cross'?'—':String(value.text??''));if(value.type!=='text')td.setAttribute('aria-label',value.type==='check'?'包含':'不包含');tr.append(td);}body.append(tr);}table.append(body);wrap.append(table);section.append(wrap);return section;
 }
-function update(){for(const draw of listeners)draw();}
+function update(){ensureGroup();for(const draw of listeners)draw();}
 function closePay(){epoch++;if(payment){payment.close();payment.remove();payment=null;}}
 function pay(p){
  if(payment||!purchaseOwner()||!items().some(x=>x.id===p.id))return;
@@ -37,7 +41,7 @@ function pay(p){
  const close=()=>closePay();dialog.append(button('×',close,'sku-payment-close'),el('p','sku-note','H5购买交互演示 · 非支付窗口'),el('h2','',p.name),el('strong','sku-price',money(p)),el('p','',p.term),el('p','',p.description),el('p','sku-note','商品与金额来自后台；本页仅演示，不创建订单、扣款或变更积分。'),button('知道了',close,'sku-cancel'));
  document.body.append(dialog);if(ticket!==epoch||token!==purchaseOwner()){closePay();return;}dialog.showModal();dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
 }
-export function skuRail(){const root=el('section','sku-catalog');root.setAttribute('aria-label','会员与积分方案');const scroll={member:0,points:0};function draw(){const old=root.querySelector('.sku-rail');if(old)scroll[root.dataset.group]=old.scrollLeft;root.dataset.group=group;root.replaceChildren();const tabs=el('div','sku-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','商品类型');for(const [key,title]of [['member','会员方案'],['points','积分包']]){const tab=button(title,()=>{group=key;update();});tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(group===key));tab.tabIndex=group===key?0:-1;tab.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();group=e.key==='Home'?'member':e.key==='End'?'points':group==='member'?'points':'member';update();root.querySelector('[aria-selected=true]').focus();}};tabs.append(tab);}root.append(tabs);const rail=el('div','sku-rail');for(const p of items()){const card=el('article','sku-card'+(current()?.id===p.id?' selected':''));const select=button(p.name,()=>{selected[group]=p.id;update();},'sku-select');select.setAttribute('aria-pressed',String(current()?.id===p.id));card.append(select);if(p.term)card.append(el('p','sku-term',p.term));const price=el('div','sku-price',money(p));if(p.original)price.append(el('del','',money(p,p.original)));const buy=button('',()=>{selected[group]=p.id;update();pay(p);},'sku-pay');buy.append(el('span','sku-buy-label',action(p)),el('span','sku-buy-arrow','→'));buy.lastChild.setAttribute('aria-hidden','true');buy.setAttribute('aria-label',action(p)+' '+p.name);card.append(price,buy);rail.append(card);}if(!items().length)rail.append(stateMessage(group));root.append(rail);rail.scrollLeft=scroll[group];}listeners.add(draw);draw();queueMicrotask(()=>{if(root.isConnected)loadCatalog();});root.dispose=()=>listeners.delete(draw);return root;}
+export function skuRail(){const root=el('section','sku-catalog');root.setAttribute('aria-label','会员与积分方案');const scroll={member:0,points:0};function draw(){ensureGroup();const old=root.querySelector('.sku-rail');if(old)scroll[root.dataset.group]=old.scrollLeft;root.dataset.group=group;root.replaceChildren();const tabs=el('div','sku-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','商品类型');for(const [key,title]of [['member','会员方案'],['points','积分包']]){if(key==='member'&&!memberAvailable())continue;const tab=button(title,()=>{group=key;update();});tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(group===key));tab.tabIndex=group===key?0:-1;tab.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();group=keyboardGroup(e.key);update();root.querySelector('[aria-selected=true]').focus();}};tabs.append(tab);}root.append(tabs);const rail=el('div','sku-rail');for(const p of items()){const card=el('article','sku-card'+(current()?.id===p.id?' selected':''));const select=button(p.name,()=>{selected[group]=p.id;update();},'sku-select');select.setAttribute('aria-pressed',String(current()?.id===p.id));card.append(select);if(p.term)card.append(el('p','sku-term',p.term));const price=el('div','sku-price',money(p));if(p.original)price.append(el('del','',money(p,p.original)));const buy=button('',()=>{selected[group]=p.id;update();pay(p);},'sku-pay');buy.append(el('span','sku-buy-label',action(p)),el('span','sku-buy-arrow','→'));buy.lastChild.setAttribute('aria-hidden','true');buy.setAttribute('aria-label',action(p)+' '+p.name);card.append(price,buy);rail.append(card);}if(!items().length)rail.append(stateMessage(group));root.append(rail);rail.scrollLeft=scroll[group];}listeners.add(draw);draw();queueMicrotask(()=>{if(root.isConnected)loadCatalog();});root.dispose=()=>listeners.delete(draw);return root;}
 export function mountSku(journal,letter){const points=document.querySelector('.points-card');journal.insertBefore(points,letter);journal.insertBefore(skuRail(),letter);journal.classList.add('sku-journal');const css=el('link','');css.rel='stylesheet';css.href='/static/closet-app/sku-fusion.css';document.head.append(css);}
 // The purchase center uses the same catalog and selection as the profile rail.
 export function skuDetail(options={}){
@@ -54,7 +58,7 @@ export function skuDetail(options={}){
     const tab=button('',()=>choose(key));tab.id='sku-center-tab-'+key;tab.dataset.group=key;tab.setAttribute('role','tab');tab.setAttribute('aria-controls','sku-center-panel');
     const symbol=el('span','sku-tab-icon');symbol.setAttribute('aria-hidden','true');
     symbol.innerHTML=icon==='crown'?'<svg viewBox="0 0 24 24"><path d="m3 6 5 5 4-7 4 7 5-5-2 14H5Z"/></svg>':'<svg viewBox="0 0 24 24"><path d="m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/></svg>';
-    tab.append(symbol,el('span','',title));tab.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();choose(e.key==='Home'?'member':e.key==='End'?'points':group==='member'?'points':'member');tabs.querySelector('[aria-selected=true]').focus();}};tabs.append(tab);
+    tab.append(symbol,el('span','',title));tab.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();choose(keyboardGroup(e.key));tabs.querySelector('[aria-selected=true]').focus();}};tabs.append(tab);
   }
   header.append(tabs);root.append(header);
   const hero=el('section','sku-center-hero');hero.setAttribute('aria-label','爱搭衣橱，日常穿搭陪伴');
@@ -66,12 +70,13 @@ export function skuDetail(options={}){
   const dock=el('div','sku-dock');root.append(dock);const scroll={member:0,points:0};
   function agreement(title){const key={'会员服务协议':'member','连续订阅服务协议':'subscription','积分购买协议':'points'}[title];const url=catalogState().config.data?.agreements?.[key];if(url&&/^https:\/\//.test(url)){const a=el('a','sku-agreement',title);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}return button(title,()=>window.PreviewMessage.notify('当前服务暂未提供此协议地址，请在正式App查看。'),'sku-agreement');}
   function draw(){
+    ensureGroup();
     applyMembershipBanner(art,bannerPersona);
     const focused=root.contains(document.activeElement)?document.activeElement?.dataset.choice:null;
     const old=catalog.querySelector('.sku-rail');if(old)scroll[catalog.dataset.group]=old.scrollLeft;
     root.dataset.group=group;catalog.dataset.group=group;
     panel.setAttribute('aria-labelledby','sku-center-tab-'+group);
-    for(const tab of tabs.children){const yes=tab.dataset.group===group;tab.setAttribute('aria-selected',String(yes));tab.tabIndex=yes?0:-1;}
+    for(const tab of tabs.children){tab.hidden=tab.dataset.group==='member'&&!memberAvailable();const yes=tab.dataset.group===group;tab.setAttribute('aria-selected',String(yes));tab.tabIndex=yes?0:-1;}
     const rail=el('div','sku-rail');
     for(const p of items()){
       const card=el('article','sku-card'+(current()?.id===p.id?' selected':''));

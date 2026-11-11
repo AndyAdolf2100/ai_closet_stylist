@@ -203,7 +203,15 @@
     return root;
   }
 
-  window.OutfitBoard = { create, layout, role, close: () => modal?.close() };
+  function readOnly(look) {
+    const root = make('section', 'outfit-composition');
+    const expand = make('button', 'outfit-expand', '查看单品细节'); expand.type = 'button';
+    root.append(board(look.items, index => open(look, expand, index)));
+    const footer = make('div', 'outfit-board-footer'); footer.append(expand); root.append(footer);
+    expand.onclick = () => open(look, expand);
+    return root;
+  }
+  window.OutfitBoard = { create, readOnly, layout, role, close: () => modal?.close() };
   window.addEventListener('outfit-images-owner-change',event=>{
     for(const card of cards){if(!card.root.isConnected)cards.delete(card);else{card.resetSave();if(event.detail&&card.started())card.render();}}
   });

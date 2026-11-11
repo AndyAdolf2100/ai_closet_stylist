@@ -110,3 +110,11 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  assert.match(w.document.body.textContent,/1 件衣橱单品/);
  dom.window.close();
 });
+test('operations replay shares the item board without composition, saving or authenticated requests',()=>{
+ const {dom,w,board}=setup();w.OutfitImages.get=()=>assert.fail('read-only replay must not compose or upload');
+ const root=board.readOnly({title:'历史搭配',items:[item('top')]});w.document.body.append(root);
+ assert.equal(root.querySelectorAll('.outfit-save').length,0);assert.equal(root.querySelectorAll('.outfit-piece').length,1);
+ root.querySelector('.outfit-expand').click();assert(w.document.querySelector('dialog').open);
+ assert.equal(w.document.querySelector('.outfit-original img').src,'https://photos.invalid/cut.png');
+ dom.window.close();
+});

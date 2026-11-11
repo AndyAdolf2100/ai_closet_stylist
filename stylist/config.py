@@ -10,6 +10,7 @@ from .catalog_config import CatalogConfig
 
 @dataclass(frozen=True)
 class Settings:
+    ops_mysql_dsn: str = field(default="", repr=False)
     langfuse_enabled: bool = False
     langfuse_base_url: str = ""
     langfuse_public_key: str = field(default="", repr=False)
@@ -58,6 +59,7 @@ class Settings:
         origin = urlsplit(mcp_url)
         server_url = os.getenv("STYLIST_SERVER_URL", f"{origin.scheme}://{origin.netloc}")
         return cls(
+            ops_mysql_dsn=os.getenv("STYLIST_OPS_MYSQL_DSN", ""),
             langfuse_enabled=os.getenv("LANGFUSE_TRACING_ENABLED", "true").lower() in {"1", "true", "yes"}
                 and bool(os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY")),
             langfuse_base_url=os.getenv("LANGFUSE_BASE_URL", "").rstrip("/"),
