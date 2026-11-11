@@ -37,3 +37,6 @@ html[data-app-design=yijian] #wardrobe .y-wardrobe-grid .product>span{display:bl
 @media(hover:hover){html[data-app-design=yijian] #wardrobe button:hover{filter:brightness(.98)}}
 
 html[data-app-design=yijian] #wardrobe .quick-actions button+button::before{content:none;display:none}
+
+.y-wardrobe-portrait{position:relative}.y-wardrobe-portrait-fade{position:absolute;inset:0;background-image:inherit;background-size:300%;background-repeat:no-repeat;opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.y-wardrobe-portrait-fade{display:none}}

@@ -1,3 +1,4 @@
+import {wardrobePortraitMotion} from './wardrobe-portrait.js';
 import {syncCompanionPage} from './companion-page.js';
 import {mountSku,careCopy} from './sku-fusion.js';
 import {mountHomeWeatherNote} from './home-weather-note.js';
@@ -86,7 +87,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const wardrobeBy=make('span','y-wardrobe-by'),wardrobeComment=make('p');wardrobeComment.setAttribute('aria-live','polite');
   const wardrobeTalk=make('button','y-wardrobe-talk','听听搭配想法 ↗');wardrobeTalk.type='button';wardrobeTalk.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'chat'}));
   wardrobeCopy.append(wardrobeBy,wardrobeComment,wardrobeTalk,wardrobeHeader.querySelector('.quick-actions'));
-  const wardrobePortrait=make('div','y-wardrobe-portrait');wardrobePortrait.setAttribute('role','img');
+  const wardrobePortrait=make('div','y-wardrobe-portrait');wardrobePortrait.setAttribute('role','img');const updatePortraitMotion=wardrobePortraitMotion(wardrobePortrait);
   wardrobeScene.append(wardrobeCopy,wardrobePortrait);wardrobeHeader.append(wardrobeScene);
   document.querySelector('.profile-top h1').textContent='我的日常';
   document.querySelector('.profile-top [data-agent=checkin]')?.remove();
@@ -163,7 +164,8 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     wardrobeBy.textContent=`✧ ${name} · 陪你挑衣`;
     wardrobeComment.textContent=wardrobeLines[persona]||wardrobeLines.male_calm_v1;
     wardrobePortrait.style.backgroundImage=`url("/static/closet-app/assets/wardrobe-scenes-v1/${persona}-triptych.png")`;
-    wardrobePortrait.setAttribute('aria-label',`${name}，侧身为你挑选衣服`);
+    updatePortraitMotion(persona);
+    wardrobePortrait.setAttribute('aria-label',`${name}，${persona==='female_regal_v1'?'陪你挑选和整理衣服':'侧身为你挑选衣服'}`);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
     letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];
