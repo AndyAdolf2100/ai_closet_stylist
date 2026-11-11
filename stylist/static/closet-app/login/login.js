@@ -1,4 +1,9 @@
 const $=s=>document.querySelector(s);
+// Keep the original handlers and shared form while arranging full-width methods.
+$('.quick-icons').prepend($('#phone-method'));
+$('.quick-actions').insertBefore($('.carrier-number'),$('#carrier-login'));
+$('.quick-actions').append($('#wechat'));
+$('.quick-login').append($('.quick-agreement'));
 let codeStage=false,phoneStage=location.hash==='#phone';
 const loginParams=new URLSearchParams(location.search);document.body.dataset.color=['system','male','female'].includes(loginParams.get('color'))?loginParams.get('color'):'system';
 document.documentElement.dataset.appDesign='yijian';

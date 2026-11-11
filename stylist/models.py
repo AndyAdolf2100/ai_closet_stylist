@@ -79,6 +79,8 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    product_search: bool = False
+    product_search_evidence: str = Field(default="", max_length=6000)
     outfit_weather_adjustment: bool = False
     outfit_weather_evidence: str = Field(default="", max_length=6000)
     attachment_wardrobe_required: bool = False
@@ -205,6 +207,8 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    product_search: bool = False
+    product_results: list[Product] = Field(default_factory=list, max_length=6)
     retrieval_diagnostics: dict = Field(default_factory=dict)
     new_clothes: bool = False
     new_clothes_auto_enabled: bool = False

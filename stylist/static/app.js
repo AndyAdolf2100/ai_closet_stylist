@@ -370,8 +370,7 @@ function productGrid(items) {
       const img = el('img'); img.src = url; img.alt = (item.color || '') + (item.secondary_class_name || item.class_name || '单品');
       img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
       const imageButton = el('button', 'product-image'); imageButton.type = 'button';
-      const original = (item.original_image || '').replace(/^http:/i, 'https:');
-      imageButton.dataset.previewSrc = /^https:\/\//i.test(original) ? original : url;
+      imageButton.dataset.previewSrc = url;
       imageButton.setAttribute('aria-label', '放大查看' + img.alt);
       img.onerror = () => {
         if (urls[1] && img.src !== urls[1]) { img.src = urls[1]; return; }
@@ -516,6 +515,26 @@ function showReply(reply, request = null, previewNode = null) {
       '以下是穿搭思路，不代表你已拥有这些衣物，目前不能保存或试穿。');
     node.insertBefore(notice, node.children[1] || null);
   }
+  for (const item of reply.product_results || []) {
+    const card = el('article', 'look subject-entry-card product-search-card');
+    card.append(el('h3', '', '衣橱里的单品'), el('p', 'subject-entry-title', item.title || [item.color, item.secondary_class_name || item.class_name].filter(Boolean).join(' · ')));
+    const urls = [item.cutout_image, item.original_image].map(v => String(v || '').replace(/^http:/i, 'https:')).filter(v => /^https:\/\//i.test(v));
+    if (urls.length) {
+      const img = el('img', 'subject-entry-image'); img.src = urls[0]; img.alt = item.title || '单品图片'; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+      let index = 0; img.onerror = () => { if (++index < urls.length) img.src = urls[index]; else img.replaceWith(el('p', '', '图片暂不可用')); };
+      card.append(img);
+    }
+    card.append(el('p', '', [item.color, item.secondary_class_name || item.class_name, item.material].filter(Boolean).join(' · ')));
+    if (item.description) card.append(el('p', '', item.description));
+    const owner = session?.access_token;
+    const view = el('button', 'subtle', '查看这件'); view.type = 'button';
+    view.onclick = async () => {
+      if (busy || !requireLogin() || session?.access_token !== owner || conversation !== reply.conversation_id || version !== reply.version) return;
+      if (item.source !== 'user') return;
+      await window.openSubjectConversation({subject_product:{source:'user', product_id:item.product_id}});
+    };
+    card.append(view); node.append(card);
+  }
   const productEntry = reply.product_entry;
   const outfitEntry = reply.outfit_entry;
   if (productEntry || outfitEntry) {
@@ -569,7 +588,7 @@ function showReply(reply, request = null, previewNode = null) {
   const systemItems = reply.looks?.some(look => look.items?.some(item => item.source === 'system'));
   const partial = reply.looks?.some(look => look.items?.length && look.wardrobe_complete === false);
   const label = { advice: '穿法建议', outfit: systemItems ? '邂逅新衣 · 含未拥有的参考款' : partial ? '衣橱部分搭配' : '真实衣橱搭配', concept: '文字参考 · 非已有单品', clarification: '需要你确认' };
-  if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
+  if (!reply.conversation_only) node.prepend(el('div', 'badge', reply.product_search ? '衣橱单品' : reply.weather_only ? '天气查询' : label[reply.delivery] || '穿搭建议'));
   if (reply.city_selection_required && !selectedCity) node.append(cityInvitation(reply, request));
   if (reply.weather?.source === 'itinerary_forecast') {
     const route = el('section', 'itinerary-weather');

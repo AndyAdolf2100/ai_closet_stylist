@@ -1,4 +1,5 @@
 import {createClosetSwitcher} from './closet-switcher.js';
+import {companionPage} from './companion-page.js';
 import {readAvailablePoints} from './points-balance.js';
 import {mountPaymentDemo,paymentDemoEnabled} from './payment-demo.js';
 import {skuDetail} from './sku-fusion.js';
@@ -184,12 +185,13 @@ window.addEventListener('yijian-points-earn-open',()=>openDetail('earn-points'))
 const details = { 'earn-points':'积分获取', 'generation-records':'生成记录', 'my-outfits':'我的搭配', statistics: '衣橱小记', ootd: 'OOTD', diy: 'DIY搭配', products: '逛逛新品', membership: '会员与积分', orders: '订单记录', messages: '我的消息', feedback: '意见反馈', contact: '联系我们', settings: '设置', import: '电商导入', 'create-closet': '创建衣橱' };
 function openDetail(key) {
   const content = node('div', 'detail-body');
+  if (key === 'companion') { detail('我的穿搭助理', companionPage(openAgent)); return; }
   if (key === 'settings') {
     content.className = 'detail-menu settings-notebook';
-    const intro=node('div','settings-intro');intro.append(node('span','settings-eyebrow','MAKE YOURSELF AT HOME'),node('h3','','让这里，更像你的爱搭衣橱。'),node('p','','怎样称呼、怎样相处，都听你的。'));content.append(intro);
+    const intro=node('div','settings-intro');intro.append(node('span','settings-eyebrow','MAKE YOURSELF AT HOME'),node('h3','','让这里，更像你的爱搭衣橱。'));if(document.documentElement.dataset.appDesign!=='yijian')intro.append(node('p','','怎样称呼、怎样相处，都听你的。'));content.append(intro);
     const paths={identity:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-2a7 7 0 0 1 14 0v2',preference:'m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z',memory:'M4 4h6a3 3 0 0 1 3 3v14a5 5 0 0 0-5-3H4Zm16 0h-4a3 3 0 0 0-3 3v14a5 5 0 0 1 5-3h2Z',account:'M14 4h6v16h-6M3 12h12m-4-4 4 4-4 4'};
     const groups=[['关于彼此',[['称呼与形象','你的称呼与性别 · 助理名字与模样','settings','identity'],['了解我','穿搭喜好与聊天习惯','preferences','preference'],['我们的手记','查看与整理已保存的偏好','memory','memory']]],['账号',[['登录 / 切换账号','连接你的个人衣橱','login','account']]]];
-    groups.forEach(([label,rows])=>{const group=node('section','settings-group');group.append(node('h4','',label));const card=node('div','settings-card');rows.forEach(([title,description,action,icon])=>{if(action==='memory'&&document.documentElement.dataset.appDesign==='yijian')return;const row=button('',()=>openAgent(action),'settings-row');const mark=node('span','settings-icon');mark.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[icon]+'"/></svg>';const text=node('span','settings-row-copy');text.append(node('strong','',title),node('small','',description));row.append(mark,text,node('span','settings-chevron','›'));card.append(row);});group.append(card);content.append(group);});
+    groups.forEach(([label,rows])=>{if(label==='关于彼此'&&document.documentElement.dataset.appDesign==='yijian')return;const group=node('section','settings-group');group.append(node('h4','',label));const card=node('div','settings-card');rows.forEach(([title,description,action,icon])=>{if(action==='memory'&&document.documentElement.dataset.appDesign==='yijian')return;const row=button('',()=>openAgent(action),'settings-row');const mark=node('span','settings-icon');mark.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[icon]+'"/></svg>';const text=node('span','settings-row-copy');text.append(node('strong','',title),node('small','',description));row.append(mark,text,node('span','settings-chevron','›'));card.append(row);});group.append(card);content.append(group);});
     content.append(button('退出登录',()=>openAgent('logout'),'settings-logout'),node('p','settings-footnote','按自己的节奏，留下喜欢的设置。'));
   }
   else if(key==='earn-points'){detail(details[key],pointsEarningPage({node,button,openAgent,openPurchase:group=>detail(details.membership,skuDetail({group})),readSession,signal:state.controller.signal}));return;}
@@ -262,6 +264,7 @@ window.addEventListener('companion-profile-change',()=>syncAccount());
 window.addEventListener('yijian-session-change',syncAccount);
 window.addEventListener('yijian-overlay-closed',()=>{if(agentOpener?.isConnected)agentOpener.focus();if(state.tab==='profile')loadMemories();});
 window.addEventListener('yijian-agent-open',e=>openAgent(e.detail||'chat'));
+window.addEventListener('yijian-companion-open',()=>openDetail('companion'));
 window.addEventListener('yijian-checkin-claimed',()=>{if(state.tab==='profile')loadProfile();});
 document.addEventListener('keydown', e => {
   if(e.key==='Escape'&&document.querySelector('#yijian-agent-root dialog[open],dialog[data-app-dialog][open]'))return;

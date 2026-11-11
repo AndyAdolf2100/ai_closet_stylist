@@ -30,17 +30,17 @@ test('missing historic categories are inferred only from category evidence',()=>
  const {dom,board}=setup();assert.equal(board.role({secondary_class_name:'风衣'}),'outer');
  assert.equal(board.role({class_name:'半身裙'}),'bottom');assert.equal(board.role({description:'外套上有包'}),'other');dom.window.close();
 });
-test('selecting a piece opens its original detail; existing large preview restores detail focus',async()=>{
+test('selecting a piece prefers its beautified detail; existing large preview restores detail focus',async()=>{
  const {dom,w,board}=setup();const items=[item('top',{title:'白衬衫',material:'棉',color:'白色'}),item('outer',{title:'风衣'}),item('shoes')];
  const root=board.create({title:'舒服的通勤',items});w.document.body.append(root);await ready();
  root.querySelectorAll('.outfit-piece')[1].click();let modal=w.document.querySelector('dialog');assert(modal.open);
  assert.equal(modal.querySelector('.outfit-item-info h3').textContent,'风衣');
- assert.equal(modal.querySelector('.outfit-original img').src,'https://photos.invalid/original.jpg');
+ assert.equal(modal.querySelector('.outfit-original img').src,'https://photos.invalid/cut.png');
  modal.querySelector('.outfit-thumbnail').click();assert.match(modal.querySelector('dl').textContent,/棉/);
  w.eval(fs.readFileSync('stylist/static/product-preview.js','utf8'));
  const trigger=modal.querySelector('.outfit-original');trigger.click();
  const preview=w.document.getElementById('product-preview');assert(preview.open);assert(modal.open);
- assert.equal(preview.querySelector('img').src,'https://photos.invalid/original.jpg');
+ assert.equal(preview.querySelector('img').src,'https://photos.invalid/cut.png');
  assert(!modal.querySelector('.is-zoomed'));assert(!preview.querySelector('.is-zoomed'));
  assert(preview.querySelector('[aria-label="放大图片"]'));
  const previous=preview.querySelector('[aria-label="上一张商品图片"]');
@@ -136,4 +136,12 @@ test('unknown results do not replay; switching accounts discards late save notic
  const other=board.create({items:[item('top')]},{conversationId:'owned',version:2,index:0});w.document.body.append(other);await ready();
  w.OutfitLibrary.save=()=>new Promise(r=>finish=r);other.querySelector('.outfit-save').click();notices.length=0;
  w.dispatchEvent(new w.CustomEvent('outfit-images-owner-change',{detail:false}));finish({status:'saved'});await ready();assert.equal(notices.length,0);assert(other.querySelector('.outfit-save').disabled);dom.window.close();
+});
+test('operations replay shares the item board without composition, saving or authenticated requests',()=>{
+ const {dom,w,board}=setup();w.OutfitImages.get=()=>assert.fail('read-only replay must not compose or upload');
+ const root=board.readOnly({title:'历史搭配',items:[item('top')]});w.document.body.append(root);
+ assert.equal(root.querySelectorAll('.outfit-save').length,0);assert.equal(root.querySelectorAll('.outfit-piece').length,1);
+ root.querySelector('.outfit-expand').click();assert(w.document.querySelector('dialog').open);
+ assert.equal(w.document.querySelector('.outfit-original img').src,'https://photos.invalid/cut.png');
+ dom.window.close();
 });

@@ -1,3 +1,4 @@
+import {syncCompanionPage} from './companion-page.js';
 import {mountSku,careCopy} from './sku-fusion.js';
 import {mountHomeWeatherNote} from './home-weather-note.js';
 import {needsOnboarding,onboardingURL} from './first-run.js';
@@ -42,6 +43,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const syncHomeCity=()=>{if(document.querySelector('#location-open'))return;let city;try{city=JSON.parse(sessionStorage.getItem('ai-closet-stylist-city-v1')||'null');}catch{}const name=city?.city_name||'定位城市';homeCity.querySelector('span').textContent=name;homeCity.setAttribute('aria-label',name+'，点击定位，可手动选择城市');};syncHomeCity();window.addEventListener('yijian-session-change',syncHomeCity);window.addEventListener('stylist-city-change',syncHomeCity);
   toolbar.append(brand,homeCity); $('app').prepend(toolbar); applyPalette(root.dataset.appPalette);
   const hero = make('section','y-welcome'); hero.setAttribute('aria-label','爱搭衣橱日常');
+  const companionEntry=make('button','y-companion-entry');companionEntry.type='button';companionEntry.setAttribute('aria-label','查看我的穿搭助理');companionEntry.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-companion-open'));hero.append(companionEntry);
   const copy=make('div','y-welcome-copy'); copy.append(make('span','y-eyebrow','A LITTLE MOMENT WITH YOU'),make('h1','','今天，穿得像自己。'),make('p','','今天的心情，想用哪件衣服表达？'));
   const heading = copy.querySelector('h1'); heading.replaceChildren(make('span','','今天，'),make('span','','穿得像自己。'));
   const talk=make('button','y-talk','聊聊穿搭'); talk.append(icon('arrow')); talk.onclick=()=>forward('chat'); copy.append(talk);
@@ -140,6 +142,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   fetch('/static/closet-app/welcome-copy.json').then(r=>{if(!r.ok)throw new Error('copy');return r.json();}).then(bank=>{welcomeBank=bank;renderCompanion(latestWelcomeProfile);}).catch(()=>{});
   function renderCompanion(profile) {
     latestWelcomeProfile=profile;
+    syncCompanionPage(profile);
     const persona=personas.has(profile?.assistant_persona)?profile.assistant_persona:'male_calm_v1';homeWeatherNote.setPersona(persona);
     const name=profile?.agent_name || '衣衣';
     const variants=welcomeBank?.[persona];

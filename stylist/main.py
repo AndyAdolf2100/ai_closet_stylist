@@ -77,6 +77,7 @@ def create_app(settings=None):
                 yield
             finally:
                 await runs.close()
+                await asyncio.to_thread(engine.tracing.close)
                 if sender_task:
                     sender_task.cancel()
                     await asyncio.gather(sender_task, return_exceptions=True)
@@ -461,6 +462,14 @@ def create_app(settings=None):
 
     from .closet_app import router as closet_router
     app.include_router(closet_router(settings))
+
+    from .ops_records import router as ops_router
+    app.include_router(ops_router(settings))
+
+    @app.get("/ops/conversations")
+    async def ops_conversations():
+        return FileResponse(Path(__file__).with_name("static") / "ops" / "index.html",
+                            headers={"Cache-Control": "no-store"})
 
     @app.get("/app/")
     async def closet_app(design: str | None = None, screen: str | None = None):
