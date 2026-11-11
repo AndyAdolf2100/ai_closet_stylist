@@ -53,3 +53,47 @@ html[data-app-design=yijian] body[data-color]{--bg:var(--y-bg);--paper:var(--y-p
 form input::placeholder{color:var(--muted)}
 
 @media(prefers-reduced-motion:reduce){.quick-actions button{transition:none}}
+
+/* A portrait-led welcome with one quiet, full-width stack of login methods. */
+.quick-login{padding:12px 28px max(20px,env(safe-area-inset-bottom));gap:0}
+.quick-welcome{padding-top:6px}
+.login-portraits{position:relative;width:188px;margin:0 auto 28px}
+.login-portrait-stage{position:relative;display:block;width:188px;height:188px;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:50%;background:var(--soft);box-shadow:0 12px 38px color-mix(in srgb,var(--accent) 10%,transparent);isolation:isolate}
+.login-portrait-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:blur(1.5px);transform:scale(1.02);transition:opacity 1.4s cubic-bezier(.45,0,.55,1),filter 1.4s ease,transform 5.2s ease;pointer-events:none}
+.login-portrait-stage img.is-current{opacity:1;filter:blur(0);transform:scale(1)}
+.login-portrait-controls{position:absolute;right:-6px;bottom:-6px;width:44px;height:44px}
+.login-portrait-pause{position:absolute;right:-4px;top:-4px;display:grid;place-items:center;width:44px;height:44px;padding:12px;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);opacity:0;transition:opacity .25s}
+.login-portrait-pause svg{width:17px;height:17px}
+.quick-welcome>.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--muted);margin:8px 0 0}
+.quick-welcome h2{font:600 27px/1.5 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;letter-spacing:.02em;margin:12px 0 8px}
+.quick-welcome .intro{font-size:12px;margin:0 0 26px;line-height:1.8}
+.quick-access{margin:0}
+.quick-actions{gap:10px}
+.quick-actions button,.quick-icons>button{position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:15px;padding:13px 44px;font:600 15px/1.6 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;letter-spacing:.02em;box-shadow:none}
+.quick-actions button>svg,.quick-icons .login-icon{position:absolute;left:19px;top:50%;transform:translateY(-50%);width:22px;height:24px}
+.quick-actions .quick-carrier,.quick-icons>button{border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.quick-actions .quick-carrier:hover,.quick-icons>button:hover{background:var(--soft);border-color:var(--accent)}
+.quick-other{margin:10px 0 0;padding:0;text-align:center}
+.quick-icons{display:grid;gap:10px}
+.quick-icons>button{gap:0;flex-direction:row}
+.quick-icons .login-icon{border:0;border-radius:0;background:transparent;color:var(--ink)}
+.quick-icons .login-icon svg{width:20px;height:22px}
+.quick-agreement{margin:16px 0 0;align-items:flex-start;min-height:44px;font-size:11px;gap:6px}
+.quick-agreement button{font-size:11px}
+.quick-agreement input{width:16px;height:16px}
+.login-footer{border:0;padding-top:8px;padding-bottom:max(16px,env(safe-area-inset-bottom));font-size:11px}
+.quick-login:has(.phone-fallback) .quick-other{padding-top:0}
+@media(max-height:780px){.quick-login{padding-top:0}.login-portraits{width:144px;margin-bottom:22px}.login-portrait-stage{width:144px;height:144px}.quick-welcome h2{font-size:24px;margin-top:8px}.quick-welcome .intro{margin-bottom:20px}.quick-welcome>.eyebrow{margin-top:4px}.quick-actions button,.quick-icons>button{min-height:50px}.login-top{padding-top:12px;padding-bottom:8px}}
+@media(max-width:359px){.quick-login{padding-inline:22px}.quick-welcome h2{font-size:23px}.quick-actions button,.quick-icons>button{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.login-portrait-stage img,.login-portrait-pause{transition:none}}
+.quick-other,.quick-icons{width:100%}
+.quick-icons{grid-template-columns:minmax(0,1fr);justify-content:stretch}
+.quick-actions .quick-carrier{box-shadow:none}
+
+.login-portraits:hover .login-portrait-pause,.login-portraits:focus-within .login-portrait-pause,.login-portrait-pause[aria-pressed=true]{opacity:1}
+@media(hover:none){.login-portrait-pause{opacity:.7}}
+
+/* Keep the carrier number immediately above its own login action. */
+.quick-actions .carrier-number{margin:6px 0 0;text-align:center}
+.quick-actions .carrier-number strong{font-size:20px;line-height:1.4;letter-spacing:1px}
+.quick-actions .carrier-number p{font-size:11px;margin:3px 0 0}
