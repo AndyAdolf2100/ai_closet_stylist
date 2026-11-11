@@ -3,45 +3,50 @@
   const root = document.querySelector('.login-portraits');
   if (!root) return;
   const stage = root.querySelector('.login-portrait-stage');
-  const pause = root.querySelector('.login-portrait-pause');
   const landing = document.querySelector('.quick-login');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const personas = [
-    ['female_sweet_v1', '甜美机灵'], ['male_calm_v1', '冷静可靠'],
-    ['female_warm_v1', '温柔坚定'], ['male_artistic_v1', '浪漫灵动'],
-    ['female_regal_v1', '高傲自信'], ['male_confident_v1', '笃定不羁']
+    ['female_sweet_v1', '甜美机灵', 'yiyi-female-sweet-clever', 369, 35, 1.04],
+    ['male_calm_v1', '冷静可靠', 'yiyi-male-composed', 341, 15, 1.25],
+    ['female_warm_v1', '温柔坚定', 'yiyi-female-gentle-resolute', 338.5, 12, 1.1],
+    ['male_artistic_v1', '浪漫灵动', 'yiyi-male-artistic', 327.5, 15, 1.2],
+    ['female_regal_v1', '高傲自信', 'yiyi-female-regal-confident', 348, 15, 1.1],
+    ['male_confident_v1', '笃定不羁', 'yiyi-male-confident', 314.5, 8, 1.2]
   ];
-  let index = 0, timer = null, paused = false, hovering = false, focused = false, leaving = false;
-  const images = [];
-  const canPlay = () => !motion.matches && !paused && !hovering && !focused && !leaving && !document.hidden && !landing.hidden;
+  let index = 0, timer = null, hovering = false, focused = false, leaving = false;
+  const frames = [];
+  const canPlay = () => !motion.matches && !hovering && !focused && !leaving && !document.hidden && !landing.hidden;
   function schedule() {
     clearTimeout(timer); timer = null;
     if (canPlay()) timer = setTimeout(() => { if (canPlay()) show((index + 1) % personas.length); schedule(); }, 5200);
     root.dataset.playing = String(canPlay());
-    pause.hidden = motion.matches;
   }
   function show(next) {
     index = next;
     root.dataset.persona = personas[index][0];
     root.dataset.index = String(index);
     stage.setAttribute('aria-label', `切换穿搭助理头像，当前为${personas[index][1]}`);
-    images.forEach((image, i) => image.classList.toggle('is-current', i === index));
+    frames.forEach((frame, i) => frame.classList.toggle('is-current', i === index));
   }
-  personas.forEach(([id], i) => {
+  personas.forEach(([id, label, asset, centerX, hairTop, scale]) => {
+    // Reuse the transparent front view from the three-view atlas. The union
+    // clip admits hair above/outside the circle while containing the bust.
+    const frame = document.createElement('span');
+    frame.className = 'login-portrait-frame';
+    frame.style.clipPath = `url("${location.href.split('#')[0]}#login-portrait-head-clip")`;
     const image = document.createElement('img');
-    image.src = `/static/closet-app/assets/care-portraits/${id}-closeup.png`;
-    image.alt = ''; image.decoding = 'async'; image.width = image.height = 240;
+    image.src = `/static/assets/characters/candidates-v2/${asset}-turnaround-transparent-v6.png`;
+    image.alt = ''; image.decoding = 'async'; image.width = 1536; image.height = 1024;
+    const left = 94 - centerX * scale, top = -20 - hairTop * scale;
+    frame.style.setProperty('--portrait-width', (1536 * scale / 188 * 100) + '%');
+    frame.style.setProperty('--portrait-left', (left / 188 * 100) + '%');
+    frame.style.setProperty('--portrait-top', (top / 188 * 100) + '%');
+    frame.style.setProperty('--portrait-origin-x', (centerX / 1536 * 100) + '%');
+    frame.style.setProperty('--portrait-origin-y', ((94 - top) / scale / 1024 * 100) + '%');
     image.addEventListener('error', () => { image.hidden = true; });
-    stage.append(image); images.push(image);
+    frame.append(image); stage.append(frame); frames.push(frame);
   });
   stage.onclick = () => { show((index + 1) % personas.length); schedule(); };
-  pause.onclick = () => {
-    paused = !paused;
-    pause.setAttribute('aria-pressed', String(paused));
-    pause.setAttribute('aria-label', paused ? '继续头像轮播' : '暂停头像轮播');
-    pause.querySelector('path').setAttribute('d', paused ? 'm9 5 10 7-10 7Z' : 'M9 6v12M15 6v12');
-    schedule();
-  };
   root.addEventListener('pointerenter', () => { hovering = true; schedule(); });
   root.addEventListener('pointerleave', () => { hovering = false; schedule(); });
   root.addEventListener('focusin', () => { focused = true; schedule(); });

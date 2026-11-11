@@ -57,14 +57,15 @@ form input::placeholder{color:var(--muted)}
 /* A portrait-led welcome with one quiet, full-width stack of login methods. */
 .quick-login{padding:12px 28px max(20px,env(safe-area-inset-bottom));gap:0}
 .quick-welcome{padding-top:6px}
-.login-portraits{position:relative;width:188px;margin:0 auto 28px}
-.login-portrait-stage{position:relative;display:block;width:188px;height:188px;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:50%;background:var(--soft);box-shadow:0 12px 38px color-mix(in srgb,var(--accent) 10%,transparent);isolation:isolate}
-.login-portrait-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:blur(1.5px);transform:scale(1.02);transition:opacity 1.4s cubic-bezier(.45,0,.55,1),filter 1.4s ease,transform 5.2s ease;pointer-events:none}
-.login-portrait-stage img.is-current{opacity:1;filter:blur(0);transform:scale(1)}
-.login-portrait-controls{position:absolute;right:-6px;bottom:-6px;width:44px;height:44px}
-.login-portrait-pause{position:absolute;right:-4px;top:-4px;display:grid;place-items:center;width:44px;height:44px;padding:12px;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--muted);opacity:0;transition:opacity .25s}
-.login-portrait-pause svg{width:17px;height:17px}
-.quick-welcome>.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--muted);margin:8px 0 0}
+.login-portraits{position:relative;width:188px;margin:24px auto 8px}
+.login-portrait-stage{position:relative;display:block;width:188px;height:188px;padding:0;overflow:visible;border:0;border-radius:50%;background:transparent;isolation:isolate}
+.login-portrait-stage::before{content:'';position:absolute;inset:0;border:1px solid var(--line);border-radius:50%;background:var(--soft);box-shadow:0 12px 38px color-mix(in srgb,var(--accent) 10%,transparent)}
+.login-portrait-clipdefs{position:absolute;pointer-events:none}
+.login-portrait-frame{position:absolute;inset:0;display:block;opacity:0;transition:opacity 1.4s cubic-bezier(.45,0,.55,1);pointer-events:none}
+.login-portrait-frame.is-current{opacity:1}
+.login-portrait-stage .login-portrait-frame img{position:absolute;max-width:none;inset:auto;width:var(--portrait-width);height:auto;left:var(--portrait-left);top:var(--portrait-top);transform:scale(1.02);transform-origin:var(--portrait-origin-x) var(--portrait-origin-y);transition:transform 5.2s ease;pointer-events:none}
+.login-portrait-stage .login-portrait-frame.is-current img{transform:scale(1)}
+.quick-welcome>.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--muted);margin:4px 0 0}
 .quick-welcome h2{font:600 27px/1.5 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;letter-spacing:.02em;margin:12px 0 8px}
 .quick-welcome .intro{font-size:12px;margin:0 0 26px;line-height:1.8}
 .quick-access{margin:0}
@@ -83,15 +84,13 @@ form input::placeholder{color:var(--muted)}
 .quick-agreement input{width:16px;height:16px}
 .login-footer{border:0;padding-top:8px;padding-bottom:max(16px,env(safe-area-inset-bottom));font-size:11px}
 .quick-login:has(.phone-fallback) .quick-other{padding-top:0}
-@media(max-height:780px){.quick-login{padding-top:0}.login-portraits{width:144px;margin-bottom:22px}.login-portrait-stage{width:144px;height:144px}.quick-welcome h2{font-size:24px;margin-top:8px}.quick-welcome .intro{margin-bottom:20px}.quick-welcome>.eyebrow{margin-top:4px}.quick-actions button,.quick-icons>button{min-height:50px}.login-top{padding-top:12px;padding-bottom:8px}}
+@media(max-height:780px){.quick-login{padding-top:0}.login-portraits{width:144px;margin-bottom:8px}.login-portrait-stage{width:144px;height:144px}.quick-welcome h2{font-size:24px;margin-top:8px}.quick-welcome .intro{margin-bottom:20px}.quick-welcome>.eyebrow{margin-top:4px}.quick-actions button,.quick-icons>button{min-height:50px}.login-top{padding-top:12px;padding-bottom:8px}}
 @media(max-width:359px){.quick-login{padding-inline:22px}.quick-welcome h2{font-size:23px}.quick-actions button,.quick-icons>button{font-size:14px}}
-@media(prefers-reduced-motion:reduce){.login-portrait-stage img,.login-portrait-pause{transition:none}}
+@media(prefers-reduced-motion:reduce){.login-portrait-frame,.login-portrait-stage .login-portrait-frame img{transition:none}}
 .quick-other,.quick-icons{width:100%}
 .quick-icons{grid-template-columns:minmax(0,1fr);justify-content:stretch}
 .quick-actions .quick-carrier{box-shadow:none}
 
-.login-portraits:hover .login-portrait-pause,.login-portraits:focus-within .login-portrait-pause,.login-portrait-pause[aria-pressed=true]{opacity:1}
-@media(hover:none){.login-portrait-pause{opacity:.7}}
 
 /* Keep the carrier number immediately above its own login action. */
 .quick-actions .carrier-number{margin:6px 0 0;text-align:center}
