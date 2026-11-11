@@ -2012,3 +2012,5 @@
 - 2026-11-11｜PRD-01 登录按钮配色最终规则：用户后续明确微信不再固定微信绿色，改用原一键手机登录的主题实心色（系统黄／男灰蓝／女主题绿）；手机保留default浅底边框、小笺正文居中。替代此前固定绿色／亮绿实现，三主题四视口12组检查通过，同功能最终前后文档已合并更新，不展示中间方案。
 
 - 2026-11-11｜PRD-01 登录双按钮辨识度（本地已实现）：用户限定上方界面不动，仅优化微信和一键手机两个长按钮，使其醒目且适配三主题；延续微信主题实心、手机default层级，已补主题描边、手机图标、16px字重与轻阴影，保持52px按钮高度。12组检查通过；三主题440px截图上方550px逐像素一致。并入UI-002最终对照，不新增过程条目；用户已授权本轮提交，未部署。
+
+- 2026-11-11｜运维会话记录查询接口（server 侧实现、本地未部署）：用户指出仅凭会话 ID 查详情不符合运维实际（运维只掌握用户 ID），要求先按用户取会话列表再取详情。最终形态为 aicloset-server 两条无鉴权只读接口：`GET /api/internal/stylist/records/users/{user_id}/conversations`（`updated_at` 倒序、`limit` 1-100 默认 20、`offset`、`include_deleted` 可选，返回会话 ID／版本／消息数／最近一句预览／软删除标记／总数）与既有 `GET /api/internal/stylist/records/conversations/{id}`；数据经独立配置 `stylist_postgresql` 只读连接本仓库线上库 `aicloset_stylist`，不建表不写入。本仓库保留 `scripts/ops_conversation_records.py`（list / show 两步）与 `docs/OPS_CONVERSATION_RECORDS.md`。server 侧 8 项模拟测试与路由注册测试通过，列表 SQL 已用 gorm DryRun 核对生成语句并在本地 SQLite 造数验证排序／软删过滤／计数／越权隔离／分页；本机不在 RDS 白名单，真实库连通未验证，需服务器部署后确认。
