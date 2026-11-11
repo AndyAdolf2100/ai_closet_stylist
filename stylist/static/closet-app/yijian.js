@@ -162,8 +162,8 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
     const character=window.CompanionCharacters.find(persona);
     wardrobeBy.textContent=`✧ ${name} · 陪你挑衣`;
     wardrobeComment.textContent=wardrobeLines[persona]||wardrobeLines.male_calm_v1;
-    wardrobePortrait.style.backgroundImage=`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`;
-    wardrobePortrait.setAttribute('aria-label',`${name}，陪你挑衣`);
+    wardrobePortrait.style.backgroundImage=`url("/static/closet-app/assets/wardrobe-scenes-v1/${persona}-triptych.png")`;
+    wardrobePortrait.setAttribute('aria-label',`${name}，侧身为你挑选衣服`);
     avatar.style.setProperty('--scene-image',`url("/static/assets/characters/companion-scenes-v2/${persona}-hero.png")`);
     ['x1','y1','x2','y2','rx','ry'].forEach((key,index)=>avatar.style.setProperty('--eye-'+key,character.blinkEyes[index]+'%'));
     letterTitle.textContent=careCopy[persona][0]; letterCopy.textContent=careCopy[persona][1];

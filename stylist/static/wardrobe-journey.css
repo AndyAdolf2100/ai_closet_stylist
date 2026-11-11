@@ -365,3 +365,20 @@
 .journey-dialog[data-flow=person] .journey-steps li+li::before{content:"";width:28px;height:1px;background:var(--line);margin:0 12px 0 7px}
 .journey-dialog[data-flow=person] .journey-body{padding-top:8px}
 .journey-dialog[data-flow=person] .journey-intro{margin:0 0 12px;line-height:1.65}
+
+/* Give each fitting portrait space for its image and full name. */
+.journey-dialog[data-panel=portraits]{width:min(540px,calc(100% - 24px))}
+.journey-dialog[data-panel=portraits] .journey-twin-strip{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row;grid-auto-columns:auto;gap:14px;overflow:visible;scroll-snap-type:none;padding:2px 0 4px}
+.journey-dialog[data-panel=portraits] .journey-twin-strip .journey-portrait{padding:8px;gap:0;border-radius:16px}
+.journey-dialog[data-panel=portraits] .journey-portrait-photo{height:148px;aspect-ratio:auto;border-radius:10px}
+.journey-dialog[data-panel=portraits] .journey-twin-strip img{height:100%;object-position:50% 20%;border-radius:10px}
+.journey-dialog[data-panel=portraits] .journey-portrait-caption{padding:10px 3px 4px}
+.journey-dialog[data-panel=portraits] .journey-twin-strip .journey-portrait-name{font-size:14px!important;line-height:1.5}
+.journey-dialog[data-panel=portraits] .journey-portrait-upload{margin:16px 0 0;padding:14px 12px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+.journey-dialog[data-panel=portraits] .journey-portrait-upload-copy strong{font-size:13px;line-height:1.7}
+.journey-dialog[data-panel=portraits] .journey-footer{padding-top:14px;border-top:1px solid var(--line)}
+@media(max-width:350px){.journey-dialog[data-panel=portraits] .journey-twin-strip{gap:10px}.journey-dialog[data-panel=portraits] .journey-portrait-photo{height:128px}.journey-dialog[data-panel=portraits] .journey-twin-strip .journey-portrait-name{font-size:13px!important}}
+
+.journey-person-stage{font:22px/1.5 Georgia,"Songti SC",serif;margin:0 0 14px}.journey-dialog[data-panel=upload][data-flow=person] .journey-image{padding:12px;margin:12px 0 18px;border-radius:14px}.journey-dialog[data-panel=upload][data-flow=person] .journey-image img{max-height:280px;width:100%;object-fit:contain}.journey-dialog[data-panel=upload][data-flow=person] .journey-state{margin:0 0 12px;padding:12px 14px;border-radius:12px}
+
+.journey-dialog[data-flow=detail-tryon] .journey-detail-portrait{margin:16px 0 12px}.journey-detail-portrait img{height:220px;max-height:220px}

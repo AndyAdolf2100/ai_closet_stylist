@@ -1,3 +1,4 @@
+import {detailTryonButton} from './detail-tryon.js';
 import {createClosetSwitcher} from './closet-switcher.js';
 import {companionPage} from './companion-page.js';
 import {readAvailablePoints} from './points-balance.js';
@@ -101,7 +102,7 @@ function productCard(item) {
     const body = node('div', 'detail-body');
     body.append(picture(src, title), node('h3', '', title));
     if (item.last_add_time) body.append(node('p', '', `添加于 ${item.last_add_time}`));
-    body.append(subjectChatButton('product', item, {button, openAgent, readSession}));
+    body.append(subjectChatButton('product', item, {button, openAgent, readSession}));body.append(detailTryonButton('product', item, {button, openAgent, readSession}));
     detail(title, body);
   }, 'product'); b.append(picture(src, title), node('span', '', title));const description=[item.color,item.material].filter(Boolean).join(' · ');if(description)b.append(node('small','y-product-note',description));return b;
 }
@@ -227,6 +228,11 @@ async function openAgent(action = 'chat', subjectEntry = null) {
   const frame = $('agent-frame');
   if (!agentReady) agentReady = new Promise(resolve => { frame.onload = resolve; frame.src = '/static/index.html'; });
   await agentReady;
+  if(action==='detail-tryon'){
+    if(readSession()?.access_token!==owner)return;
+    if(!frame.contentWindow.DetailTryon)await new Promise((resolve,reject)=>{const script=frame.contentDocument.createElement('script');script.type='module';script.src='/static/closet-app/detail-tryon.js';script.onload=resolve;script.onerror=reject;frame.contentDocument.body.append(script);});
+    if(readSession()?.access_token===owner)await frame.contentWindow.WardrobeJourney.tryon(subjectEntry);return;
+  }
   if (subjectEntry) {
     if (readSession()?.access_token !== owner || $('agent-page').hidden) return;
     await frame.contentWindow.openSubjectConversation(subjectEntry); return;

@@ -36,7 +36,13 @@
     if(state===3){r.selection_required=false;r.stage='cancelled';action.status='cancelled';return remember(action);}
     const waiting=Boolean(detail.selection_required)&&(state===1||state==null);
     r.selection_required=waiting;
-    if(waiting){r.stage=items.length?'selecting':'segmenting';action.status=items.length?'awaiting_selection':'processing';return remember(action);}
+    if(waiting){
+      const ready=items.length>0&&items.every(p=>p.beautify_status===2||(p.beautify_status===1&&Boolean(p.beautify_image)));
+      r.selection_required=ready;r.stage=ready?'selecting':items.length?'preview_beautifying':'segmenting';
+      r.preview_completed_count=items.filter(p=>p.beautify_status===1&&p.beautify_image).length;
+      r.preview_failed_count=items.filter(p=>p.beautify_status===2).length;
+      action.status=ready?'awaiting_selection':'processing';return remember(action);
+    }
     action.status='processing';
     const selected=state===2?items.filter(p=>p.selection_status===2):[];
     if(state===2){r.selection_submitted_ids=selected.map(p=>p.detail_id);if(finishProducts(action,selected))return remember(action);}
@@ -51,7 +57,7 @@
   }
 
   async function select(id,ids){const action=get(id),r=action.result,selected=[...new Set(ids)].sort((a,b)=>a-b);if(r.selection_submitted_ids){if(JSON.stringify(r.selection_submitted_ids)!==JSON.stringify(selected))throw Error('本次选择已提交，请查看原任务。');return refresh(id);}
-    const valid=new Set((r.selection_items||[]).map(i=>Number(i.detail_id)));if(!r.selection_required||selected.some(n=>!Number.isSafeInteger(n)||!valid.has(n)))throw Error('候选单品已变化，请重新核对。');r.selection_submitted_ids=selected;r.stage='submitting_selection';action.status='processing';remember(action);
+    const valid=new Set((r.selection_items||[]).filter(i=>i.beautify_status===1&&i.beautify_image).map(i=>Number(i.detail_id)));if(!r.selection_required||selected.some(n=>!Number.isSafeInteger(n)||!valid.has(n)))throw Error('候选单品已变化，请重新核对。');r.selection_submitted_ids=selected;r.stage='submitting_selection';action.status='processing';remember(action);
     try{await request('/api/user_product/upload/task/selection',{method:'POST',body:{task_id:r.task_id,selected_detail_ids:selected}});r.selection_required=false;r.stage=selected.length?'beautifying':'cancelled';action.status=selected.length?'processing':'cancelled';return remember(action);}catch(error){const rejected=[43510,43511].includes(error.code);action.status=rejected?'failed':'unknown';if(rejected){r.selection_required=false;r.stage='capacity_blocked';}r.message=rejected?error.message:'选择结果待确认，只查询原任务，不会重复提交。';error.action=remember(action);throw error;}
   }
   window.ServerGarmentUpload={start,refresh,select,list:()=>read().filter(a=>a.owner===owner()),clear:()=>memory.clear()};

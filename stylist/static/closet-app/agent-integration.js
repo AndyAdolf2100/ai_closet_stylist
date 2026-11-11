@@ -21,7 +21,7 @@ export function mountAgent(){
     // Agent modules create their dialogs on body; keep App-owned dialogs in their native modal layer.
     const relocate=()=>{for(const child of [...document.body.children])if(child.matches('dialog:not([data-first-visit]):not([data-app-dialog]),#companion-notification'))host.append(child);};
     const observer=new MutationObserver(relocate);observer.observe(document.body,{childList:true});
-    for(const name of scripts){if(name==='app')for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/static/'+name+'.js?v=server-terminal-20261111';script.onload=resolve;script.onerror=()=>reject(Error('组件没能加载，请刷新页面。'));document.body.append(script);});relocate();}
+    for(const name of scripts){if(name==='app')for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/static/'+name+'.js?v=person-complete-flow-20261111';script.onload=resolve;script.onerror=()=>reject(Error('组件没能加载，请刷新页面。'));document.body.append(script);});relocate();}
     for(const id of Object.values(ids)){const element=document.getElementById(id);if(element)triggers.set(id,element);}
     const cityBar=document.createElement('div');cityBar.className='y-agent-city';
     const cityButton=document.createElement('button');cityButton.type='button';cityButton.className='y-agent-city-button';cityButton.setAttribute('aria-haspopup','dialog');cityButton.setAttribute('aria-controls','location-dialog');
@@ -119,6 +119,7 @@ export async function openIntegratedAgent(action,subjectEntry=null){
   if(action==='login'||(!sessionToken()&&action!=='logout')){location.assign(loginURL());return;}
   if(action!=='logout'&&!await ensureOnboarded())return;
   const host=await mountAgent();
+  if(action==='detail-tryon'){if(sessionToken()!==owner)return;await window.WardrobeJourney.tryon(subjectEntry);return;}
   if(subjectEntry){if(sessionToken()!==owner||document.getElementById('agent-page').hidden)return;await window.openSubjectConversation(subjectEntry);return;}
   let authenticated=false;try{authenticated=!!JSON.parse(sessionStorage.getItem('ai-closet-stylist-session-v1')||'null')?.access_token;}catch{}
   if(action==='city'){await document.querySelector('.y-agent-city-button')?.onclick({currentTarget:document.querySelector('.y-home-city-button')});return;}

@@ -27,7 +27,7 @@ export function createJourney({live,getToken,ensureAccess,getProfile,getCity,onC
     if(!owner)owner=getToken();
     if(!same())throw Error('账号已切换，请重新进入引导。');
     if(!ready)ready=(async()=>{
-      for(const name of ['server-garment-upload','wardrobe-journey','product-preview'])await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='/static/'+name+'.js?v=server-terminal-20261111';s.onload=resolve;s.onerror=()=>reject(Error('组件未能加载，请刷新重试。'));document.body.append(s);});
+      for(const name of ['server-garment-upload','wardrobe-journey','product-preview'])await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='/static/'+name+'.js?v=person-complete-flow-20261111';s.onload=resolve;s.onerror=()=>reject(Error('组件未能加载，请刷新重试。'));document.body.append(s);});
       window.WardrobeJourney.configure({api,notify,onProduct:async id=>{state.subjectProduct=id;state.subjectContext=null;state.subjectPaired=false;state.reply=null;persist();await askStyle();},onStyle:async id=>{try{if(state.request&&id!==state.upload?.action_id){notify('请先核对当前搭配请求，再更换衣物。');return;}if(id!==state.upload?.action_id){state.upload=await api('/stylist-api/media/'+encodeURIComponent(id));state.reply=null;persist();onChange();}await askStyle();}catch(e){notify(e.message);}},getConversation:()=>state.reply?.conversation_id,getContext:()=>({conversation_id:state.reply?.conversation_id,version:state.reply?.version})});
       window.WardrobeJourney.setOwner(owner);
       document.getElementById('journey-dialog').dataset.onboarding='true';
