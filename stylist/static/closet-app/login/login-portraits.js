@@ -6,12 +6,12 @@
   const landing = document.querySelector('.quick-login');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const personas = [
-    ['female_sweet_v1', '甜美机灵', 'yiyi-female-sweet-clever', 369, 35, 1.04],
-    ['male_calm_v1', '冷静可靠', 'yiyi-male-composed', 341, 15, 1.25],
-    ['female_warm_v1', '温柔坚定', 'yiyi-female-gentle-resolute', 338.5, 12, 1.1],
-    ['male_artistic_v1', '浪漫灵动', 'yiyi-male-artistic', 327.5, 15, 1.2],
-    ['female_regal_v1', '高傲自信', 'yiyi-female-regal-confident', 348, 15, 1.1],
-    ['male_confident_v1', '笃定不羁', 'yiyi-male-confident', 314.5, 8, 1.2]
+    ['female_sweet_v1', '甜美机灵', 'yiyi-female-sweet-clever', 373, 35, 1.04, 14, 0],
+    ['male_calm_v1', '冷静可靠', 'yiyi-male-composed', 346, 15, 1.25, 10, 3],
+    ['female_warm_v1', '温柔坚定', 'yiyi-female-gentle-resolute', 344, 12, 1.1, 9, 0],
+    ['male_artistic_v1', '浪漫灵动', 'yiyi-male-artistic', 332, 15, 1.2, 12, 6],
+    ['female_regal_v1', '高傲自信', 'yiyi-female-regal-confident', 359, 15, 1.1, 12, 7],
+    ['male_confident_v1', '笃定不羁', 'yiyi-male-confident', 322, 8, 1.2, 9, 3]
   ];
   let index = 0, timer = null, hovering = false, focused = false, leaving = false;
   const frames = [];
@@ -28,16 +28,18 @@
     stage.setAttribute('aria-label', `切换穿搭助理头像，当前为${personas[index][1]}`);
     frames.forEach((frame, i) => frame.classList.toggle('is-current', i === index));
   }
-  personas.forEach(([id, label, asset, centerX, hairTop, scale]) => {
+  personas.forEach(([id, label, asset, centerX, hairTop, scale, angle, offsetY]) => {
     // Reuse the transparent front view from the three-view atlas. The union
     // clip admits hair above/outside the circle while containing the bust.
+    // Per-person face alignment is static; the transition only fades/scales.
     const frame = document.createElement('span');
     frame.className = 'login-portrait-frame';
     frame.style.clipPath = `url("${location.href.split('#')[0]}#login-portrait-head-clip")`;
     const image = document.createElement('img');
     image.src = `/static/assets/characters/candidates-v2/${asset}-turnaround-transparent-v6.png`;
     image.alt = ''; image.decoding = 'async'; image.width = 1536; image.height = 1024;
-    const left = 94 - centerX * scale, top = -20 - hairTop * scale;
+    const left = 94 - centerX * scale, top = -20 - hairTop * scale + offsetY;
+    frame.style.setProperty('--portrait-angle', angle + 'deg');
     frame.style.setProperty('--portrait-width', (1536 * scale / 188 * 100) + '%');
     frame.style.setProperty('--portrait-left', (left / 188 * 100) + '%');
     frame.style.setProperty('--portrait-top', (top / 188 * 100) + '%');

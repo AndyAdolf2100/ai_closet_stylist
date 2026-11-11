@@ -63,8 +63,8 @@ form input::placeholder{color:var(--muted)}
 .login-portrait-clipdefs{position:absolute;pointer-events:none}
 .login-portrait-frame{position:absolute;inset:0;display:block;opacity:0;transition:opacity 1.4s cubic-bezier(.45,0,.55,1);pointer-events:none}
 .login-portrait-frame.is-current{opacity:1}
-.login-portrait-stage .login-portrait-frame img{position:absolute;max-width:none;inset:auto;width:var(--portrait-width);height:auto;left:var(--portrait-left);top:var(--portrait-top);transform:scale(1.02);transform-origin:var(--portrait-origin-x) var(--portrait-origin-y);transition:transform 5.2s ease;pointer-events:none}
-.login-portrait-stage .login-portrait-frame.is-current img{transform:scale(1)}
+.login-portrait-stage .login-portrait-frame img{position:absolute;max-width:none;inset:auto;width:var(--portrait-width);height:auto;left:var(--portrait-left);top:var(--portrait-top);transform:rotate(var(--portrait-angle,0deg)) scale(1.02);transform-origin:var(--portrait-origin-x) var(--portrait-origin-y);transition:transform 5.2s ease;pointer-events:none}
+.login-portrait-stage .login-portrait-frame.is-current img{transform:rotate(var(--portrait-angle,0deg)) scale(1)}
 .quick-welcome>.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--muted);margin:4px 0 0}
 .quick-welcome h2{font:600 27px/1.5 -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;letter-spacing:.02em;margin:12px 0 8px}
 .quick-welcome .intro{font-size:12px;margin:0 0 26px;line-height:1.8}
