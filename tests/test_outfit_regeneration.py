@@ -349,3 +349,34 @@ async def test_explicit_past_date_reports_date_problem_without_current_weather_f
     assert reply.weather is None and reply.task.event_date == past
     assert any('过去日期' in warning for warning in reply.warnings)
     assert 'forecast' not in upstream.calls and 'weather.get' not in upstream.calls
+
+
+@pytest.mark.parametrize("include_anchor", [True, False])
+async def test_regeneration_retains_accessory_from_subject_entry(tmp_path, include_anchor):
+    from stylist.models import ProductRef
+    store, upstream, cid, state = await setup(tmp_path)
+    umbrella_row = {**PRODUCTS[0], 'product_id': '999', 'class_name': '配饰',
+                    'secondary_class_name': '雨伞', 'title': '黑色雨伞', 'color': '黑色'}
+    upstream.products.append(umbrella_row)
+    umbrella = Product(source='user', product_id='999', slot='accessory', title='黑色雨伞', class_name='配饰')
+    owner = await upstream.identity()
+    entry = ChatRequest(message='帮我查看下这件', request_id='umbrella-entry', conversation_id=cid, expected_version=1)
+    _, claim, state, _ = store.reserve(owner, entry)
+    state.looks = [Look(title='当前雨伞', items=[umbrella])]
+    store.finish(owner, entry, claim, state, Reply(conversation_id=cid, version=2, mode='consult',
+        delivery='advice', message='打开雨伞', task=state.task, looks=state.looks,
+        subject_product=ProductRef(source='user', product_id='999')))
+    candidate=draft()
+    if include_anchor:
+        candidate.looks[0].selected_keys.append('user:999')
+    model=Model([candidate])
+    engine=Stylist(Settings(),store,model)
+    action=ChatRequest(message='重新生成穿搭',regenerate_outfit=True,regenerate_from_version=2,
+        selected_look_index=0,conversation_id=cid,expected_version=2,request_id='umbrella-regenerate')
+    if include_anchor:
+        reply=await engine.chat(upstream,action)
+        assert any(item.product_id=='999' for item in reply.looks[0].items)
+    else:
+        with pytest.raises(StylistError):
+            await engine.chat(upstream,action)
+    assert all('user:999' in payload['frozen_keys'] for payload in model.payloads)

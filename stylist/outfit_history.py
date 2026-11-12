@@ -3,7 +3,7 @@ def outfit_catalog(messages):
     result = []
     for turn in messages:
         reply = turn.get('reply') or {}
-        if reply.get('historical_outfit_replay'):
+        if reply.get('historical_outfit_replay') or reply.get('saved_outfit_search'):
             continue
         if reply.get('product_entry') is not None or reply.get('outfit_entry') is not None:
             continue

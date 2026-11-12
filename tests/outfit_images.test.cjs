@@ -53,7 +53,7 @@ test('partial composition draws only owned items, never the four text references
  w.OutfitBoard={layout:items=>items.map(()=>({x:50,y:50,w:60,h:60,z:1}))};
  w.LocalCutout={get:async item=>{cutouts.push(item.product_id);return 'https://images.invalid/owned.png'}};
  w.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=200;}set src(value){queueMicrotask(()=>this.onload())}};
- w.document.createElement=tag=>{assert.equal(tag,'canvas');return {getContext:()=>({drawImage:()=>draws.push('owned')}),toDataURL:()=> 'data:image/png;base64,synthetic'};};
+ w.document.createElement=tag=>{assert.equal(tag,'canvas');const canvas={getContext:()=>({drawImage:()=>{if(canvas.width===960)draws.push('owned')},getImageData:()=>({data:new Uint8ClampedArray(64*64*4)})}),toDataURL:()=> 'data:image/png;base64,synthetic'};return canvas;};
  w.OutfitImages.configure({load:async()=>({status:'missing'}),save:async()=>({status:'completed',image_url:'https://images.invalid/partial.png'})});
  await w.OutfitImages.get({items:[{product_id:'1'}],pieces:['衬衫','裤','外套','鞋','包'],reference_pieces:['裤','外套','鞋','包'],wardrobe_complete:false},{conversationId:'partial',version:1,index:0});
  assert.deepEqual(cutouts,['1']);assert.equal(draws.length,1);dom.window.close();

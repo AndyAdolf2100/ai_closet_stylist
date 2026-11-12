@@ -1,5 +1,7 @@
 """Synthetic dialogue expectations shared by offline and explicit live recall checks."""
 CASES = [
+    ('我刚才第一套搭配是啥来着', [1]),
+    ('输出一下', [1]),
     ('第一个给我看看', [1]),
     ('第三个再发我一下', [3]),
     ('最后一个给我看看', [5]),

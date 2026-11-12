@@ -15,13 +15,15 @@ class OutfitFeedback(Model):
     assistant_persona: PersonaId | None = None
 
 
-def owned_look(conn, owner, cid, version, index):
+def owned_look(conn, owner, cid, version, index, *, allow_saved_snapshot=False):
     row = conn.execute('SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?',
                        (owner, cid, version)).fetchone()
     if not row:
         raise StylistError('feedback_not_found', '找不到当前账号的这套搭配。', 404)
     reply = Reply.model_validate_json(row['reply_json'])
-    if index >= len(reply.looks) or reply.pending_confirmation or reply.delivery != 'outfit':
+    saved_snapshot = (allow_saved_snapshot and reply.delivery == 'advice'
+                      and reply.product_entry is None and reply.subject_product is None)
+    if index >= len(reply.looks) or reply.pending_confirmation or (reply.delivery != 'outfit' and not saved_snapshot):
         raise StylistError('feedback_not_available', '这条记录还没有完成的搭配。', 422)
     return reply, reply.looks[index]
 

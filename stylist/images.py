@@ -10,7 +10,7 @@ import uuid
 from pydantic import Field, StrictBool
 
 from .errors import StylistError
-from .models import Model, ProductRef, SessionState
+from .models import Model, ProductRef, SessionState, Reply, Look
 from .points import require_points
 from .retrieval import resolve_products
 
@@ -47,7 +47,19 @@ class ImageService:
                 raise StylistError("conversation_not_found", "找不到这条对话。", 404)
             if row["version"] != version or row["active_claim"]:
                 raise StylistError("stale_version", "搭配正在变化，请刷新后重新查看费用。", 409)
-            return SessionState.model_validate_json(row["state_json"])
+            state = SessionState.model_validate_json(row["state_json"])
+            snapshot = conn.execute("SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?",
+                                    (owner, cid, version)).fetchone()
+            if snapshot:
+                reply = Reply.model_validate_json(snapshot['reply_json'])
+                if reply.product_entry and reply.subject_product:
+                    from .retrieval import from_row
+                    item = from_row(reply.product_entry.get('product') or {}, 'user')
+                    if item is None or item.source != reply.subject_product.source or item.product_id != reply.subject_product.product_id:
+                        raise StylistError('product_entry_invalid_result', '当前单品信息无法核对，请重新打开。', 409)
+                    # Derive an owned read-only snapshot, never fall back to a previous outfit.
+                    state.looks = [Look(title=reply.product_entry.get('title') or '当前单品', items=[item], pieces=[item.display_name], wardrobe_complete=False)]
+            return state
 
     async def quote(self, upstream, request):
         owner = await upstream.identity()

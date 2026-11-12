@@ -79,6 +79,15 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    wardrobe_delete_intent: Literal["product", "outfit", "both"] | None = None
+    wardrobe_delete_scope: Literal["user", "system", "other"] = "user"
+    wardrobe_delete_evidence: str = Field(default="", max_length=6000)
+    outfit_request_kind: Literal["none", "history", "saved_library", "generate"] = "none"
+    outfit_request_evidence: str = Field(default="", max_length=6000)
+    saved_outfit_search: bool = False
+    saved_outfit_search_evidence: str = Field(default="", max_length=6000)
+    random_selection: bool = False
+    exclude_previous: bool = False
     recall_outfit_numbers: list[int] = Field(default_factory=list, max_length=7)
     recall_evidence: str = Field(default="", max_length=6000)
     product_search: bool = False
@@ -209,6 +218,7 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    saved_outfit_search: bool = False
     historical_outfit_replay: bool = False
     product_search: bool = False
     product_results: list[Product] = Field(default_factory=list, max_length=6)

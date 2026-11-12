@@ -36,10 +36,20 @@ async def main():
   for n,(message,expected) in enumerate(cases):
    store=Store(str(Path(tmp)/f'{n}.sqlite'));request=ChatRequest(message='忽略天气，给我生成5套搭配',request_id='initial-outfits');cid,claim,state,_=store.reserve('recall-fixture',request)
    state.looks=[Look(title=f'第{i}套：'+title,pieces=[title],how=['按原方案搭配']) for i,title in enumerate(['白衬衫与牛仔裤','灰针织衫与长裤','黑西装与直筒裤','蓝衬衫与卡其裤','米色外套与黑裤'],1)]
-   store.finish('recall-fixture',request,claim,state,Reply(conversation_id=cid,version=1,mode='recommend',delivery='outfit',message='这五套搭配供你选。',task=Task(weather_policy='ignored'),looks=state.looks))
+   initial=Reply(conversation_id=cid,version=1,mode='recommend',delivery='outfit',message='这五套搭配供你选。',task=Task(weather_policy='ignored'),looks=state.looks)
+   state.messages=[{'role':'user','content':request.message},{'role':'assistant','content':initial.model_dump_json()}]
+   store.finish('recall-fixture',request,claim,state,initial)
+   previous_version=1
+   if message=='输出一下':
+    follow=ChatRequest(message='我刚才第一套搭配是啥来着',request_id='fixture-recall-text',conversation_id=cid,expected_version=1)
+    _,claim,state,_=store.reserve('recall-fixture',follow)
+    context=Reply(conversation_id=cid,version=2,mode='consult',delivery='advice',message='第一套是白衬衫与牛仔裤。',task=Task(),conversation_only=True)
+    state.messages += [{'role':'user','content':follow.message},{'role':'assistant','content':context.model_dump_json()}]
+    store.finish('recall-fixture',follow,claim,state,context)
+    previous_version=2
    model=Model(s);start=time.monotonic()
    try:
-    reply=await Stylist(s,store,model).chat(Upstream(),ChatRequest(message=message,request_id=f'recall-test-{n}',conversation_id=cid,expected_version=1))
+    reply=await Stylist(s,store,model).chat(Upstream(),ChatRequest(message=message,request_id=f'recall-test-{n}',conversation_id=cid,expected_version=previous_version))
     actual=[int(x.title[1]) for x in reply.looks];passed=actual==expected and reply.historical_outfit_replay and not reply.message and model.calls==['plan']
     row={'message':message,'expected':expected,'actual':actual,'passed':passed,'message_text':reply.message,'model_calls':model.calls,'plan':model.last}
    except Exception as e:row={'message':message,'expected':expected,'passed':False,'error':type(e).__name__,'model_calls':model.calls,'plan':getattr(model,'last',None)}

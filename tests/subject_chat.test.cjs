@@ -33,3 +33,11 @@ test('home discussions carry visible copy without pretending to be saved outfits
  const t=await setup('discussion',{id:72,title:'首页造型',description:'白衬衫配灰裤'});
  await t.control.action();assert.deepEqual(t.calls,[['chat',{discussion:{title:'首页造型',description:'白衬衫配灰裤'}}]]);
 });
+
+test('H5 entry labels are short while structured references remain unchanged',async()=>{
+ const product=await setup('product',{user_product_id:'12'});assert.equal(product.control.text,'聊聊这件');
+ const outfit=await setup('outfit',{outfit_id:72,outfit_id_type:2});assert.equal(outfit.control.text,'聊聊这套');
+ await product.control.action();await outfit.control.action();
+ assert.deepEqual(product.calls,[['chat',{subject_product:{source:'user',product_id:'12'}}]]);
+ assert.deepEqual(outfit.calls,[['chat',{subject_outfit:{source:'user',outfit_id:72}}]]);
+});

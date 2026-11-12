@@ -256,9 +256,14 @@ async def test_recall_original_card_without_retrieval_or_generation(tmp_path, me
         state.looks = looks
         store.finish('1', request, claim, state, Reply(conversation_id=cid, version=version,
                      mode='recommend', delivery='outfit', message=title, task=Task(), looks=state.looks))
+    if message == '输出一下':
+        follow = ChatRequest(message='我刚才第一套搭配是啥来着', request_id='follow-recall-text',conversation_id=cid,expected_version=version)
+        _,claim,state,_=store.reserve('1',follow)
+        version+=1
+        store.finish('1',follow,claim,state,Reply(conversation_id=cid,version=version,mode='consult',delivery='advice',message='第一套是原搭配1。',task=Task(),conversation_only=True))
     model = FakeModel(Plan(mode='consult', recall_outfit_numbers=expected, recall_evidence=message), Draft(message='不应调用'))
     reply = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
-        message=message, request_id='recall-first', conversation_id=cid, expected_version=len(rounds)))
+        message=message, request_id='recall-first', conversation_id=cid, expected_version=version))
     assert reply.historical_outfit_replay
     assert reply.message == ""
     assert reply.follow_ups == []
@@ -269,3 +274,10 @@ async def test_recall_original_card_without_retrieval_or_generation(tmp_path, me
     assert [row['outfit_number'] for row in model.inputs[0][1]['outfit_history']] == [1, 2, 3, 4, 5]
     from stylist.outfit_history import outfit_catalog
     assert len(outfit_catalog(store.history('1', cid)['messages'])) == 5
+
+
+def test_latest_library_intent_survives_conversation_only_flag():
+    import json
+    from stylist.engine import last_business_intent
+    for flag,expected in [('saved_outfit_search','saved_outfit_search'),('product_search','product_search'),('historical_outfit_replay','outfit_recall')]:
+        assert last_business_intent([{'role':'assistant','content':json.dumps({flag:True,'conversation_only':True,'weather_only':False})}])==expected

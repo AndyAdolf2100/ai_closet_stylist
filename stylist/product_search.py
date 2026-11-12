@@ -1,5 +1,7 @@
 """Read-only single-product discovery; never compose outfits or start image jobs."""
 from typing import Literal
+from secrets import SystemRandom
+import json
 
 from pydantic import Field
 
@@ -11,10 +13,10 @@ from .retrieval import resolve_products
 
 class ProductSearchSelection(Model):
     scope: Literal["garment", "shoes", "accessory", "any"] = "any"
-    selected_keys: list[str] = Field(default_factory=list, max_length=6)
+    selected_keys: list[str] = Field(default_factory=list, max_length=150)
 
 
-async def search_products(upstream, llm, request, task, history):
+async def search_products(upstream, llm, request, task, history, *, random_selection=False, exclude_previous=False):
     refs, total = {}, 0
     for page in range(1, 4):
         # Discovery includes items the user disabled for automatic outfit generation.
@@ -35,13 +37,26 @@ async def search_products(upstream, llm, request, task, history):
     if not products:
         return [], partial
     selection = await llm.generate('product_search', {
-        'message': request.message, 'history': history[-12:],
+        'message': request.message, 'history': history[-12:], 'random_selection': random_selection,
         'candidates': [{'key': p.key, **p.model_dump(exclude={'original_image', 'cutout_image'})} for p in products],
     }, ProductSearchSelection)
     pool = {p.key: p for p in products}
     keys = list(dict.fromkeys(selection.selected_keys))
-    if len(keys) > 6 or any(key not in pool for key in keys):
+    if any(key not in pool for key in keys):
         raise StylistError('product_search_invalid_selection', '这次单品筛选结果未能确认，请换个说法再试。', 502)
     slots = {"garment": {"top", "bottom", "outer", "dress"}, "shoes": {"shoes"},
              "accessory": {"accessory"}}.get(selection.scope)
-    return [pool[key] for key in keys if slots is None or pool[key].slot in slots], partial
+    matches = [pool[key] for key in keys if slots is None or pool[key].slot in slots]
+    if exclude_previous:
+        for turn in reversed(history):
+            if turn.get('role') != 'assistant':
+                continue
+            try:
+                previous = json.loads(turn['content'])
+            except (ValueError, KeyError, TypeError):
+                continue
+            ref = previous.get('subject_product') if isinstance(previous, dict) else None
+            if isinstance(ref, dict):
+                matches = [p for p in matches if p.product_id != str(ref.get('product_id'))]
+                break
+    return (SystemRandom().sample(matches, 1) if random_selection and matches else matches[:6]), partial

@@ -77,14 +77,16 @@ test('closing on account clear removes all item details and does not leak anothe
  const next=board.create({title:'下一套',items:[item('bottom',{title:'长裤'})]});w.document.body.append(next);await ready();next.querySelector('.outfit-expand').click();
  assert.match(w.document.querySelector('dialog h2').textContent,/下一套/);assert.equal(w.document.querySelectorAll('dialog .outfit-thumbnail').length,1);dom.window.close();
 });
-test('half-processed clothes never render; display and download share the final saved image',async()=>{
- const {dom,w,board}=setup();let complete,downloaded;
+test('half-processed clothes never render; detail uses the final image and save uses its outfit reference',async()=>{
+ const {dom,w,board}=setup();let complete,downloaded,saved;
+ w.OutfitLibrary={status:async()=>({status:'missing'}),save:async ref=>{saved=ref;return {status:'saved'}}};
  w.OutfitImages={get:()=>new Promise(resolve=>complete=resolve),download:async result=>{downloaded=result.image_url}};
  const root=board.create({items:[item('top'),item('outer')]},{conversationId:'owned',version:1,index:0});w.document.body.append(root);await ready();
  assert(root.querySelector('.outfit-placeholder'));assert(!root.querySelector('img'));assert(!root.querySelector('.outfit-piece'));assert(!root.textContent.includes('去背景'));
  complete({image_url:'https://photos.invalid/saved-oss.png'});await ready();
  assert.equal(root.querySelector('.outfit-final-image').src,'https://photos.invalid/saved-oss.png');
- root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.equal(downloaded,'https://photos.invalid/saved-oss.png');
+ root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.equal(saved.conversationId,'owned');assert.equal(saved.version,1);
+ root.querySelector('.outfit-expand').click();assert.equal(w.document.querySelector('dialog .outfit-final-image').src,'https://photos.invalid/saved-oss.png');
  assert.equal(root.querySelectorAll('.outfit-hotspot').length,2);dom.window.close();
 });
 test('a five-piece suggestion renders only its one owned item and lists the other four as text',async()=>{
@@ -92,7 +94,7 @@ test('a five-piece suggestion renders only its one owned item and lists the othe
  const app=fs.readFileSync('stylist/static/app.js','utf8');
  const el=(tag,cls,text)=>{const n=w.document.createElement(tag);n.className=cls||'';if(text)n.textContent=text;return n;};
  const bubble=(role,text)=>{const n=el('article',role,text);w.document.body.append(n);return n;};
- const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const setNewClothes=()=>{};'+
+ const code='let conversation,version,selectedLook,followLatest,outfitGroupSequence=0;const feed=window.document.body;const setNewClothes=()=>{};const markNewContent=()=>{};'+
    app.slice(app.indexOf('function bulletSection('),app.indexOf('function productGrid('))+
    app.slice(app.indexOf('function showReply('),app.indexOf('function setBusy('))+';return showReply;';
  const show=new Function('window','el','bubble','scrollBottom','outfitFeedback',code)(w,el,bubble,()=>{},()=>el('div','outfit-feedback'));
@@ -117,4 +119,13 @@ test('operations replay shares the item board without composition, saving or aut
  root.querySelector('.outfit-expand').click();assert(w.document.querySelector('dialog').open);
  assert.equal(w.document.querySelector('.outfit-original img').src,'https://photos.invalid/cut.png');
  dom.window.close();
+});
+test('image-aware layering keeps normal placement and only nudges severely covered innerwear',()=>{
+ const {dom,board}=setup();const items=[item('top'),item('outer'),item('bottom'),item('accessory')];
+ const base=board.layout(items);const normal=board.layout(items,[{width:200,height:260},{width:200,height:260},null,null]);
+ assert.equal(normal[0].x,base[0].x);
+ const narrow=board.layout(items,[{width:40,height:260},{width:200,height:260},null,null]);
+ assert(narrow[0].x<base[0].x);assert(base[0].x-narrow[0].x<=6);
+ for(let i=1;i<items.length;i++)assert.deepEqual(narrow[i],base[i]);
+ assert.equal(narrow[0].z,base[0].z);dom.window.close();
 });
