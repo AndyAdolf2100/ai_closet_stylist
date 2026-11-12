@@ -211,6 +211,8 @@ def test_legacy_notes_excluded_from_api_without_deleting_original_storage(tmp_pa
     async def identity(self):
         return 'legacy-owner'
     monkeypatch.setattr('stylist.main.Upstream.identity', identity)
+    async def check_text(self, text): pass
+    monkeypatch.setattr('stylist.main.Upstream.check_text', check_text)
     path = str(tmp_path / 'scope.db')
     store = Store(path)
     old = MemoryBook(revision=3, entries=[
@@ -227,7 +229,7 @@ def test_legacy_notes_excluded_from_api_without_deleting_original_storage(tmp_pa
         assert response.json()['entries'] == [{'id': 'color', 'category': '穿衣习惯', 'content': '我喜欢蓝色'}]
         with store.connection() as conn:
             assert conn.execute('SELECT book_json FROM stylist_memory_books').fetchone()[0] == old.model_dump_json()
-        invalid = {**response.json(), 'entries': [{'id': 'bad', 'category': '穿衣习惯', 'content': '我喜欢乌龙茶'}]}
+        invalid = {**response.json(), 'entries': [{'id': 'bad', 'category': '日常片段', 'content': '我喜欢乌龙茶'}]}
         assert client.put('/stylist-api/memories', headers=headers, json=invalid).status_code == 422
         valid = client.put('/stylist-api/memories', headers=headers, json=response.json())
         assert valid.status_code == 200 and '_retired_entries' not in valid.json()
@@ -317,6 +319,8 @@ def test_complete_paragraph_round_trips_through_authenticated_memory_api(tmp_pat
     from stylist.main import create_app
     async def identity(self):return 'synthetic-paragraph-api'
     monkeypatch.setattr('stylist.main.Upstream.identity',identity)
+    async def check_text(self, text): pass
+    monkeypatch.setattr('stylist.main.Upstream.check_text', check_text)
     with TestClient(create_app(Settings(database=str(tmp_path/'paragraph-api.db')))) as client:
         headers={'Authorization':'Bearer synthetic'}
         saved=client.put('/stylist-api/memories',headers=headers,json={
@@ -326,5 +330,7 @@ def test_complete_paragraph_round_trips_through_authenticated_memory_api(tmp_pat
         read=client.get('/stylist-api/memories',headers=headers)
         assert read.json()==saved.json()
         mixed={**read.json(),'entries':[{'id':'mixed','content':FULL_CLOTHING_NOTE+'以后叫我宝贝。'}]}
-        assert client.put('/stylist-api/memories',headers=headers,json=mixed).status_code==422
-        assert client.get('/stylist-api/memories',headers=headers).json()==read.json()
+        updated=client.put('/stylist-api/memories',headers=headers,json=mixed)
+        assert updated.status_code==200
+        assert client.get('/stylist-api/memories',headers=headers).json()==updated.json()
+        assert updated.json()['entries'][0]['content']==mixed['entries'][0]['content']

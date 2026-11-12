@@ -14,7 +14,7 @@
       <button type="button" id="memory-add">＋ 留下一条穿搭信息</button>
       <div id="memory-conflict" hidden><p>另一处的手记已有更新。当前草稿仍在，可以先复制需要保留的内容。</p><button type="button" id="memory-reload" class="subtle">放弃草稿，重新读取</button></div>
       <button type="button" id="memory-retry" class="subtle" hidden>重新翻开手记</button>
-      <p class="memory-footnote">明确的本人穿搭喜好会收进手记；也可以说「记住我的穿衣习惯」。<br>这里只记录穿搭信息，不收录日常片段或相处约定。<br>保存后跨对话保留；修改、删除或暂停，从下一次新请求生效。旧聊天记录仍保留。</p>
+      <p class="memory-footnote">明确的本人穿搭喜好会收进手记；也可以说「记住我的穿衣习惯」。<br>这里适合写下喜欢的风格、穿衣习惯，或想避开的款式。<br>保存后跨对话保留；修改、删除或暂停，从下一次新请求生效。旧聊天记录仍保留。</p>
     </div>
     <footer class="memory-footer"><span id="memory-save-note">随时可以改写，也可以忘记</span><div><button type="button" id="memory-cancel" class="subtle">暂不改动</button><button type="submit" id="memory-save" class="primary">收好这几页 ↗</button></div></footer>
   </form>`;

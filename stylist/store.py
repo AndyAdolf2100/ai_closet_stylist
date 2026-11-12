@@ -37,6 +37,7 @@ class Store:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         if self.postgres and os.getenv("STYLIST_REQUIRE_MIGRATIONS", "").lower() in {"true", "1"}:
             import psycopg
+
             from .schema_migrations import verify_connection
             with psycopg.connect(self.path) as conn:
                 verify_connection(conn)
@@ -116,9 +117,10 @@ class Store:
             row = conn.execute("SELECT book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()
         return decode_memory_book(row["book_json"] if row else None)[0]
 
-    def save_memory_book(self, owner, book):
+    def save_memory_book(self, owner, book, *, manual=False):
         from .memory import decode_memory_book, encode_memory_book, validate_clothing_book
-        validate_clothing_book(book)
+        if not manual:
+            validate_clothing_book(book)
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             row = conn.execute("SELECT revision,book_json FROM stylist_memory_books WHERE owner_id=?", (owner,)).fetchone()

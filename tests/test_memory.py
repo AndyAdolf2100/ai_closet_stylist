@@ -38,6 +38,8 @@ def test_memory_api_identity_validation_and_conflict(tmp_path, monkeypatch):
     async def identity(self):
         return self.authorization.removeprefix('Bearer ')
     monkeypatch.setattr('stylist.main.Upstream.identity', identity)
+    async def check_text(self, text): pass
+    monkeypatch.setattr('stylist.main.Upstream.check_text', check_text)
     with TestClient(create_app(Settings(database=str(tmp_path / 'memory.db')))) as client:
         a, b = {'Authorization': 'Bearer a'}, {'Authorization': 'Bearer b'}
         assert client.get('/stylist-api/memories').status_code == 401

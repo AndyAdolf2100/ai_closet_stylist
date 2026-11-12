@@ -227,8 +227,17 @@ def create_app(settings=None):
 
     @app.put("/stylist-api/memories")
     async def save_memory_book(book: MemoryBookWrite, authorization: str | None = Header(default=None)):
-        owner = await Upstream(settings, require_token(authorization)).identity()
-        return await asyncio.to_thread(store.save_memory_book, owner, MemoryBook.model_validate(book.model_dump()))
+        upstream = Upstream(settings, require_token(authorization))
+        owner = await upstream.identity()
+        current = await asyncio.to_thread(store.memory_book, owner)
+        if current.revision != book.revision:
+            raise StylistError("memory_conflict", "手记已有新的修改。你的草稿仍在，请先重新读取，再合并想留下的内容。", 409)
+        previous = {entry.id: entry.content for entry in current.entries}
+        changed_text = any(previous.get(entry.id) != entry.content for entry in book.entries)
+        if changed_text:
+            await upstream.check_text("\n".join(entry.content for entry in book.entries))
+        normalized = MemoryBook.model_validate(book.model_dump())
+        return await asyncio.to_thread(store.save_memory_book, owner, normalized, manual=True)
 
     @app.post("/stylist-api/weather/forecast")
     async def weather_forecast(request: ForecastRequest, authorization: str | None = Header(default=None)):

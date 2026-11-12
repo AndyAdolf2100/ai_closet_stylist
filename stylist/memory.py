@@ -97,6 +97,9 @@ def decode_memory_book(raw):
     original = MemoryBook.model_validate(document)
     entries = []
     for entry in original.entries:
+        if entry.category == "穿衣习惯":
+            entries.append(entry)
+            continue
         content = clothing_content(entry.content)
         if content != entry.content or entry.category != "穿衣习惯":
             if entry.model_dump() not in retired:
@@ -215,12 +218,16 @@ def memory_category(content):
     return "穿衣习惯"
 
 
+def usable_memory_entry(entry):
+    """Notebook content is user data, without a second keyword gate."""
+    return entry["category"] == "穿衣习惯"
+
+
 def apply_memory(task, plan, entries):
     """Ephemeral defaults only: never contaminate the saved conversation task."""
     if not plan.use_profile_preferences or plan.conversation_only or plan.weather_only or task.target_description:
         return task.model_copy(deep=True)
-    contents = {entry["content"] for entry in entries if entry["category"] == "穿衣习惯"
-                and clothing_content(entry["content"]) == entry["content"]}
+    contents = {entry["content"] for entry in entries if usable_memory_entry(entry)}
     data, defaults = task.model_dump(), Task().model_dump()
     for field, raw in plan.memory_changes.items():
         change = Change.model_validate(raw)
