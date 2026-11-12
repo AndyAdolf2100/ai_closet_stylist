@@ -2231,4 +2231,6 @@
 
 - 2026-11-12 OPS-MYSQL 当前规则：test只读手机号查询连接aicloset_test，dev连接aicloset_dev，替代此前MySQL共库假设；同实例账号可保留。已更新本地私密交付配置和公开模板；用户已提供运行容器只读检查，配置及实际连接均为aicloset_test，检查正确；不写入或迁移原MySQL。
 
-- 2026-11-12 CI-MAIN 用户要求main合入test并调整配置供检查：开始时两分支均为3976fcd，无新增合并；main默认dev且两个job仅main/web触发，test原配置保留test/test-web。目标同机172.16.0.90，main用dev.env、8466和dev库。已本地调整，验证中，不推送或触发部署。
+- 2026-11-12 CI-MAIN 用户要求main合入test并调整配置供检查：开始时两分支均为3976fcd，无新增合并；main默认dev且两个job仅main/web触发，test原配置保留test/test-web。目标同机172.16.0.90，main用dev.env、8466和dev库。已提交14fd4c7，用户后续触发dev部署；因缺消息索引被只读预检阻止，用户已手动补索引，重试终态待取证。
+
+- 2026-11-12 CI-DOC 用户要求完整CI流程文档并提交main：已重整docs/CI_TEST_DEV.md，覆盖首次准备、环境表／配置、离线底座、运维手动SQL、Nginx、触发、配置更新、验收、重试恢复及report独立发布；README新增主入口，旧架构分析移除过时的未部署及在线构建表述。已按脚本核对环境映射与底座摘要，文档链接及15段Bash语法检查通过；不执行部署或真实SQL，提交main不自动推送。
