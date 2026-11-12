@@ -18,6 +18,7 @@ from .advice_boundaries import PREFIX as ADVICE_PREFIX
 from .advice_boundaries import boundary_fallback, boundary_problems, hypothetical_preference
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
+from .outfit_history import outfit_catalog, recalled_looks
 from .grounding import (
     PREFIX,
     attribute_claim_problems,
@@ -83,6 +84,7 @@ logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
+    recalled_looks: list[dict]
     retrieval_diagnostics: dict
     new_clothes: bool
     new_clothes_auto_enabled: bool
@@ -171,6 +173,12 @@ class Stylist:
     def graph(self, upstream, request, saver, owner=None):
         from .models import Product
 
+        async def historical_outfits():
+            if not owner or not request.conversation_id:
+                return []
+            history = await asyncio.to_thread(self.store.history, owner, request.conversation_id)
+            return outfit_catalog(history["messages"])
+
         def unpack(data):
             return Plan.model_validate(data["plan"]), Task.model_validate(data["task"])
 
@@ -238,6 +246,7 @@ class Stylist:
                                      if clothing_content(note["content"]) == note["content"]],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
+                "outfit_history": await historical_outfits(),
                 "last_business_intent": last_business_intent(state.messages),
                 "selected_location": request.location.model_dump(mode="json") if request.location else None,
                 "selected_look_index": request.selected_look_index,
@@ -265,6 +274,17 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            if (plan.recall_outfit_numbers and plan.recall_evidence.strip()
+                    and plan.recall_evidence.strip() in request.message
+                    and not request.regenerate_outfit and not request.upload_action_id
+                    and not request.pair_subject_product and not request.chat_image):
+                history = (await asyncio.to_thread(self.store.history, owner, request.conversation_id)
+                           if request.conversation_id else {"messages": []})
+                saved = recalled_looks(history["messages"], plan.recall_outfit_numbers)
+                plan = Plan(mode="consult", conversation_only=True, use_inventory=False,
+                            clarification=None if saved else "想找的是哪一套？可以说说那套的颜色或单品。")
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"),
+                        "frozen": [], "recalled_looks": saved}
             if (plan.product_search and plan.product_search_evidence.strip()
                     and plan.product_search_evidence.strip() in request.message
                     and not request.regenerate_outfit and not request.pair_subject_product
@@ -613,6 +633,7 @@ class Stylist:
                 "mode": plan.mode,
                 "planning_dates": schedule_dates(plan, task),
                 "history": state.messages[-8:], "weather": weather,
+                "outfit_history": await historical_outfits(),
                 "retrieval_diagnostics": data.get("retrieval_diagnostics", {}),
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
                                for p in pool.values() if p.key not in original_targets],
@@ -798,6 +819,11 @@ class Stylist:
 
         def deliver_node(data):
             plan, task = unpack(data)
+            if data.get("recalled_looks"):
+                return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                    mode="consult", delivery="outfit", message="", task=task,
+                    looks=data["recalled_looks"], conversation_only=True, historical_outfit_replay=True,
+                    request_id=request.request_id).model_dump(mode="json")}
             explore = data.get("new_clothes", request.new_clothes is True)
             automatic = data.get("new_clothes_auto_enabled", False)
             exploration = dict(new_clothes=explore, new_clothes_auto_enabled=automatic,
@@ -900,7 +926,7 @@ class Stylist:
             builder.add_node(name, tracked, retry_policy=RetryPolicy(max_attempts=2, retry_on=retryable)
                              if name in {"understand", "style", "repair"} else None)
         builder.add_edge(START, "understand")
-        builder.add_conditional_edges("understand", lambda d: "deliver" if d["plan"]["clarification"] else "product_search" if d["plan"].get("product_search") else "approval")
+        builder.add_conditional_edges("understand", lambda d: "deliver" if d.get("recalled_looks") or d["plan"]["clarification"] else "product_search" if d["plan"].get("product_search") else "approval")
         builder.add_conditional_edges("approval", lambda d: "deliver" if d["cancelled"] else "weather")
         builder.add_conditional_edges("weather", lambda d: "deliver" if d["plan"]["clarification"] else "retrieve")
         builder.add_edge("retrieve", "style")
@@ -981,6 +1007,8 @@ class Stylist:
                         task=Task.model_validate(output["task"]), pending_confirmation=True, request_id=request.request_id)
                 reply = Reply.model_validate(output["reply"])
                 task, plan = Task.model_validate(output["task"]), Plan.model_validate(output["plan"])
+                if reply.historical_outfit_replay:
+                    state.looks = reply.looks
                 if not plan.conversation_only and not plan.product_search:
                     state.task = task
                     if not plan.weather_only:
@@ -996,12 +1024,12 @@ class Stylist:
                     if book.enabled and len(book.entries) < 30 and candidate and not any(
                             entry.content == candidate.content for entry in book.entries):
                         memory_save = candidate
-                if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
+                if not reply.historical_outfit_replay and reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
                         "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
                     reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
                 # Receipt cleanup must not remove the hypothetical premise that
                 # the validated draft used to distinguish a condition from a fact.
-                if (plan.conversation_only and hypothetical_preference(request.message)
+                if (not reply.historical_outfit_replay and plan.conversation_only and hypothetical_preference(request.message)
                         and boundary_problems(Draft(message=reply.message), request.message, task)):
                     reply.message = boundary_fallback(Draft(message=reply.message), request.message, Task()).message
                     reply.follow_ups = []

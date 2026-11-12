@@ -116,3 +116,9 @@ uv run python scripts/ops_conversation_records.py show --conversation sty_xxx --
 ### 消息区域按手机排版
 
 外层保持PC查询三栏，中栏每轮消息与卡片最大440px居中，窄栏按可用宽度收缩；用户气泡最大87%靠右。不改变左右列表／请求面板，不改变查询和只读行为。三PC宽度检查及原有容错、分页、软删、竞态用例通过。修改前截图仅作本地过程取证，最终报告继续以dd02eb5无此页面为基线，展示最终手机消息效果。
+
+### 2026-11-12 排查结果
+
+2026-11-12：运维卡片去重已实现，单品详情不重复显示looks和retained_items，搭配详情优先标准looks；无正文历史卡片保留。5项前端、10项后端、三桌面尺寸16次只读请求检查通过。测试环境手机号503 ops_mysql_not_configured，ID查询200；私有ops.env及加载命令单独准备在var/releases/ops-config-20261112，未远端部署。
+
+测试域名为aicloset-assistant.wxbjq.top；页面和console.js均200。无匹配合成手机号本地404，测试站503；无匹配合成ID列表200。仅证明接口与配置状态，不代表真实用户数据验收。将私有ops.env单独安装到服务器config/ops.env后，必须重建容器加载新增环境，不能仅restart。

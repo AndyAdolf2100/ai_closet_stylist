@@ -15,9 +15,13 @@ export function renderReply(parent,raw,path='reply'){
  guard(host,path,raw,()=>{
   const reply=typeof raw==='string'?JSON.parse(raw):raw;if(!object(reply))throw Error('回复应为JSON对象');
   guard(host,path+'.message',reply.message,()=>{if(reply.message)host.append(node('p','turn-message assistant',string(reply.message)));});
-  for(const field of ['product_results','looks','retained_items'])guard(host,path+'.'+field,reply[field],()=>array(reply[field]).forEach((value,i)=>guard(host,path+'.'+field+'['+i+']',value,()=>field==='looks'?look(host,value,path+'.looks['+i+']'):product(host,value,path+'.'+field+'['+i+']'))));
+  const hasLooks=Array.isArray(reply.looks)&&reply.looks.length>0;
+  const fields=['product_results'];
+  if(!reply.product_entry)fields.push('looks');
+  if(!hasLooks&&!reply.product_entry&&!reply.outfit_entry)fields.push('retained_items');
+  for(const field of fields)guard(host,path+'.'+field,reply[field],()=>array(reply[field]).forEach((value,i)=>guard(host,path+'.'+field+'['+i+']',value,()=>field==='looks'?look(host,value,path+'.looks['+i+']'):product(host,value,path+'.'+field+'['+i+']'))));
   if(reply.product_entry)guard(host,path+'.product_entry',reply.product_entry,()=>{if(!object(reply.product_entry)||reply.product_entry.product&&!object(reply.product_entry.product))throw Error('单品详情应为对象');product(host,reply.product_entry.product?{...reply.product_entry.product,image_url:reply.product_entry.image_url}:reply.product_entry,path+'.product_entry');});
-  if(reply.outfit_entry)guard(host,path+'.outfit_entry',reply.outfit_entry,()=>look(host,reply.outfit_entry,path+'.outfit_entry'));
+  if(reply.outfit_entry&&!hasLooks)guard(host,path+'.outfit_entry',reply.outfit_entry,()=>look(host,reply.outfit_entry,path+'.outfit_entry'));
   if(reply.weather)guard(host,path+'.weather',reply.weather,()=>weather(host,reply.weather,path+'.weather'));
   guard(host,path+'.warnings',reply.warnings,()=>array(reply.warnings).forEach((text,i)=>guard(host,path+'.warnings['+i+']',text,()=>host.append(node('p','warning',string(text))))));
   for(const [field,title]of [['upload_intent','衣物上传引导'],['avatar_intent','试穿形象引导']])if(reply[field])guard(host,path+'.'+field,reply[field],()=>{const kind=string(reply[field]);const card=node('article','look');card.append(node('span','badge','历史入口 · 只读'),node('h3','',title),node('p','',({garment:'添加衣物',unspecified:'等待确认照片用途',upload:'创建试穿形象',view:'查看已有试穿形象',tryon:'搭配试穿'})[kind]||kind));host.append(card);});

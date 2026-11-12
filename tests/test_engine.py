@@ -6,6 +6,7 @@ from stylist.config import Settings
 from stylist.engine import Stylist
 from stylist.models import Change, ChatRequest, Draft, Look, LookDraft, Plan, Product, Reply, Slot, Task
 from stylist.store import Store
+from scripts.outfit_recall_dialogues import CASES as RECALL_CASES
 
 
 class FakeModel:
@@ -227,3 +228,44 @@ async def test_weekly_text_plan_still_checks_weather_and_respects_explicit_opt_o
     result = await engine.chat(Upstream(), ChatRequest(message="本周只给文字方案，不考虑天气", request_id="weekly-weather-2",
         location=CitySelection(city_name="上海市"), weather_policy="ignored"))
     assert not calls and result.weather is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('message,expected', RECALL_CASES)
+@pytest.mark.parametrize('single_round', [True, False])
+async def test_recall_original_card_without_retrieval_or_generation(tmp_path, message, expected, single_round):
+    class Upstream:
+        async def identity(self):
+            return '1'
+        @asynccontextmanager
+        async def mcp(self):
+            raise AssertionError('Recall must not retrieve wardrobe or weather')
+            yield
+        async def get(self, *args):
+            pytest.fail('Recall must not query business inventory')
+
+    store = Store(str(tmp_path / 'recall.db'))
+    cid = None
+    originals = [Look(title=f'原搭配{i}', pieces=[f'单品{i}'], how=['自然垂放']) for i in range(1, 6)]
+    rounds = [originals] if single_round else [[look] for look in originals]
+    for version, looks in enumerate(rounds, 1):
+        title = '生成搭配' if version == 1 else '基于刚才那套再生成一套'
+        request = ChatRequest(message=title, request_id=f'original-{version}',
+                              conversation_id=cid, expected_version=version - 1)
+        cid, claim, state, _ = store.reserve('1', request)
+        state.looks = looks
+        store.finish('1', request, claim, state, Reply(conversation_id=cid, version=version,
+                     mode='recommend', delivery='outfit', message=title, task=Task(), looks=state.looks))
+    model = FakeModel(Plan(mode='consult', recall_outfit_numbers=expected, recall_evidence=message), Draft(message='不应调用'))
+    reply = await Stylist(Settings(), store, model).chat(Upstream(), ChatRequest(
+        message=message, request_id='recall-first', conversation_id=cid, expected_version=len(rounds)))
+    assert reply.historical_outfit_replay
+    assert reply.message == ""
+    assert reply.follow_ups == []
+    assert reply.weather is None
+    assert [look.model_dump() for look in reply.looks] == [originals[number - 1].model_dump() for number in expected]
+    assert reply.looks[0].how == ['自然垂放']
+    assert [name for name, _ in model.inputs] == ['plan']
+    assert [row['outfit_number'] for row in model.inputs[0][1]['outfit_history']] == [1, 2, 3, 4, 5]
+    from stylist.outfit_history import outfit_catalog
+    assert len(outfit_catalog(store.history('1', cid)['messages'])) == 5

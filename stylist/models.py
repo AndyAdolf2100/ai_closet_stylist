@@ -79,6 +79,8 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    recall_outfit_numbers: list[int] = Field(default_factory=list, max_length=7)
+    recall_evidence: str = Field(default="", max_length=6000)
     product_search: bool = False
     product_search_evidence: str = Field(default="", max_length=6000)
     outfit_weather_adjustment: bool = False
@@ -207,6 +209,7 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    historical_outfit_replay: bool = False
     product_search: bool = False
     product_results: list[Product] = Field(default_factory=list, max_length=6)
     retrieval_diagnostics: dict = Field(default_factory=dict)

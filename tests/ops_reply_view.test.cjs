@@ -18,3 +18,12 @@ test('request structure errors do not hide healthy inspector entries',async()=>{
  const {renderInspector}=await mod;const {dom,host}=setup();renderInspector(host,{conversation_id:'fixture',session:{owner_id:'1024'},requests:[null,{request_id:'synthetic-failed',status:'failed',response:'{bad'}, {request_id:'synthetic-completed',status:'completed',response:{}}]});
  assert.match(host.textContent,/synthetic-completed/);assert.match(host.textContent,/synthetic-failed/);assert.equal(host.querySelectorAll('.part-error').length,2);assert.equal(host.querySelectorAll('button').length,0);dom.window.close();
 });
+test('detail cards and retained snapshots do not duplicate the primary card',async()=>{
+ const {renderMessages}=await mod;const {dom,host}=setup();const product={source:'user',title:'白衬衫',product_id:'1'};
+ renderMessages(host,[{version:1,reply:{message:'',product_entry:{product},looks:[{title:'重复单品',items:[product]}],retained_items:[product]}},{version:2,reply:{looks:[{title:'通勤搭配',items:[product]}],outfit_entry:{title:'重复搭配',items:[product]},retained_items:[product]}}]);
+ assert.equal(host.querySelectorAll('article.look').length,2);assert.equal(host.querySelectorAll('.part-error').length,0);assert.doesNotMatch(host.textContent,/重复单品|重复搭配/);dom.window.close();
+});
+test('card-only history replay displays cards without adding a text message',async()=>{
+ const {renderReply}=await mod;const {dom,host}=setup();renderReply(host,{historical_outfit_replay:true,message:'',looks:[{title:'原搭配',pieces:['白衬衫']}],follow_ups:[]});
+ assert.equal(host.querySelectorAll('article.look').length,1);assert.equal(host.querySelectorAll('.turn-message').length,0);assert.equal(host.querySelectorAll('button').length,0);dom.window.close();
+});
