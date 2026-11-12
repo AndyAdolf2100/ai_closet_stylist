@@ -91,3 +91,6 @@ body.capture #phone{margin:auto}
 .plan-grid:has(>.plan:only-child){grid-template-columns:1fr}
 /* dev_2.0.0 purchase copy, shared with the independent design preview. */
 .payment-root .payment-table-wrap{overflow:auto}.payment-root .payment-table-wrap table{width:100%;border-collapse:collapse;font-size:11px}.payment-root .payment-table-wrap th,.payment-root .payment-table-wrap td{padding:9px 5px;border-bottom:1px solid var(--pay-line,#eeece5);text-align:center}.payment-root .payment-table-wrap th:first-child{text-align:left}.payment-root .payment-disclaimer{font-size:11px;color:var(--pay-muted,#838178);margin:8px 0}.payment-root .payment-points-rules{font-size:12px;line-height:1.8;margin-top:18px}.payment-root .payment-points-rules ul{padding-left:18px}.payment-root .payment-points-rules li+li{margin-top:7px}
+
+/* Dialogue has no per-request quote: balance occupies the whole card. */
+.balance.balance--single{grid-template-columns:minmax(0,1fr);padding:16px;margin:16px 0}.balance.balance--single>div{min-width:0}.balance.balance--single strong{overflow-wrap:anywhere}

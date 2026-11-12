@@ -49,7 +49,7 @@ class MemoryBookWrite(MemoryBook):
 _CLOTHING = re.compile(
     r"穿|衣|衫|裤|裙|鞋|靴|袜|外套|风衣|西装|毛衣|针织|卫衣|T恤|短袖|长袖|"
     r"围巾|帽子|手套|包包|手提包|背包|首饰|项链|耳环|耳饰|配饰|面料|羊毛|棉质|棉麻|真丝|"
-    r"尺码|版型|宽松|修身|高腰|低腰|领口|袖口|腰线|腰头|裤脚|搭配|配色|极简|休闲|优雅|复古|街头|运动风|通勤|平时走路|聚酯|涤纶|亚麻|皮革|羊绒|"
+    r"材质|单品|纯色|条纹|基础款|潮流款|款式|尺码|版型|宽松|修身|高腰|低腰|领口|袖口|腰线|腰头|裤脚|搭配|配色|极简|休闲|优雅|复古|街头|运动风|通勤|平时走路|聚酯|涤纶|亚麻|皮革|羊绒|"
     r"(?:黑|白|灰|红|黄|绿|蓝|紫|粉|棕|米|橙|青|银|金)色")
 _OUTSIDE = re.compile(
     r"喝|吃|乌龙|茶|咖啡|饮料|饭|电影|音乐|游戏|宠物|杯子|汽车|手机|电脑|"
@@ -58,17 +58,27 @@ _OUTSIDE = re.compile(
     r"扣费|密钥|接口|系统指令|忽略.{0,6}规则")
 
 
+# These descriptions need an established clothing context, rather than making
+# words such as "舒服" sufficient to classify unrelated notes as clothing.
+_CLOTHING_DESCRIPTION = re.compile(
+    r"松弛|清爽|利落|大方|得体|合身|舒适|紧绷|拖沓|低饱和|百搭|耐看|"
+    r"花哨|夸张|简约|简洁|基础款|小众|好打理|透气|耐穿|难伺候|繁杂|多余装饰")
+
+
 def clothing_content(content):
     """Keep clothing clauses only; do not reinterpret diary or interaction rules as outfits."""
     text = content.strip()
     chunks = re.split(r"([，,。！!；;\n])", text)
-    selected, all_relevant = [], True
+    selected, all_relevant, clothing_context = [], True, False
     for i in range(0, len(chunks), 2):
         part = chunks[i].strip()
         if not part:
             continue
-        relevant = bool(_CLOTHING.search(part) and not _OUTSIDE.search(part)
-                        and not re.search(r"我(?:朋友|妈妈|同事|家人)|(?:他|她|朋友|同事)(?:喜欢|不喜欢|穿)", part))
+        excluded = bool(_OUTSIDE.search(part) or re.search(
+            r"我(?:朋友|妈妈|同事|家人)|(?:他|她|朋友|同事)(?:喜欢|不喜欢|偏爱|穿)", part))
+        direct = bool(_CLOTHING.search(part))
+        relevant = not excluded and (direct or clothing_context and bool(_CLOTHING_DESCRIPTION.search(part)))
+        clothing_context = bool(relevant)
         if relevant:
             delimiter = chunks[i - 1] if i else ""
             if selected and delimiter in {"，", ","} and preference_list_item(part):

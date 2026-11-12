@@ -556,9 +556,9 @@ function showReply(reply, request = null, previewNode = null) {
     if (productEntry) {
       const owner = session?.access_token;
       const actions = el('div', 'subject-entry-actions');
-      const current = () => {
+      const current = (historicalTryon = false) => {
         if (busy || !requireLogin()) return false;
-        if (session?.access_token !== owner || conversation !== reply.conversation_id || version !== reply.version) {
+        if (session?.access_token !== owner || conversation !== reply.conversation_id || (historicalTryon ? version < reply.version : version !== reply.version)) {
           notifyIssue('当前单品或账号已有变化，请重新打开这件单品。'); return false;
         }
         return true;
@@ -575,7 +575,7 @@ function showReply(reply, request = null, previewNode = null) {
       // Product detail records can predate single-look context in search replies.
       tryon.disabled = !(reply.looks?.[0]?.items?.length || productEntry?.subject?.product_id || reply.subject_product?.product_id);
       tryon.onclick = async () => {
-        if (tryon.disabled || !current()) return;
+        if (tryon.disabled || !current(true)) return;
         tryon.disabled = true;
         try { await window.WardrobeJourney.tryon({conversation_id:reply.conversation_id, version:reply.version, look_index:0}); }
         catch (err) { notifyIssue(err.message); }
@@ -666,9 +666,9 @@ function showReply(reply, request = null, previewNode = null) {
       preview.dataset.agentTrack='outfit_tryon';
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
-        if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
+        if (conversation !== reply.conversation_id || version < reply.version) return;
         preview.disabled = true;
-        try { await window.WardrobeJourney.tryon({conversation_id:conversation,version,look_index:lookIndex}); }
+        try { await window.WardrobeJourney.tryon({conversation_id:reply.conversation_id,version:reply.version,look_index:lookIndex}); }
         catch(err) { notifyIssue(err.message); } finally { preview.disabled=false; }
       };
       card.append(preview);

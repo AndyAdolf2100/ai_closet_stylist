@@ -53,21 +53,38 @@ class ImageService:
             row = conn.execute("SELECT * FROM stylist_sessions WHERE id=? AND owner_id=?", (cid, owner)).fetchone()
             if not row:
                 raise StylistError("conversation_not_found", "找不到这条对话。", 404)
-            if row["version"] != version or row["active_claim"]:
-                raise StylistError("stale_version", "搭配正在变化，请刷新后重新查看费用。", 409)
+            if version > row["version"]:
+                raise StylistError("stale_version", "找不到所选记录，请重新打开。", 409)
             state = SessionState.model_validate_json(row["state_json"])
             snapshot = conn.execute("SELECT reply_json FROM stylist_messages WHERE owner_id=? AND conversation_id=? AND version=?",
                                     (owner, cid, version)).fetchone()
+            historical = version < row["version"]
+            if historical and not snapshot:
+                raise StylistError("no_real_outfit", "所选历史记录没有可试穿的单品。", 422)
             if snapshot:
                 reply = Reply.model_validate_json(snapshot['reply_json'])
+                if reply.pending_confirmation or reply.delivery in {"concept", "clarification"}:
+                    raise StylistError("no_real_outfit", "这条记录尚未形成可试穿的实际单品。", 422)
+                if historical:
+                    state.looks = reply.looks
+                    state.task = reply.task
+                    state.subject_outfit_id = reply.subject_outfit.outfit_id if reply.subject_outfit else None
                 if reply.product_entry and reply.subject_product:
                     from .retrieval import from_row
-                    item = from_row(reply.product_entry.get('product') or {}, 'user')
+                    item = from_row(reply.product_entry.get('product') or {}, reply.subject_product.source)
                     if item is None or item.source != reply.subject_product.source or item.product_id != reply.subject_product.product_id:
                         raise StylistError('product_entry_invalid_result', '当前单品信息无法核对，请重新打开。', 409)
                     state.subject_outfit_id = None
-                    # Derive an owned read-only snapshot, never fall back to a previous outfit.
                     state.looks = [Look(title=reply.product_entry.get('title') or '当前单品', items=[item], pieces=[item.display_name], wardrobe_complete=False)]
+                elif reply.outfit_entry and reply.subject_outfit:
+                    from .retrieval import from_row
+                    items = [from_row(item, 'user') for item in reply.outfit_entry.get('items', [])]
+                    if not items or any(item is None for item in items):
+                        raise StylistError('no_real_outfit', '所选搭配缺少有效单品，请重新打开。', 422)
+                    state.looks = [Look(title=reply.outfit_entry.get('title') or '搭配详情', items=items)]
+                    state.subject_outfit_id = reply.subject_outfit.outfit_id
+                elif historical and not reply.looks:
+                    raise StylistError("no_real_outfit", "所选历史记录没有可试穿的单品。", 422)
             return state
 
     async def quote(self, upstream, request):
@@ -187,13 +204,17 @@ class ImageService:
             if cost["points_cost"] != snapshot["points_cost"] or twin_fingerprint(overview) != snapshot["twin"] or contract != snapshot["contract"]:
                 self.mark(owner, action_id, "expired")
                 raise StylistError("image_quote_changed", "费用、形象或接口已变化，请重新查看费用并确认。", 409)
+            refs = [ProductRef.model_validate(item) for item in snapshot["items"]]
+            products = await resolve_products(mcp, refs)
+            if {p.key for p in products} != {r.key for r in refs}:
+                raise StylistError("outfit_changed", "部分衣物已不可用，请重新选择试穿单品。", 409)
             await require_points(upstream, snapshot["points_cost"], "tryon_points_insufficient")
-            # Claim before the first write, atomically checking the conversation is still current.
+            # Claim once; later dialogue turns do not invalidate an immutable card snapshot.
             with self.store.connection() as conn:
                 conn.execute("BEGIN IMMEDIATE")
                 current = conn.execute("SELECT version,active_claim FROM stylist_sessions WHERE id=? AND owner_id=?",
                                        (row["conversation_id"], owner)).fetchone()
-                if not current or current["version"] != row["version"] or current["active_claim"]:
+                if not current or current["version"] < row["version"]:
                     raise StylistError("stale_version", "搭配已变化，请重新确认当前搭配。", 409)
                 changed = conn.execute("UPDATE stylist_image_actions SET status='executing' WHERE id=? AND owner_id=? AND status='quoted'",
                                        (action_id, owner))

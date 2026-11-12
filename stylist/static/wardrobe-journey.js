@@ -40,7 +40,7 @@
   function validContext(ref){
     if(!ref)return true;
     const state=getContext?.();
-    return state?state.conversation_id===ref.conversation_id&&state.version===ref.version:!getConversation||getConversation()===ref.conversation_id;
+    return state?state.conversation_id===ref.conversation_id&&Number.isInteger(ref.version)&&ref.version>=1&&state.version>=ref.version:!getConversation||getConversation()===ref.conversation_id;
   }
   function requireContext(ref){if(!validContext(ref))throw Error('这套搭配已更新，请从当前对话重新选择形象。');}
   const sameConversation=action=>!action.conversation_id||!getConversation||getConversation()===action.conversation_id;

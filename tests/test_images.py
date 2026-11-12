@@ -244,3 +244,75 @@ async def test_each_confirm_reads_balance_and_low_or_failed_read_never_dispatche
     await service.confirm(upstream,quote['action_id'],True)
     assert reads==['/api/vip_center/points_detail']*3
     assert upstream.commits==['save_recommended_outfit','digital_twin_tryon']
+
+
+def advance_dialogue(service, request):
+    import json
+    with service.store.connection() as conn:
+        row=conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?',(request.conversation_id,)).fetchone()
+        data=json.loads(row['state_json'])
+        data['looks']=[Look(title='后来搭配',items=[Product(source='user',product_id='3',slot='shoes')]).model_dump(mode='json')]
+        data['subject_outfit_id']=99
+        conn.execute('UPDATE stylist_sessions SET version=version+1,state_json=? WHERE id=?',(json.dumps(data),request.conversation_id))
+
+
+@pytest.mark.asyncio
+async def test_historical_outfit_quote_and_confirm_keep_original_items_after_later_turns(tmp_path):
+    service,request,upstream=setup_service(tmp_path)
+    advance_dialogue(service,request)
+    quote=await service.quote(upstream,request)
+    assert quote['item_count']==3 and quote['title']=='通勤装'
+    assert upstream.commits==[]
+    advance_dialogue(service,request)
+    result=await service.confirm(upstream,quote['action_id'],True)
+    assert result['status']=='completed'
+    saved=next(args for name,args in upstream.commit_args if name=='save_recommended_outfit')
+    assert [x['product_id'] for x in saved['items']]==[1,2,3]
+    with service.store.connection() as conn:
+        row=conn.execute('SELECT version,state_json FROM stylist_sessions WHERE id=?',(request.conversation_id,)).fetchone()
+    assert row['version']==3 and __import__('json').loads(row['state_json'])['looks'][0]['title']=='后来搭配'
+
+
+@pytest.mark.asyncio
+async def test_historical_product_without_looks_recovers_only_its_original_item(tmp_path):
+    import json
+    service,request,upstream=setup_service(tmp_path)
+    with service.store.connection() as conn:
+        row=conn.execute('SELECT reply_json FROM stylist_messages WHERE conversation_id=?',(request.conversation_id,)).fetchone()
+        reply=json.loads(row['reply_json']);reply.update(looks=[],delivery='advice',
+            subject_product={'source':'user','product_id':'2'},product_entry={'title':'原长裤','product':{'source':'user','product_id':'2','class_name':'裤子'}})
+        conn.execute('UPDATE stylist_messages SET reply_json=? WHERE conversation_id=?',(json.dumps(reply),request.conversation_id))
+    advance_dialogue(service,request)
+    quote=await service.quote(upstream,request)
+    assert quote['item_count']==1 and quote['title']=='原长裤'
+    await service.confirm(upstream,quote['action_id'],True)
+    assert upstream.commit_args[0][1]['items']==[{'source':'user','product_id':2}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('delivery,pending',[('concept',False),('clarification',False),('outfit',True),('advice',False)])
+async def test_non_outfit_historical_messages_never_borrow_latest_items(tmp_path,delivery,pending):
+    import json
+    service,request,upstream=setup_service(tmp_path)
+    with service.store.connection() as conn:
+        row=conn.execute('SELECT reply_json FROM stylist_messages WHERE conversation_id=?',(request.conversation_id,)).fetchone()
+        reply=json.loads(row['reply_json']);reply.update(looks=[],delivery=delivery,pending_confirmation=pending)
+        conn.execute('UPDATE stylist_messages SET reply_json=? WHERE conversation_id=?',(json.dumps(reply),request.conversation_id))
+    advance_dialogue(service,request)
+    with pytest.raises(StylistError,match='no_real_outfit'):
+        await service.quote(upstream,request)
+    assert upstream.commits==[]
+
+
+@pytest.mark.asyncio
+async def test_historical_quote_revalidates_deleted_item_before_confirmation(tmp_path):
+    service,request,upstream=setup_service(tmp_path)
+    advance_dialogue(service,request)
+    quote=await service.quote(upstream,request)
+    original=upstream.call
+    async def missing(name,args):
+        if name=='product.resolve':return {'items':[]}
+        return await original(name,args)
+    upstream.call=missing
+    with pytest.raises(StylistError):await service.confirm(upstream,quote['action_id'],True)
+    assert upstream.commits==[]
