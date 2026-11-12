@@ -2224,3 +2224,5 @@
 - 2026-11-12 CI复核：修复临时文件忽略规则误匹配.sql的问题，Vim规则收窄为*.sw[a-z]；SQL基线必须纳入Git和CI源码包。CI继续仅检查不执行SQL；已增加忽略规则回归。
 
 - 2026-11-12 CI-COMPAT 用户确认GitLab旧版，仅使用同级aicloset-server已有的基础CI关键字；已替换workflow/default/resource_group/environment为job级tags/only，test自动、web手动，保留服务器flock及环境分离、SQL只读边界。首次197492失败原因来自用户截图；修复已通过目标GitLab CI Lint（valid、无错误）及20项定向回归，部署结果另验。
+
+- 2026-11-12 CI-HOST 用户服务器hostname -I确认172.16.0.90（其余172.17/172.18为容器网桥），部署目标由继承旧配置的172.16.0.91修正为172.16.0.90，dev/test同机；此前流水线197493在旧主机缺少test.env时停止，未替换服务。用户授权提交推送重试，需验证Runner到新目标SSH权限。

@@ -4,7 +4,7 @@
 
 ## 当前规则
 
-以当前ai_closet_stylist项目为唯一代码来源，旧Agent弃用。用户最初要求复用原CI，后明确允许改.gitlab-ci.yml，并由本项目提供自己的部署sh，不再依赖服务器上的未知旧脚本。保留devops-test Runner和172.16.0.91内网传输通道。
+以当前ai_closet_stylist项目为唯一代码来源，旧Agent弃用。用户最初要求复用原CI，后明确允许改.gitlab-ci.yml，并由本项目提供自己的部署sh，不再依赖服务器上的未知旧脚本。保留devops-test Runner和172.16.0.90内网传输通道。
 
 根.gitlab-ci.yml中DEPLOY_ENV只接受test／dev，默认test：
 

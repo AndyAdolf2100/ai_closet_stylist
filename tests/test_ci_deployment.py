@@ -16,6 +16,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def test_ci_uses_server_compatible_basic_keywords_and_server_deployment_lock():
     ci=yaml.safe_load((ROOT/'.gitlab-ci.yml').read_text())
     assert ci['variables']['DEPLOY_ENV']=='test'
+    assert ci['variables']['DEPLOY_HOST']=='172.16.0.90'
     assert set(ci)=={'variables','stages','job_build','job_deploy'}
     for name in ['job_build','job_deploy']:
         job=ci[name]

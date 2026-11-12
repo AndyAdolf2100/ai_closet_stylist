@@ -15,7 +15,7 @@
 
 ## 新的脚本链路
 
-沿用devops-test Runner与172.16.0.91内网上传／SSH通道；不再调用服务器的未知deploy-aicloset-agent.sh，也不再写CIHOME/.env。
+沿用devops-test Runner与172.16.0.90内网上传／SSH通道；不再调用服务器的未知deploy-aicloset-agent.sh，也不再写CIHOME/.env。
 
 1. scripts/ci_package.sh按白名单打源码包，包名包含环境、流水线ID及提交；排除配置、数据、报告及私有截图。
 2. build job上传源码包和SHA256。
