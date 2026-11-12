@@ -13,6 +13,6 @@ trap 'rm -f "$excludes"' EXIT
 awk '/^# BEGIN OSS image exclusions/{inside=1;next} /^# END OSS image exclusions/{inside=0} inside && NF && $0 !~ /^#/ {print}' .dockerignore > "$excludes"
 COPYFILE_DISABLE=1 tar -czf "var/ci-release/$name" --exclude-from="$excludes" --exclude='__pycache__' --exclude='*.pyc' \
   --exclude='stylist/static/closet-app/comparison/evolution/screenshots/private' \
-  Dockerfile .dockerignore pyproject.toml uv.lock README.md stylist deploy/docker/start.sh deploy/ci/deploy.sh
+  Dockerfile .dockerignore pyproject.toml uv.lock README.md stylist deploy/docker/start.sh deploy/ci/deploy.sh deploy/ci/Dockerfile.offline
 (cd var/ci-release && sha256sum "$name" > "$name.sha256")
 printf 'Prepared %s\n' "$name"

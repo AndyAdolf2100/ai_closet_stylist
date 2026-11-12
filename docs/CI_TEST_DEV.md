@@ -50,7 +50,7 @@ DEPLOY_ENV=test读取test.env，dev读取dev.env；env权限0600。公钥也可�
 
 CI不反复传完整离线镜像：Runner只传源码白名单包，服务器保留Docker镜像和构建缓存。打包按.dockerignore中由OSS清单生成的排除段跳过远程图片，保留运行所需ONNX和WASM；本机实测262,466,946字节缩为8,667,924字节（250.31→8.27MiB，约减少96.7%）。这是本轮样本，不保证后续包固定大小。
 
-Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目。代码变化不再使前置依赖层失效；依赖锁文件变化仍正常重装。首次构建需要拉基础镜像／依赖，缓存被清理或更换服务器后也需重新准备。未测目标服务器构建耗时，不承诺固定部署秒数。
+Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目。代码变化不再使前置依赖层失效；依赖锁文件变化仍正常重装。当前改为预导入离线运行依赖镜像；缓存清理后仍使用本地底座，底座被删除或依赖变化则需重新导入。未测目标服务器构建耗时，不承诺固定部署秒数。
 
 手动离线包交付方式保留。以后若已有镜像仓库，可再改为Runner构建及推送、目标拉取缺少的层；目前不为了CI另引入仓库与权限配置。
 
@@ -79,3 +79,9 @@ Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目�
 2026-11-12 GitLab旧版兼容修复：首次流水线197492报jobs:workflow config contains unknown keys: rules；按同级aicloset-server的基础结构改为variables/stages及job内script/tags/only，移除workflow/default/resource_group/environment。only=test或web，推送test自动运行，其他分支只接受网页手动运行；DEPLOY_ENV仍由脚本校验test/dev，服务器flock保留并发锁。
 
 兼容修复验证：直接调用本机GitLab实例/api/v4/ci/lint返回HTTP 200、status=valid、errors=[]；20项定向回归通过。此为目标实例语法验证，不代表构建／部署完成。
+
+## 无外网服务器离线构建（当前规则）
+
+服务器无法访问Docker Hub，需一次性docker load本地导出的aicloset-stylist:ci-runtime-<uv.lock前16位SHA256>运行依赖镜像。当前为aicloset-stylist:ci-runtime-7ec3bb1bf0238b32，Linux amd64。CI先检查本地镜像和镜像内uv.lock，再用deploy/ci/Dockerfile.offline执行--pull=false --network none构建，不执行pip/uv依赖安装。缺底座直接失败，不尝试联网。每次源码包仍约数MB；依赖锁变化重新准备底座。两个环境共用镜像，各自源码、配置、容器、数据库和端口独立。手工离线发布不受影响。
+
+离线验证证据：21项定向回归通过；从实际CI源码包解出源码，用--network none构建成功，无网络容器中H5、ops、静态资源200、未登录API401，SQL基线文件存在。用户确认服务器镜像包SHA256校验OK并docker load成功、平台linux/amd64。运行镜像仅作为依赖底座，构建先删除旧/app/stylist再复制当前源码，避免旧文件残留；未验证真实上游业务。

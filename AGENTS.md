@@ -2226,3 +2226,5 @@
 - 2026-11-12 CI-COMPAT 用户确认GitLab旧版，仅使用同级aicloset-server已有的基础CI关键字；已替换workflow/default/resource_group/environment为job级tags/only，test自动、web手动，保留服务器flock及环境分离、SQL只读边界。首次197492失败原因来自用户截图；修复已通过目标GitLab CI Lint（valid、无错误）及20项定向回归，部署结果另验。
 
 - 2026-11-12 CI-HOST 用户服务器hostname -I确认172.16.0.90（其余172.17/172.18为容器网桥），部署目标由继承旧配置的172.16.0.91修正为172.16.0.90，dev/test同机；此前流水线197493在旧主机缺少test.env时停止，未替换服务。用户授权提交推送重试，需验证Runner到新目标SSH权限。
+
+- 2026-11-12 CI-OFFLINE 用户确认目标服务器不能访问Docker Hub，CI必须离线构建：使用预导入Linux amd64运行依赖镜像，按uv.lock摘要选镜像并校验，不在线拉取或安装依赖；网络关闭构建，仅覆盖当前源码，dev/test共用底座，依赖变化重新导入。保留SQL只读预检及原手动离线发布方式。21项回归、隔离无网络构建及H5/ops/API鉴权模拟通过；用户已确认服务器镜像校验OK、导入成功、linux/amd64，真实CI部署待验。

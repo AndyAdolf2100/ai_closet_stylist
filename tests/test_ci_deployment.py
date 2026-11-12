@@ -34,7 +34,7 @@ def test_ci_uses_server_compatible_basic_keywords_and_server_deployment_lock():
 def test_ci_archive_never_includes_private_config_or_user_evidence(tmp_path):
     root=tmp_path/'repo';(root/'scripts').mkdir(parents=True)
     shutil.copy(ROOT/'scripts/ci_package.sh',root/'scripts/ci_package.sh')
-    for name in ['Dockerfile','.dockerignore','pyproject.toml','uv.lock','README.md','stylist/main.py','deploy/docker/start.sh','deploy/ci/deploy.sh',
+    for name in ['Dockerfile','.dockerignore','pyproject.toml','uv.lock','README.md','stylist/main.py','deploy/docker/start.sh','deploy/ci/deploy.sh','deploy/ci/Dockerfile.offline',
                  'stylist/static/remote-image.png','config/deploy.env','var/user-data.json','reports/private.html','stylist/static/closet-app/comparison/evolution/screenshots/private/user.png']:
         p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('synthetic')
     (root/'.dockerignore').write_text('# BEGIN OSS image exclusions (generated)\nstylist/static/remote-image.png\n# END OSS image exclusions\n')
@@ -83,7 +83,8 @@ else:print('{"ready":true}')
     (root/'config/login-public.pem').write_text('synthetic-public-key')
     commit='b'*40;archive=Path('/tmp')/f'aicloset-agent-test-{uuid.uuid4().int}-{commit}.tar.gz'
     with tarfile.open(archive,'w:gz') as t:
-        info=tarfile.TarInfo('Dockerfile');data=b'FROM scratch\n';info.size=len(data);t.addfile(info,io.BytesIO(data))
+        for name,data in [('Dockerfile',b'FROM scratch\n'),('uv.lock',b'synthetic lock\n')]:
+            info=tarfile.TarInfo(name);info.size=len(data);t.addfile(info,io.BytesIO(data))
     checksum=archive.with_name(archive.name+'.sha256');checksum.write_text(hashlib.sha256(archive.read_bytes()).hexdigest()+'  '+archive.name+'\n')
     try:
         env={**os.environ,'PATH':str(bindir)+os.pathsep+os.environ['PATH'],'CALL_LOG':str(log),'TEST_MODE':mode}
@@ -162,3 +163,15 @@ def test_sql_baseline_is_not_ignored_but_editor_swaps_are():
     for name in ['.gitlab-ci.yml.swp','.gitlab-ci.yml.swo','.gitlab-ci.yml.swn']:
         result=subprocess.run(['git','check-ignore','--no-index',name],cwd=ROOT,capture_output=True,text=True)
         assert result.returncode==0,name
+
+
+def test_ci_build_uses_loaded_runtime_and_disables_network():
+    deploy=(ROOT/'deploy/ci/deploy.sh').read_text()
+    dockerfile=(ROOT/'deploy/ci/Dockerfile.offline').read_text()
+    assert 'docker image inspect "$runtime_image"' in deploy
+    assert 'docker build --pull=false --network none' in deploy
+    assert 'STYLIST_RUNTIME_IMAGE=$runtime_image' in deploy
+    assert 'sha256sum "$release/source/uv.lock"' in deploy
+    assert 'uv sync' not in dockerfile and 'pip install' not in dockerfile
+    assert 'RUN rm -rf /app/stylist' in dockerfile
+    assert 'deploy/ci/Dockerfile.offline' in (ROOT/'scripts/ci_package.sh').read_text()

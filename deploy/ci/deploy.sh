@@ -44,14 +44,26 @@ cleanup(){
    if [[ $renamed == 1 ]]; then docker rename "$old_id" "$app"; fi
    docker start "$old_id" >/dev/null
   fi
-  echo 'Release not activated; previous container restored when it had been stopped. Database migrations are not reversed.' >&2
+  echo 'Release not activated; previous container restored when it had been stopped. No database schema changes were executed.' >&2
  fi
  exit "$status"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-docker build --label "org.opencontainers.image.revision=$commit" -t "$image" "$release/source"
+# Resolve a locally loaded runtime by dependency lock. Never pull or install online.
+runtime_hash=$(sha256sum "$release/source/uv.lock" | cut -c1-16)
+runtime_image="aicloset-stylist:ci-runtime-$runtime_hash"
+docker image inspect "$runtime_image" >/dev/null 2>&1 || fail "Load the offline runtime image first: $runtime_image"
+docker run --rm -i --network none --entrypoint /app/.venv/bin/python "$runtime_image" - "$runtime_hash" <<'PYRUNTIME'
+import hashlib,pathlib,sys
+assert hashlib.sha256(pathlib.Path('/app/uv.lock').read_bytes()).hexdigest().startswith(sys.argv[1]), 'Runtime dependency lock mismatch'
+import fastapi,uvicorn,httpx,psycopg,langgraph,langfuse
+print('Offline runtime dependencies verified')
+PYRUNTIME
+docker build --pull=false --network none --build-arg "STYLIST_RUNTIME_IMAGE=$runtime_image" \
+ -f "$release/source/deploy/ci/Dockerfile.offline" \
+ --label "org.opencontainers.image.revision=$commit" -t "$image" "$release/source"
 # Validate actual container settings before migrations or stopping any service.
 docker run --rm -i --env-file "$release/private/runtime.env" -e LANGFUSE_TRACING_ENABLED=false --entrypoint /app/.venv/bin/python "$image" - "$environment" <<'PY'
 import sys

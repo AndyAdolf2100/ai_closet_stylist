@@ -1,0 +1,16 @@
+# The server must load the matching Linux amd64 runtime image once beforehand.
+ARG STYLIST_RUNTIME_IMAGE
+FROM ${STYLIST_RUNTIME_IMAGE}
+USER root
+WORKDIR /app
+# Remove the old application before copying; deleted files must not survive.
+RUN rm -rf /app/stylist
+COPY pyproject.toml uv.lock README.md ./
+COPY stylist ./stylist
+COPY deploy/docker/start.sh /usr/local/bin/stylist-start
+RUN /app/.venv/bin/python -m stylist.image_assets
+RUN mkdir -p /app/var && chown stylist:stylist /app/var
+USER 10001:10001
+EXPOSE 8000
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/stylist-start"]
+CMD ["/app/.venv/bin/uvicorn", "stylist.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--timeout-graceful-shutdown", "260", "--no-proxy-headers"]
