@@ -15,7 +15,7 @@ const identityReady=()=>Boolean(draft.name.trim()&&['男','女'].includes(draft.
 const companionReady=()=>CompanionCharacters.all.some(p=>p.id===draft.role);
 const canContinue=()=>loaded&&!saving&&identityReady()&&(step===0||companionReady());
 function updateIdentityActions(){$('#skip').disabled=saving||!loaded;$('#next').disabled=!canContinue();$('#skip').hidden=step<2||step===4;$('#skip').textContent=step===4?'保存并进入爱搭衣橱':'稍后设置，继续';}
-const steps=[['认识你','在开始之前，想先认识你。','一个喜欢的称呼，让每次问候都更亲切。'],['陪伴你的衣衣','选一个，让你自在的助理。','助理形象与你的性别无关，选择你喜欢的相处方式。'],['穿衣习惯','把你的喜欢，慢慢说给我听。','不用一次说完。从几个小小的偏好开始，也可以稍后补充。'],['相处的节奏','怎样聊天，会让你更自在？','按你喜欢的节奏，慢慢认识彼此。'],['第一件小事','从一件小事，开始我们的日常。','选一件现在想做的事。你也可以先看看爱搭衣橱。']];
+const steps=[['认识你','在开始之前，想先认识你。'],['陪伴你的衣衣','选一个，让你自在的助理。'],['穿衣习惯','把你的喜欢，慢慢说给我听。'],['相处的节奏','怎样聊天，会让你更自在？'],['第一件小事','从一件小事，开始我们的日常。']];
 function el(t,c,text){const n=document.createElement(t);n.className=c;if(text)n.textContent=text;return n;}
 function input(label,key,placeholder,max=24){const wrap=el('div','field');const l=el('label','',label);l.htmlFor=key;const i=el(key==='avoid'?'textarea':'input','');i.id=key;i.value=draft[key];i.placeholder=placeholder;i.maxLength=max;i.required=key==='name';i.oninput=()=>{draft[key]=i.value;updateIdentityActions();};wrap.append(l,i);return wrap;}
 function choices(labels,key,multi=false){const box=el('div','chips');labels.forEach(label=>{const b=el('button','chip',label||'暂不设置');b.type='button';b.setAttribute('aria-pressed',String(multi?draft[key].includes(label):draft[key]===label));b.onclick=()=>{if(multi){if(draft[key].includes(label))draft[key]=draft[key].filter(x=>x!==label);else if(draft[key].length<3)draft[key].push(label);else{PreviewMessage.notify('最多选择三项，可以先取消一项。',{name:effectiveAgentName(),role:draft.role});return;}}else {draft[key]=label;if(key==='gender'){setPalette(companionPalette());}if(key==='gender')draft.priorities=draft.priorities.filter(value=>FashionPreferences.prioritiesFor(label).includes(value));}render();};box.append(b);});return box;}
@@ -23,8 +23,7 @@ function fashionChoices(labels,key,offset=0){const box=el('div',key==='styles'?'
 function roleSummary(p){const n=el('small','role-summary');const text=p.id==='female_regal_v1'?'审美独到 · 自信从容':p.summary;text.split(' · ').forEach(part=>n.append(el('span','role-trait',part)));return n;}
 function portrait(p){const w=el('div','portrait'),img=el('img','');img.src=p.image;img.alt=p.label;w.style.cssText=`--scale:${p.framing.scale};--top:${p.framing.top}%;--left:${p.framing.left}%`;w.append(img);return w;}
 function render(){const screen=$('#screen');screen.replaceChildren();$('.device').dataset.scene=['identity','companion','preferences','rhythm','start'][step];$('#counter').textContent=`初识 · 0${step+1} / 05`;screen.append(el('h2','',steps[step][1]));
-const dialogue=el('div','closer-dialogue');dialogue.append(el('p','', ['我该怎样称呼你，才会让你觉得亲切？','不用急着决定，选让你感到自在的模样就好。','喜欢什么、不想穿什么，都可以慢慢告诉我。','想听简短的建议，还是一起慢慢聊？你来决定。',`${draft.name.trim()||'你好'}，今天想从哪件事开始？`][step]));screen.append(dialogue);
-screen.append(el('p','description',step===0?'从一个喜欢的称呼，开始我们的日常。':steps[step][2]));
+const dialogue=el('div','closer-dialogue');dialogue.append(el('p','', ['我该怎么称呼你？告诉我一个你喜欢的名字，让每次问候都亲切一点。','不用急着选，看看谁让你觉得自在。喜欢哪种模样，就让谁陪你慢慢聊。','喜欢怎样穿，不喜欢哪些款式，都可以告诉我。不用一次说完，往后我们慢慢聊。','想听简短的建议，还是多聊几句？选你觉得自在的方式就好。',`${draft.name.trim()||'你好'}，今天想从哪件事开始？`][step]));screen.append(dialogue);
 if(step===0){screen.append(input('希望我怎样称呼你','name','请输入你的昵称'));screen.append(el('h3','field-title','你的性别'),choices(['男','女'],'gender'));}
 if(step===1){
 const groups=el('div','role-groups');

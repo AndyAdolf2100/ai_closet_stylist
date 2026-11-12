@@ -9,8 +9,7 @@ body[data-edition=yijian] #dots .active{width:auto;color:var(--accent);border-co
 .closer-intro{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:18px;flex-shrink:0}.closer-star{font:30px/1 Georgia,serif;color:var(--muted);opacity:.65}#counter{font-size:12px;letter-spacing:2px;color:var(--muted)}
 body[data-edition=yijian] #screen{flex:1;min-height:0;overflow-y:auto;overflow-x:clip;padding:0 18px 22px;scrollbar-width:thin}
 body[data-edition=yijian] #screen h2{font:24px/1.65 'Songti SC','STSong',serif;letter-spacing:0;text-align:center;margin:16px -2px;color:var(--ink);white-space:normal}
-.closer-dialogue{background:var(--paper);border:1px solid var(--line);border-radius:4px 22px 22px 22px;padding:17px 16px;box-shadow:0 6px 18px #00000003}.closer-dialogue small{color:var(--accent);font-size:12px;letter-spacing:1px}.closer-dialogue p{font-size:13px;line-height:1.9;margin:0;color:var(--ink)}
-body[data-edition=yijian] .description{font-size:12px;line-height:1.9;text-align:center;max-width:none;color:var(--muted);margin:15px 0 20px}
+.closer-dialogue{background:var(--paper);border:1px solid var(--line);border-radius:4px 22px 22px 22px;padding:17px 16px;box-shadow:0 6px 18px #00000003}.closer-dialogue small{color:var(--accent);font-size:12px;letter-spacing:1px}.closer-dialogue p{font-size:13px;line-height:1.9;margin:0;color:var(--ink);text-align:center}
 body[data-edition=yijian] .field{margin:18px 0 20px}
 body[data-edition=yijian] .field label,body[data-edition=yijian] .field-title{font-size:12px;letter-spacing:0;margin:18px 0 9px}
 body[data-edition=yijian] .field input{font:16px/1.7 -apple-system,'PingFang SC',sans-serif;padding:12px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
