@@ -89,3 +89,5 @@ Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目�
 2026-11-12 OPS-MYSQL：用户修正test手机号查询库为aicloset_test；已更新本地config/ci/test.env及模板，dev保留aicloset_dev。服务器需修改/opt/aicloset-agent/config/test.env中的STYLIST_OPS_MYSQL_DSN；容器创建时注入，修改文件后需重新部署，不会自动热更新。
 
 上线检查补充：用户提供容器只读查询，test的MySQL配置及SELECT DATABASE()均为aicloset_test。公网只读探测/health返回revision=ed1d55b80dbb7586d0301be8a2859080bf61104b，H5及/ops/conversations为200；/ops与/ops/尚无路由，为404，运维入口应使用完整路径。这不代表带身份业务完整验收。
+
+2026-11-12 main分支配置：已包含test至3976fcd的代码，main默认DEPLOY_ENV=dev、两个job的only=main/web；DEPLOY_HOST仍172.16.0.90，读取config/dev.env、PostgreSQL aicloset_stylist、MySQL aicloset_dev，服务8466、assistant域名。test分支配置不改。后续合并须保留各分支的环境选择，避免main误部署test。当前只修改本地供用户检查，未推送触发dev部署。

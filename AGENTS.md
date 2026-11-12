@@ -2230,3 +2230,5 @@
 - 2026-11-12 CI-OFFLINE 用户确认目标服务器不能访问Docker Hub，CI必须离线构建：使用预导入Linux amd64运行依赖镜像，按uv.lock摘要选镜像并校验，不在线拉取或安装依赖；网络关闭构建，仅覆盖当前源码，dev/test共用底座，依赖变化重新导入。保留SQL只读预检及原手动离线发布方式。21项回归、隔离无网络构建及H5/ops/API鉴权模拟通过；用户已确认服务器镜像校验OK、导入成功、linux/amd64，真实CI部署待验。
 
 - 2026-11-12 OPS-MYSQL 当前规则：test只读手机号查询连接aicloset_test，dev连接aicloset_dev，替代此前MySQL共库假设；同实例账号可保留。已更新本地私密交付配置和公开模板；用户已提供运行容器只读检查，配置及实际连接均为aicloset_test，检查正确；不写入或迁移原MySQL。
+
+- 2026-11-12 CI-MAIN 用户要求main合入test并调整配置供检查：开始时两分支均为3976fcd，无新增合并；main默认dev且两个job仅main/web触发，test原配置保留test/test-web。目标同机172.16.0.90，main用dev.env、8466和dev库。已本地调整，验证中，不推送或触发部署。

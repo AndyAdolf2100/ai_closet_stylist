@@ -15,14 +15,14 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def test_ci_uses_server_compatible_basic_keywords_and_server_deployment_lock():
     ci=yaml.safe_load((ROOT/'.gitlab-ci.yml').read_text())
-    assert ci['variables']['DEPLOY_ENV']=='test'
+    assert ci['variables']['DEPLOY_ENV']=='dev'
     assert ci['variables']['DEPLOY_HOST']=='172.16.0.90'
     assert set(ci)=={'variables','stages','job_build','job_deploy'}
     for name in ['job_build','job_deploy']:
         job=ci[name]
         assert set(job)=={'stage','script','tags','only'}
         assert job['tags']==['devops-test']
-        assert job['only']==['test','web']
+        assert job['only']==['main','web']
         assert all(isinstance(command,str) for command in job['script'])
     assert 'flock -w 600' in (ROOT/'deploy/ci/deploy.sh').read_text()
     script='\n'.join(ci['job_deploy']['script'])

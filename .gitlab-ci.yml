@@ -1,6 +1,6 @@
 # Keep the same basic GitLab syntax used by aicloset-server.
 variables:
-  DEPLOY_ENV: "test" # test or dev; override for a manual pipeline
+  DEPLOY_ENV: "dev" # main deploys dev; test branch keeps DEPLOY_ENV=test
   DEPLOY_HOST: "172.16.0.90"
   DEPLOY_ROOT: "/opt/aicloset-agent"
 
@@ -16,7 +16,7 @@ job_build:
   tags:
     - devops-test
   only:
-    - test
+    - main
     - web
 
 job_deploy:
@@ -30,5 +30,5 @@ job_deploy:
   tags:
     - devops-test
   only:
-    - test
+    - main
     - web
