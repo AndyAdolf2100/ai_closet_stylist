@@ -18,7 +18,6 @@ from .advice_boundaries import PREFIX as ADVICE_PREFIX
 from .advice_boundaries import boundary_fallback, boundary_problems, hypothetical_preference
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
-from .outfit_history import outfit_catalog, recalled_looks
 from .grounding import (
     PREFIX,
     attribute_claim_problems,
@@ -43,6 +42,7 @@ from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionStat
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
+from .outfit_history import outfit_catalog, recalled_looks
 from .personas import (
     attachment_wardrobe_invitation,
     avatar_invitation,
@@ -1124,8 +1124,10 @@ class Stylist:
                 task, plan = Task.model_validate(output["task"]), Plan.model_validate(output["plan"])
                 if reply.historical_outfit_replay or reply.product_search and reply.product_entry:
                     state.looks = reply.looks
+                    state.subject_outfit_id = None
                 if reply.saved_outfit_search and output.get("library_looks"):
                     state.looks = [Look.model_validate(look) for look in output["library_looks"]]
+                    state.subject_outfit_id = reply.subject_outfit.outfit_id if reply.subject_outfit else None
                 if not plan.conversation_only and not plan.product_search:
                     state.task = task
                     if not plan.weather_only:
@@ -1134,6 +1136,7 @@ class Stylist:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
+                        state.subject_outfit_id = None
                 memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
                 if memory_save is None and not memory_intent(request.message):
                     book = await asyncio.to_thread(self.store.memory_book, owner)
@@ -1203,6 +1206,7 @@ class Stylist:
                                   message="这件单品已不可用，不过我们可以继续。你可以换一件，或让我从当前衣橱重新搭一套。",
                                   follow_ups=["从当前衣橱帮我搭一套"], request_id=request.request_id)
                     state.looks = []
+                    state.subject_outfit_id = None
                     state.messages = (state.messages + [
                         {"role": "user", "content": "帮我查看下这件"},
                         {"role": "assistant", "content": json.dumps(reply.model_dump(mode="json"), ensure_ascii=False)},
@@ -1217,6 +1221,7 @@ class Stylist:
                               pieces=[item.display_name], wardrobe_complete=False)]
                 message = "已打开这件单品，可以继续聊怎么搭配。"
                 history_message = "帮我查看下这件"
+                state.subject_outfit_id = None
             else:
                 outfit_entry = await resolve_outfit_entry(upstream, request.subject_outfit)
                 items = [from_row(item, "user") for item in outfit_entry["items"]]
@@ -1225,6 +1230,7 @@ class Stylist:
                 looks = [Look(title=outfit_entry["title"] or "搭配详情", items=items,
                               pieces=[item.display_name for item in items],
                               wardrobe_complete=True, why=[], how=[], notes=[])]
+                state.subject_outfit_id = request.subject_outfit.outfit_id
                 message = "已打开这套搭配，可以继续聊怎么调整。"
                 history_message = "帮我查看下搭配"
             reply = Reply(

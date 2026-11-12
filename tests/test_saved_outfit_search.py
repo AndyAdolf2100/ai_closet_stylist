@@ -168,4 +168,6 @@ async def test_missing_cover_falls_back_to_original_products_and_composition_con
     assert reply.outfit_entry is None and len(reply.looks)==1
     assert [p.product_id for p in reply.looks[0].items]==['1','2']
     assert reply.delivery=='outfit' and not reply.message
+    from stylist.images import ImageService
+    assert ImageService(store).context('1',reply.conversation_id,reply.version).subject_outfit_id == 11
     assert Compositions(store).get('1',reply.conversation_id,reply.version,0,'female')['status']=='missing'

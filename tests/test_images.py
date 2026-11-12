@@ -12,7 +12,7 @@ from stylist.store import Store
 
 class ImageUpstream:
     def __init__(self):
-        self.cost, self.commits, self.fail = 2, [], False
+        self.cost, self.commits, self.commit_args, self.saved_outfits, self.fail = 2, [], [], {}, False
     async def get(self, path):
         assert path == '/api/vip_center/points_detail'
         return {'total_available': 10000}
@@ -36,22 +36,28 @@ class ImageUpstream:
         pytest.fail(name)
     async def commit_image(self, name, args):
         self.commits.append(name)
+        self.commit_args.append((name, args))
         await asyncio.sleep(0)
         if name == "save_recommended_outfit":
             # Server's PrepareTryOnOutfit accepts only ^sel_[A-Za-z0-9_-]{8,64}$.
             assert args['selection_id'].startswith('sel_') and len(args['selection_id']) == 36
-            return {"outfit_id": 12, "status": "completed"}
+            if args["selection_id"] in self.saved_outfits:
+                return {"outfit_id": self.saved_outfits[args["selection_id"]], "outfit_created": False,
+                        "status": "completed"}
+            self.saved_outfits[args["selection_id"]] = 12
+            return {"outfit_id": 12, "outfit_created": True, "status": "completed"}
         if self.fail:
             raise StylistError("mcp_unavailable", "timeout")
         return {"status": "completed", "result_image": "https://example.test/tryon.jpg"}
 
 
-def setup_service(tmp_path):
+def setup_service(tmp_path, existing_outfit_id=None):
     store = Store(str(tmp_path / "state.db"))
     request = ChatRequest(message="通勤", request_id="image-test-seed")
     cid, claim, state, _ = store.reserve("1", request)
     products = [Product(source="user", product_id=str(i), slot=slot) for i, slot in [(1, Slot.TOP), (2, Slot.BOTTOM), (3, Slot.SHOES)]]
     state.looks = [Look(title="通勤装", items=products)]
+    state.subject_outfit_id = existing_outfit_id
     store.finish("1", request, claim, state, Reply(conversation_id=cid, version=1, mode="recommend",
                  delivery="outfit", message="搭配", task=Task(), looks=state.looks))
     return ImageService(store), ImageQuoteRequest(conversation_id=cid, version=1), ImageUpstream()
@@ -101,6 +107,32 @@ async def test_concurrent_confirmation_dispatches_once(tmp_path):
     assert upstream.commits.count("save_recommended_outfit") == 1
     assert (await service.confirm(upstream, quote["action_id"], True))["status"] == "completed"
     assert len(upstream.commits) == 2
+
+
+@pytest.mark.asyncio
+async def test_repeated_quote_uses_same_saved_outfit_selection(tmp_path):
+    service, request, upstream = setup_service(tmp_path)
+    first = await service.quote(upstream, request)
+    await service.confirm(upstream, first["action_id"], True)
+    second = await service.quote(upstream, request)
+    await service.confirm(upstream, second["action_id"], True)
+
+    saved = [args for name, args in upstream.commit_args if name == "save_recommended_outfit"]
+    tryons = [args for name, args in upstream.commit_args if name == "digital_twin_tryon"]
+    assert len(saved) == 2
+    assert saved[0]["selection_id"] == saved[1]["selection_id"]
+    assert len(upstream.saved_outfits) == 1
+    assert len({args["idempotency_key"] for args in tryons}) == 2
+
+
+@pytest.mark.asyncio
+async def test_existing_saved_outfit_tryon_skips_outfit_creation(tmp_path):
+    service, request, upstream = setup_service(tmp_path, existing_outfit_id=72)
+    quote = await service.quote(upstream, request)
+    await service.confirm(upstream, quote["action_id"], True)
+
+    assert upstream.commits == ["digital_twin_tryon"]
+    assert upstream.commit_args[0][1]["outfit_id"] == 72
 
 
 @pytest.mark.asyncio

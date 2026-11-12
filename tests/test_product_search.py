@@ -90,12 +90,17 @@ async def test_lookup_keeps_existing_outfit_and_next_lookup_receives_results(tmp
     engine = Stylist(Settings(), store, model)
     first = await engine.chat(upstream, ChatRequest(subject_product={'source': 'user', 'product_id': '104'},
         request_id='entry-before-lookup'))
+    with store.connection() as conn:
+        row=conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?',(first.conversation_id,)).fetchone()
+        seeded=json.loads(row['state_json']); seeded['subject_outfit_id']=72
+        conn.execute('UPDATE stylist_sessions SET state_json=? WHERE id=?',(json.dumps(seeded),first.conversation_id))
     second = await engine.chat(upstream, ChatRequest(message='再看看黑鞋', request_id='search-after-entry',
         conversation_id=first.conversation_id, expected_version=1))
     with store.connection() as conn:
         row = conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?', (first.conversation_id,)).fetchone()
     state = SessionState.model_validate_json(row['state_json'])
     assert state.looks == first.looks and state.task == first.task
+    assert state.subject_outfit_id is None
     history = json.loads(state.messages[-1]['content'])
     assert history['product_search'] and history['product_entry']['product']['product_id'] == '104'
     third = await engine.chat(upstream, ChatRequest(message='还有其他黑色的吗', request_id='search-followup',
@@ -187,7 +192,13 @@ async def test_old_single_product_card_tryon_uses_its_snapshot_not_previous_outf
         subject_product={'source':'user','product_id':'104'},product_entry={'subject':{'source':'user','product_id':'104'},
         'title':'当前鞋子','product':{'source':'user','product_id':'104','title':'鞋子','class_name':'鞋子'}})
     store.finish(owner,request,claim,state,reply)
+    with store.connection() as conn:
+        import json
+        row=conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?',(cid,)).fetchone()
+        snapshot=json.loads(row['state_json']); snapshot['subject_outfit_id']=72
+        conn.execute('UPDATE stylist_sessions SET state_json=? WHERE id=?',(json.dumps(snapshot),cid))
     context=ImageService(store).context(owner,cid,1)
+    assert context.subject_outfit_id is None
     assert len(context.looks)==1
     assert [p.product_id for p in context.looks[0].items]==['104']
     assert store.history(owner,cid)['messages'][0]['reply']['looks']==[]
