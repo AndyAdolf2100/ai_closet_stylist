@@ -61,3 +61,14 @@ def test_creation_uses_maintenance_catalog_before_target_connection(monkeypatch)
     check("postgresql://fixture@localhost/aicloset_stylist", create=True)
     assert connections == ["postgres", "aicloset_stylist"]
     assert any("CREATE DATABASE" in query for query in statements)
+
+
+@pytest.mark.parametrize('name',['aicloset_stylist','aicloset_stylist_test'])
+def test_environment_database_must_match_exactly(name):
+    assert connection_parameters('postgresql://fixture@db.invalid/'+name,target=name)['dbname']==name
+    other='aicloset_stylist' if name.endswith('_test') else 'aicloset_stylist_test'
+    with pytest.raises(ValueError):connection_parameters('postgresql://fixture@db.invalid/'+other,target=name)
+
+
+def test_arbitrary_database_cannot_be_enabled_as_a_target():
+    with pytest.raises(ValueError):connection_parameters('postgresql://fixture@db.invalid/old_agent',target='old_agent')

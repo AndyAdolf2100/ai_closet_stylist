@@ -30,13 +30,15 @@ async def test_search_returns_authoritative_cards_without_weather_or_outfits(tmp
     upstream = DialogueUpstream('search')
     reply = await Stylist(Settings(), Store(str(tmp_path/'search.db')), model).chat(upstream,
         ChatRequest(message=message, request_id='single-search-test', new_clothes=True))
-    assert reply.product_search and reply.delivery == 'advice' and not reply.looks
-    assert [p.key for p in reply.product_results] == ['user:104']
-    assert reply.product_results[0].title == '黑色平底乐福鞋'
+    assert reply.product_search and reply.delivery == 'advice'
+    assert len(reply.looks)==1 and reply.looks[0].items[0].key=='user:104'
+    assert reply.product_results == []
+    assert reply.product_entry['subject']['product_id'] == '104'
+    assert reply.product_entry['title'] == '黑色平底乐福鞋'
     assert not reply.city_selection_required and not reply.weather
     assert 'forecast' not in upstream.calls and 'outfit.search-saved' not in upstream.calls
-    assert len([c for c in upstream.calls if c == 'product.resolve']) == 1
-    assert all(p.source == 'user' for p in reply.product_results)
+    assert len([c for c in upstream.calls if c == 'product.resolve']) == 2
+    assert reply.product_entry['product']['source'] == 'user'
 
 
 @pytest.mark.asyncio
@@ -74,7 +76,7 @@ async def test_lookup_persists_card_history_and_idempotent_replay(tmp_path):
     replay = await engine.chat(upstream, request)
     assert first == replay and len(model.calls) == 2
     saved = engine.store.history(await upstream.identity(), first.conversation_id)
-    assert saved['messages'][0]['reply']['product_results'][0]['product_id'] == '104'
+    assert saved['messages'][0]['reply']['product_entry']['product']['product_id'] == '104'
 
 
 @pytest.mark.asyncio
@@ -88,14 +90,19 @@ async def test_lookup_keeps_existing_outfit_and_next_lookup_receives_results(tmp
     engine = Stylist(Settings(), store, model)
     first = await engine.chat(upstream, ChatRequest(subject_product={'source': 'user', 'product_id': '104'},
         request_id='entry-before-lookup'))
+    with store.connection() as conn:
+        row=conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?',(first.conversation_id,)).fetchone()
+        seeded=json.loads(row['state_json']); seeded['subject_outfit_id']=72
+        conn.execute('UPDATE stylist_sessions SET state_json=? WHERE id=?',(json.dumps(seeded),first.conversation_id))
     second = await engine.chat(upstream, ChatRequest(message='再看看黑鞋', request_id='search-after-entry',
         conversation_id=first.conversation_id, expected_version=1))
     with store.connection() as conn:
         row = conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?', (first.conversation_id,)).fetchone()
     state = SessionState.model_validate_json(row['state_json'])
     assert state.looks == first.looks and state.task == first.task
+    assert state.subject_outfit_id is None
     history = json.loads(state.messages[-1]['content'])
-    assert history['product_search'] and history['product_results'][0]['product_id'] == '104'
+    assert history['product_search'] and history['product_entry']['product']['product_id'] == '104'
     third = await engine.chat(upstream, ChatRequest(message='还有其他黑色的吗', request_id='search-followup',
         conversation_id=first.conversation_id, expected_version=second.version))
     assert third.product_search
@@ -112,7 +119,8 @@ async def test_garment_scope_does_not_expand_black_clothes_to_shoes_and_bags(tmp
             return await super().generate(name, payload, result_type)
     reply = await Stylist(Settings(), Store(str(tmp_path/'scope.db')), Model()).chat(
         DialogueUpstream('search'), ChatRequest(message='找件黑色衣服', request_id='garment-scope-test'))
-    assert [p.product_id for p in reply.product_results] == ['101']
+    assert reply.product_results == []
+    assert reply.product_entry['product']['product_id'] == '101'
 
 
 @pytest.mark.asyncio
@@ -130,3 +138,67 @@ async def test_lookup_never_reads_another_users_conversation(tmp_path):
         await engine.chat(other, ChatRequest(message='继续看看', request_id='owner-b-search',
             conversation_id=first.conversation_id, expected_version=1))
     assert not other.calls
+
+
+@pytest.mark.asyncio
+async def test_random_single_item_returns_one_existing_product_without_outfits(tmp_path):
+    class RandomModel(SearchModel):
+        async def generate(self,name,payload,result_type):
+            result=await super().generate(name,payload,result_type)
+            if name=='plan':result.random_selection=True
+            else:assert payload['random_selection'] is True
+            return result
+    model=RandomModel(keys=['user:101','user:102'])
+    upstream=DialogueUpstream('random-single')
+    engine=Stylist(Settings(),Store(str(tmp_path/'random.db')),model)
+    reply=await engine.chat(upstream,
+        ChatRequest(message='从我的衣橱里随机给我一件单品',request_id='random-single-001'))
+    assert reply.product_search and reply.product_results==[]
+    assert reply.product_entry['product']['product_id'] in {'101','102'}
+    assert reply.subject_product.product_id == reply.product_entry['product']['product_id']
+    assert len(reply.looks)==1 and len(reply.looks[0].items)==1 and reply.weather is None
+    assert reply.looks[0].items[0].product_id == reply.product_entry['product']['product_id']
+    from stylist.images import ImageService
+    context=ImageService(engine.store).context(await upstream.identity(),reply.conversation_id,reply.version)
+    assert context.looks==reply.looks
+    assert [name for name,_ in model.calls]==['plan','product_search']
+
+
+@pytest.mark.asyncio
+async def test_another_item_excludes_previous_product_without_looking_at_old_outfit():
+    import json
+    from stylist.models import Task
+    from stylist.product_search import search_products
+    history=[{'role':'assistant','content':json.dumps({'product_search':True,'subject_product':{'source':'user','product_id':'101'}})}]
+    model=SearchModel(keys=['user:101','user:102'])
+    products,_=await search_products(DialogueUpstream('another-item'),model,
+        ChatRequest(message='再来一件',request_id='another-item-001'),Task(),history,
+        random_selection=True,exclude_previous=True)
+    assert [p.product_id for p in products]==['102']
+    assert model.calls[0][1]['history']==history
+
+
+@pytest.mark.asyncio
+async def test_old_single_product_card_tryon_uses_its_snapshot_not_previous_outfit(tmp_path):
+    from stylist.models import Look, Product, Reply, Task
+    from stylist.images import ImageService
+    upstream=DialogueUpstream('old-product-card')
+    owner=await upstream.identity()
+    store=Store(str(tmp_path/'old-card.db'))
+    request=ChatRequest(message='随机看看一件',request_id='old-card-snapshot')
+    cid,claim,state,_=store.reserve(owner,request)
+    state.looks=[Look(title='之前整套',items=[Product(source='user',product_id='102',slot='bottom')])]
+    reply=Reply(conversation_id=cid,version=1,mode='consult',delivery='advice',task=Task(),message='',
+        subject_product={'source':'user','product_id':'104'},product_entry={'subject':{'source':'user','product_id':'104'},
+        'title':'当前鞋子','product':{'source':'user','product_id':'104','title':'鞋子','class_name':'鞋子'}})
+    store.finish(owner,request,claim,state,reply)
+    with store.connection() as conn:
+        import json
+        row=conn.execute('SELECT state_json FROM stylist_sessions WHERE id=?',(cid,)).fetchone()
+        snapshot=json.loads(row['state_json']); snapshot['subject_outfit_id']=72
+        conn.execute('UPDATE stylist_sessions SET state_json=? WHERE id=?',(json.dumps(snapshot),cid))
+    context=ImageService(store).context(owner,cid,1)
+    assert context.subject_outfit_id is None
+    assert len(context.looks)==1
+    assert [p.product_id for p in context.looks[0].items]==['104']
+    assert store.history(owner,cid)['messages'][0]['reply']['looks']==[]

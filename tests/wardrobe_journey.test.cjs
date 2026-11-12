@@ -271,9 +271,9 @@ test('dialogue gallery selects a draft, then quotes the exact outfit without cha
  assert.deepEqual(JSON.parse(calls.find(([p])=>p.endsWith('/quote'))[1].body),ref);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);assert.ok(byText(t.w,'确认消耗 8 积分并试穿'));t.close();
 });
-test('stale dialogue gallery cannot change a default portrait or submit generation',async()=>{
+test('future dialogue gallery cannot change a default portrait or submit generation',async()=>{
  const calls=[];let version=1;const t=setup(async(...a)=>{calls.push(a);return galleryOverview;},{getContext:()=>({conversation_id:'current',version})});
- t.w.WardrobeJourney.offer({avatar_intent:'tryon',tryon_context:{conversation_id:'current',version:1,look_index:0}},t.w.document.getElementById('feed'));await flush();version=2;
+ t.w.WardrobeJourney.offer({avatar_intent:'tryon',tryon_context:{conversation_id:'current',version:1,look_index:0}},t.w.document.getElementById('feed'));await flush();version=0;
  byText(t.w,'确认形象，查看这次试穿积分').click();await flush();assert.equal(calls.length,1);assert.match(t.notices[0],/已更新/);t.close();
 });
 test('avatar upload invitation is distinct from adding garments and requires a click',async()=>{
@@ -423,4 +423,12 @@ test('attachment execution guidance opens one fresh single-garment picker and ne
  assert(!byText(t.w,'创建本人试穿形象'));byText(t.w,'选择单张衣物照片').click();
  const input=t.w.document.querySelector('#journey-photo-input');assert(input);assert.equal(input.multiple,false);assert.equal(input.files.length,0);
  assert.equal(calls.length,0);assert(byText(t.w,'确认上传'));t.close();
+});
+
+test('historical card can quote its original version without submitting try-on',async()=>{
+ const calls=[];const ref={conversation_id:'current',version:1,look_index:0};
+ const t=setup(async(path,options)=>{calls.push([path,options]);if(path.endsWith('/twins'))return {default_confirmed:true,default_twin_key:'base-a'};if(path.endsWith('/quote'))return {action_id:'historical-quote',points_cost:8,title:'历史搭配',item_count:3};throw Error('Unexpected write');},{getContext:()=>({conversation_id:'current',version:3})});
+ await t.w.WardrobeJourney.tryon(ref);await flush();
+ assert.deepEqual(JSON.parse(calls.find(([p])=>p.endsWith('/quote'))[1].body),ref);
+ assert.ok(byText(t.w,'确认消耗 8 积分并试穿'));assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);t.close();
 });

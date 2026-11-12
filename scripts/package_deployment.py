@@ -87,10 +87,32 @@ def public_bootstrap(config):
     return {"deploy/docker/runtime.defaults": defaults.encode(), "deploy/docker/login-public.pem": pem}
 
 
-def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_config_dir=None, runtime_only=False, image_archive=None, compression_level=9):
+def prepare_ops_sidecar(config, delivery):
+    """Export an explicitly authorized private companion file, never archive it."""
+    config, delivery = Path(config), Path(delivery)
+    if config.is_symlink() or not config.is_file():
+        raise ValueError("Private ops configuration must be a regular file")
+    content = config.read_bytes()
+    if b"STYLIST_OPS_MYSQL_DSN=" not in content or not content.strip():
+        raise ValueError("Private ops configuration is incomplete")
+    delivery.mkdir(parents=True, exist_ok=True)
+    target = delivery / "aicloset-ops.env"
+    # Create with private permissions before copying any bytes.
+    import os
+    fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        os.fchmod(stream.fileno(), 0o600)
+        stream.write(content)
+    return target
+
+
+def package(output, image=None, *, root=ROOT, bootstrap_config=None, private_config_dir=None, runtime_only=False, image_archive=None, compression_level=9, ops_config=None):
     if compression_level not in range(1, 10):
         raise ValueError("Compression level must be between 1 and 9")
     paths = release_files(root)
+    ops_source = Path(ops_config) if ops_config else next((p for p in [root / "config/ops.deploy.env", root / "config/ops.env"] if p.is_file()), root / "config/ops.env")
+    if ops_config or ops_source.is_file():
+        prepare_ops_sidecar(ops_source, output.parent)
     if image_archive:
         image_archive = Path(image_archive)
         if not image or image_archive.is_symlink() or not image_archive.is_file():
@@ -161,6 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("--bootstrap-config", type=Path, help="Bundle public endpoints/model ID/public key only; never the API key")
     parser.add_argument("--private-config-dir", type=Path, help="Explicit private bundle: include credentials, never distribute publicly")
     parser.add_argument("--runtime-only", action="store_true", help="Omit duplicate application source when an image is embedded")
+    parser.add_argument("--ops-config", type=Path, help="Export private MySQL ops env as a separate 0600 companion file, never inside the archive")
     args = parser.parse_args()
-    count = package(args.output, args.image, bootstrap_config=args.bootstrap_config, private_config_dir=args.private_config_dir, runtime_only=args.runtime_only, image_archive=args.image_archive, compression_level=args.compression_level)
+    count = package(args.output, args.image, bootstrap_config=args.bootstrap_config, private_config_dir=args.private_config_dir, runtime_only=args.runtime_only, image_archive=args.image_archive, compression_level=args.compression_level, ops_config=args.ops_config)
     print(f"Packaged {count} files into {args.output}; " + ("PRIVATE bundle includes deployment credentials." if args.private_config_dir else "runtime config and data excluded."))

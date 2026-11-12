@@ -1,0 +1,34 @@
+# Keep the same basic GitLab syntax used by aicloset-server.
+variables:
+  DEPLOY_ENV: "dev" # main deploys dev; test branch keeps DEPLOY_ENV=test
+  DEPLOY_HOST: "172.16.0.90"
+  DEPLOY_ROOT: "/opt/aicloset-agent"
+
+stages:
+  - build
+  - deploy
+
+job_build:
+  stage: build
+  script:
+    - bash scripts/ci_package.sh "$DEPLOY_ENV" "$CI_PIPELINE_ID" "$CI_COMMIT_SHA"
+    - scp "var/ci-release/aicloset-agent-${DEPLOY_ENV}-${CI_PIPELINE_ID}-${CI_COMMIT_SHA}.tar.gz" "var/ci-release/aicloset-agent-${DEPLOY_ENV}-${CI_PIPELINE_ID}-${CI_COMMIT_SHA}.tar.gz.sha256" "root@${DEPLOY_HOST}:/tmp/"
+  tags:
+    - devops-test
+  only:
+    - main
+    - web
+
+job_deploy:
+  stage: deploy
+  script:
+    - |
+      set -eu
+      case "$DEPLOY_ENV" in test|dev) ;; *) exit 1 ;; esac
+      archive="/tmp/aicloset-agent-${DEPLOY_ENV}-${CI_PIPELINE_ID}-${CI_COMMIT_SHA}.tar.gz"
+      ssh "root@${DEPLOY_HOST}" "bash -s -- '$DEPLOY_ENV' '$archive' '$CI_COMMIT_SHA' '$DEPLOY_ROOT'" < deploy/ci/deploy.sh
+  tags:
+    - devops-test
+  only:
+    - main
+    - web

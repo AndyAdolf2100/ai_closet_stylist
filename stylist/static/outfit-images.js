@@ -13,7 +13,19 @@
     const canvas=document.createElement('canvas');canvas.width=960;canvas.height=1200;
     // Keep alpha untouched: assistant theme backgrounds belong to CSS, never the OSS image.
     const ctx=canvas.getContext('2d');
-    for(const {p,i} of OutfitBoard.layout(look.items).map((p,i)=>({p,i})).sort((a,b)=>a.p.z-b.p.z)){
+    const sizes=images.map(img=>{
+      const size={width:img.naturalWidth,height:img.naturalHeight};
+      try {
+        const scan=document.createElement('canvas');scan.width=scan.height=64;
+        const context=scan.getContext('2d');context.drawImage(img,0,0,64,64);
+        const data=context.getImageData(0,0,64,64).data;
+        let left=64,top=64,right=-1,bottom=-1;
+        for(let y=0;y<64;y++)for(let x=0;x<64;x++)if(data[(y*64+x)*4+3]>24){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+        if(right>=left&&bottom>=top)size.bounds=[left/64,top/64,(right-left+1)/64,(bottom-top+1)/64];
+      } catch { /* Intrinsic dimensions remain a safe fallback for unreadable pixels. */ }
+      return size;
+    });
+    for(const {p,i} of OutfitBoard.layout(look.items,sizes).map((p,i)=>({p,i})).sort((a,b)=>a.p.z-b.p.z)){
       const img=images[i],w=p.w/100*960,h=p.h/100*1200,s=Math.min(w/img.naturalWidth,h/img.naturalHeight);
       ctx.drawImage(img,p.x/100*960-img.naturalWidth*s/2,p.y/100*1200-img.naturalHeight*s/2,img.naturalWidth*s,img.naturalHeight*s);
     }

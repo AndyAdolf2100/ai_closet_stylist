@@ -41,7 +41,10 @@ elif name == 'nginx':
         sys.exit(1)
 elif name == 'docker':
     if args[:1] == ['ps']:
-        if (root/'running').exists(): print('managed-container')
+        if (root/'running').exists():
+            if os.environ.get('CI_MANAGED_DEV'):
+                if any(a.startswith('label=aicloset.environment=') for a in args): print('ci-managed-dev')
+            else: print('managed-container')
     elif args[:1] == ['build']:
         if os.environ.get('FAIL_BUILD'): sys.exit(1)
     elif args[:1] == ['compose'] and 'run' in args:
@@ -362,3 +365,39 @@ def test_failed_update_restores_config_before_usage_defaults(host):
     failed = run(make_release(root, 'usage-rollback-failed'), {**env, 'FAIL_DATABASE': '1'})
     assert failed.returncode != 0
     assert config.read_text() == original
+
+
+def test_private_ops_companion_is_loaded_and_failed_upgrade_restores_it(host):
+    root, env = host
+    source = root / 'ops-input.env'
+    original = 'STYLIST_OPS_MYSQL_DSN=mysql://fixture:private-pass@db.invalid/test\n'
+    source.write_text(original)
+    env = {**env, 'AICLOSET_OPS_CONFIG': str(source)}
+    result = run(make_release(root, 'ops-first'), env)
+    assert result.returncode == 0, result.stderr
+    target = root / 'deployment/config/ops.env'
+    assert target.read_text() == original
+    assert target.stat().st_mode & 0o777 == 0o600
+    assert 'private-pass' not in result.stdout + result.stderr
+    source.write_text('STYLIST_OPS_MYSQL_DSN=mysql://fixture:replacement@db.invalid/test\n')
+    failed = run(make_release(root, 'ops-failed'), {**env, 'FAIL_DATABASE': '1'})
+    assert failed.returncode != 0
+    assert target.read_text() == original
+
+
+@pytest.mark.parametrize('fail_proxy',[False,True])
+def test_manual_release_can_replace_ci_dev_and_restore_it_on_failure(host,fail_proxy):
+    root,env=host
+    assert run(make_release(root,'before-ci'),env).returncode==0
+    (root/'events').write_text('')
+    updated={**env,'CI_MANAGED_DEV':'1'}
+    if fail_proxy:updated['FAIL_PROXY']='1'
+    result=run(make_release(root,'after-ci'),updated)
+    events=[json.loads(line) for line in (root/'events').read_text().splitlines()]
+    assert ['docker',['stop','-t','330','ci-managed-dev']] in events
+    if fail_proxy:
+        assert result.returncode!=0
+        assert ['docker',['start','ci-managed-dev']] in events
+    else:
+        assert result.returncode==0,result.stderr
+        assert any(e[0]=='docker' and e[1][:2]==['rename','ci-managed-dev'] for e in events)

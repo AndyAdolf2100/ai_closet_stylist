@@ -240,3 +240,20 @@ def test_private_runtime_bundle_requires_opt_in_and_excludes_duplicate_source(tm
         assert archive.extractfile(env).read() == (private / "deploy.env").read_bytes()
     with pytest.raises(ValueError, match="requires an image"):
         package(tmp_path / "invalid.tar.gz", root=source, runtime_only=True)
+
+
+def test_ops_sidecar_is_private_and_keeps_literal_dsn(tmp_path):
+    from scripts.package_deployment import prepare_ops_sidecar
+    source = tmp_path / 'ops.env'
+    source.write_text('STYLIST_OPS_MYSQL_DSN=mysql://fixture:p%24ss@db.invalid/test\n')
+    delivery = tmp_path / 'delivery'
+    target = prepare_ops_sidecar(source, delivery)
+    assert target.read_bytes() == source.read_bytes()
+    assert target.stat().st_mode & 0o777 == 0o600
+    target.chmod(0o644)
+    prepare_ops_sidecar(source, delivery)
+    assert target.stat().st_mode & 0o777 == 0o600
+    linked = tmp_path / 'linked.env'
+    linked.symlink_to(source)
+    with pytest.raises(ValueError, match='regular file'):
+        prepare_ops_sidecar(linked, delivery)

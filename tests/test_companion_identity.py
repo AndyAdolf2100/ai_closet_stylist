@@ -167,7 +167,7 @@ def test_new_profile_defaults_to_male_without_replacing_saved_roles():
 
 def test_female_priority_types_are_derived_and_do_not_change_saved_choices(tmp_path):
     from pydantic import ValidationError
-    values = ["轻松舒适", "显瘦遮肉", "职业干练", "温柔甜美", "活力阳光"]
+    values = ["轻松舒适", "显瘦遮肉", "时尚潮流", "含蓄内敛", "得体适配"]
     for value in values:
         profile = CompanionProfile(user_gender="女", assistant_persona="male_calm_v1", dressing_priorities=[value])
         context = profile.dialogue_data()
@@ -178,13 +178,13 @@ def test_female_priority_types_are_derived_and_do_not_change_saved_choices(tmp_p
         assert profile.dressing_priorities == [value]
         assert "dressing_priority_tags" not in profile.model_dump()
     male = CompanionProfile(user_gender="男", assistant_persona="female_warm_v1",
-                            dressing_priorities=["舒适自在", "温柔甜美"])
+                            dressing_priorities=["舒适自在", "含蓄内敛"])
     assert male.dialogue_data()["dressing_priorities"] == ["舒适自在"]
     assert male.dressing_priority_tags()[0]["gender_type"] == "male"
     assert male.dressing_priority_tags()[0]["applicable_gender"] == "male"
     assert male.dressing_priority_tags(outfit_gender="女") == []
     assert CompanionProfile(user_gender="女", dressing_priorities=["舒适自在"]).dialogue_data()["dressing_priorities"] == []
-    unknown = CompanionProfile(dressing_priorities=["温柔甜美"])
+    unknown = CompanionProfile(dressing_priorities=["含蓄内敛"])
     assert unknown.dialogue_data()["dressing_priorities"] == []
     with pytest.raises(ValidationError):
         CompanionProfile(user_gender="女", dressing_priorities=values)
@@ -199,7 +199,7 @@ def test_female_priority_types_are_derived_and_do_not_change_saved_choices(tmp_p
 @pytest.mark.asyncio
 async def test_female_only_priorities_do_not_reach_explicit_male_styling(tmp_path):
     profile = CompanionProfile(user_gender="女", assistant_persona="male_calm_v1",
-                               dressing_priorities=["显瘦遮肉", "温柔甜美"])
+                               dressing_priorities=["显瘦遮肉", "含蓄内敛"])
     class Upstream:
         async def identity(self):
             return "gender-priority-fixture"
@@ -215,4 +215,4 @@ async def test_female_only_priorities_do_not_reach_explicit_male_styling(tmp_pat
     reply = await Stylist(Settings(), Store(str(tmp_path / "state.db")), Model()).chat(Upstream(), ChatRequest(
         message="讲讲男装配色", request_id="gender-priority-explicit", companion_profile=profile))
     assert reply.task.gender == "男"
-    assert profile.dressing_priorities == ["显瘦遮肉", "温柔甜美"]
+    assert profile.dressing_priorities == ["显瘦遮肉", "含蓄内敛"]

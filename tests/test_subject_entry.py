@@ -4,7 +4,7 @@ import pytest
 
 from stylist.config import Settings
 from stylist.engine import Stylist
-from stylist.models import ChatRequest
+from stylist.models import ChatRequest, SessionState
 from stylist.store import Store
 
 
@@ -75,6 +75,9 @@ async def test_saved_outfit_detail_entry_echoes_canvas_and_items(tmp_path):
     assert reply.outfit_entry["presentation"]["canvas_image"].endswith("canvas.png")
     assert reply.looks[0].items[0].product_id == "12"
     assert reply.subject_outfit.outfit_id == 72
+    with engine.store.connection() as conn:
+        row = conn.execute("SELECT state_json FROM stylist_sessions WHERE id=?", (reply.conversation_id,)).fetchone()
+    assert SessionState.model_validate_json(row["state_json"]).subject_outfit_id == 72
 
 
 def test_detail_entry_requires_a_reference_when_message_is_empty():

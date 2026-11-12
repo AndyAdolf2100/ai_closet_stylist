@@ -10,7 +10,7 @@ from .personas import PersonaId
 MAX_WEATHER_LOCATIONS = 10
 
 MALE_DRESSING_PRIORITIES = frozenset({"舒适自在", "方便走动", "容易打理", "合身自然", "适合场合"})
-FEMALE_DRESSING_PRIORITIES = frozenset({"轻松舒适", "显瘦遮肉", "职业干练", "温柔甜美", "活力阳光"})
+FEMALE_DRESSING_PRIORITIES = frozenset({"轻松舒适", "显瘦遮肉", "时尚潮流", "含蓄内敛", "得体适配", "职业干练", "温柔甜美", "活力阳光"})
 
 
 class Model(BaseModel):
@@ -79,6 +79,17 @@ class MemorySave(Model):
 
 
 class Plan(Model):
+    wardrobe_delete_intent: Literal["product", "outfit", "both"] | None = None
+    wardrobe_delete_scope: Literal["user", "system", "other"] = "user"
+    wardrobe_delete_evidence: str = Field(default="", max_length=6000)
+    outfit_request_kind: Literal["none", "history", "saved_library", "generate"] = "none"
+    outfit_request_evidence: str = Field(default="", max_length=6000)
+    saved_outfit_search: bool = False
+    saved_outfit_search_evidence: str = Field(default="", max_length=6000)
+    random_selection: bool = False
+    exclude_previous: bool = False
+    recall_outfit_numbers: list[int] = Field(default_factory=list, max_length=7)
+    recall_evidence: str = Field(default="", max_length=6000)
     product_search: bool = False
     product_search_evidence: str = Field(default="", max_length=6000)
     outfit_weather_adjustment: bool = False
@@ -207,6 +218,8 @@ class TryonReference(Model):
 
 
 class Reply(Model):
+    saved_outfit_search: bool = False
+    historical_outfit_replay: bool = False
     product_search: bool = False
     product_results: list[Product] = Field(default_factory=list, max_length=6)
     retrieval_diagnostics: dict = Field(default_factory=dict)
@@ -248,6 +261,7 @@ class SessionState(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"] = "consult"
     looks: list[Look] = Field(default_factory=list)
     messages: list[dict[str, str]] = Field(default_factory=list)
+    subject_outfit_id: int | None = Field(default=None, gt=0)
 
 
 class CompanionProfile(Model):
@@ -262,7 +276,7 @@ class CompanionProfile(Model):
     conversation_style: Literal["自然相处", "温柔鼓励", "直接坦诚", "轻松幽默"] = "自然相处"
     reply_detail: Literal["适中", "简洁重点", "细致解释"] = "适中"
     style_preferences: list[Literal["简约", "休闲", "通勤", "温柔", "复古", "运动", "街头", "优雅"]] = Field(default_factory=list, max_length=3)
-    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "合身自然", "适合场合", "已有衣物优先", "尝试新风格", "轻松舒适", "显瘦遮肉", "职业干练", "温柔甜美", "活力阳光"]] = Field(default_factory=list, max_length=3)
+    dressing_priorities: list[Literal["舒适自在", "方便走动", "容易打理", "合身自然", "适合场合", "已有衣物优先", "尝试新风格", "轻松舒适", "显瘦遮肉", "时尚潮流", "含蓄内敛", "得体适配", "职业干练", "温柔甜美", "活力阳光"]] = Field(default_factory=list, max_length=3)
 
     @model_validator(mode="after")
     def validate_names(self):

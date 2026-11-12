@@ -25,7 +25,7 @@ class OutfitSaves:
     def context(self, owner, cid, version, index):
         self.store.require_conversation(owner, cid)
         with self.store.connection() as conn:
-            _, look = owned_look(conn, owner, cid, version, index)
+            _, look = owned_look(conn, owner, cid, version, index, allow_saved_snapshot=True)
         if not look.items:
             raise StylistError('outfit_not_saveable', '文字参考还没有实际单品，暂时不能保存搭配。', 422)
         key = hashlib.sha256(json.dumps([owner, cid, version, index]).encode()).hexdigest()

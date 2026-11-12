@@ -106,16 +106,11 @@ uv run python scripts/evaluate_semantics.py
 
 ## LangGraph 与部署
 
-这台 CentOS7 测试机的环境、打包、跳板机上传、安装、Nginx合并、验收、更新及回退统一见
-[测试服务器配置与部署流程](docs/TEST_SERVER_DEPLOYMENT.md)。
+当前main/dev、test的自动打包部署统一见[Agent＋H5 CI打包与部署完整流程](docs/CI_TEST_DEV.md)：首次服务器准备、私密配置、手动SQL、离线运行依赖镜像、Nginx、GitLab触发、验收、重试与恢复均在同一手册。main默认部署dev，test分支部署test；CI只读检查数据库结构，不自动执行DDL；report／UI change log单独发布。
 
-当前测试机使用 [PostgreSQL私密amd64离线包](docs/SIMPLE_DEPLOYMENT.md)：前端＋Agent同容器，自动应用包内私密配置、检查远程独立库、更新应用与Nginx。先解出安装脚本再从文件执行。用户已确认版本 `20261030T080643Z-91a41c298fa0-2192` 部署成功；登录、衣橱及模型效果另验。专用包可按用户授权携带凭证，但配置、密钥、数据及发布包不提交Git，镜像本身不含凭证。
+历史手工发布入口仍保留：[测试服务器配置与部署流程](docs/TEST_SERVER_DEPLOYMENT.md)、[手工离线部署](docs/SIMPLE_DEPLOYMENT.md)、[CentOS7补充](docs/CENTOS7_DEPLOYMENT.md)及[Ubuntu部署](docs/DOCKER_UBUNTU_DEPLOYMENT.md)。这些文档中的历史配置和安装器行为不代替当前CI规则；当前CI不需要Compose或宿主Python，也不把实际env打入镜像。
 
-当前测试机实际为CentOS7、x86_64、Docker20.10.7，已确认Ubuntu版Compose二进制存在GLIBC不兼容；该机器请先读 [CentOS7部署补充](docs/CENTOS7_DEPLOYMENT.md)，使用静态链接Compose离线包，不套用Ubuntu系统工具安装命令。
-
-单域名 Ubuntu 测试服务器优先使用 [Docker + Nginx 部署说明](docs/DOCKER_UBUNTU_DEPLOYMENT.md)：前端和 Agent 同镜像，配置与持久数据在镜像外，支持源码构建或离线镜像上传；目标域名 `aicloset-assistant.wxbjq.top`。已有 App 登录态接入的生产模板保持默认关闭网页登录；独立测试站点可通过 `STYLIST_ALLOW_MOBILE_LOGIN=true` 显式开启现有验证码登录。
-
-入门和节点对应关系见 [LangGraph 入门](docs/LANGGRAPH_QUICKSTART.md)；滚动发布、排空、断线恢复、PostgreSQL 配置和当前限制见 [K8s 部署说明](docs/KUBERNETES_DEPLOYMENT.md)。部署前先运行 `uv run python -m stylist.migrate` 创建业务及检查点表。
+入门和节点对应关系见[LangGraph入门](docs/LANGGRAPH_QUICKSTART.md)；独立K8s方案见[K8s部署说明](docs/KUBERNETES_DEPLOYMENT.md)。本地开发可自动初始化；当前CI环境的建表、结构及索引SQL必须先由运维手动执行，再进行只读预检和部署。
 
 ## 助理回复人格
 

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import sqlite3
 import time
 import uuid
@@ -34,6 +35,12 @@ class Store:
         self.mysql = path.startswith("mysql://")
         if not self.postgres and not self.mysql:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
+        if self.postgres and os.getenv("STYLIST_REQUIRE_MIGRATIONS", "").lower() in {"true", "1"}:
+            import psycopg
+            from .schema_migrations import verify_connection
+            with psycopg.connect(self.path) as conn:
+                verify_connection(conn)
+            return
         with self.connection() as conn:
             schema = "schema_mysql.sql" if self.mysql else "schema.sql"
             conn.executescript(Path(__file__).with_name(schema).read_text())

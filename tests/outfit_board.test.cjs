@@ -87,6 +87,7 @@ test('half-processed clothes never render; explicit save uses the authoritative 
  complete({image_url:'https://photos.invalid/saved-oss.png'});await ready();
  assert.equal(root.querySelector('.outfit-final-image').src,'https://photos.invalid/saved-oss.png');
  root.querySelector('.outfit-board-actions .subtle').click();await ready();assert.deepEqual(JSON.parse(JSON.stringify(saved)),{ref:{conversationId:'owned',version:1,index:0},system:false});assert.equal(root.querySelector('.outfit-save').textContent,'已保存');
+ root.querySelector('.outfit-expand').click();assert.equal(w.document.querySelector('dialog .outfit-final-image').src,'https://photos.invalid/saved-oss.png');
  assert.equal(root.querySelectorAll('.outfit-hotspot').length,2);dom.window.close();
 });
 test('a five-piece suggestion renders only its one owned item and lists the other four as text',async()=>{
@@ -144,4 +145,13 @@ test('operations replay shares the item board without composition, saving or aut
  root.querySelector('.outfit-expand').click();assert(w.document.querySelector('dialog').open);
  assert.equal(w.document.querySelector('.outfit-original img').src,'https://photos.invalid/cut.png');
  dom.window.close();
+});
+test('image-aware layering keeps normal placement and only nudges severely covered innerwear',()=>{
+ const {dom,board}=setup();const items=[item('top'),item('outer'),item('bottom'),item('accessory')];
+ const base=board.layout(items);const normal=board.layout(items,[{width:200,height:260},{width:200,height:260},null,null]);
+ assert.equal(normal[0].x,base[0].x);
+ const narrow=board.layout(items,[{width:40,height:260},{width:200,height:260},null,null]);
+ assert(narrow[0].x<base[0].x);assert(base[0].x-narrow[0].x<=6);
+ for(let i=1;i<items.length;i++)assert.deepEqual(narrow[i],base[i]);
+ assert.equal(narrow[0].z,base[0].z);dom.window.close();
 });

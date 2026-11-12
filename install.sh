@@ -48,9 +48,13 @@ for config in "$vhost_dir"/*.conf; do
     fail "其他站点已显式配置该域名，请先处理冲突：$config"
   fi
 done
+ci_running=''
 if ss -lnt | awk '$4 ~ /:8466$/ { found=1 } END { exit !found }'; then
   running=$(docker ps -q --filter label=com.docker.compose.project=aicloset-assistant --filter label=com.docker.compose.service=stylist)
-  [[ -n "$running" && -n "$previous" ]] || fail '8466 已被非本安装流程管理的服务占用，未停止该服务。'
+  if [[ -z "$running" || -z "$previous" ]]; then
+    ci_running=$(docker ps -q --filter label=aicloset.environment=dev --filter 'name=^/aicloset-agent-dev$' --filter publish=8466)
+    [[ -n "$ci_running" && "$ci_running" != *$'\n'* ]] || fail '8466 已被非本安装流程管理的服务占用，未停止该服务。'
+  fi
 fi
 
 work=''
@@ -61,6 +65,8 @@ nginx_changed=0
 nginx_backup=''
 had_nginx=0
 config_changed=0
+ops_changed=0
+ops_backup=''
 config_backup=''
 compose_at() {
   local directory=$1 reference=$2
@@ -78,6 +84,9 @@ finish() {
       if (( had_nginx )); then cp -p "$nginx_backup" "$nginx_target"; else rm -f "$nginx_target"; fi
       "$nginx_bin" -t && "$nginx_bin" -s reload
     fi
+    if (( ops_changed )); then
+      if [[ -f "$ops_backup" ]]; then cp -p "$ops_backup" "$base/config/ops.env"; else rm -f "$base/config/ops.env"; fi
+    fi
     if (( config_changed )); then
       for name in deploy.env login-public.pem; do
         if [[ -f "$config_backup/$name" ]]; then
@@ -88,7 +97,10 @@ finish() {
       done
     fi
     if (( app_changed )); then
-      if [[ -n "$previous" && -f "$previous/.env" ]]; then
+      if [[ -n "$ci_running" ]]; then
+        compose_at "$release" "$image" stop stylist
+        docker start "$ci_running" >/dev/null
+      elif [[ -n "$previous" && -f "$previous/.env" ]]; then
         old_image=$(sed -n 's/^STYLIST_IMAGE=//p' "$previous/.env")
         if compose_at "$previous" "$old_image" up -d --no-build --pull never --wait --wait-timeout 180; then
           printf '上一版本已恢复。\n' >&2
@@ -206,6 +218,16 @@ if [[ ! -f "$base/config/login-public.pem" ]]; then
 fi
 image="aicloset-stylist:$version"
 printf 'STYLIST_IMAGE=%s\n' "$image" >"$release/.env"
+# Private companion file is uploaded separately; never sourced or printed.
+ops_source=${AICLOSET_OPS_CONFIG:-/tmp/aicloset-ops.env}
+if [[ -f "$ops_source" ]]; then
+  [[ ! -L "$ops_source" ]] || fail 'Ops configuration must not be a symlink.'
+  grep -q '^STYLIST_OPS_MYSQL_DSN=.' "$ops_source" || fail 'Ops MySQL configuration is incomplete.'
+  ops_backup="$base/backups/ops-$version.env"
+  [[ ! -f "$base/config/ops.env" ]] || install -m 600 "$base/config/ops.env" "$ops_backup"
+  ops_changed=1
+  install -m 600 "$ops_source" "$base/config/ops.env"
+fi
 compose_at "$release" "$image" config --quiet
 
 printf '\n[3/5] 准备镜像（旧版本在构建期间继续运行）\n'
@@ -222,6 +244,7 @@ compose_at "$release" "$image" run --rm -T --no-deps stylist /app/.venv/bin/pyth
 
 printf '\n[4/5] 更新应用并检查健康状态\n'
 app_changed=1
+if [[ -n "$ci_running" ]]; then docker stop -t 330 "$ci_running" >/dev/null; fi
 compose_at "$release" "$image" up -d --no-build --pull never --wait --wait-timeout 180
 response=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 10 http://127.0.0.1:8466/health/ready)
 grep -Eq '"ready"[[:space:]]*:[[:space:]]*true' <<<"$response" || fail '应用未返回预期的健康检查结果。'
@@ -245,6 +268,7 @@ response=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 15 \
   --resolve "$domain:443:127.0.0.1" "https://$domain/health/ready")
 grep -Eq '"ready"[[:space:]]*:[[:space:]]*true' <<<"$response" || fail '域名代理尚未指向新 Agent。'
 
+if [[ -n "$ci_running" ]]; then docker rename "$ci_running" "aicloset-agent-dev-previous-$version"; fi
 [[ -z "$previous" ]] || ln -sfn "$previous" "$base/previous"
 ln -s "$release" "$base/.current-$$"
 mv -Tf "$base/.current-$$" "$base/current"

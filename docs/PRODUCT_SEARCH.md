@@ -10,11 +10,11 @@
 
 ## 数据与卡片
 
-Plan新增product_search／product_search_evidence；Reply新增product_search／product_results，最多6件。前端复用subject-entry-card样式，每件独立图片、名称、属性与“查看这件”。点击后走原有单品上下文入口，继续使用“用这件搭配下”和“试穿这件”，不自动试穿或收费。旧账号、旧会话和旧版本按钮不能触发。
+2026-11-12当前规则：Agent匹配后返回一件单品，复用既有product_entry／subject_product详情卡字段，product_results置空以避免重复。随机在符合语义的候选中抽一件，非随机返回相关度排序后的首件；不自动试穿或收费。查询不覆盖原搭配，H5详情入口文案为“聊聊这件”；iOS无需新增字段解析。此前最多6件product_results展示为历史实现，当前按用户“直接输出单件详情卡”要求替代。
 
 读取当前账号quick_edit_list前三页（最多150条），不加is_ai_outfit过滤，使未启用自动搭配的单品也可被查找。再通过product.resolve权威重读；不查系统衣橱或已保存搭配补库存、不查天气、不要求凑齐套装。超过150条明确提示查询范围。模型仅选候选key，后端校验来源与key、去重并按服装／鞋／配饰范围过滤；实际卡片资料完全来自Server解析结果。未知款不能伪造，查询故障不冒充衣橱为空。
 
-查询不覆盖原搭配任务和已有方案；查询结果的文字属性及key进入本账号对话摘要供后续理解，图片不进入模型。鉴权、版本与幂等沿用现有框架。两次文字调用仍走原用量记录链路，本轮没有验证真实积分扣费。
+查询保留原任务条件及历史方案；当前单件详情快照切换到本次匹配单品，供继续搭配及试穿，避免错用旧方案；查询结果的文字属性及key进入本账号对话摘要供后续理解，图片不进入模型。鉴权、版本与幂等沿用现有框架。两次文字调用仍走原用量记录链路，本轮没有验证真实积分扣费。
 
 ## 图片规则与边界
 
@@ -32,3 +32,17 @@ Plan新增product_search／product_search_evidence；Reply新增product_search�
 - H5 App组件隔离渲染，系统主题、合成图片，红圈与前后图见reports/26-11-11/change-log/docs/UI_CHANGELOG.html；搭配详情前图为9d087dc基线补拍。没有真实衣橱、真实润色出图、付费图片或远端部署验收。
 
 真实文字记录在本地reports/26-11-11/product-search/；可复跑：STYLIST_LEGACY_CONFIG=../ai_closet_agent/config/config.yaml .venv/bin/python -m scripts.evaluate_product_search --live --output var/product-search-live/new-batch.json。记录当前模型配置标识，不能把该批次当六人格全量或生产验收。
+
+## 已有搭配库与上下文（2026-11-12）
+
+“从我的已有搭配库找／随机挑一套”使用当前用户my-outfits游标列表，不以聊天历史代替。最多10页、约100条；沿用现有详情支持的outfit_id_type=2，通过outfit.resolve及product.resolve读取原搭配及当前单品，不重组、不调用style生成。Agent从候选按语义匹配；随机在匹配候选中抽取。优先返回一套有有效封面的outfit_entry／subject_outfit详情卡，looks为空避免重复；若封面缺失则仅返回原单品looks组合卡、outfit_entry为空，复用既有客户端合成渲染，不调用生成模型。实际选中单品在会话状态保留以供继续咨询；无匹配或查询故障不转成新搭配生成。查询范围超限明确提示，未支持的其他类型不伪装成可读取。
+
+最近业务意图分别保存为product_search／saved_outfit_search；模型结合上下文理解“再来一件、换一套、别太正式”，不要求重复衣橱／搭配库关键词。exclude_previous用于明确要换别的时排除刚展示的记录；“再看看”不排除，明确重新搭则切换生成。5条初始分流与4条上下文分流真实文字模型通过；业务卡片链路使用合成服务回归，未查询真实用户库、未执行保存或收费。
+
+2026-11-12试穿兼容：product_entry查询结果同时返回与原详情入口一致的单件looks，当前state同步为这件单品。旧卡缺少looks时前端仍允许进入试穿，ImageService.context从当前版本保存的product_entry精确恢复同账号单品快照；无效引用拒绝，不回退旧搭配，版本／账号校验和费用显式确认保留。未执行真实报价或生图。
+
+2026-11-12来源纠偏：规划新增outfit_request_kind及原话证据，区分“找现成”的saved_library、“刚才那套”的history和“搭一套”的generate；有旧锚点时“找下我衣橱里面的搭配”也须查库，不沿用旧包生成。四条真实语义验证结果var/dialogue-qa/20261112-library-vs-generated-routing-live.json，原卡库真实业务读取仍未验收。
+
+实际列表形状核对（2026-11-12）：my-outfits首屏只读200、10条类型2。匹配候选必须读取occasion_text及canvas_info.canvas_data.product_list中的分类／颜色等文字属性，不假设列表必有title。画布可为JSON字符串；传给文字模型时不包含图片URL。真实读取只验证列表，完整库推荐返回仍以合成业务及真实语义分流分别验收。
+
+2026-11-12空卡防护：随机整套查询排除单件非连衣裙记录，防止单条半身裙误作整套。封面优先MCP presentation，兼容同条列表记录的canvas_image／cover_image／canvas_info.canvas_image；无有效HTTP封面时回传已解析的原单品looks。不回写旧历史、不编造新衣物、不调用style／收费生图；旧的空卡记录不会仅因重启自动改写。专项含无封面组合图上下文、有效封面不重复和单裙不作为套装。

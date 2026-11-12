@@ -12,7 +12,17 @@ function render(options={}){
  const photo=()=>escape((options.assetBase||'assets/')+role+'-closeup.png'),copy=()=>personas[role][1];
  const $=id=>({value:options.capacityBranch||'normal'}),open=value=>{html=value;};
 function companion(text=copy()){return `<div class="companion"><img src="${photo()}" alt="衣衣"><div><b>衣衣 · ${personas[role][0]}</b><p>${text}</p></div></div>`;}
-function balance(cost=scenes[scene][1]){if(options.live){const n=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0,display=(v,fallback)=>n(v)?`<strong>${v}<em>积分</em></strong>`:`<strong style="font-size:14px">${fallback}</strong>`;return `<div class="balance"><div><small>本次费用</small>${display(options.pointsCost,'以最新报价为准')}</div><div><small>当前可用积分</small>${display(options.availablePoints,'以账户查询为准')}</div></div>`}return `<div class="balance"><div><small>${cost==null?'当前可用积分':'本次需要'}</small><strong>${cost==null?'0':cost}<em>积分</em></strong></div><div><small>${cost==null?'当前状态':'当前可用'}</small><strong>${cost==null?'待继续':'0'}${cost==null?'':'<em>积分</em>'}</strong></div></div>`;}
+function balance(cost=scenes[scene][1]){
+ const conversation=options.view==='letter'||scene==='agent'||scene==='expanded';
+ if(options.live){
+  const n=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
+  const display=(v,fallback)=>n(v)?`<strong>${v}<em>积分</em></strong>`:`<strong style="font-size:14px">${fallback}</strong>`;
+  const available=`<div><small>当前可用积分</small>${display(options.availablePoints,'以账户查询为准')}</div>`;
+  return conversation?`<div class="balance balance--single">${available}</div>`:`<div class="balance"><div><small>本次费用</small>${display(options.pointsCost,'以最新报价为准')}</div>${available}</div>`;
+ }
+ if(conversation)return '<div class="balance balance--single"><div><small>当前可用积分</small><strong>0<em>积分</em></strong></div></div>';
+ return `<div class="balance"><div><small>${cost==null?'当前可用积分':'本次需要'}</small><strong>${cost==null?'0':cost}<em>积分</em></strong></div><div><small>${cost==null?'当前状态':'当前可用'}</small><strong>${cost==null?'待继续':'0'}${cost==null?'':'<em>积分</em>'}</strong></div></div>`;
+}
 function sheetTop(title){return `<div class="sheet-top"><h2 id="sheet-title">${title}</h2><button class="close" data-action="close" aria-label="关闭面板">×</button></div>`;}
 function features(){return `<div class="feature-grid"><div class="feature"><b>Agent 穿搭对话</b><span>结合需求，连续聊搭配</span></div><div class="feature"><b>衣物润色</b><span>开始前确认图片费用</span></div><div class="feature"><b>数字分身</b><span>保留你的试穿形象</span></div><div class="feature"><b>搭配试穿</b><span>选好搭配再确认费用</span></div></div>`;}
 function pointsSheet(){if(scene==='vip')return vipSheet();plan='points';open(sheetTop('积分还差一点')+`<div class="sheet-body"><p class="subcopy">${scenes[scene][0]} · 这次的选择已保留</p>${balance()}${companion()}<div class="plan-grid"><button class="plan selected" data-action="plan" data-value="points" aria-pressed="true"><b>${scenes[scene][1]<=100?'100':'500'} 积分包</b><span class="price"><small>¥</small>${scenes[scene][1]<=100?'12':'48'}</span><small>用于对话与图片功能</small><small class="plan-note">覆盖本次积分缺口</small></button><button class="plan" data-action="plan" data-value="member" aria-pressed="false"><b>SVIP 会员</b><span class="price"><small>¥</small>19<small> / 月</small></span><small>衣橱权益与积分方案</small><small class="plan-note">查看完整权益 ›</small></button></div><p class="plans-intro">积分可用于 助理对话、润色、数字分身及试穿。</p><div class="sheet-actions"><button class="primary" data-action="chosen-purchase">补充积分</button><button class="tertiary" data-action="close">先留着，稍后再来</button></div></div>`);}

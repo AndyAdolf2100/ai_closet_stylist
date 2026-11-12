@@ -8,31 +8,34 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 
 TARGET = "aicloset_stylist"
+TARGETS = {TARGET, "aicloset_stylist_test"}
 
 
-def connection_parameters(dsn):
+def connection_parameters(dsn, target=TARGET):
+    if target not in TARGETS:
+        raise ValueError("Unsupported deployment database")
     if not dsn.startswith(("postgresql://", "postgres://")) or "REPLACE_" in dsn:
         raise ValueError("Configure a PostgreSQL STYLIST_DATABASE in private config/deploy.env")
     parameters = conninfo_to_dict(dsn)
-    if parameters.get("dbname") != TARGET:
-        raise ValueError("Deployment database must be aicloset_stylist; legacy databases are forbidden")
+    if parameters.get("dbname") != target:
+        raise ValueError(f"Deployment database must be {target}; other databases are forbidden")
     parameters["connect_timeout"] = "5"
     return parameters
 
 
-def check(dsn, create=False):
-    parameters = connection_parameters(dsn)
+def check(dsn, create=False, target=TARGET):
+    parameters = connection_parameters(dsn, target)
     # libpq connection failures may lose SQLSTATE, including a missing database.
     # Check existence through the maintenance DB before opening the target.
     admin_parameters = {**parameters, "dbname": "postgres"}
     with psycopg.connect(**admin_parameters, autocommit=True) as admin:
         admin.execute("SET statement_timeout = '8s'")
-        exists = admin.execute("SELECT 1 FROM pg_database WHERE datname=%s", (TARGET,)).fetchone()
+        exists = admin.execute("SELECT 1 FROM pg_database WHERE datname=%s", (target,)).fetchone()
         if not exists:
             if not create:
-                raise ValueError("aicloset_stylist does not exist; run with --create-database")
+                raise ValueError(f"{target} does not exist; create it explicitly before deployment")
             try:
-                admin.execute(sql.SQL("CREATE DATABASE {} TEMPLATE template0 ENCODING 'UTF8'").format(sql.Identifier(TARGET)))
+                admin.execute(sql.SQL("CREATE DATABASE {} TEMPLATE template0 ENCODING 'UTF8'").format(sql.Identifier(target)))
             except psycopg.errors.DuplicateDatabase:
                 pass
     conn = psycopg.connect(**parameters, autocommit=True)
@@ -44,8 +47,8 @@ def check(dsn, create=False):
             raise ValueError("Target database contains unrelated tables; refusing to initialize it")
         can_create = conn.execute("SELECT has_schema_privilege(current_user, 'public', 'CREATE')").fetchone()[0]
         if not can_create:
-            raise ValueError("Database account needs CREATE permission on aicloset_stylist.public")
-        print("PostgreSQL connection verified: aicloset_stylist; schema initialization permitted.")
+            raise ValueError(f"Database account needs CREATE permission on {target}.public")
+        print(f"PostgreSQL connection verified: {target}; schema initialization permitted.")
 
 
 def safe_error(exc, dsn):
@@ -68,9 +71,10 @@ def safe_error(exc, dsn):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--create-database", action="store_true")
+    parser.add_argument("--database-name", choices=sorted(TARGETS), default=TARGET)
     args = parser.parse_args()
     try:
-        check(os.getenv("STYLIST_DATABASE", ""), args.create_database)
+        check(os.getenv("STYLIST_DATABASE", ""), args.create_database, args.database_name)
     except ValueError as exc:
         # Only locally generated errors are printed; libpq errors may contain credentials.
         print(str(exc) if not isinstance(exc, psycopg.Error) else "Invalid database configuration.")

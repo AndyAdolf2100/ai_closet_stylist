@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -117,8 +118,12 @@ def create_app(settings=None):
 
     @app.get("/health")
     async def health():
-        return {"status": "live", "llm_configured": bool(settings.llm_key and settings.llm_model),
-                "integration_status": "unchecked_until_authenticated_probe"}
+        result = {"status": "live", "llm_configured": bool(settings.llm_key and settings.llm_model),
+                  "integration_status": "unchecked_until_authenticated_probe"}
+        revision = os.getenv("STYLIST_BUILD_COMMIT", "")
+        if len(revision) == 40 and all(c in "0123456789abcdef" for c in revision):
+            result["revision"] = revision
+        return result
 
     @app.get("/stylist-api/wardrobe/{product_id}/image-source")
     async def wardrobe_image_source(product_id: str = ApiPath(pattern=r"^[1-9][0-9]{0,19}$"),

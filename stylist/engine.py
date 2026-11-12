@@ -38,10 +38,11 @@ from .memory import (
     strip_save_claims,
     verified_memory_save,
 )
-from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionState, Slot, Task
+from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionState, Slot, Task, ProductRef
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
+from .outfit_history import outfit_catalog, recalled_looks
 from .personas import (
     attachment_wardrobe_invitation,
     avatar_invitation,
@@ -70,6 +71,7 @@ from .policy import (
 )
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .product_search import search_products
+from .saved_outfit_search import search_saved_outfits
 from .progress import report
 from .retrieval import from_row, resolve_products, retrieve, saved_candidates, weather_for
 from .subject_entry import resolve_outfit_entry, resolve_product_entry
@@ -83,6 +85,8 @@ logger = logging.getLogger(__name__)
 
 
 class RunState(TypedDict, total=False):
+    library_looks: list[dict]
+    recalled_looks: list[dict]
     retrieval_diagnostics: dict
     new_clothes: bool
     new_clothes_auto_enabled: bool
@@ -116,7 +120,15 @@ def last_business_intent(messages):
             reply = json.loads(message["content"])
         except (ValueError, TypeError, KeyError):
             continue
-        if not isinstance(reply, dict) or reply.get("conversation_only"):
+        if not isinstance(reply, dict):
+            continue
+        if reply.get("saved_outfit_search") or reply.get("outfit_entry"):
+            return "saved_outfit_search"
+        if reply.get("product_search") or reply.get("product_entry"):
+            return "product_search"
+        if reply.get("historical_outfit_replay"):
+            return "outfit_recall"
+        if reply.get("conversation_only"):
             continue
         if isinstance(reply.get("weather_only"), bool):
             return "weather" if reply["weather_only"] else "styling"
@@ -171,6 +183,12 @@ class Stylist:
     def graph(self, upstream, request, saver, owner=None):
         from .models import Product
 
+        async def historical_outfits():
+            if not owner or not request.conversation_id:
+                return []
+            history = await asyncio.to_thread(self.store.history, owner, request.conversation_id)
+            return outfit_catalog(history["messages"])
+
         def unpack(data):
             return Plan.model_validate(data["plan"]), Task.model_validate(data["task"])
 
@@ -181,6 +199,13 @@ class Stylist:
             if request.selected_look_index is None:
                 return state.looks[:1]
             if request.selected_look_index >= len(state.looks):
+                # Existing clients do not reset their old tab for an entry-only card.
+                try:
+                    latest = json.loads(state.messages[-1]["content"])
+                except (IndexError, ValueError, KeyError, TypeError):
+                    latest = {}
+                if len(state.looks) == 1 and latest.get("saved_outfit_search") and latest.get("subject_outfit"):
+                    return state.looks[:1]
                 raise StylistError("look_not_found", "这套搭配暂时找不到了，请打开最新对话再选一下。", 409)
             return [state.looks[request.selected_look_index]]
 
@@ -218,14 +243,33 @@ class Stylist:
                 try:
                     last = json.loads(state.messages[-1]["content"])
                     reference = last["subject_product"]
-                    subject_anchor = state.looks[0].items[0]
-                    valid = (len(state.looks) == 1 and len(state.looks[0].items) == 1
+                    entry_item = (last.get("product_entry") or {}).get("product")
+                    subject_anchor = from_row(entry_item, "user") if entry_item else state.looks[0].items[0]
+                    valid = (subject_anchor is not None
                              and reference["source"] == subject_anchor.source == "user"
                              and reference["product_id"] == subject_anchor.product_id)
                 except (IndexError, KeyError, TypeError, ValueError):
                     valid = False
                 if not valid:
                     raise StylistError("subject_product_context_changed", "当前单品已有变化，请重新打开单品再搭配。", 409)
+            if request.regenerate_outfit and owner and request.conversation_id:
+                # The entry item remains the anchor even after several chat turns.
+                history = await asyncio.to_thread(self.store.history, owner, request.conversation_id)
+                limit = request.regenerate_from_version or request.expected_version
+                for turn in reversed(history["messages"]):
+                    previous = turn.get("reply") or {}
+                    if previous.get("version", 0) > limit:
+                        continue
+                    if previous.get("subject_outfit") is not None:
+                        break
+                    ref = previous.get("subject_product")
+                    if ref is not None:
+                        for look in previous.get("looks", []):
+                            for item in look.get("items", []):
+                                if item.get("source") == ref.get("source") and str(item.get("product_id")) == str(ref.get("product_id")):
+                                    subject_anchor = Product.model_validate(item)
+                                    break
+                        break
             report("understanding", progress_message(request.assistant_persona, "understanding"))
             planning_payload = {
                 "chat_image": request.chat_image,
@@ -238,6 +282,7 @@ class Stylist:
                                      if clothing_content(note["content"]) == note["content"]],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
+                "outfit_history": await historical_outfits(),
                 "last_business_intent": last_business_intent(state.messages),
                 "selected_location": request.location.model_dump(mode="json") if request.location else None,
                 "selected_look_index": request.selected_look_index,
@@ -265,6 +310,52 @@ class Stylist:
                     plan.memory_changes = defaults.memory_changes
             else:
                 plan, task = await interpret_task(self.llm, planning_payload, state, request.message)
+            if (plan.wardrobe_delete_intent and plan.wardrobe_delete_evidence.strip()
+                    and plan.wardrobe_delete_evidence.strip() in request.message):
+                messages = {
+                    "product": "我暂时不能直接删除单品。请到「衣橱」找到要删除的单品，在单品详情里手动删除。",
+                    "outfit": "我暂时不能直接删除搭配。请到「衣橱」里的「我的搭配」，找到对应搭配后手动删除。",
+                    "both": "我暂时不能直接删除衣橱内容。请到「衣橱」找到要删除的单品，或进入「我的搭配」找到对应搭配，再手动删除。",
+                }
+                kind = plan.wardrobe_delete_intent
+                guidance = messages[kind]
+                if plan.wardrobe_delete_scope == 'system':
+                    guidance = "我不能删除系统参考内容。你可以在本次搭配里移除或换掉它；如果已加入个人衣橱，请到「衣橱」找到对应单品，再手动删除。"
+                elif plan.wardrobe_delete_scope == 'other':
+                    guidance = "我不能删除其他用户衣橱里的内容。如果要删除你自己衣橱中的单品或搭配，请到「衣橱」找到对应内容后手动删除。"
+                plan = Plan(mode="consult", conversation_only=True, use_inventory=False,
+                            wardrobe_delete_intent=kind, wardrobe_delete_scope=plan.wardrobe_delete_scope, clarification=guidance)
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
+            plan.wardrobe_delete_intent = None
+            if plan.outfit_request_evidence.strip() and plan.outfit_request_evidence.strip() in request.message:
+                if plan.outfit_request_kind == "saved_library":
+                    plan.saved_outfit_search = True
+                    plan.saved_outfit_search_evidence = plan.outfit_request_evidence
+                    plan.recall_outfit_numbers = []
+                    plan.product_search = False
+                elif plan.outfit_request_kind == "generate":
+                    plan.saved_outfit_search = False
+                    plan.recall_outfit_numbers = []
+            if (plan.saved_outfit_search and plan.saved_outfit_search_evidence.strip()
+                    and plan.saved_outfit_search_evidence.strip() in request.message
+                    and not request.regenerate_outfit and not request.pair_subject_product
+                    and not request.upload_action_id and not request.chat_image):
+                plan.mode, plan.conversation_only, plan.use_inventory = "consult", True, False
+                plan.clarification = None
+                plan.recall_outfit_numbers = []
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"), "frozen": []}
+            plan.saved_outfit_search = False
+            if (plan.recall_outfit_numbers and plan.recall_evidence.strip()
+                    and plan.recall_evidence.strip() in request.message
+                    and not request.regenerate_outfit and not request.upload_action_id
+                    and not request.pair_subject_product and not request.chat_image):
+                history = (await asyncio.to_thread(self.store.history, owner, request.conversation_id)
+                           if request.conversation_id else {"messages": []})
+                saved = recalled_looks(history["messages"], plan.recall_outfit_numbers)
+                plan = Plan(mode="consult", conversation_only=True, use_inventory=False,
+                            clarification=None if saved else "想找的是哪一套？可以说说那套的颜色或单品。")
+                return {"plan": plan.model_dump(mode="json"), "task": state.task.model_dump(mode="json"),
+                        "frozen": [], "recalled_looks": saved}
             if (plan.product_search and plan.product_search_evidence.strip()
                     and plan.product_search_evidence.strip() in request.message
                     and not request.regenerate_outfit and not request.pair_subject_product
@@ -613,6 +704,7 @@ class Stylist:
                 "mode": plan.mode,
                 "planning_dates": schedule_dates(plan, task),
                 "history": state.messages[-8:], "weather": weather,
+                "outfit_history": await historical_outfits(),
                 "retrieval_diagnostics": data.get("retrieval_diagnostics", {}),
                 "candidates": [{"key": p.key, **p.model_dump(exclude={"original_image", "cutout_image"})}
                                for p in pool.values() if p.key not in original_targets],
@@ -798,6 +890,15 @@ class Stylist:
 
         def deliver_node(data):
             plan, task = unpack(data)
+            if plan.wardrobe_delete_intent:
+                return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                    mode="consult", delivery="advice", message=plan.clarification, task=task,
+                    conversation_only=True, request_id=request.request_id).model_dump(mode="json")}
+            if data.get("recalled_looks"):
+                return {"reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                    mode="consult", delivery="outfit", message="", task=task,
+                    looks=data["recalled_looks"], conversation_only=True, historical_outfit_replay=True,
+                    request_id=request.request_id).model_dump(mode="json")}
             explore = data.get("new_clothes", request.new_clothes is True)
             automatic = data.get("new_clothes_auto_enabled", False)
             exploration = dict(new_clothes=explore, new_clothes_auto_enabled=automatic,
@@ -861,6 +962,32 @@ class Stylist:
                           warnings=list(dict.fromkeys(warnings)), follow_ups=draft.follow_ups)
             return {"reply": reply.model_dump(mode="json")}
 
+        async def saved_outfit_search_node(data):
+            plan, task = unpack(data)
+            try:
+                looks, refs, entries, partial = await search_saved_outfits(upstream, self.llm, request.message,
+                                                               random_selection=plan.random_selection,
+                                                               history=source_session(data).messages, exclude_previous=plan.exclude_previous)
+                message = "" if looks else "这次没有找到可用且符合要求的已有搭配，没有重新生成。"
+                warnings = ["本次最多查询前100条记录，仅在已查到的候选中推荐。"] if partial else []
+            except AuthenticationExpired:
+                raise
+            except StylistError:
+                looks, refs, entries, warnings = [], [], [], []
+                message = "已有搭配库暂时没有查询成功，请稍后重试；本次没有重新生成。"
+            entry = entries[0] if entries else None
+            # Some saved canvases have no raster cover. Existing clients can
+            # compose the original items, but an entry-only card would be blank.
+            has_cover = bool(entry and (entry.get("image_url") or (entry.get("presentation") or {}).get("canvas_image")))
+            fallback_looks = looks if entry and not has_cover else []
+            return {"library_looks": [look.model_dump(mode="json") for look in looks],
+                "reply": Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
+                mode="consult", delivery="outfit" if fallback_looks else "advice", message=message, task=task,
+                outfit_entry=entry if has_cover else None,
+                looks=fallback_looks, saved_outfit_search=True, conversation_only=True, warnings=warnings,
+                subject_outfit=refs[0] if len(refs) == 1 else None,
+                request_id=request.request_id).model_dump(mode="json")}
+
         async def product_search_node(data):
             state = source_session(data)
             profile_gender = request.companion_profile.user_gender if request.companion_profile else None
@@ -868,8 +995,18 @@ class Stylist:
             gender_change = plan.changes.get("gender")
             search_task = Task(gender=gender_change.value if gender_change else profile_gender if plan.use_profile_gender else None)
             report("wardrobe", progress_message(request.assistant_persona, "wardrobe"))
+            product_entry = None
+            entry_looks = []
             try:
-                products, partial = await search_products(upstream, self.llm, request, search_task, state.messages)
+                products, partial = await search_products(upstream, self.llm, request, search_task, state.messages,
+                                                          random_selection=plan.random_selection, exclude_previous=plan.exclude_previous)
+                if products:
+                    product_entry = await resolve_product_entry(upstream, ProductRef(source='user', product_id=products[0].product_id))
+                    item = from_row(product_entry["product"], "user")
+                    if item is None:
+                        raise StylistError('product_entry_invalid_result', '单品信息不完整，请重试。', 502)
+                    entry_looks = [Look(title=product_entry["title"] or "当前单品", items=[item],
+                                        pieces=[item.display_name], wardrobe_complete=False)]
                 message = "找到这些单品，你可以点开看看，再决定怎么搭。" if products else "这次查询暂时没找到符合条件的单品，不代表整个衣橱里没有；可以换个描述，或添加想找的单品。"
                 warnings = ["这次查询覆盖前150件单品，未检索全部衣橱。"] if partial else []
                 reason = None if products else "no_match"
@@ -878,17 +1015,20 @@ class Stylist:
             except StylistError as exc:
                 if exc.code == "product_search_invalid_selection":
                     raise
+                product_entry, entry_looks = None, []
                 products, warnings, reason = [], [], "unavailable"
                 message = "这次单品查询没有完成，还不能判断有没有符合条件的单品，请稍后再试。"
             reply = Reply(conversation_id=data["session_id"], version=request.expected_version + 1,
                 mode="recommend", delivery="advice", task=state.task, message=message,
-                product_search=True, product_results=products, warnings=warnings,
+                product_search=True, product_results=[] if product_entry else products, warnings=warnings,
+                product_entry=product_entry, subject_product=product_entry["subject"] if product_entry else None,
+                looks=entry_looks,
                 reference_reason=reason, wardrobe_gap=not products and reason != "unavailable",
                 new_clothes=data.get("new_clothes", False))
             return {"reply": reply.model_dump(mode="json")}
 
         builder = StateGraph(RunState)
-        for name, node in [("understand", understand), ("product_search", product_search_node), ("approval", approval), ("weather", weather_node),
+        for name, node in [("understand", understand), ("saved_outfit_search", saved_outfit_search_node), ("product_search", product_search_node), ("approval", approval), ("weather", weather_node),
                            ("retrieve", retrieve_node), ("style", style_node), ("validate", validate_node),
                            ("repair", repair_node), ("deliver", deliver_node)]:
             async def tracked(data, _node=node, _name=name):
@@ -900,7 +1040,7 @@ class Stylist:
             builder.add_node(name, tracked, retry_policy=RetryPolicy(max_attempts=2, retry_on=retryable)
                              if name in {"understand", "style", "repair"} else None)
         builder.add_edge(START, "understand")
-        builder.add_conditional_edges("understand", lambda d: "deliver" if d["plan"]["clarification"] else "product_search" if d["plan"].get("product_search") else "approval")
+        builder.add_conditional_edges("understand", lambda d: "saved_outfit_search" if d["plan"].get("saved_outfit_search") else "deliver" if d.get("recalled_looks") or d["plan"]["clarification"] else "product_search" if d["plan"].get("product_search") else "approval")
         builder.add_conditional_edges("approval", lambda d: "deliver" if d["cancelled"] else "weather")
         builder.add_conditional_edges("weather", lambda d: "deliver" if d["plan"]["clarification"] else "retrieve")
         builder.add_edge("retrieve", "style")
@@ -908,6 +1048,7 @@ class Stylist:
         builder.add_conditional_edges("validate", lambda d: "repair" if d["problems"] else "deliver")
         builder.add_edge("repair", "deliver")
         builder.add_edge("product_search", END)
+        builder.add_edge("saved_outfit_search", END)
         builder.add_edge("deliver", END)
         return builder.compile(checkpointer=saver)
 
@@ -981,6 +1122,12 @@ class Stylist:
                         task=Task.model_validate(output["task"]), pending_confirmation=True, request_id=request.request_id)
                 reply = Reply.model_validate(output["reply"])
                 task, plan = Task.model_validate(output["task"]), Plan.model_validate(output["plan"])
+                if reply.historical_outfit_replay or reply.product_search and reply.product_entry:
+                    state.looks = reply.looks
+                    state.subject_outfit_id = None
+                if reply.saved_outfit_search and output.get("library_looks"):
+                    state.looks = [Look.model_validate(look) for look in output["library_looks"]]
+                    state.subject_outfit_id = reply.subject_outfit.outfit_id if reply.subject_outfit else None
                 if not plan.conversation_only and not plan.product_search:
                     state.task = task
                     if not plan.weather_only:
@@ -989,6 +1136,7 @@ class Stylist:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
+                        state.subject_outfit_id = None
                 memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
                 if memory_save is None and not memory_intent(request.message):
                     book = await asyncio.to_thread(self.store.memory_book, owner)
@@ -996,12 +1144,12 @@ class Stylist:
                     if book.enabled and len(book.entries) < 30 and candidate and not any(
                             entry.content == candidate.content for entry in book.entries):
                         memory_save = candidate
-                if reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
+                if not reply.historical_outfit_replay and not reply.saved_outfit_search and reply.delivery != "clarification" and memory_save is None and not any(token in request.message for token in (
                         "？", "?", "什么", "哪", "手记", "记住", "记得", "保存")):
                     reply.message = strip_save_claims(reply.message) or "收到，我们接着聊。"
                 # Receipt cleanup must not remove the hypothetical premise that
                 # the validated draft used to distinguish a condition from a fact.
-                if (plan.conversation_only and hypothetical_preference(request.message)
+                if (not reply.historical_outfit_replay and plan.conversation_only and hypothetical_preference(request.message)
                         and boundary_problems(Draft(message=reply.message), request.message, task)):
                     reply.message = boundary_fallback(Draft(message=reply.message), request.message, Task()).message
                     reply.follow_ups = []
@@ -1012,6 +1160,12 @@ class Stylist:
                     {"role": "assistant", "content": json.dumps({"message": reply.message,
                         "new_clothes": reply.new_clothes,
                         "product_search": reply.product_search,
+                        "saved_outfit_search": reply.saved_outfit_search,
+                        "historical_outfit_replay": reply.historical_outfit_replay,
+                        "product_entry": ({"product": {key: value for key, value in reply.product_entry["product"].items()
+                                                    if key not in {"original_image", "cutout_image"}}} if reply.product_entry else None),
+                        "subject_product": reply.subject_product.model_dump(mode="json") if reply.subject_product else None,
+                        "subject_outfit": reply.subject_outfit.model_dump(mode="json") if reply.subject_outfit else None,
                         "product_results": [p.model_dump(exclude={"original_image", "cutout_image"}) for p in reply.product_results],
                         "weather_only": reply.weather_only, "conversation_only": reply.conversation_only,
                         "follow_ups": reply.follow_ups,
@@ -1052,6 +1206,7 @@ class Stylist:
                                   message="这件单品已不可用，不过我们可以继续。你可以换一件，或让我从当前衣橱重新搭一套。",
                                   follow_ups=["从当前衣橱帮我搭一套"], request_id=request.request_id)
                     state.looks = []
+                    state.subject_outfit_id = None
                     state.messages = (state.messages + [
                         {"role": "user", "content": "帮我查看下这件"},
                         {"role": "assistant", "content": json.dumps(reply.model_dump(mode="json"), ensure_ascii=False)},
@@ -1066,6 +1221,7 @@ class Stylist:
                               pieces=[item.display_name], wardrobe_complete=False)]
                 message = "已打开这件单品，可以继续聊怎么搭配。"
                 history_message = "帮我查看下这件"
+                state.subject_outfit_id = None
             else:
                 outfit_entry = await resolve_outfit_entry(upstream, request.subject_outfit)
                 items = [from_row(item, "user") for item in outfit_entry["items"]]
@@ -1074,6 +1230,7 @@ class Stylist:
                 looks = [Look(title=outfit_entry["title"] or "搭配详情", items=items,
                               pieces=[item.display_name for item in items],
                               wardrobe_complete=True, why=[], how=[], notes=[])]
+                state.subject_outfit_id = request.subject_outfit.outfit_id
                 message = "已打开这套搭配，可以继续聊怎么调整。"
                 history_message = "帮我查看下搭配"
             reply = Reply(

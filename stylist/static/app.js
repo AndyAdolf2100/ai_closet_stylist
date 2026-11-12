@@ -556,9 +556,9 @@ function showReply(reply, request = null, previewNode = null) {
     if (productEntry) {
       const owner = session?.access_token;
       const actions = el('div', 'subject-entry-actions');
-      const current = () => {
+      const current = (historicalTryon = false) => {
         if (busy || !requireLogin()) return false;
-        if (session?.access_token !== owner || conversation !== reply.conversation_id || version !== reply.version) {
+        if (session?.access_token !== owner || conversation !== reply.conversation_id || (historicalTryon ? version < reply.version : version !== reply.version)) {
           notifyIssue('当前单品或账号已有变化，请重新打开这件单品。'); return false;
         }
         return true;
@@ -572,9 +572,10 @@ function showReply(reply, request = null, previewNode = null) {
         finally { pair.disabled = false; }
       };
       const tryon = el('button', 'subtle', '试穿这件'); tryon.type = 'button';
-      tryon.disabled = !reply.looks?.[0]?.items?.length;
+      // Product detail records can predate single-look context in search replies.
+      tryon.disabled = !(reply.looks?.[0]?.items?.length || productEntry?.subject?.product_id || reply.subject_product?.product_id);
       tryon.onclick = async () => {
-        if (tryon.disabled || !current()) return;
+        if (tryon.disabled || !current(true)) return;
         tryon.disabled = true;
         try { await window.WardrobeJourney.tryon({conversation_id:reply.conversation_id, version:reply.version, look_index:0}); }
         catch (err) { notifyIssue(err.message); }
@@ -665,9 +666,9 @@ function showReply(reply, request = null, previewNode = null) {
       preview.dataset.agentTrack='outfit_tryon';
       preview.onclick = async () => {
         if (busy || !requireLogin()) return;
-        if (conversation !== reply.conversation_id || version !== reply.version) { notifyIssue('这是历史方案，请先打开对应的最新对话。'); return; }
+        if (conversation !== reply.conversation_id || version < reply.version) return;
         preview.disabled = true;
-        try { await window.WardrobeJourney.tryon({conversation_id:conversation,version,look_index:lookIndex}); }
+        try { await window.WardrobeJourney.tryon({conversation_id:reply.conversation_id,version:reply.version,look_index:lookIndex}); }
         catch(err) { notifyIssue(err.message); } finally { preview.disabled=false; }
       };
       card.append(preview);
@@ -740,7 +741,7 @@ async function refreshHistory() {
     for (const container of [$('history'), $('mobile-history-list')]) {
       container.replaceChildren();
       for (const row of rows) {
-        const title = (row.title?.trim() || '未命名对话').replace(/^(?:打开单品[：:].*|聊聊这件单品\s*·.*|用这件.*搭配一下|用这件搭一套|用这件搭配下)$/, '帮我查看下这件').replace(/^打开搭配[：:].*$/, '帮我查看下搭配');
+        const title = (row.title?.trim() || '未命名对话').replace(/^(?:打开单品[：:].*|聊聊这件单品\s*·.*|用这件.*搭配一下|用这件搭一套|用这件搭配下)$/, '聊聊这件').replace(/^打开搭配[：:].*$/, '聊聊这套').replace(/^帮我查看下这件$/, '聊聊这件').replace(/^帮我查看下搭配$/, '聊聊这套');
         const characters = Array.from(title.replace(/\s+/g, ' '));
         const shortTitle = characters.slice(0, 20).join('') + (characters.length > 20 ? '...' : '');
         const button = el('button', 'history-conversation-title', shortTitle); button.type = 'button';
@@ -754,7 +755,7 @@ async function refreshHistory() {
             const record = await api('/stylist-api/conversations/' + row.id);
             if (session?.user.id !== owner) return;
             $('feed').replaceChildren();
-            for (const turn of record.messages) { bubble('user', turn.reply.product_entry ? '帮我查看下这件' : turn.reply.outfit_entry ? '帮我查看下搭配' : turn.user); showReply(turn.reply); }
+            for (const turn of record.messages) { bubble('user', turn.reply.product_entry && !turn.reply.product_search ? '聊聊这件' : turn.reply.outfit_entry && !turn.reply.saved_outfit_search ? '聊聊这套' : turn.user); showReply(turn.reply); }
             window.ChatAttachments?.clear();
             conversation = record.conversation_id; version = record.version;
             window.WardrobeJourney?.restore(conversation).catch(err=>notifyIssue(err.message));
@@ -810,7 +811,7 @@ async function sendMessage(resuming = false, outfitAction = null, cityAction = n
   const inputValue = $('message').value;
   const draftImage = !uploadAction && !pairAction && !subjectEntry && !outfitAction && !cityAction && !explorationAction ? window.ChatAttachments?.get() : null;
   const text = uploadAction ? `用这件搭配下。${inputValue.trim() ? '\n'+inputValue.trim() : ''}` : pairAction ? `用当前这件「${pairAction.title || '衣物'}」，从我的衣橱搭一套。${inputValue.trim() ? '\n'+inputValue.trim() : ''}` : subjectEntry ? '' : (explorationAction ? '沿用刚才的搭配要求，开启邂逅新衣，把系统参考款也纳入选择，继续完成刚才的搭配。' : null) || saved?.request.message || cityAction?.request?.message || (cityAction ? '按刚才的穿搭要求，结合选好的城市天气继续搭配。' : outfitAction ? '重新生成穿搭' : (inputValue.trim() || (draftImage ? '请看看这张图片里的穿搭。' : '')));
-  const displayText = subjectEntry?.subject_product ? '帮我查看下这件' : subjectEntry?.subject_outfit ? '帮我查看下搭配' : text;
+  const displayText = subjectEntry?.subject_product ? '聊聊这件' : subjectEntry?.subject_outfit ? '聊聊这套' : text;
   if ((!text && !subjectEntry) || busy || !requireLogin()) return;
   if (window.CompanionSettings) { await window.CompanionSettings.ready; if (busy || !session) return; }
   if (subjectEntry && attachmentOwner !== session?.access_token) return;

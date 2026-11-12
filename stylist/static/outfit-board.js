@@ -19,7 +19,7 @@
     if (/衫|上衣|背心/.test(text)) return 'top';
     return 'other';
   }
-  function layout(items) {
+  function layout(items, imageSizes = null) {
     const grouped = {};
     items.forEach((item, index) => { const kind = role(item); (grouped[kind] ||= []).push(index); });
     const weight = item => {
@@ -28,7 +28,7 @@
       return /毛衣|卫衣|针织|开衫/.test(text) ? 20 : 10;
     };
     Object.values(grouped).forEach(group => group.sort((a, b) => weight(items[a]) - weight(items[b])));
-    return items.map((item, index) => {
+    const positions = items.map((item, index) => {
       const kind = role(item), group = grouped[kind], n = group.indexOf(index), count = group.length;
       // Slight offsets expose the inner garment while keeping outerwear above it.
       const hasOuter = !!grouped.outer, base = {
@@ -46,6 +46,33 @@
       const delta = (n - (count - 1) / 2) * Math.min(12, 30 / Math.max(count - 1, 1));
       return { kind, x: x + delta, y: y + n * 2, w: w * (count > 2 ? .84 : 1), h, z: z + n };
     });
+    if (!imageSizes) return positions;
+    const bounds = (p, size) => {
+      if (!size?.width || !size?.height) return null;
+      const scale = Math.min(p.w * 9.6 / size.width, p.h * 12 / size.height);
+      const w = size.width * scale / 9.6, h = size.height * scale / 12;
+      const [bx, by, bw, bh] = size.bounds || [0, 0, 1, 1];
+      return {left:p.x-w/2+w*bx, top:p.y-h/2+h*by, w:w*bw, h:h*bh};
+    };
+    positions.forEach((p, index) => {
+      if (p.kind !== 'top') return;
+      const inner = bounds(p, imageSizes[index]);
+      if (!inner || inner.w <= 0 || inner.h <= 0) return;
+      let adjustment = 0;
+      positions.forEach((outer, other) => {
+        if (!['top','outer'].includes(outer.kind) || outer.z <= p.z) return;
+        const front = bounds(outer, imageSizes[other]); if (!front) return;
+        const overlapW = Math.max(0, Math.min(inner.left+inner.w,front.left+front.w)-Math.max(inner.left,front.left));
+        const overlapH = Math.max(0, Math.min(inner.top+inner.h,front.top+front.h)-Math.max(inner.top,front.top));
+        if (overlapW*overlapH/(inner.w*inner.h) <= .8) return;
+        const delta = p.x <= outer.x ? front.left + inner.w*.65 - (inner.left+inner.w)
+          : front.left+front.w-inner.w*.65-inner.left;
+        if (Math.abs(delta)>Math.abs(adjustment)) adjustment=delta;
+      });
+      // Leave ordinary layering untouched; only reveal a small side of heavily hidden tops.
+      p.x += Math.max(-12, Math.min(12, adjustment));
+    });
+    return positions;
   }
   function photo(item, failed) {
     const urls = [item.cutout_image, item.original_image].map(safe).filter(Boolean);
