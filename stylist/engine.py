@@ -18,7 +18,6 @@ from .advice_boundaries import PREFIX as ADVICE_PREFIX
 from .advice_boundaries import boundary_fallback, boundary_problems, hypothetical_preference
 from .alerts import AlertService
 from .errors import AuthenticationExpired, StylistError
-from .outfit_history import outfit_catalog, recalled_looks
 from .grounding import (
     PREFIX,
     attribute_claim_problems,
@@ -43,6 +42,7 @@ from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionStat
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
+from .outfit_history import outfit_catalog, recalled_looks
 from .personas import (
     attachment_wardrobe_invitation,
     avatar_invitation,
@@ -1017,6 +1017,7 @@ class Stylist:
                     # Failed replacement advice does not silently overwrite the current real outfit.
                     if not (plan.mode == "modify" and reply.delivery == "concept"):
                         state.looks = reply.looks
+                        state.subject_outfit_id = None
                 memory_save = verified_memory_save(plan.memory_save, request.message, state.messages)
                 if memory_save is None and not memory_intent(request.message):
                     book = await asyncio.to_thread(self.store.memory_book, owner)
@@ -1102,6 +1103,7 @@ class Stylist:
                 looks = [Look(title=outfit_entry["title"] or "搭配详情", items=items,
                               pieces=[item.display_name for item in items],
                               wardrobe_complete=True, why=[], how=[], notes=[])]
+                state.subject_outfit_id = request.subject_outfit.outfit_id
                 message = "已打开这套搭配，可以继续聊怎么调整。"
                 history_message = "帮我查看下搭配"
             reply = Reply(

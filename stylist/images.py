@@ -35,6 +35,14 @@ def twin_fingerprint(overview):
                                                           "custom_twin", "system_twins", "default_confirmed"]})
 
 
+def materialization_selection_id(owner, row, snapshot):
+    """Keep one Server-side saved outfit for one immutable Agent look."""
+    key = {"owner": owner, "conversation_id": row["conversation_id"],
+           "version": row["version"], "look_index": snapshot["look_index"],
+           "items": snapshot["items"]}
+    return "sel_" + fingerprint(key)[:32]
+
+
 class ImageService:
     def __init__(self, store):
         self.store = store
@@ -55,6 +63,7 @@ class ImageService:
         if request.look_index >= len(state.looks) or not state.looks[request.look_index].items:
             raise StylistError("no_real_outfit", "文字参考尚未匹配真实衣物，不能直接生成试穿图。", 422)
         refs = [ProductRef(source=p.source, product_id=p.product_id) for p in state.looks[request.look_index].items]
+        existing_outfit_id = state.subject_outfit_id
         async with upstream.mcp() as mcp:
             overview = await mcp.call("digital_twin_overview", {})
             if not overview.get("default_twin_key") or not overview.get("default_confirmed"):
@@ -64,17 +73,19 @@ class ImageService:
             if {p.key for p in products} != {r.key for r in refs}:
                 raise StylistError("outfit_changed", "部分衣物已不可用，请重新搭配。", 409)
             tools = await mcp.discover()
-            names = ["save_recommended_outfit", "digital_twin_tryon"]
+            names = ["digital_twin_tryon"] if existing_outfit_id else ["save_recommended_outfit", "digital_twin_tryon"]
             if any(name not in tools for name in names):
                 raise StylistError("image_tool_missing", "当前服务尚未开放这项试穿能力。")
             contract = fingerprint({name: tools[name].model_dump(mode="json") for name in names})
         action_id = "img_" + uuid.uuid4().hex
         snapshot = {"items": [r.model_dump() for r in refs], "points_cost": cost["points_cost"],
                     "look_index": request.look_index,
+                    "outfit_id": existing_outfit_id,
                     "twin": twin_fingerprint(overview), "contract": contract,
                     "scene": {"occasion": state.task.occasion, "style": state.task.style},
                     "title": state.looks[request.look_index].title,
-                    "notices": ["确认后会将所选单品保存到个人搭配库并生成试穿图；参考款不代表已拥有，也不会录入个人衣橱。",
+                    "notices": [("确认后会为这套已有搭配生成试穿图，不会重复保存搭配。" if existing_outfit_id else
+                                "确认后会将所选单品保存到个人搭配库并生成试穿图；参考款不代表已拥有，也不会录入个人衣橱。"),
                                 "图片仅试穿已选衣橱单品，其余文字参考不参与生成。",
                                 "试穿图片用于视觉参考，不能保证实际尺码、面料和上身效果。"]}
         portraits = list(overview.get("system_twins", []))
@@ -158,7 +169,7 @@ class ImageService:
             cost = await mcp.call("digital_twin_tryon_quote", {})
             overview = await mcp.call("digital_twin_overview", {})
             tools = await mcp.discover()
-            names = ["save_recommended_outfit", "digital_twin_tryon"]
+            names = ["digital_twin_tryon"] if snapshot.get("outfit_id") else ["save_recommended_outfit", "digital_twin_tryon"]
             contract = fingerprint({name: tools[name].model_dump(mode="json") for name in names if name in tools})
             if cost["points_cost"] != snapshot["points_cost"] or twin_fingerprint(overview) != snapshot["twin"] or contract != snapshot["contract"]:
                 self.mark(owner, action_id, "expired")
@@ -176,9 +187,13 @@ class ImageService:
                 if changed.rowcount != 1:
                     raise StylistError("image_already_submitted", "这次试穿已经提交。", 409)
             try:
-                saved = await mcp.commit_image("save_recommended_outfit", {"selection_id": "sel_" + action_id[4:],
-                    "items": [{"source": x["source"], "product_id": int(x["product_id"])} for x in snapshot["items"]]})
-                result = await mcp.commit_image("digital_twin_tryon", {"outfit_id": saved["outfit_id"],
+                outfit_id = snapshot.get("outfit_id")
+                if not outfit_id:
+                    saved = await mcp.commit_image("save_recommended_outfit", {
+                        "selection_id": materialization_selection_id(owner, row, snapshot),
+                        "items": [{"source": x["source"], "product_id": int(x["product_id"])} for x in snapshot["items"]]})
+                    outfit_id = saved["outfit_id"]
+                result = await mcp.commit_image("digital_twin_tryon", {"outfit_id": outfit_id,
                     "idempotency_key": action_id, "scene": snapshot["scene"]})
                 image = result.get("result_image_url") or result.get("result_image")
                 status = "completed" if result.get("status") == "completed" and image else "processing"

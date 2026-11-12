@@ -251,6 +251,7 @@ class SessionState(Model):
     mode: Literal["consult", "recommend", "modify", "weekly"] = "consult"
     looks: list[Look] = Field(default_factory=list)
     messages: list[dict[str, str]] = Field(default_factory=list)
+    subject_outfit_id: int | None = Field(default=None, gt=0)
 
 
 class CompanionProfile(Model):
