@@ -1272,14 +1272,14 @@ dialog.outfit-detail{position:fixed;inset:0;width:min(1020px,calc(100% - 64px));
 .journey-dialog .journey-batch-photo-card,.journey-dialog .journey-batch-photo-card.has-photo{display:block;min-height:0;padding:0;border:0;background:none;box-shadow:none}
 .journey-batch-photo-card>.journey-pocket-hint,.journey-batch-photo-card>strong{display:none}
 .journey-dialog .journey-batch-photo-card .journey-photo-sources{display:grid;grid-template-columns:1fr;gap:8px;width:100%;margin:0}
-.journey-dialog .journey-photo-sources button[data-photo-source]{display:flex;align-items:center;justify-content:flex-start;gap:14px;width:100%;min-height:102px;padding:18px;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
-.journey-dialog .journey-photo-sources button[data-photo-source]>span:first-child{display:grid;place-items:center;flex:0 0 40px;width:40px;height:44px;border-radius:8px;background:var(--soft);color:var(--accent-ink,var(--accent))}
+.journey-dialog .journey-photo-sources button[data-photo-source]{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;min-height:76px;padding:12px 15px;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
+.journey-dialog .journey-photo-sources button[data-photo-source]>span:first-child{display:grid;place-items:center;flex:0 0 34px;width:34px;height:36px;border-radius:8px;background:var(--soft);color:var(--accent-ink,var(--accent))}
 .journey-source-copy{min-width:0;flex:1}.journey-source-heading{display:flex;align-items:center;gap:8px}.journey-source-heading strong{font-size:16px;font-weight:500;line-height:1.6}.journey-source-recommend{font-size:12px;padding:2px 5px;border-radius:4px;background:var(--soft);color:var(--muted)}.journey-source-detail{display:block;font-size:12px;color:var(--muted);line-height:1.8;margin-top:4px}.journey-source-arrow{font-size:24px;color:var(--muted);flex-shrink:0}
 
 .journey-compose-status{padding:20px;text-align:center;color:var(--muted)}
-@media(max-width:350px){.journey-dialog .journey-photo-sources button[data-photo-source]{padding:14px;gap:10px}.journey-source-heading strong{font-size:15px}.journey-source-detail{font-size:12px}}
+@media(max-width:350px){.journey-dialog .journey-photo-sources button[data-photo-source]{padding:10px 12px;gap:10px}.journey-source-heading strong{font-size:15px}.journey-source-detail{font-size:12px}}
 .journey-sheet-handle{display:none}
-.journey-dialog[data-panel=upload]{position:fixed;inset:auto 0 0;width:min(600px,100vw);max-width:100vw;height:min(84dvh,800px);max-height:calc(100dvh - 36px);margin:0 auto;padding:0;border:0;border-radius:24px 24px 0 0;background:var(--paper);box-shadow:0 -12px 60px #18273325;overflow:hidden}
+.journey-dialog[data-panel=upload]{position:fixed;inset:auto 0 0;width:min(600px,100vw);max-width:100vw;height:min(1040px,calc(100dvh - max(24px, env(safe-area-inset-top) + 12px)));max-height:calc(100dvh - max(24px, env(safe-area-inset-top) + 12px));margin:0 auto;padding:0;border:0;border-radius:24px 24px 0 0;background:var(--paper);box-shadow:0 -12px 60px #18273325;overflow:hidden}
 .journey-dialog[data-panel=upload][open]{animation:journey-sheet-rise .25s ease-out}
 .journey-dialog[data-panel=upload]::backdrop{background:#18202c65;backdrop-filter:blur(3px)}
 .journey-dialog[data-panel=upload] .journey-sheet-handle{display:block;width:36px;height:4px;border-radius:4px;flex-shrink:0;background:color-mix(in srgb,var(--muted) 35%,transparent);margin:9px auto 0}
@@ -1320,6 +1320,58 @@ dialog.outfit-detail{position:fixed;inset:0;width:min(1020px,calc(100% - 64px));
 .journey-person-stage{font:22px/1.5 Georgia,"Songti SC",serif;margin:0 0 14px}.journey-dialog[data-panel=upload][data-flow=person] .journey-image{padding:12px;margin:12px 0 18px;border-radius:14px}.journey-dialog[data-panel=upload][data-flow=person] .journey-image img{max-height:280px;width:100%;object-fit:contain}.journey-dialog[data-panel=upload][data-flow=person] .journey-state{margin:0 0 12px;padding:12px 14px;border-radius:12px}
 
 .journey-dialog[data-flow=detail-tryon] .journey-detail-portrait{margin:16px 0 12px}.journey-detail-portrait img{height:220px;max-height:220px}
+
+.journey-upload-guide{margin:18px 0 0;width:100%;min-width:0}.journey-dialog .journey-upload-guide-preview{display:block;width:100%;padding:0;min-height:0;border:0;background:transparent;border-radius:12px;overflow:hidden;cursor:zoom-in}.journey-upload-guide-preview img{display:block;width:100%;height:auto;max-height:none;object-fit:contain}.journey-upload-guide figcaption{text-align:center;font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.6}.journey-upload-guide[hidden]{display:none!important}
+
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-photo-sources button[data-photo-source]{min-height:64px;padding:10px 14px;gap:10px}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-photo-sources button[data-photo-source]>span:first-child{flex-basis:30px;width:30px;height:32px;border-radius:7px}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-heading{gap:6px}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-heading strong{font-size:15px;line-height:1.4}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-detail{font-size:12px;line-height:1.6;margin-top:2px}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-recommend{font-size:12px;padding:1px 4px}
+.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-arrow{font-size:20px}
+@media(max-width:350px){.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-photo-sources button[data-photo-source]{padding:8px 12px;gap:9px}.journey-dialog[data-panel=upload]:is([data-flow=garment],[data-flow=person]) .journey-source-heading strong{font-size:14px}}
+
+/* Detail try-on: review the selected portrait and every garment together. */
+.journey-detail-tryon-card{border:1px solid var(--line);border-radius:18px;padding:16px;background:var(--paper);margin:16px 0}
+.journey-detail-tryon-person{display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.journey-detail-tryon-person>.journey-image{width:clamp(124px,44vw,184px);height:auto;flex:0 0 clamp(124px,44vw,184px);margin:0;padding:0;border-radius:12px;overflow:hidden}
+.journey-detail-tryon-person>.journey-image img{width:100%;height:auto;max-height:none;aspect-ratio:auto;object-fit:contain;display:block}
+.journey-detail-tryon-person>div{display:grid;gap:5px;min-width:0;flex:1}
+.journey-detail-tryon-person strong{font-size:14px}.journey-detail-tryon-person button{justify-self:start;padding:5px 12px;font-size:12px;min-height:32px}
+.journey-detail-tryon-clothes h4{font-size:13px;margin:18px 0 12px;font-weight:500}
+.journey-detail-tryon-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.journey-detail-tryon-grid figure{margin:0;min-width:0}.journey-detail-tryon-grid img{display:block;width:100%;height:auto;object-fit:contain;background:var(--soft);border-radius:10px}
+.journey-detail-tryon-grid figcaption{font-size:12px;line-height:1.6;margin-top:6px;overflow-wrap:anywhere;color:var(--muted)}
+@media(max-width:360px){.journey-detail-tryon-card{padding:12px}.journey-detail-tryon-grid{gap:8px}.journey-detail-tryon-grid img{height:auto}}
+
+.journey-batch-progress{margin:14px 0 20px}.journey-batch-progress>.journey-note{margin:0 0 8px!important;font-size:12px;line-height:1.6}
+
+.journey-completed-mark{display:inline-flex;align-items:center;gap:8px;border-radius:20px;padding:7px 12px;margin:0 0 16px;background:var(--soft);color:var(--accent-ink,var(--accent));font-size:12px}
+
+.journey-dialog[data-flow=person] .journey-submitbar{width:100%;flex-wrap:nowrap;align-items:center;gap:10px}
+.journey-dialog[data-flow=person] .journey-submitbar>.primary{width:auto;min-width:0;flex:1}
+.journey-dialog[data-flow=person] .journey-submitbar>button:not(.primary){flex:0 0 auto;white-space:nowrap}
+
+.journey-loading-title{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.journey-loading-title::after{content:'';display:block;flex:0 0 15px;width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--accent-ink,var(--accent));border-radius:50%;animation:journey-title-spin .85s linear infinite}
+@keyframes journey-title-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.journey-loading-title::after{animation:none;border-right-color:var(--accent-ink,var(--accent))}}
+
+.journey-detail-tryon-person{gap:14px;padding-bottom:14px}.journey-detail-tryon-person>.journey-portrait-change{flex:0 0 auto;min-height:44px;padding:8px 0 8px 10px;border:0;background:transparent;box-shadow:none;font-size:12px;white-space:nowrap;color:var(--accent-ink,var(--accent))}.journey-detail-tryon-person strong{line-height:1.5;overflow-wrap:anywhere}.journey-detail-tryon-person .journey-card-label{font-size:12px;letter-spacing:.5px}
+
+.journey-detail-tryon-person>.journey-image{border:0;border-radius:12px;background:var(--soft)}.journey-detail-tryon-person>div{align-self:center}.journey-detail-tryon-person strong{font-weight:500;font-size:14px}.journey-detail-tryon-person>.journey-portrait-change{font-size:12px;color:var(--muted);padding-left:8px}
+
+.journey-detail-tryon-grid{align-items:start}.journey-detail-tryon-grid img{aspect-ratio:auto;max-height:none}
+
+.journey-detail-tryon-person{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.journey-detail-tryon-person>.journey-image{grid-column:1 / -1;width:100%;height:auto;min-width:0;margin:0;flex:none}
+.journey-detail-tryon-person>.journey-image img{width:100%;height:auto;max-height:none;object-fit:contain;aspect-ratio:auto}
+.journey-detail-tryon-person>div{grid-column:1;margin:0;align-self:center}
+.journey-detail-tryon-person>.journey-portrait-change{grid-column:2;padding:0 0 0 12px;min-height:36px}
+
+.journey-detail-tryon-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:16px 12px}
+.journey-detail-tryon-grid img{display:block;width:100%;height:auto;aspect-ratio:1 / 1;object-fit:contain;object-position:center;background:#fff;box-sizing:border-box;padding:10px;border-radius:10px}
 
 /* companion-characters.css */
 /* Static character selection: crop the supplied front view without modifying art. */

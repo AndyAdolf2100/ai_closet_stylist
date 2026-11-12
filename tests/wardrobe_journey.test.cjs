@@ -190,7 +190,7 @@ test('person generation has its own quote, and dismissing it sends only cancella
  });
  t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();await flush();
  assert.equal(t.w.document.querySelector('.journey-steps').hidden,true);
- assert.match(t.w.document.querySelector('.journey-footer').textContent,/确认消耗 20 积分并生成/);assert.match(t.w.document.querySelector('.journey-body').textContent,/另行确认积分/);
+ assert.match(t.w.document.querySelector('.journey-footer').textContent,/确认消耗 20 积分并生成/);assert.match(t.w.document.querySelector('.journey-body').textContent,/点击确认后才开始生成/);assert.doesNotMatch(t.w.document.querySelector('.journey-body').textContent,/搭配试穿另行确认积分/);
  assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);byText(t.w,'关闭 ×').click();await flush();
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&JSON.parse(o.body).confirmed).length,0);
  assert.equal(calls.filter(([p,o])=>p.endsWith('/confirm')&&!JSON.parse(o.body).confirmed).length,1);t.close();
@@ -411,7 +411,7 @@ for(const transition of ['close','account','view'])test(`media polling discards 
  let reads=0,resolve;const a={action_id:'med_stale_poll',kind:'generation',status:'processing',result:{}};
  const t=setup(async path=>{if(path.endsWith('/media'))return [a];if(path.endsWith('/images'))return [];return ++reads===1?a:new Promise(done=>resolve=done);});const tick=mockPolling(t.w);
  await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();const inflight=tick();await flush();
- if(transition==='close')t.w.document.querySelector('#journey-dialog').close();else if(transition==='account')t.w.WardrobeJourney.setOwner('2');else t.w.WardrobeJourney.upload('person');
+ if(transition==='close')t.w.document.querySelector('#journey-dialog').close();else if(transition==='account')t.w.WardrobeJourney.setOwner('2');else t.w.WardrobeJourney.upload('person',{fresh:true});
  resolve({...a,status:'completed'});await inflight;assert.notEqual(t.w.document.querySelector('#journey-dialog').dataset.status,'completed');await assert.rejects(tick);t.close();
 });
 
@@ -431,4 +431,63 @@ test('historical card can quote its original version without submitting try-on',
  await t.w.WardrobeJourney.tryon(ref);await flush();
  assert.deepEqual(JSON.parse(calls.find(([p])=>p.endsWith('/quote'))[1].body),ref);
  assert.ok(byText(t.w,'确认消耗 8 积分并试穿'));assert.equal(calls.filter(([p])=>p.endsWith('/confirm')).length,0);t.close();
+});
+test('garment overall progress uses selected photos and finished beautification rather than recognition progress',async()=>{
+ for(const [stage,status,raw,items,selection,expected] of [
+  ['segmenting','processing',100,[],false,50],
+  ['preview_beautifying','processing',100,[{beautify_status:1,beautify_image:'https://example.test/a.png'},{beautify_status:0}],false,75],
+  ['selecting','awaiting_selection',50,[{detail_id:1,beautify_status:1,beautify_image:'https://example.test/a.png'}],true,100],
+  ['beautifying','processing',50,[],false,100],
+  ['completed','completed',50,[],false,100],
+  ['failed','failed',100,[],false,null]
+ ]){
+  const action={action_id:'server_progress',kind:'garment',status,result:{protocol:'server_direct',stage,progress:raw,selection_items:items,selection_required:selection,...(stage==='beautifying'?{selection_submitted_ids:[1]}:{})}};
+  const t=setup(async()=>[]);t.w.ServerGarmentUpload.list=()=>[action];t.w.ServerGarmentUpload.refresh=async()=>action;
+  await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();
+  const bar=t.w.document.querySelector('.journey-batch-progress [role="progressbar"]');
+  assert.equal(bar?.getAttribute('aria-valuenow')??null,expected===null?null:String(expected),stage);t.close();
+ }
+});
+test('portrait generation can close and reopen the same action without another submission',async()=>{
+ const calls=[],action={action_id:'resume_generation',kind:'generation',status:'processing',result:{progress:40}};
+ const t=setup(async(path,o)=>{calls.push([path,o]);if(path.endsWith('/media'))return[action];if(path.endsWith('/images'))return[];return action;});
+ await t.w.WardrobeJourney.history();t.w.document.querySelector('.journey-record-open').click();await flush();
+ assert.equal(byText(t.w,'关闭 ×').disabled,false);assert.equal(t.w.document.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'75');
+ byText(t.w,'关闭 ×').click();t.w.WardrobeJourney.upload('person');await flush();assert.equal(t.w.document.querySelector('.journey-person-stage').textContent,'正在生成试穿形象');assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);t.close();
+});
+test('pending portrait replaces the upload entry, opens final sheet and can be declined for fresh photos',async()=>{
+ const calls=[];const t=setup(async(path,o)=>{calls.push([path,o]);return {selection_version:1,pending_task:{task_id:'pending-1',status:'completed',can_confirm:true,result_image_url:'https://example.test/avatar.png'},system_twins:[]};});
+ await t.w.WardrobeJourney.twins();assert.equal(t.w.document.querySelector('.journey-pending-portrait'),null);assert.match(t.w.document.querySelector('.journey-portrait-upload').textContent,/查看待确认形象/);
+ t.w.document.querySelector('.journey-portrait-upload').click();await flush();assert.equal(t.w.document.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'100');assert.equal(t.w.document.querySelector('.journey-state'),null);assert.match(t.w.document.querySelector('.journey-completed-mark').textContent,/准备好/);
+ byText(t.w,'放弃并重新生成').click();await flush();assert(t.w.document.querySelector('#journey-photo-input'));assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);await t.w.WardrobeJourney.twins();assert.match(t.w.document.querySelector('.journey-portrait-upload').textContent,/上传本人照片/);t.close();
+});
+for(const kind of ['person','garment'])test(`${kind} preview and upload wait follow their respective progress rules`,async()=>{
+ let resolve;const t=setup(()=>new Promise(done=>resolve=done));t.w.WardrobeJourney.upload(kind);await selectFile(t.w);
+ assert.equal(t.w.document.querySelector('.journey-body [role=progressbar]')?.getAttribute('aria-valuenow')??null,kind==='person'?'0':null);byText(t.w,'确认上传').click();assert.equal(t.w.document.querySelector('.journey-body [role=progressbar]')?.getAttribute('aria-valuenow')??null,kind==='person'?'25':null);if(kind==='garment')assert.match(t.w.document.querySelector('.journey-upload-status').textContent,/正在上传/);
+ resolve({action_id:'photo_timing',kind,status:'completed',result:{}});await flush();t.close();
+});
+test('discarding checked portrait cancels only its unconfirmed quote and returns to fresh photos',async()=>{
+ const calls=[];const t=setup(async(path,o)=>{calls.push([path,o]);if(path.endsWith('/uploads'))return{action_id:'checked_photo',kind:'person',status:'completed',result:{allowed_hat_actions:['none']}};if(path.endsWith('/generation-quote'))return{action_id:'pending_quote',points_cost:20};return{status:'cancelled'};});
+ t.w.WardrobeJourney.upload('person');await selectFile(t.w);byText(t.w,'确认上传').click();await flush();assert.equal(t.w.document.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'50');byText(t.w,'放弃照片').click();await flush();assert(t.w.document.querySelector('#journey-photo-input'));assert.equal(t.w.document.querySelector('[role=progressbar]'),null);const confirms=calls.filter(([p])=>p.endsWith('/confirm'));assert.equal(confirms.length,1);assert.equal(JSON.parse(confirms[0][1].body).confirmed,false);t.close();
+});
+test('portrait milestones remain 0, 25, 50, 75 and 100 without visible progress copy',async()=>{
+ let finish;const completed={action_id:'four_gen',kind:'generation',status:'completed',result:{task_id:'four-task',can_confirm:true,result_image_url:'https://example.test/avatar.png'}};
+ const t=setup(async(path,o)=>{if(path.endsWith('/uploads'))return{action_id:'four_photo',kind:'person',status:'completed',result:{allowed_hat_actions:['none']}};if(path.endsWith('/generation-quote'))return{action_id:'four_gen',points_cost:20};if(path.endsWith('/confirm')&&JSON.parse(o.body).confirmed)return new Promise(done=>finish=done);return completed;});
+ const value=()=>t.w.document.querySelector('.journey-person-progress [role=progressbar]').getAttribute('aria-valuenow');
+ t.w.WardrobeJourney.upload('person');await selectFile(t.w);assert.equal(value(),'0');assert.equal(t.w.document.querySelector('.journey-photo-pocket').hidden,true);
+ byText(t.w,'确认上传').click();assert.equal(value(),'25');await flush();assert.equal(value(),'50');byText(t.w,'确认消耗 20 积分并生成').click();await flush();assert.equal(value(),'75');assert.equal(byText(t.w,'关闭 ×').disabled,false);
+ byText(t.w,'关闭 ×').click();finish(completed);await flush();assert.equal(t.w.document.querySelector('dialog').open,false);t.w.WardrobeJourney.upload('person');await flush();assert.equal(value(),'100');assert.equal(t.w.document.querySelector('.journey-person-progress .journey-note'),null);t.close();
+});
+test('detail try-on opens its review card immediately while reads are pending without a preliminary loading dialog',async()=>{
+ let inspect;const calls=[];const t=setup(async(p,o)=>{calls.push([p,o]);return{default_confirmed:true,default_twin_key:'base',system_twins:[{twin_key:'base',name:'基础形象',image_url:'https://example.test/avatar.png'}]};});
+ t.w.DetailTryon={inspect:()=>new Promise(done=>inspect=done),prepare:async()=>40};
+ const opening=t.w.WardrobeJourney.tryon({detail_target:{kind:'product',id:'12'},title:'白衬衫',detail_items:[{title:'白衬衫',cutout_image:'https://example.test/shirt.png'}]});
+ assert.equal(t.w.document.querySelector('#journey-title').textContent,'生成试穿');assert(t.w.document.querySelector('.journey-detail-tryon-card'));assert.equal(t.w.document.querySelector('.companion-loading'),null);assert.equal(t.w.document.querySelector('.journey-detail-tryon-grid figure').textContent,'白衬衫');assert.equal(calls.length,0);
+ inspect({status:'idle'});await opening;assert(byText(t.w,'确认消耗 40 积分并试穿'));assert.equal(calls.filter(([,o])=>o?.method==='POST').length,0);t.close();
+});
+test('detail white tiles reuse local cutout for authenticated wardrobe products',async()=>{
+ const pieces=[],t=setup(async()=>({default_confirmed:true,default_twin_key:'base',system_twins:[{twin_key:'base',image_url:'https://example.test/avatar.png'}]}));
+ t.w.LocalCutout={get:async(piece,options)=>{pieces.push([piece,options]);return'blob:trimmed-garment';}};t.w.DetailTryon={inspect:async()=>({status:'idle'}),prepare:async()=>40};
+ await t.w.WardrobeJourney.tryon({detail_target:{kind:'product',id:'12'},detail_items:[{user_product_id:12,cutout_image:'https://example.test/cutout.png',title:'上衣'}]});await flush();
+ assert(pieces.length>0);assert(pieces.every(([p,o])=>p.product_id==='12'&&p.source==='user'&&o.preferExisting));assert.equal(t.w.document.querySelector('.journey-detail-tryon-grid img').src,'blob:trimmed-garment');assert.equal(t.w.document.querySelector('.journey-detail-tryon-grid img').dataset.cutout,'ready');t.close();
 });

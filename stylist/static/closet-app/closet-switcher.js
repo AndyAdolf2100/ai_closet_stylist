@@ -21,8 +21,8 @@ export function createClosetSwitcher({read,write,onSelect,getSelected,getProduct
    const save=button('确认加入',async()=>{if(!current()||getSelected()?.id!==selected.id)return;await write('closet-items/'+selected.id,{user_product_id:[...picked]});if(!current())return;d.close();await reload();},'closet-primary');save.disabled=true;d.append(grid,count,save);if(!items.length)d.append(el('p','closet-hint','当前已加载库存中暂无可选单品。'));
   }catch(e){if(current()){loading.textContent=e.message;d.append(button('重新读取',()=>{d.close();return addItems();}));}}
  }
- function create(initialFamily=false){const {d,current}=dialog(initialFamily?'创建家庭衣橱':'创建分类衣橱');const name=el('input'),remark=el('textarea'),family=el('input');name.placeholder='衣橱名称';name.maxLength=40;name.required=true;name.setAttribute('aria-label','衣橱名称');remark.placeholder='备注（选填）';remark.maxLength=100;remark.setAttribute('aria-label','衣橱备注');family.type='checkbox';family.checked=initialFamily;const label=el('label','closet-family');label.append(family,el('span','','家人衣橱'));const note=el('p','closet-hint','创建后，从我的衣橱选择衣物加入。');
-  const save=button('创建',async()=>{if(!name.value.trim()){name.focus();return;}if(!current())return;const result=await write('closet-create',{name:name.value.trim(),remark:remark.value.trim(),is_family:family.checked});if(!current())return;if(!result.id)throw Error('创建结果待确认，请刷新衣橱列表核对，勿重复提交。');d.close();await reload();choose(result);},'closet-primary');family.onchange=()=>{save.disabled=family.checked;note.textContent=family.checked?'家人衣橱功能准备中，暂不能保存。':'创建后，从我的衣橱选择衣物加入。';};d.append(name,remark,label,note,save);if(initialFamily)family.onchange();name.focus();}
+ function create(){const {d,current}=dialog('创建分类衣橱');const name=el('input');name.placeholder='衣橱名称';name.maxLength=40;name.required=true;name.setAttribute('aria-label','衣橱名称');
+  const save=button('创建',async()=>{if(!name.value.trim()){name.focus();return;}if(!current())return;const result=await write('closet-create',{name:name.value.trim(),remark:'',is_family:false});if(!current())return;if(!result.id)throw Error('创建结果待确认，请刷新衣橱列表核对，勿重复提交。');d.close();await reload();choose(result);},'closet-primary');d.append(name,save);name.focus();}
  function menu(){
   const {d}=dialog('选择衣橱','closet-menu');titleButton.setAttribute('aria-expanded','true');
   const content=el('div','closet-menu-content');d.append(content);
@@ -34,8 +34,10 @@ export function createClosetSwitcher({read,write,onSelect,getSelected,getProduct
   });};
   group('我的衣橱',[null,...rows.filter(r=>!r.is_family)]);
   const add=button('',()=>{d.close();create();},'closet-option closet-create-option'),copy=el('span','closet-option-copy');copy.append(el('strong','','分类衣橱'),el('small','','从已有单品，整理一份喜欢'));add.setAttribute('aria-label','分类衣橱');add.append(el('span','closet-monogram','＋'),copy);content.append(add);
+  /* 暂时隐藏家人衣橱分组（含分割线）和创建入口，保留已有数据。
   group('家人衣橱',rows.filter(r=>r.is_family));
   const familyAdd=button('',()=>{d.close();create(true);},'closet-option closet-create-option'),familyCopy=el('span','closet-option-copy');familyAdd.setAttribute('aria-label','家庭衣橱');familyCopy.append(el('strong','','家庭衣橱'),el('small','','为家人，留一处穿搭天地'));familyAdd.append(el('span','closet-monogram','＋'),familyCopy);content.append(familyAdd);
+  */
   const position=()=>{const anchor=titleButton.getBoundingClientRect(),shell=document.querySelector('#wardrobe').getBoundingClientRect(),width=Math.min(320,shell.width-40,innerWidth-32),left=Math.max(16,Math.min(shell.left+20,innerWidth-width-16)),top=Math.max(16,Math.min(anchor.bottom+12,innerHeight-160));d.style.width=width+'px';d.style.left=left+'px';d.style.top=top+'px';d.style.setProperty('--closet-menu-height',Math.max(120,innerHeight-top-24)+'px');d.style.setProperty('--closet-arrow-left',Math.max(24,Math.min(anchor.left+58-left,width-32))+'px');};
   position();window.addEventListener('resize',position);d.addEventListener('close',()=>{titleButton.setAttribute('aria-expanded','false');if(!document.querySelector('.closet-dialog[open]'))titleButton.focus({preventScroll:true});window.removeEventListener('resize',position);});
   d.addEventListener('click',event=>{if(event.target!==d)return;const r=d.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)d.close();});

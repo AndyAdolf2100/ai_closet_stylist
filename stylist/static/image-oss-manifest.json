@@ -1908,6 +1908,168 @@
       "remote_bytes": 1791824,
       "content_type": "image/png",
       "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/female_regal_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/4df512143f1a40dea32144863c89dc87.png",
+      "sha256": "2cf0c229e1ab40b247f2cf69e71fe8683529bfb98dac431895d764aa1748949c",
+      "bytes": 1823550,
+      "remote_sha256": "67a2895a20dd6982b0e82d998eed575496efc6626713321a76a7b55a8772cab9",
+      "remote_bytes": 815511,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/female_sweet_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/efc82ed85e00439b8c192f670da6afb9.png",
+      "sha256": "9fd9d488b3bd086fc60d179b56dca338d1eae36bfdb0093059af3d1e8a59b5ce",
+      "bytes": 2019424,
+      "remote_sha256": "2ce932d463fa4316796cedab45bbc31d38ac4331e107e3faec111ebaa2fb71b9",
+      "remote_bytes": 878432,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/female_warm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/277da5d413cf4d92916518daeb99a21c.png",
+      "sha256": "a1189bc2e751117c866e6df9e8995ff1b244259744052beb22011696d3899914",
+      "bytes": 2014620,
+      "remote_sha256": "a423402c1cbfb8ebec66f66d661570e4c5dde96fa3616703e4b86131a315c49a",
+      "remote_bytes": 870396,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/male_artistic_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/e927009bb85e40db823378c091cd9a95.png",
+      "sha256": "1104e672ee5c20b7925d11208615acb0dcdbed2db03ae30d283f30ab5d3f040d",
+      "bytes": 1859997,
+      "remote_sha256": "f4e68a8b3b2a9357fd612f715daec427e92d513c30c93dd2b01de04d1db87332",
+      "remote_bytes": 818575,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/male_calm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/0eac9d7c5a6a46b692eb2c2161bea8b0.png",
+      "sha256": "79f4a01e02e37fab7c6904b186b940393d1f32190cae03772e880ab586573799",
+      "bytes": 1966681,
+      "remote_sha256": "14f250ddaa908dccabfb409cf74430a4ac37f21cf35270575e6d09d5c54cd5d6",
+      "remote_bytes": 827177,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/upload-guides-v1/male_confident_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/6fe51ab5ad2149f8ae88674f644786b5.png",
+      "sha256": "b83150bca2e7f231bccdbe1c832592c9dd3e464c179e259a5c614cc0ecc81ef0",
+      "bytes": 1946049,
+      "remote_sha256": "a5a253b3b972900758c0b092de830db54407a4af7761a586e1f52f8b87f20a9c",
+      "remote_bytes": 842500,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/female_regal_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/35c0c87847f0425297347c5bf2dcc4e1.png",
+      "sha256": "d693337e06f7cae36a40e1aace1ba074fb75f8ab32aeb00b1bf14f2c4ae21b76",
+      "bytes": 1814042,
+      "remote_sha256": "edeec527822a2964bb70cf5e68a9a2b42e4efe71f5fc9ea0d9fee7a58f0adee9",
+      "remote_bytes": 770765,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/female_sweet_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/d24b8942522a4ed48f2a054b5c19c386.png",
+      "sha256": "1fe770521da1569a87cd3390ceec79ad10b2edc32dc454ee4dc80be90d1f83bb",
+      "bytes": 1841750,
+      "remote_sha256": "9ccceb37bed91b7b64b6734eb343eac7689950d32e6a9bd74fdf092b9b99d466",
+      "remote_bytes": 811971,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/female_warm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/0704cfad30dd4e2da2df110e680adc99.png",
+      "sha256": "830d18568620f0d92fada2ff3cb6cead56142f156fa0e288f8a0cea8b82c3557",
+      "bytes": 1811325,
+      "remote_sha256": "d07d76444d5b715837d868111f6083abd07deb3afd6c6285ff9c9da6b05acf23",
+      "remote_bytes": 788594,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/male_artistic_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/f130981462554aaf9d74bf108c1a992f.png",
+      "sha256": "f463b5a2e9ad106f995a1ca10bb22943a0de23a4995f532f75d0218e4794de66",
+      "bytes": 1884674,
+      "remote_sha256": "e7c3f83c0317c60994bface592321139b9843200287aea93444edb847e4eb9bb",
+      "remote_bytes": 816190,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/male_calm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/2e76625a6d6c417a8547d0957f83dd43.png",
+      "sha256": "88c73f9eacb6f785f474d96ece4dec46f85e957fd97ead82766d031042d49f8c",
+      "bytes": 1880802,
+      "remote_sha256": "3abfaf5a0b9830093c9bd469a7c6e5c066ff07fd92a1cb7fc7025f7570d82662",
+      "remote_bytes": 791123,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v1/male_confident_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/d208a87339bf4f5f99d035dc866c8148.png",
+      "sha256": "8ec3afeec3b45d8008d670d8a5646c7d2acefda1f0605b6a9890a738b484470f",
+      "bytes": 1871060,
+      "remote_sha256": "d4d847696dc50fc23f53e47c8d1ec95715977326fe71e08023d2bea6817dc1bb",
+      "remote_bytes": 796325,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/female_regal_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/d1ea9071dff94a3d8c47dceb21310405.png",
+      "sha256": "e8c5cd1b3b326635ee7c7980baf120de140d08c2bd1c50416c831c334e428760",
+      "bytes": 1994138,
+      "remote_sha256": "08fc999c7da5abfecf6608b08efdd3d060709385660582134e447a41b8ac6708",
+      "remote_bytes": 869033,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/female_sweet_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/dfb7239fa2bc4bb8b51b4457a75e0d87.png",
+      "sha256": "0937725728d8e6dcb683deeb5f54d9617c7775a8c5f0fd3eaf01a1ae848818ac",
+      "bytes": 2100837,
+      "remote_sha256": "d108110cf283dd3a37c403f8e90ca4497a9df8e24638c838a2bbc529c63e1423",
+      "remote_bytes": 909242,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/female_warm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/897e103431e1466d841dfc40bbe0e612.png",
+      "sha256": "eff808f4a3cfccde302901900a8c04dcbe89b760fa5fd2e10bc8316e8b6d6fc9",
+      "bytes": 1924544,
+      "remote_sha256": "73991c3b389a428b2101a67afabfc04f1c128f828c817962c476c854a0a73a42",
+      "remote_bytes": 854166,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/male_artistic_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/8751d897eb494471ad9880ed137beea6.png",
+      "sha256": "0db1cce013648a6bf7734c0a5f38c956ffb96b9a7485a6a4d5606261a87e405e",
+      "bytes": 1975190,
+      "remote_sha256": "1270bbe9cc54bb45fb984d28edeb6a90dc60db66b0cdffc70f77d9e2f76c4252",
+      "remote_bytes": 864377,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/male_calm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/c71264ab7e2843389d97a44a7a858f98.png",
+      "sha256": "fbe027e2736d069a38981f4e3eddda1a503d8b78d848b6e1e5d38d1f5deb2d5f",
+      "bytes": 1861472,
+      "remote_sha256": "61d00c1c50f3b3f91a4d088d9174f3c4e0b4aef57f62b8b48abc1460640569c1",
+      "remote_bytes": 812266,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v2/male_confident_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/3dd8f962fc5b4fd1830c52fcb803ccc9.png",
+      "sha256": "0cefd297c21cbd7c9c6f294cd6c354f98e3ab7aecae49b4dda7b7008517b978b",
+      "bytes": 2008374,
+      "remote_sha256": "d245d5c1411c1c423bac40c52c7458d692b3115d5f8474c03fc3dfe760b41e6a",
+      "remote_bytes": 886262,
+      "content_type": "image/png",
+      "cors_required": true
     }
   },
   "embedded": {

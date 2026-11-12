@@ -74,7 +74,7 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   const wardrobeHeader=document.querySelector('.wardrobe-scene');
   const wardrobeTitle=make('div','y-page-intro'); wardrobeTitle.append(make('span','y-eyebrow','YOUR PRIVATE WARDROBE'));
   wardrobeHeader.querySelector('h1').textContent='我的衣橱';wardrobeHeader.prepend(wardrobeTitle);
-  const wardrobeAdd=make('button','y-wardrobe-add','＋ 添加');wardrobeAdd.type='button';wardrobeAdd.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'upload'}));wardrobeHeader.append(wardrobeAdd);
+  const wardrobeAdd=make('button','y-wardrobe-add','＋ 添加衣物');wardrobeAdd.type='button';wardrobeAdd.onclick=()=>window.dispatchEvent(new CustomEvent('yijian-agent-open',{detail:'upload'}));const wardrobeHeading=make('div','y-wardrobe-heading');wardrobeHeading.append(wardrobeHeader.querySelector('h1'),wardrobeAdd);wardrobeTitle.after(wardrobeHeading);
   const wardrobeScene=make('div','y-wardrobe-companion'),wardrobeCopy=make('div','y-wardrobe-copy');
   const wardrobeLines={
     male_calm_v1:'不急着添新衣，先把已有的喜欢，穿得舒服又妥帖。',
@@ -122,13 +122,16 @@ if (document.documentElement.dataset.appDesign === 'yijian') {
   wardrobeNote.replaceChildren(icon('stats'),wardrobeNoteCopy,make('span','y-wardrobe-note-arrow','›'));
   document.querySelector('.feature-cards').after(wardrobeNote);
   document.querySelectorAll('.feature-cards button').forEach((b,i)=>b.replaceChild(icon(i?'diy':'records'),b.querySelector('img')));
+  document.querySelector('.feature-cards [data-detail="generation-records"] small').textContent='查看记录';
+  const profileShortcuts=document.querySelector('.feature-cards');profileShortcuts.classList.add('y-profile-shortcuts');letter.replaceWith(profileShortcuts);accountJournal.setAttribute('aria-label','我的账号与快捷入口');
+  profileShortcuts.querySelectorAll('button').forEach(b=>{const title=b.querySelector('strong');title.textContent=title.textContent.replace(/\s*[›>]\s*$/,'');const copy=b.querySelector('span');copy.classList.add('y-profile-shortcut-copy');const badge=make('span','y-profile-shortcut-icon');badge.append(b.querySelector('.y-icon'));const main=make('span','y-profile-shortcut-main');main.append(badge,copy);const arrow=make('span','y-profile-shortcut-arrow','›');arrow.setAttribute('aria-hidden','true');b.replaceChildren(main,arrow);});
   document.querySelectorAll('.profile-menu button').forEach((b,i)=>b.replaceChild(icon(['records','mail','chat','mail','settings'][i]),b.querySelector('img')));
   document.querySelectorAll('.create-scroll button:not(.close)').forEach((b,i)=>b.replaceChild(icon(['chat','diy','products','diy','ootd'][i]),b.querySelector('img')));
   document.querySelector('.create-scroll > p').textContent='从一件衣服开始，慢慢找到喜欢的自己。';
   document.querySelector('.create-scroll h2').textContent='给日常，添一笔';
   document.querySelector('.identity .pencil').hidden=true;
   const identity=document.querySelector('.identity'),identityCopy=identity.querySelector('div');
-  document.querySelector('.memory-card').after(identity);
+  document.querySelector('.memory-card').before(identity);
   const portraitButton=identity.querySelector('.avatar'),selfPortrait=make('div','y-identity-photo');selfPortrait.append(icon('profile'),$('account-avatar'));portraitButton.replaceWith(selfPortrait);
   identityCopy.classList.add('y-identity-copy');identityCopy.prepend(make('span','y-identity-eyebrow','爱搭衣橱 · 我的日常'));
   const shapeLink=identityCopy.querySelector('.identity-edit');shapeLink.textContent='挑选试穿模样';shapeLink.setAttribute('aria-label','挑选我的试穿形象');shapeLink.append(icon('arrow'));

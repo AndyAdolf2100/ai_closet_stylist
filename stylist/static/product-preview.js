@@ -39,7 +39,9 @@
     setZoom(false); image.hidden = false; zoom.disabled = false;
     status.textContent = '图片加载中…';
     image.alt = gallery[index].alt;
-    caption.textContent = `${gallery[index].alt} · ${index + 1} / ${gallery.length}`;
+    caption.hidden = gallery[index].hideCaption === true;
+    caption.textContent = caption.hidden ? '' : `${gallery[index].alt} · ${index + 1} / ${gallery.length}`;
+    toolbar.style.justifyContent = caption.hidden ? 'flex-end' : '';
     previous.disabled = index === 0; next.disabled = index === gallery.length - 1;
     navigation.hidden = gallery.length < 2;
     image.src = gallery[index].src;

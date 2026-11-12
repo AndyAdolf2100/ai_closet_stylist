@@ -2,7 +2,12 @@
 (() => {
   let owner=null, epoch=0, api=null, notify=null, onStyle=null,onProduct=null, getConversation=null, getContext=null, onRegenerate=null, onNeedOutfit=null, timer=null, previewURL=null, opener=null;
   let pendingLook=null, activeQuote=null, viewSequence=0,closeLocked=false;
-  let activeTryon=null;
+  let activeTryon=null,personResume=null;
+  const dismissedPerson=new Set();
+  const uploadGuideURLs={"male_calm_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/0eac9d7c5a6a46b692eb2c2161bea8b0.png","male_confident_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/6fe51ab5ad2149f8ae88674f644786b5.png","female_sweet_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/efc82ed85e00439b8c192f670da6afb9.png","female_regal_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/4df512143f1a40dea32144863c89dc87.png","female_warm_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/277da5d413cf4d92916518daeb99a21c.png","male_artistic_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/e927009bb85e40db823378c091cd9a95.png"};
+  const personGuideURLs={"male_calm_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/c71264ab7e2843389d97a44a7a858f98.png","male_confident_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/3dd8f962fc5b4fd1830c52fcb803ccc9.png","female_sweet_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/dfb7239fa2bc4bb8b51b4457a75e0d87.png","female_regal_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/d1ea9071dff94a3d8c47dceb21310405.png","female_warm_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/897e103431e1466d841dfc40bbe0e612.png","male_artistic_v1":"https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261112/8751d897eb494471ad9880ed137beea6.png"};
+  function updateUploadGuide(persona){const guide=body.querySelector('.journey-upload-guide');if(!guide)return;const assets=guide.dataset.kind==='person'?personGuideURLs:uploadGuideURLs;const role=Object.hasOwn(assets,persona)?persona:'male_calm_v1';const image=guide.querySelector('img');image.src=assets[role];guide.dataset.persona=role;}
+  window.addEventListener('companion-profile-change',event=>updateUploadGuide(event.detail?.assistant_persona));
   const points=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Number(value).toLocaleString('en-US',{maximumFractionDigits:20}):'—';
   const watchers=new Map(),finished=new Set();
   const $=id=>document.getElementById(id);
@@ -94,9 +99,9 @@
   }
   function upload(kind='garment',options={}){
     const maxPhotos=kind==='garment'&&!options.single?10:1;
-    show(kind==='garment'?'把喜欢收进衣橱':'创建我的试穿形象');dialog.dataset.panel='upload';scene.hidden=true;steps.hidden=true;const token=epoch,view=viewSequence;
+    show(kind==='garment'?'添加衣物':'创建我的试穿形象');dialog.dataset.panel='upload';scene.hidden=true;steps.hidden=true;const token=epoch,view=viewSequence;
     atmosphere(kind);scene.hidden=true;steps.hidden=true;
-    body.append(el('p','journey-intro',kind==='garment'?(maxPhotos===10?'选择一种添加方式，建立你的私人衣橱。照片最多10张，预览确认再上传。':'请选择一张只含单件衣物的照片，预览确认后再上传。'):'选择本人的清晰正面照片，避免遮挡。照片检查后，会单独展示人物生成所需积分。'));
+    if(kind==='garment'&&maxPhotos!==10)body.append(el('p','journey-intro',kind==='garment'?(maxPhotos===10?'选择一种添加方式，建立你的私人衣橱。照片最多10张，预览确认再上传。':'请选择一张只含单件衣物的照片，预览确认后再上传。'):'选择本人的清晰正面照片，避免遮挡。照片检查后，会单独展示人物生成所需积分。'));
     const input=el('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';input.setAttribute('aria-label',kind==='garment'?'选择衣物照片':'选择本人照片');
     input.id='journey-photo-input';input.className='journey-file-input';input.multiple=maxPhotos>1;if(kind==='garment')input.setAttribute('aria-description',maxPhotos===10?'最多10张照片，预览确认后上传。':'请选择一张单件衣物照片。');
     const pocket=el('div','journey-photo-pocket');
@@ -113,22 +118,28 @@
           activeSource=camera?'camera':'photo';fileSequence++;releasePhoto();data=null;requestID=null;submit.disabled=true;preview.replaceChildren();pocket.classList.remove('has-photo');
           input.multiple=!camera&&maxPhotos>1;
           if(camera)input.setAttribute('capture',kind==='person'?'user':'environment');else input.removeAttribute('capture');
-          input.value='';input.click();
+          if(guide)guide.hidden=false;input.value='';input.click();
         });
         pick.dataset.photoSource=camera?'camera':'photo';
         const icon=el('span');icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24">'+(camera?'<path d="M8 6 9 3h6l1 3h4v14H4V6Z"/><circle cx="12" cy="12" r="4"/>':'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/>')+'</svg>';
-        const copy=el('span','journey-source-copy'),heading=el('span','journey-source-heading');heading.append(el('strong','',camera?'拍摄':'从照片添加'));if(!camera)heading.append(el('small','journey-source-recommend','推荐'));copy.append(heading,el('small','journey-source-detail',camera?'使用本次拍摄的照片':kind==='person'?'选择1张本人照片 · 预览后确认':maxPhotos===10?'一次最多10张 · 预览后确认':'单张单件衣物 · 预览后确认上传'));pick.replaceChildren(icon,copy,el('span','journey-source-arrow','›'));pick.setAttribute('aria-label',camera?'拍摄':kind==='person'?'从照片添加，单张本人照片':maxPhotos===10?'从照片添加，最多10张':'从照片添加，单张衣物');pickButtons.push(pick);choices.append(pick);
+        const copy=el('span','journey-source-copy'),heading=el('span','journey-source-heading');heading.append(el('strong','',camera?'拍摄':'从照片添加'));if(!camera&&kind!=='person')heading.append(el('small','journey-source-recommend','推荐'));copy.append(heading,el('small','journey-source-detail',camera?'使用本次拍摄的照片':kind==='person'?'选择1张本人照片 · 预览后确认':maxPhotos===10?'一次最多10张 · 预览后确认':'单张单件衣物 · 预览后确认上传'));pick.replaceChildren(icon,copy,el('span','journey-source-arrow','›'));pick.setAttribute('aria-label',camera?'拍摄':kind==='person'?'从照片添加，单张本人照片':maxPhotos===10?'从照片添加，最多10张':'从照片添加，单张衣物');pickButtons.push(pick);choices.append(pick);
       }
       pocketIcon.remove();pocket.append(choices);
     }
     const preview=el('div','journey-upload-preview'),actions=el('div','journey-actions journey-submitbar');
+    let guide=null;
+    if(kind==='person'||kind==='garment'&&maxPhotos===10){
+      guide=el('figure','journey-upload-guide');guide.dataset.kind=kind;const art=el('img');art.alt=kind==='person'?'创建试穿形象示意：头像、半身或全身生活照片均可上传，生成统一头肩数字分身，注意避免面部遮挡':'衣物识别示意：人物穿搭照、单件衣服照和多件衣服合照，确认识别结果后再加入衣橱';art.loading='lazy';art.decoding='async';art.referrerPolicy='no-referrer';
+      const enlarge=button('',()=>window.ProductPreview?.open([{src:art.src,alt:art.alt,hideCaption:true}],0,enlarge));enlarge.className='journey-upload-guide-preview';enlarge.setAttribute('aria-label',kind==='person'?'放大试穿形象说明图':'放大衣物识别说明图');enlarge.append(art);guide.append(enlarge,el('figcaption','',kind==='person'?'轻点放大 · 图片为创建流程示意':'轻点放大 · 图片为识别方式示意'));art.onerror=()=>{guide.hidden=true;};
+    }
     let data=null,requestID=null,fileSequence=0;
     const submit=button('确认上传',async()=>{
       if(!data||!current(token))return;
       input.disabled=true;submit.disabled=true;pickButtons.forEach(b=>b.disabled=true);lockClose(true);
+      if(kind==='garment')preview.append(loadingTitle(el('p','journey-upload-status','正在上传照片…')));else{const heading=body.querySelector('.journey-person-stage');if(heading)loadingTitle(heading);body.querySelector('.journey-person-progress')?.replaceWith(personSteps('uploading'));}actions.querySelector('[data-discard-photo]')?.setAttribute('disabled','');
       try{if(kind==='garment'&&!window.ServerGarmentUpload)throw Error('上传组件未加载，请刷新页面。');const action=kind==='garment'?await window.ServerGarmentUpload.start(data,requestID):await api('/stylist-api/media/uploads',{method:'POST',body:JSON.stringify({request_id:requestID,kind,image_data:data,confirmed:true})});
         if(current(token)){renderUpload(action);if(dialog.open&&view===viewSequence){data=null;renderMedia(action);}}
-      }catch(error){if(current(token))lockClose(false);throw error;}finally{if(current(token)){input.disabled=false;pickButtons.forEach(b=>b.disabled=false);}}
+      }catch(error){if(current(token)){lockClose(false);const heading=body.querySelector('.journey-person-stage');if(heading)loadingTitle(heading,false);if(kind==='person')body.querySelector('.journey-person-progress')?.replaceWith(personSteps('selected'));preview.querySelector('.journey-upload-status')?.remove();preview.querySelector('.journey-person-progress')?.remove();preview.querySelector('.journey-batch-progress')?.remove();}throw error;}finally{if(current(token)){input.disabled=false;pickButtons.forEach(b=>b.disabled=false);actions.querySelector('[data-discard-photo]')?.removeAttribute('disabled');}}
     },true);submit.disabled=true;
     input.onchange=async()=>{
       const files=Array.from(input.files||[]);if(!files.length||!current(token)||!dialog.open||view!==viewSequence)return;
@@ -136,16 +147,38 @@
       const alive=()=>current(token)&&dialog.open&&view===viewSequence&&selectedFile===fileSequence;
       if(files.length>(activeSource==='camera'?1:maxPhotos)){notify?.(activeSource==='camera'?'拍摄只使用本次的一张照片。':maxPhotos===10?'一次最多选择10张照片，请重新选择。':'请只选择一张照片。');return;}
       if(files.some(file=>file.size<16||file.size>10*1024*1024)){notify?.('每张照片请选择10MB以内的有效JPG、PNG或WebP图片。');return;}
+      if(guide)guide.hidden=true;
       pocketTitle.textContent=kind==='garment'?'照片选好了，也可以重新选择':'照片选好了，点这里可以换一张';pocketHint.textContent=files.length>1?`已选择${files.length}张 · 正在准备…`:files[0].name;
       const readPhoto=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('照片读取失败，请重新选择。'));reader.readAsDataURL(file);});
       const img=el('img');
       try{
-        if(files.length===1){previewURL=URL.createObjectURL(files[0]);img.src=previewURL;img.alt='仅在本地预览的待上传照片';preview.append(img,el('span','journey-preview-label','这张照片，还只在你的设备上'));pocket.classList.add('has-photo');const read=await readPhoto(files[0]);if(alive()){data=photoDataURL(read);submit.disabled=false;}}
+        if(files.length===1){previewURL=URL.createObjectURL(files[0]);img.src=previewURL;img.alt='仅在本地预览的待上传照片';preview.append(img);pocket.classList.add('has-photo');const read=await readPhoto(files[0]);if(alive()){data=photoDataURL(read);submit.disabled=false;}}
         else{preview.append(el('p','journey-compose-status','正在准备'+files.length+'张照片…'));const composed=await composePhotos(files,readPhoto,alive);if(!alive()||!composed)return;data=composed;img.src=composed;img.alt=files.length+'张照片拼成的本地待上传图片';preview.replaceChildren(img,el('span','journey-preview-label',`已选择${files.length}张照片，请预览确认`));pocketHint.textContent=`已选择${files.length}张 · 请预览确认`;pocket.classList.add('has-photo');submit.disabled=false;}
+        if(alive()&&data&&kind==='person'){pocket.hidden=true;preview.replaceChildren(img);body.replaceChildren(el('h3','journey-person-stage','核对照片，准备生成'),personSteps('selected'),pocket,preview);if(guide)body.append(guide);if(!actions.querySelector('[data-discard-photo]')){const discard=button('放弃照片',()=>upload('person',{fresh:true}));discard.dataset.discardPhoto='true';actions.append(discard);}}
       }catch(e){if(alive()){data=null;submit.disabled=true;preview.replaceChildren();pocketHint.textContent=kind==='garment'?maxPhotos===10?'一次最多10张 · 预览后确认':'单张单件衣物 · 预览后确认上传':'JPG / PNG / WebP · 10MB 以内';notify?.(e.message);}}
     };
-    actions.append(submit);body.append(pocket,preview);if(kind!=='garment')body.append(el('p','journey-note','确认后会上传并检查照片。人物生成的费用，会在下一步单独确认。'));dock(actions);
+    if(kind==='person'&&!options.fresh){
+      const unchanged=()=>current(token)&&dialog.open&&view===viewSequence&&fileSequence===0;let saved=false;try{saved=Boolean(sessionStorage.getItem('journey-person-task:'+owner));}catch{}
+      if(personResume||saved){pickButtons.forEach(b=>b.disabled=true);input.disabled=true;}
+      resumePerson(unchanged).then(()=>{if(unchanged()){pickButtons.forEach(b=>b.disabled=false);input.disabled=false;}}).catch(e=>{if(unchanged()){show('创建我的试穿形象');dialog.dataset.panel='upload';scene.hidden=true;steps.hidden=true;body.append(el('p','journey-note','暂时无法读取原任务，请重新查询后继续。'));dock(button('重新读取',()=>upload('person')));notify?.(e.message);}});
+    }
+    actions.append(submit);body.append(pocket,preview);if(guide){body.append(guide);updateUploadGuide(document.documentElement.dataset.companionPersona||window.CompanionSettings?.getProfile?.()?.assistant_persona);}dock(actions);
   }
+  function personDismissKey(action){return String(action.result?.task_id||action.action_id);}
+  function pendingPortrait(task){return {action_id:'twin-pending:'+task.task_id,kind:'generation',twin_pending:true,status:task.can_confirm?'completed':['failed','completed'].includes(task.status)?task.status:'processing',result:task};}
+  async function resumePerson(live){
+    let action=personResume;
+    if(!action){try{const saved=JSON.parse(sessionStorage.getItem('journey-person-task:'+owner)||'null');if(saved?.action_id)action=saved;}catch{}}
+    if(!action||dismissedPerson.has(personDismissKey(action)))return;try{if(sessionStorage.getItem('journey-person-dismissed:'+owner)===personDismissKey(action))return;}catch{}
+    const fresh=await readMedia(action);if(!live())return;
+    if((fresh.kind==='generation'&&(['processing','executing','unknown'].includes(fresh.status)||fresh.status==='completed'&&fresh.result?.can_confirm))||(fresh.kind==='person'&&(['processing','executing','unknown'].includes(fresh.status)||fresh.status==='completed'&&fresh.result?.allowed_hat_actions?.length)))renderMedia(fresh);
+  }
+  function personSteps(stage,action={}){
+    const wrap=el('div','journey-person-progress'),value=stage==='completed'?100:stage==='generating'?75:stage==='ready'?50:['uploading','checking'].includes(stage)?25:0;
+    const progress=garmentProgress(value,'创建试穿形象进度');progress.querySelector('.journey-note').remove();wrap.append(progress);return wrap;
+  }
+  function rememberPerson(action){personResume=action;try{sessionStorage.setItem('journey-person-task:'+owner,JSON.stringify({action_id:action.action_id,kind:action.kind,twin_pending:action.twin_pending,result:action.twin_pending?{task_id:action.result?.task_id}:{}}));}catch{}}
+
   function renderUpload(action){
     if(action.kind!=='garment'||!owner)return;
     const feed=$('feed');let card=feed.querySelector('[data-media-action="'+action.action_id+'"]');
@@ -166,7 +199,7 @@
   }
   function mediaLabel(action){return {garment:'衣物入柜',person:'人物照片检查',generation:'数字人生成'}[action.kind]||'处理记录';}
   const statusLabel=status=>({quoted:'等待费用确认',executing:'正在提交',processing:'正在处理中',completed:'已完成',failed:'未完成',unknown:'结果待核对',cancelled:'已取消',expired:'报价已过期'}[status]||'状态待核对');
-  const readMedia=action=>action.kind==='garment'?(action.result?.protocol==='server_direct'?window.ServerGarmentUpload.refresh(action.action_id):Promise.resolve(action)):api('/stylist-api/media/'+action.action_id);
+  const readMedia=action=>action.twin_pending?api('/stylist-api/twins').then(o=>{const task=o.pending_task;if(task&&String(task.task_id)===String(action.result.task_id))return pendingPortrait(task);return {...action,status:'completed',result:{...action.result,can_confirm:false}};}):action.kind==='garment'?(action.result?.protocol==='server_direct'?window.ServerGarmentUpload.refresh(action.action_id):Promise.resolve(action)):api('/stylist-api/media/'+action.action_id);
   function pollMedia(action,token){
     if(action.kind==='garment'&&action.result?.protocol!=='server_direct')return;
     const view=viewSequence;
@@ -189,6 +222,13 @@
       }
     },2000);
   }
+  function loadingTitle(node,active=true){node.classList.toggle('journey-loading-title',active);if(active)node.setAttribute('aria-busy','true');else node.removeAttribute('aria-busy');return node;}
+  function garmentProgress(value,label){
+    const known=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100;
+    const box=el('div','journey-batch-progress'),caption=el('p','journey-note',label+(known?' · '+value+'%':'')),track=el('div','journey-progress-track'),fill=el('span');
+    track.setAttribute('role','progressbar');track.setAttribute('aria-label',label);track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');
+    if(known){track.setAttribute('aria-valuenow',String(value));track.setAttribute('aria-valuetext',label+'，'+value+'%');fill.style.width=value+'%';}else track.classList.add('is-indeterminate');track.append(fill);box.append(caption,track);return box;
+  }
   const batchChoices=new Map();
   function renderBatch(action){
     show('添加衣服');dialog.dataset.panel='upload';atmosphere('garment');scene.hidden=true;steps.hidden=true;
@@ -196,11 +236,16 @@
     const token=epoch,view=viewSequence,result=action.result||{},currentView=()=>current(token)&&dialog.open&&view===viewSequence;
     lockClose(['processing','executing'].includes(action.status)||(action.status==='unknown'&&Boolean(result.task_id)));if(result.selection_required&&!result.selection_submitted_ids)lockClose(false);
     const header=el('div','journey-batch-summary');header.append(el('h3','',result.stage==='preview_beautifying'?'正在美化单品':result.selection_required?'核对美化结果':action.status==='completed'?'已收入衣橱':action.status==='failed'?'本次添加未完成':action.status==='cancelled'?'本次添加已取消':action.status==='unknown'?'提交结果待核对':'正在整理你的照片'));
-    body.append(header);
+    loadingTitle(header.querySelector('h3'),!result.selection_required&&['processing','executing','unknown'].includes(action.status));body.append(header);
     if(result.message)body.append(el('p','journey-note',result.message));
     if(result.stage==='segmenting'||result.stage==='creating_task')body.append(el('p','journey-note','正在识别图片里的衣服、鞋履与配饰，识别完成后由你选择保留。'));
     if(result.stage==='preview_beautifying')body.append(el('p','journey-note','识别完成，正在美化 '+(result.selection_items||[]).length+' 件单品。美化结束后，再由你选择是否加入衣橱。'));
-    if(result.stage!=='preview_beautifying'&&typeof result.progress==='number'&&Number.isFinite(result.progress)){const progress=el('progress');progress.max=100;progress.value=Math.max(0,Math.min(100,result.progress));progress.setAttribute('aria-label','识别进度');body.append(progress);}
+    if(!['failed','cancelled'].includes(action.status)){
+      const items=result.selection_items||[],finished=items.filter(item=>item.beautify_status===2||(item.beautify_status===1&&item.beautify_image)).length;
+      const ready=result.selection_required||result.stage==='selecting'||Boolean(result.selection_submitted_ids)||action.status==='completed';
+      const value=ready?100:result.stage==='preview_beautifying'&&items.length?50+Math.round(50*finished/items.length):50;
+      body.append(garmentProgress(value,ready?(action.status==='completed'?'处理完成':'美化已结束'):result.stage==='preview_beautifying'?'正在美化单品（'+finished+'/'+items.length+'）':'照片已选好'));
+    }
     if(result.selection_required){
       let chosen=batchChoices.get(action.action_id);if(!chosen){chosen=new Set((result.selection_items||[]).filter(i=>i.beautify_status===1&&i.beautify_image).map(i=>i.detail_id));batchChoices.set(action.action_id,chosen);}
       body.append(el('p','journey-note','美化已结束，勾选想要保留的单品，再确认加入衣橱。'));const grid=el('div','journey-batch-grid');
@@ -218,12 +263,13 @@
   }
   function renderMedia(action,startPolling=true){
     if(action.kind==='garment'&&action.result?.protocol==='server_direct'){renderBatch(action);if(startPolling)pollMedia(action,epoch);return;}
-    const personFlow=['person','generation'].includes(action.kind);
+    const personFlow=['person','generation'].includes(action.kind);if(personFlow)rememberPerson(action);
     show(personFlow?'创建我的试穿形象':mediaLabel(action));const token=epoch,result=action.result||{};if(action.kind==='garment'){renderUpload(action);body.append(el('p','journey-note','旧版上传记录：仅显示已保存的结果，不再查询或更新。'));}
     atmosphere(action.kind==='garment'?'garment':'person',action.kind==='person'?0:action.status==='completed'?2:1);dialog.dataset.status=action.status;
-    if(personFlow){dialog.dataset.panel='upload';scene.hidden=true;steps.hidden=true;lockClose(['processing','executing','unknown'].includes(action.status));body.append(el('h3','journey-person-stage',action.kind==='person'?(action.status==='completed'?'核对照片，准备生成':'人物照片检查'):(action.status==='completed'?'新的试穿形象':'正在生成试穿形象')));}
-    body.append(el('p','journey-state',statusLabel(action.status)));
-    if(action.kind==='generation'&&['executing','processing'].includes(action.status))body.append(progress(action));
+    if(personFlow){dialog.dataset.panel='upload';scene.hidden=true;steps.hidden=true;lockClose(action.kind==='person'&&['processing','executing','unknown'].includes(action.status));body.append(el('h3','journey-person-stage',action.kind==='person'?(action.status==='completed'?'核对照片，准备生成':'人物照片检查'):(action.status==='completed'?'新的试穿形象':'正在生成试穿形象')));}
+    if(personFlow)loadingTitle(body.querySelector('.journey-person-stage'),['processing','executing','unknown'].includes(action.status));
+    if(!personFlow)body.append(el('p','journey-state',statusLabel(action.status)));
+    if(personFlow&&!['failed','cancelled','expired'].includes(action.status)){body.append(personSteps(action.kind==='generation'?(action.status==='completed'?'completed':'generating'):action.status==='completed'?'ready':'checking',action));if(action.kind==='generation'&&action.status==='completed')body.append(el('div','journey-completed-mark','✓ 新形象已准备好'));}
     if(result.message)body.append(el('p','',result.message));
     if(result.result_message)body.append(el('p','',result.result_message));
     appendPhoto(result.result_image_url||result.image_url,mediaLabel(action));
@@ -242,9 +288,10 @@
           if(current(token)&&dialog.open&&['twin_changed','digital_twin_candidate_unavailable','digital_twin_version_conflict'].includes(err.code))renderMedia({...action,result:{...result,can_confirm:false}},false);
           throw err;
         }
-        if(current(token)&&dialog.open){notify?.('已确认使用这个试穿形象。');body.append(el('p','journey-note','已设为我的试穿形象。'));dock(button('完成',()=>dialog.close(),true));}
+        if(current(token)&&dialog.open){personResume=null;dismissedPerson.add(personDismissKey(action));try{sessionStorage.removeItem('journey-person-task:'+owner);}catch{}notify?.('已确认使用这个试穿形象。');body.append(el('p','journey-note','已设为我的试穿形象。'));dock(button('完成',()=>dialog.close(),true));}
       },true));
     }
+    if(action.kind==='generation'&&action.status==='completed'&&result.can_confirm===true)footer.append(button('放弃并重新生成',()=>{dismissedPerson.add(personDismissKey(action));try{sessionStorage.setItem('journey-person-dismissed:'+owner,personDismissKey(action));sessionStorage.removeItem('journey-person-task:'+owner);}catch{}personResume=null;upload('person',{fresh:true});}));
     if(action.status==='failed')body.append(button(action.kind==='garment'?'重新选择衣物照片':'重新选择人物照片',()=>upload(action.kind==='garment'?'garment':'person')));
     if(startPolling)pollMedia(action,token);
   }
@@ -263,13 +310,14 @@
         if(window.AppPayment&&!await window.AppPayment.checkFunds(pending.cost,'twin'))return;
         if(!live()||quoted!==pending||activeQuote!==pending)return;
         activeQuote=null;quoted=null;
+        rememberPerson({action_id:pending.id,kind:'generation',status:'unknown',result:{}});
+        lockClose(false);body.replaceChildren(loadingTitle(el('h3','journey-person-stage','正在生成试穿形象')),personSteps('generating'));appendPhoto(action.result.image_url||action.result.result_image_url,'生成中的本人照片');dock();
         try{
           const result=await api('/stylist-api/media/'+pending.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:true})});
-          if(live())renderMedia(result);
+          if(current(token)){rememberPerson(result);if(live())renderMedia(result);}
         }catch(e){
           if(!live())return;
-          if(['image_quote_expired','image_quote_changed'].includes(e.code)){await readQuote();throw e;}
-          if(e.paymentHandled||e.code==='digital_twin_points_insufficient'){quoted=pending;activeQuote=pending;throw e;}
+          if(['image_quote_expired','image_quote_changed'].includes(e.code)||e.paymentHandled||e.code==='digital_twin_points_insufficient'){cancel(pending);activeQuote=null;quoted=null;renderMedia(action);throw e;}
           // A lost response is not evidence that generation never started.
           renderMedia({action_id:pending.id,kind:'generation',status:'unknown',result:{message:'生成结果暂未确认，正在查询原任务，请勿重复提交。'}});
           throw e;
@@ -304,8 +352,13 @@
       });
       b.setAttribute('aria-pressed',String(value===selected));hats.append(b);
     }
-    body.append(hats,hair,el('p','journey-note','按钮中显示本次人物生成所需积分，点击确认后才开始生成；搭配试穿另行确认积分。'));
-    dock(confirm);readQuote();
+    body.append(hats,hair,el('p','journey-note','按钮中显示本次人物生成所需积分，点击确认后才开始生成。'));
+    const abandon=button('放弃照片',async()=>{
+      if(!live()||submitting)return;ticket++;clearTimer();const old=quoted;quoted=null;if(activeQuote===old)activeQuote=null;
+      if(old)await api('/stylist-api/media/'+old.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:false})});
+      if(!live())return;dismissedPerson.add(personDismissKey(action));personResume=null;try{sessionStorage.removeItem('journey-person-task:'+owner);sessionStorage.setItem('journey-person-dismissed:'+owner,personDismissKey(action));}catch{}upload('person',{fresh:true});
+    });
+    dock(confirm,abandon);readQuote();
   }
   async function cancelQuote(){
     const q=activeQuote;activeQuote=null;if(q)await api((q.kind==='generation'?'/stylist-api/media/':'/stylist-api/images/')+q.id+'/confirm',{method:'POST',body:JSON.stringify({confirmed:false})});
@@ -349,62 +402,73 @@
       if(!current(token))return;
       if(pendingLook){const ref=pendingLook;pendingLook=null;await tryonQuote(ref);}else{notify?.('已保存试穿形象。');await twins();}
     },true));
-    const pending=overview.pending_task;
-    if(pending){
-      const candidate=el('section','journey-pending-portrait'),preview=el('div','journey-pending-photo'),copy=el('div','journey-pending-copy'),actions=el('div','journey-pending-actions');
-      appendPhoto(pending.result_image_url,'待确认的数字人',preview);
-      copy.append(el('span','journey-card-label','形象小记'),el('h3','',pending.can_confirm?'新的模样，等你确认':'正在准备的个人形象'));
-      if(pending.can_confirm)actions.append(button('确认使用生成的形象',async()=>{
-        await api('/stylist-api/twins/use-candidate',{method:'POST',body:JSON.stringify({task_id:String(pending.task_id),expected_version:overview.selection_version})});if(current(token)&&dialog.open)await twins();
-      },true));else copy.append(el('p','',pending.status==='failed'?'上次人物生成没有完成，请查看生成记录。':'个人形象正在准备中，稍后可刷新查看。'));
-      actions.append(button('刷新人物状态',twins));copy.append(actions);
-      if(preview.children.length)candidate.append(preview);else candidate.classList.add('without-photo');
-      candidate.append(copy);body.append(candidate);
-    }
+    const rawPending=overview.pending_task;let dismissed='';try{dismissed=sessionStorage.getItem('journey-person-dismissed:'+owner)||'';}catch{}const pending=rawPending&&!dismissedPerson.has(String(rawPending.task_id))&&String(rawPending.task_id)!==dismissed?rawPending:null;
     if(!portraits.length&&!pending)body.append(el('p','journey-note','这一页还没有形象，先用一张自己的照片开始吧。'));
-    const uploadEntry=button('',()=>upload('person'));uploadEntry.className='journey-portrait-upload';
+    const uploadEntry=button('',()=>{if(pending){personResume=pendingPortrait(pending);renderMedia(personResume);}else upload('person');});uploadEntry.className='journey-portrait-upload';
     const plus=el('span','journey-portrait-plus','＋');plus.setAttribute('aria-hidden','true');
-    const uploadCopy=el('span','journey-portrait-upload-copy');uploadCopy.append(el('strong','','上传本人照片，创建我的试穿形象'),el('span','','从一张照片，遇见新的自己'));
+    const uploadCopy=el('span','journey-portrait-upload-copy');uploadCopy.append(el('strong','',pending?(pending.can_confirm?'查看待确认形象':'查看形象生成进度'):'上传本人照片，创建我的试穿形象'),el('span','',pending?(pending.can_confirm?'新的形象已准备好，等你确认':'正在生成中，点击继续查看'):'从一张照片，遇见新的自己'));
     const arrow=el('span','journey-portrait-arrow','↗');arrow.setAttribute('aria-hidden','true');uploadEntry.append(plus,uploadCopy,arrow);
     body.append(uploadEntry);
   }
   async function tryon(ref){
     requireContext(ref);
+    if(ref.detail_target)return detailTryonQuote(ref);
     pendingLook=ref;const token=epoch;
     show('准备试穿');steps.hidden=true;
     const overview=await readLoading(body,'正在确认试穿形象…',()=>api('/stylist-api/twins'));if(!current(token)||!dialog.open)return;
     if(!overview.default_confirmed||!overview.default_twin_key){await twins();return;}
     pendingLook=null;await tryonQuote(ref);
   }
+  function prepareTryonCutout(image,item){
+    const id=String(item.user_product_id||(item.source==='user'?item.product_id:'')||'');
+    if(!window.LocalCutout||!/^[1-9][0-9]{0,19}$/.test(id))return;
+    const token=epoch,view=viewSequence,piece={...item,source:'user',product_id:id,original_image:item.original_image||item.image_url||item.cutout_image||item.cover_image};
+    image.dataset.cutout='preparing';
+    window.LocalCutout.get(piece,{preferExisting:true}).then(url=>{if(current(token)&&dialog.open&&view===viewSequence&&image.isConnected){image.src=url;image.dataset.cutout='ready';}}).catch(()=>{if(current(token)&&image.isConnected)image.dataset.cutout='fallback';});
+  }
+  function detailTryonCard(ref,selected){
+      const card=el('section','journey-detail-tryon-card');card.setAttribute('aria-label','本次试穿形象与衣物');
+      const person=el('div','journey-detail-tryon-person'),personCopy=el('div');
+      if(selected){ref.detail_portrait=selected.thumbnail_url||selected.image_url;const preview=photo(ref.detail_portrait,selected.name||'试穿形象');if(preview)person.append(preview);}
+      personCopy.append(el('strong','',selected?.name||'正在读取形象…'));const change=button('更换 ›',async()=>{pendingLook=ref;await twins();});change.className='journey-portrait-change';change.setAttribute('aria-label','更换试穿形象');change.disabled=!selected;person.append(personCopy,change);card.append(person);
+      const items=Array.isArray(ref.detail_items)?ref.detail_items:[],clothes=el('section','journey-detail-tryon-clothes');
+      clothes.append(el('h4','',ref.detail_target.kind==='product'?'本次试穿单品':'本次搭配 · '+items.length+'件单品'));
+      const grid=el('div','journey-detail-tryon-grid');
+      for(const item of items){const tile=el('figure'),name=item.title||item.product_name||item.name||item.class_name||'搭配单品',src=imageURL(item.cutout_image||item.original_image||item.image_url||item.cover_image),image=el('img');image.alt=name;image.referrerPolicy='no-referrer';if(src)image.src=src;else image.hidden=true;image.onerror=()=>{image.hidden=true;};tile.append(image,el('figcaption','',name));grid.append(tile);prepareTryonCutout(image,item);}
+      if(items.length)clothes.append(grid);else clothes.append(el('p','journey-note','单品预览暂未读取，请返回详情核对本次衣物。'));
+      card.append(clothes);return card;
+  }
   async function detailTryonQuote(ref){
     show('生成试穿');const token=epoch,view=viewSequence;
     dialog.dataset.panel='upload';dialog.dataset.flow='detail-tryon';scene.hidden=true;steps.hidden=true;
     const live=()=>current(token)&&dialog.open&&view===viewSequence;
     const service=window.DetailTryon;
+    body.append(loadingTitle(el('h3','journey-person-stage',ref.title||'本次试穿')),detailTryonCard(ref,null));
     try{
-      const action=await readLoading(body,'正在确认试穿状态…',()=>service.inspect(ref));if(!live())return;
+      const action=await service.inspect(ref);if(!live())return;
       const render=async()=>{
         if(!live())return;
         body.replaceChildren(el('h3','journey-person-stage',action.status==='completed'?'你的试穿效果':action.status==='failed'?'本次试穿未成功':'正在生成试穿'));
+        loadingTitle(body.querySelector('.journey-person-stage'),['processing','unknown'].includes(action.status));
         if(action.image)appendPhoto(action.image,'试穿效果');
         else if(ref.detail_portrait)appendPhoto(ref.detail_portrait,'正在试穿的形象');
         lockClose(['processing','unknown'].includes(action.status));
         body.append(el('p','journey-note',action.status==='completed'?'试穿已完成。':action.message||'正在为你合成，完成后会在这里展示。'));
+        if(action.status==='processing')body.append(progress({status:'processing'}));
         dock();
         if(['processing','unknown'].includes(action.status)){
           const poll=async()=>{if(!live())return;try{await service.refresh(action);}catch(e){if(live())body.querySelector('.journey-note').textContent=e.message+' 正在继续查询原任务。';}if(!live())return;if(['completed','failed'].includes(action.status))await render();else setTimeout(poll,2000);};
           setTimeout(poll,2000);
         }else if(action.status==='failed')dock(button('重新试穿',async()=>{service.retry(action);await detailTryonQuote(ref);},true));
-        else dock(button('完成',()=>dialog.close(),true));
+        else dock();
       };
       if(action.status!=='idle'){await render();return;}
-      const cost=await service.prepare(action);if(!live())return;
-      body.replaceChildren(el('h3','journey-person-stage',ref.title||'本次试穿'),el('p','journey-note','使用已确认的试穿形象，为你看看上身效果。'),el('p','journey-quote-fee',`本次消耗 ${points(cost)} 积分`));
-      const overview=await api('/stylist-api/twins');if(!live())return;
+      const [cost,overview]=await Promise.all([service.prepare(action),api('/stylist-api/twins')]);if(!live())return;
+      if(!overview.default_confirmed||!overview.default_twin_key){pendingLook=ref;await twins();return;}
+      body.replaceChildren(el('h3','journey-person-stage',ref.title||'本次试穿'),el('p','journey-note','使用已确认的试穿形象，为你看看上身效果。'));
       const portraits=[...(overview.custom_twin?[{...overview.custom_twin,twin_key:'custom',name:'我的试穿形象'}]:[]),...(overview.system_twins||[])];
       const selected=portraits.find(p=>p.twin_key===overview.default_twin_key);
-      if(selected){ref.detail_portrait=selected.thumbnail_url||selected.image_url;const preview=photo(selected.thumbnail_url||selected.image_url,selected.name||'试穿形象');if(preview){preview.classList.add('journey-detail-portrait');body.append(preview);}}
-      body.append(button('更换试穿形象',async()=>{pendingLook=ref;await twins();}));
+      body.append(detailTryonCard(ref,selected));
       const confirm=button(`确认消耗 ${points(cost)} 积分并试穿`,async()=>{
         if(!live())return;
         try{if(window.AppPayment&&!await window.AppPayment.checkFunds(cost,'tryon'))return;if(!live())return;lockClose(true);await service.start(action);if(live())await render();}finally{if(live())confirm.disabled=false;}
@@ -489,7 +553,7 @@
     action=verifiedTryon(action);const copy=tryonCopy(action),token=epoch;
     const focused=card.contains(document.activeElement),focusedLabel=document.activeElement?.textContent;
     card.classList.add('journey-tryon-letter');card.dataset.status=action.status;
-    const lead=el('h3','journey-letter-lead',copy.lead),name=el('p','journey-letter-outfit',action.title||'这一次的搭配');
+    const lead=loadingTitle(el('h3','journey-letter-lead',copy.lead),['processing','executing'].includes(action.status)),name=el('p','journey-letter-outfit',action.title||'这一次的搭配');
     card.replaceChildren(letterSender(),lead,name);
     if(action.status==='completed'){
       const figure=el('figure','journey-letter-photo');appendPhoto(tryonImage(action),'本次搭配的数字人试穿结果',figure);
@@ -515,12 +579,7 @@
     }
   }
   function progress(action){
-    const wrap=el('div','journey-progress'),track=el('div','journey-progress-track'),fill=el('span');
-    const value=action.result?.progress;track.setAttribute('role','progressbar');track.setAttribute('aria-label','试穿合成进度');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');
-    if(typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100){track.setAttribute('aria-valuenow',String(value));fill.style.width=value+'%';}
-    else track.classList.add('is-indeterminate');
-    track.append(fill);wrap.append(el('p','',action.kind==='generation'?'正在准备新的个人形象':action.status==='executing'?'正在提交这次试穿':'正在合成新的上身模样'),track,
-      el('small','',typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100?`当前进度 ${value}%`:'还在准备中，可以稍后回到对话查看。'));return wrap;
+    return garmentProgress(action.result?.progress,action.kind==='person'?'正在上传并检查照片':action.kind==='generation'?'正在生成试穿形象':action.status==='executing'?'正在提交这次试穿':'正在生成试穿');
   }
   function showTryonResult(action,refresh=false){
     action=verifiedTryon(action);
@@ -669,7 +728,7 @@
   });
   window.WardrobeJourney={
     configure(options){onProduct=options.onProduct;api=options.api;notify=options.notify;onStyle=options.onStyle;getConversation=options.getConversation;getContext=options.getContext;onRegenerate=options.onRegenerate;onNeedOutfit=options.onNeedOutfit;},
-    setOwner(next){if(String(next??'')===String(owner??''))return;epoch++;viewSequence++;lockClose(false);batchChoices.clear();window.ServerGarmentUpload?.clear();owner=next??null;activeQuote=null;pendingLook=null;activeTryon=null;for(const id of watchers.keys())stopWatcher(id);finished.clear();clearTimer();releasePhoto();if(dialog.open)dialog.close();body.replaceChildren();footer.replaceChildren();scene.replaceChildren();steps.replaceChildren();document.querySelectorAll('.journey-result,.journey-invite').forEach(n=>n.remove());},
+    setOwner(next){if(String(next??'')===String(owner??''))return;epoch++;viewSequence++;lockClose(false);batchChoices.clear();personResume=null;dismissedPerson.clear();window.ServerGarmentUpload?.clear();owner=next??null;activeQuote=null;pendingLook=null;activeTryon=null;for(const id of watchers.keys())stopWatcher(id);finished.clear();clearTimer();releasePhoto();if(dialog.open)dialog.close();body.replaceChildren();footer.replaceChildren();scene.replaceChildren();steps.replaceChildren();document.querySelectorAll('.journey-result,.journey-invite').forEach(n=>n.remove());},
     upload,twins,history,tryon,
     offer(reply,node){
       if(reply.avatar_intent){avatarCard(reply,node);return;}

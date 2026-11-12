@@ -10,10 +10,16 @@ async function request(owner,path,body){
  if(!response.ok||json.code!==0)throw Object.assign(Error(json.msg||'试穿信息暂不可用，请稍后重试。'),{business:response.ok&&Number.isInteger(json.code)});
  return json.data;
 }
+function previewItems(kind,item){
+ if(kind==='product')return [item];
+ const parse=value=>{if(typeof value==='string'){try{return JSON.parse(value);}catch{return {};}}return value||{};};
+ const canvas=parse(parse(item.canvas_info).canvas_data);
+ return Array.isArray(canvas.product_list)&&canvas.product_list.length?canvas.product_list:Array.isArray(item.products)?item.products:[];
+}
 export function detailTryonButton(kind,item,{button,openAgent,readSession}){
  const owner=readSession()?.access_token,id=kind==='product'?String(item.user_product_id??''):String(item.outfit_id??'');
  const valid=/^[1-9][0-9]*$/.test(id)&&Number.isSafeInteger(Number(id))&&(kind==='product'||Number(item.outfit_id_type)===2);
- const control=button('生成试穿',async()=>{if(!valid||control.disabled)return;if(!owner)return openAgent('login');if(readSession()?.access_token!==owner)return;control.disabled=true;try{await openAgent('detail-tryon',{detail_target:{kind,id},title:item.title||item.name||(kind==='product'?'这件单品':'这套搭配')});}finally{control.disabled=!valid;}},'y-service-primary detail-tryon-entry');control.disabled=!valid;return control;
+ const control=button('生成试穿',async()=>{if(!valid||control.disabled)return;if(!owner)return openAgent('login');if(readSession()?.access_token!==owner)return;control.disabled=true;try{await openAgent('detail-tryon',{detail_target:{kind,id},detail_items:previewItems(kind,item),title:item.title||item.name||(kind==='product'?'这件单品':'这套搭配')});}finally{control.disabled=!valid;}},'y-service-primary detail-tryon-entry');control.disabled=!valid;return control;
 }
 window.DetailTryon={
  retry(action){if(token()!==action.owner||action.status!=='failed')throw Error('请先确认原任务状态。');pending.delete(action.key);sessionStorage.removeItem(savedKey(action.target));},
