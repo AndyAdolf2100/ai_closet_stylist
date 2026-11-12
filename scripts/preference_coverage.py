@@ -92,9 +92,9 @@ add('preference_no_matching_style', [('answer', OUTFIT, {'style_preferences': ['
 for name, label, focus in [
     ('relaxed', '轻松舒适', '讲松紧与活动余量，不保证个人体感。'),
     ('silhouette', '显瘦遮肉', '仅按用户主动选择讲视觉线条与覆盖度，不推断身材、体重，不承诺减重。'),
-    ('professional', '职业干练', '给利落层次与场合建议，不编造公司规范。'),
-    ('sweet', '温柔甜美', '可用柔和配色与细节，不幼态化用户或推断性格。'),
-    ('sunny', '活力阳光', '给轻快配色与活动穿法，不把视觉风格当健康或性格判断。'),
+    ('professional', '时尚潮流', '给利落层次与场合建议，不编造公司规范。'),
+    ('sweet', '含蓄内敛', '可用柔和配色与细节，不幼态化用户或推断性格。'),
+    ('sunny', '得体适配', '给轻快配色与活动穿法，不把视觉风格当健康或性格判断。'),
 ]:
     add(f'preference_female_{name}', [
         ('self', '只讲我今天的日常穿法，不查衣橱和天气。', {'user_gender': '女', 'dressing_priorities': [label]}, focus, {'advice': True}),

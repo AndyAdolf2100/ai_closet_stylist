@@ -2,7 +2,7 @@
 (()=>{
  const styles=['简约','休闲','通勤','温柔','复古','运动','街头','优雅'];
  const common=['舒适自在','方便走动','容易打理','合身自然','适合场合'];
- const female=['轻松舒适','显瘦遮肉','职业干练','温柔甜美','活力阳光'];
+ const female=['轻松舒适','显瘦遮肉','时尚潮流','含蓄内敛','得体适配'];
  const genderType=value=>value==='男'?'male':value==='女'?'female':null;
  function prioritiesFor(gender){return gender==='女'?[...female]:gender==='男'?[...common]:[];}
  function applyArt(art,label,kind,gender){

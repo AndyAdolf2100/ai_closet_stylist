@@ -81,10 +81,10 @@ test('user gender controls fashion art and female tags; assistant gender and the
  await w.PersonalPreferences.open();$('preference-tab-style').click();
  const priorities=()=>[...w.document.querySelectorAll('[data-preference-group="dressing_priorities"] button')];
  assert.equal(priorities().filter(b=>!b.hidden).length,5);
- for(const label of ['显瘦遮肉','职业干练','活力阳光'])priorities().find(b=>b.dataset.value===label).click();
+ for(const label of ['显瘦遮肉','时尚潮流','得体适配'])priorities().find(b=>b.dataset.value===label).click();
  assert.equal(priorities().filter(b=>b.getAttribute('aria-pressed')==='true').length,3);
  assert(w.document.querySelector('.style-sprite').style.backgroundImage.includes('female-v4.png'));
- submit();await tick();assert.deepEqual(writes[0].dressing_priorities,['显瘦遮肉','职业干练','活力阳光']);
+ submit();await tick();assert.deepEqual(writes[0].dressing_priorities,['显瘦遮肉','时尚潮流','得体适配']);
  assert.equal(writes[0].user_gender,'女');assert.equal(writes[0].assistant_persona,'male_calm_v1');assert.equal(writes[0].dressing_priority_tags,undefined);
  await w.CompanionSettings.setOwner('a',async()=>({profile:{...femaleProfile,user_gender:'男',assistant_persona:'female_warm_v1',dressing_priorities:writes[0].dressing_priorities}}),false);
  await w.PersonalPreferences.open();assert.equal(priorities().filter(b=>!b.hidden).length,5);
