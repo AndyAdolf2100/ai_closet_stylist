@@ -78,3 +78,6 @@ CREATE TABLE IF NOT EXISTS stylist_outfit_saves (
  status VARCHAR(16) NOT NULL, outfit_id BIGINT, created_at REAL NOT NULL,
  FOREIGN KEY(conversation_id) REFERENCES stylist_sessions(id)
 );
+
+-- History reads filter by account and conversation, then paginate/order by version.
+CREATE INDEX IF NOT EXISTS stylist_messages_owner_conversation_version ON stylist_messages(owner_id, conversation_id, version);

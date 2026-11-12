@@ -122,3 +122,9 @@ uv run python scripts/ops_conversation_records.py show --conversation sty_xxx --
 2026-11-12：运维卡片去重已实现，单品详情不重复显示looks和retained_items，搭配详情优先标准looks；无正文历史卡片保留。5项前端、10项后端、三桌面尺寸16次只读请求检查通过。测试环境手机号503 ops_mysql_not_configured，ID查询200；私有ops.env及加载命令单独准备在var/releases/ops-config-20261112，未远端部署。
 
 测试域名为aicloset-assistant.wxbjq.top；页面和console.js均200。无匹配合成手机号本地404，测试站503；无匹配合成ID列表200。仅证明接口与配置状态，不代表真实用户数据验收。将私有ops.env单独安装到服务器config/ops.env后，必须重建容器加载新增环境，不能仅restart。
+
+### 发布伴随配置（2026-11-12，本地待发布）
+
+打包CLI可传`--ops-config config/ops.env`，导出独立0600 `aicloset-ops.env`，不纳入归档或镜像；普通直接源码打包发现根目录config/ops.env时同样导出，隔离staging需显式传入路径。新安装器读取`/tmp/aicloset-ops.env`，备份原配置后安装为服务器config/ops.env；未提供则沿用已有配置。失败恢复原文件。自定义上传路径可传AICLOSET_OPS_CONFIG，文件不source、不打印。上传到公开report站点不适用。部署相关改动暂不提交，旧交付包没有这段新安装器逻辑。
+
+2026-11-12部署排障：配置指纹一致仍可能使用外网地址；本次远程MySQL 2003且host网络TCP超时。读取同级Server备份内网配置后，用户远程实测TCP／登录／只读查询通过。交付ops伴随文件采用私有config/ops.deploy.env，本机config/ops.env保留；无主机Python要求，可容器内诊断及安装器加载。
