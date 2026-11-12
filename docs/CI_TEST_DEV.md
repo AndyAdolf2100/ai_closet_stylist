@@ -42,7 +42,7 @@
 
 DEPLOY_ENV=test读取test.env，dev读取dev.env；env权限0600。公钥也可复用既有/opt/aicloset-assistant/config/login-public.pem。GitLab只保留DEPLOY_ENV等非敏感部署参数，不需要STYLIST_TEST_ENV_FILE、STYLIST_DEV_ENV_FILE等私密File变量。
 
-模板为deploy/test.env.example和deploy/dev.env.example。PostgreSQL库名按模板分别填写，不能把dev.env直接复制成test.env而不改库名；MySQL账户只读查询配置暂沿用现有值。env使用原始KEY=value，不额外加shell引号。Langfuse已移除，不必配置密钥；旧配置中的LANGFUSE行也不会载入容器。实际配置不进Git／报告／镜像。仅设置CI变量而不将业务配置加载进目标容器，不构成配置生效。
+模板为deploy/test.env.example和deploy/dev.env.example。PostgreSQL库名按模板分别填写，不能把dev.env直接复制成test.env而不改库名；MySQL实例和只读账号可沿用，库名必须分开：test=aicloset_test，dev=aicloset_dev。env使用原始KEY=value，不额外加shell引号。Langfuse已移除，不必配置密钥；旧配置中的LANGFUSE行也不会载入容器。实际配置不进Git／报告／镜像。仅设置CI变量而不将业务配置加载进目标容器，不构成配置生效。
 
 仍需实际验证新GitLab项目可使用devops-test Runner及其SSH权限。此次本地验证采用假Docker／Nginx及临时库，不代表远程构建、域名代理、上游带身份API、数美或试穿扣费已验收；候选页面／API检查不执行收费。
 
@@ -85,3 +85,7 @@ Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目�
 服务器无法访问Docker Hub，需一次性docker load本地导出的aicloset-stylist:ci-runtime-<uv.lock前16位SHA256>运行依赖镜像。当前为aicloset-stylist:ci-runtime-7ec3bb1bf0238b32，Linux amd64。CI先检查本地镜像和镜像内uv.lock，再用deploy/ci/Dockerfile.offline执行--pull=false --network none构建，不执行pip/uv依赖安装。缺底座直接失败，不尝试联网。每次源码包仍约数MB；依赖锁变化重新准备底座。两个环境共用镜像，各自源码、配置、容器、数据库和端口独立。手工离线发布不受影响。
 
 离线验证证据：21项定向回归通过；从实际CI源码包解出源码，用--network none构建成功，无网络容器中H5、ops、静态资源200、未登录API401，SQL基线文件存在。用户确认服务器镜像包SHA256校验OK并docker load成功、平台linux/amd64。运行镜像仅作为依赖底座，构建先删除旧/app/stylist再复制当前源码，避免旧文件残留；未验证真实上游业务。
+
+2026-11-12 OPS-MYSQL：用户修正test手机号查询库为aicloset_test；已更新本地config/ci/test.env及模板，dev保留aicloset_dev。服务器需修改/opt/aicloset-agent/config/test.env中的STYLIST_OPS_MYSQL_DSN；容器创建时注入，修改文件后需重新部署，不会自动热更新。
+
+上线检查补充：用户提供容器只读查询，test的MySQL配置及SELECT DATABASE()均为aicloset_test。公网只读探测/health返回revision=ed1d55b80dbb7586d0301be8a2859080bf61104b，H5及/ops/conversations为200；/ops与/ops/尚无路由，为404，运维入口应使用完整路径。这不代表带身份业务完整验收。

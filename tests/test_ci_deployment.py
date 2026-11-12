@@ -175,3 +175,10 @@ def test_ci_build_uses_loaded_runtime_and_disables_network():
     assert 'uv sync' not in dockerfile and 'pip install' not in dockerfile
     assert 'RUN rm -rf /app/stylist' in dockerfile
     assert 'deploy/ci/Dockerfile.offline' in (ROOT/'scripts/ci_package.sh').read_text()
+
+
+def test_ops_mysql_templates_use_separate_environment_databases():
+    for environment in ['dev','test']:
+        text=(ROOT/f'deploy/{environment}.env.example').read_text()
+        dsn=next(line for line in text.splitlines() if line.startswith('STYLIST_OPS_MYSQL_DSN='))
+        assert dsn.endswith('/aicloset_'+environment)
