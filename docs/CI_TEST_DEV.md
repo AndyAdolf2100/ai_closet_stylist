@@ -25,7 +25,7 @@
 6. 新容器启动后校验公网三个入口及/health中的revision与本次提交一致。失败停止新容器、恢复实际旧容器；部署不执行数据库结构变更。
 7. 全部成功后更新环境配置和current-test／current-dev。各发布保留独立配置快照，密钥不打印／不进入构建上下文。
 
-CI resource_group和服务器flock均串行化部署，避免并行发布或共享端口竞争；不停止未知服务。不修改Nginx，现有域名必须已经代理到表中对应端口，代理不匹配会验收失败并恢复旧服务。
+服务器flock串行化部署，避免并行发布或共享端口竞争；不停止未知服务。不修改Nginx，现有域名必须已经代理到表中对应端口，代理不匹配会验收失败并恢复旧服务。
 
 普通dev离线安装器可识别本脚本创建的dev容器，后续手工安装仍可切换回Compose；成功后保留旧容器为previous，失败恢复原CI容器，不影响test环境。
 
@@ -75,3 +75,7 @@ Dockerfile先安装uv与锁定依赖，再复制业务源码并安装本项目�
 2026-11-12 用户提供服务器nginx -T：已加载assistant→8466，未匹配agent站点；新增独立agent→8465模板deploy/nginx/aicloset-agent.centos7.conf，复用现有证书路径，独立AgentTLS缓存区，不修改assistant／test Server站点。尚需服务器nginx -t、reload及DNS／HTTPS实际验证，不据当前输出认定DNS已指向本机。
 
 2026-11-12 CI复核：修复.gitignore临时文件规则误忽略.sql，收窄为*.sw[a-z]；30项CI／SQL／数据库预检回归通过，实际生成源码包并确认包含001_initial.sql、预检模块及启动脚本，排除私密配置和编辑器交换文件。未触发真实流水线。
+
+2026-11-12 GitLab旧版兼容修复：首次流水线197492报jobs:workflow config contains unknown keys: rules；按同级aicloset-server的基础结构改为variables/stages及job内script/tags/only，移除workflow/default/resource_group/environment。only=test或web，推送test自动运行，其他分支只接受网页手动运行；DEPLOY_ENV仍由脚本校验test/dev，服务器flock保留并发锁。
+
+兼容修复验证：直接调用本机GitLab实例/api/v4/ci/lint返回HTTP 200、status=valid、errors=[]；20项定向回归通过。此为目标实例语法验证，不代表构建／部署完成。

@@ -2222,3 +2222,5 @@
 - 2026-11-12 CI-NGINX 配置取证更新：用户提供已加载Nginx配置，无-agent匹配，assistant→8466存在；已补独立agent→8465完整模板，保留现有站点；服务器语法测试、reload及DNS指向待用户执行验证。
 
 - 2026-11-12 CI复核：修复临时文件忽略规则误匹配.sql的问题，Vim规则收窄为*.sw[a-z]；SQL基线必须纳入Git和CI源码包。CI继续仅检查不执行SQL；已增加忽略规则回归。
+
+- 2026-11-12 CI-COMPAT 用户确认GitLab旧版，仅使用同级aicloset-server已有的基础CI关键字；已替换workflow/default/resource_group/environment为job级tags/only，test自动、web手动，保留服务器flock及环境分离、SQL只读边界。首次197492失败原因来自用户截图；修复已通过目标GitLab CI Lint（valid、无错误）及20项定向回归，部署结果另验。
