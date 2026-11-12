@@ -36,9 +36,10 @@ from .memory import (
     memory_intent,
     referred_memory,
     strip_save_claims,
+    usable_memory_entry,
     verified_memory_save,
 )
-from .models import Draft, Look, LookDraft, MemorySave, Plan, Reply, SessionState, Slot, Task, ProductRef
+from .models import Draft, Look, LookDraft, MemorySave, Plan, ProductRef, Reply, SessionState, Slot, Task
 from .new_clothes import enabled as new_clothes_enabled
 from .new_clothes import explicit_new_clothes, previous_enabled
 from .new_clothes import invitation as new_clothes_invitation
@@ -71,9 +72,9 @@ from .policy import (
 )
 from .preferences import preferred_pool, wardrobe_allowed, wardrobe_requested
 from .product_search import search_products
-from .saved_outfit_search import search_saved_outfits
 from .progress import report
 from .retrieval import from_row, resolve_products, retrieve, saved_candidates, weather_for
+from .saved_outfit_search import search_saved_outfits
 from .subject_entry import resolve_outfit_entry, resolve_product_entry
 from .tracing import Tracing, observation
 from .tracing import text as trace_text
@@ -279,7 +280,7 @@ class Stylist:
                 "companion_profile": request.companion_profile.dialogue_data() if request.companion_profile else None,
                 "dressing_priority_tags": request.companion_profile.dressing_priority_tags() if request.companion_profile else [],
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
-                                     if clothing_content(note["content"]) == note["content"]],
+                                     if usable_memory_entry(note)],
                 "current_task": state.task.model_dump(mode="json"), "current_mode": state.mode,
                 "history": state.messages[-12:],
                 "outfit_history": await historical_outfits(),
@@ -688,7 +689,7 @@ class Stylist:
                 "companion_profile": request.companion_profile.dialogue_data(outfit_gender=task.gender) if request.companion_profile else None,
                 "dressing_priority_tags": request.companion_profile.dressing_priority_tags(outfit_gender=task.gender) if request.companion_profile else [],
                 "long_term_memory": [note for note in data.get("long_term_memory", [])
-                                     if clothing_content(note["content"]) == note["content"]],
+                                     if usable_memory_entry(note)],
                 "expression_guidance": ({
                     "直接坦诚": "先用第一句话给具体可执行的下一步，再简短解释和关心；不要先铺一段安慰，不命令或冷硬。",
                     "温柔鼓励": "先具体接住本轮感受，再给轻一点的鼓励和选择空间，不急着安排任务。",

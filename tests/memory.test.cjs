@@ -63,16 +63,16 @@ test('only clothing notes are offered and legacy categories are not rendered',as
  assert.equal($('memory-list').querySelectorAll('select, [role=listbox], .memory-category-trigger').length,0);
  assert($('memory-list').textContent.includes('穿衣习惯'));
  assert(!$('memory-list').textContent.includes('日常片段'));
- assert($('memory-dialog').querySelector('.memory-footnote').textContent.includes('只记录穿搭信息'));
+ assert($('memory-dialog').querySelector('.memory-footnote').textContent.includes('穿衣习惯'));
  $('memory-add').click();assert.equal($('memory-list').querySelectorAll('textarea').length,2);
  $('memory-cancel').click();await w.LongTermMemory.open();assert.equal($('memory-list').querySelectorAll('textarea').length,1);
  dom.window.close();
 });
 
-test('scope validation failure from API preserves clothing draft and retry',async()=>{
- let fail=true;const writes=[];const {w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));if(fail)throw Object.assign(Error('手记只记录穿搭信息'),{code:'memory_scope'});return initial;}return initial;});
+test('compliance failure from API preserves draft and retry',async()=>{
+ let fail=true;const writes=[];const {w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));if(fail)throw Object.assign(Error('这段文字暂时还不能收进手记。换个说法再试试吧，刚才写的内容还在。'),{code:'text_check_rejected'});return initial;}return initial;});
  await w.LongTermMemory.open();$('memory-text-a').value='我喜欢乌龙茶';$('memory-text-a').dispatchEvent(new w.Event('input'));submit();await tick();
- assert($('memory-dialog').open);assert.equal($('memory-text-a').value,'我喜欢乌龙茶');assert($('companion-notification').textContent.includes('只记录穿搭'));
+ assert($('memory-dialog').open);assert.equal($('memory-text-a').value,'我喜欢乌龙茶');assert($('companion-notification').textContent.includes('刚才写的内容还在'));
  $('memory-text-a').value='我喜欢羊毛外套';$('memory-text-a').dispatchEvent(new w.Event('input'));fail=false;submit();await tick();
  assert.equal(writes[1].entries[0].category,'穿衣习惯');assert(!$('memory-dialog').open);dom.window.close();
 });
@@ -93,5 +93,18 @@ test('saving an entirely blank notebook submits an empty list and reopens with n
 test('failed filtered saves retain the complete draft and retry with the same revision',async()=>{
  let fail=true;const writes=[];const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));if(fail)throw Error('模拟保存失败');return writes.at(-1)}return initial});
  await w.LongTermMemory.open();$('memory-add').click();submit();await tick();assert($('memory-dialog').open);assert.equal($('memory-list').children.length,2);assert.equal(writes[0].entries.length,1);assert($('companion-notification').textContent.includes('模拟保存失败'));
+ fail=false;submit();await tick();assert.deepEqual(writes[1],writes[0]);assert(!$('memory-dialog').open);dom.window.close();
+});
+
+test('manual notes without clothing keywords reach the server for compliance review',async()=>{
+ const writes=[];const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));return writes.at(-1)}return initial});
+ await w.LongTermMemory.open();$('memory-text-a').value='舒服自在就很好';$('memory-text-a').dispatchEvent(new w.Event('input'));submit();await tick();
+ assert.equal(writes.length,1);assert.equal(writes[0].entries[0].content,'舒服自在就很好');assert(!$('memory-dialog').open);dom.window.close();
+});
+
+test('compliance service failure retains draft, enabled state, revision and allows retry',async()=>{
+ const writes=[];let fail=true;const{w,dom,$,submit}=await setup(async(p,o={})=>{if(o.method==='PUT'){writes.push(JSON.parse(o.body));if(fail)throw Object.assign(Error('这几页还没收好，文字检查暂时没能完成。内容还在，稍后再试一次就好。'),{code:'text_check_unavailable'});return writes.at(-1)}return initial});
+ await w.LongTermMemory.open();$('memory-text-a').value='舒服自在就很好';$('memory-text-a').dispatchEvent(new w.Event('input'));$('memory-enabled').checked=false;$('memory-enabled').dispatchEvent(new w.Event('change'));submit();await tick();
+ assert($('memory-dialog').open);assert.equal($('memory-text-a').value,'舒服自在就很好');assert.equal($('memory-enabled').checked,false);assert.equal(writes[0].revision,initial.revision);assert(!$('memory-save').disabled);assert($('companion-notification').textContent.includes('内容还在'));
  fail=false;submit();await tick();assert.deepEqual(writes[1],writes[0]);assert(!$('memory-dialog').open);dom.window.close();
 });

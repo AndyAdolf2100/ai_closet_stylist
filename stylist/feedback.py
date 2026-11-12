@@ -23,9 +23,23 @@ def owned_look(conn, owner, cid, version, index, *, allow_saved_snapshot=False):
     reply = Reply.model_validate_json(row['reply_json'])
     saved_snapshot = (allow_saved_snapshot and reply.delivery == 'advice'
                       and reply.product_entry is None and reply.subject_product is None)
-    if index >= len(reply.looks) or reply.pending_confirmation or (reply.delivery != 'outfit' and not saved_snapshot):
-        raise StylistError('feedback_not_available', '这条记录还没有完成的搭配。', 422)
-    return reply, reply.looks[index]
+    if reply.pending_confirmation:
+        message = ('这次搭配还在等待确认，暂时无法保存。请先完成确认，再保存穿搭。' if allow_saved_snapshot
+                   else '这次搭配还在等待确认，暂时无法评价。请先完成确认，再评价这套搭配。')
+    elif not 0 <= index < len(reply.looks):
+        message = '这条消息里没有找到你选中的那套搭配。请重新打开对应卡片后再' + ('保存。' if allow_saved_snapshot else '评价。')
+    elif reply.delivery != 'outfit' and not saved_snapshot:
+        if allow_saved_snapshot and reply.delivery == 'advice' and (reply.product_entry is not None or reply.subject_product is not None):
+            message = '这张卡片是单品，不是一套搭配，暂时不能保存。先用它搭一套，再保存吧。'
+        elif reply.delivery == 'concept':
+            message = ('这条消息仍属于穿搭参考，暂不支持保存。请让助理生成一套搭配后再保存。' if allow_saved_snapshot
+                       else '这条消息仍属于穿搭参考，暂时不能评价。等生成搭配后，再告诉我你的喜欢吧。')
+        else:
+            message = ('这条消息还在沟通搭配需求，尚未生成搭配结果。请先完成搭配，再保存穿搭。' if allow_saved_snapshot
+                       else '这条消息是穿搭建议，还没有可评价的搭配。等生成搭配后，再告诉我你的喜欢吧。')
+    else:
+        return reply, reply.looks[index]
+    raise StylistError('feedback_not_available', message, 422)
 
 
 def read_feedback(store, owner, cid, version, index):

@@ -32,6 +32,7 @@ async function completeLogin(){
  if(!response.ok||!session.access_token)throw Error(session.message||'登录尚未完成，请重试。');sessionStorage.setItem(sessionKey,JSON.stringify(session));ownerToken=session.access_token;
 }
 
+
 function el(t,c,text){const n=document.createElement(t);n.className=c;if(text)n.textContent=text;return n;}
 function input(label,key,placeholder,max=24){const wrap=el('div','field');const l=el('label','',label);l.htmlFor=key;const i=el(key==='avoid'?'textarea':'input','');i.id=key;i.value=draft[key];i.placeholder=placeholder;i.maxLength=max;i.required=key==='name';i.oninput=()=>{draft[key]=i.value;updateIdentityActions();};wrap.append(l,i);return wrap;}
 function choices(labels,key,multi=false){const box=el('div','chips');labels.forEach(label=>{const b=el('button','chip',label||'暂不设置');b.type='button';b.setAttribute('aria-pressed',String(multi?draft[key].includes(label):draft[key]===label));b.onclick=()=>{if(multi){if(draft[key].includes(label))draft[key]=draft[key].filter(x=>x!==label);else if(draft[key].length<3)draft[key].push(label);else{PreviewMessage.notify('最多选择三项，可以先取消一项。',{name:effectiveAgentName(),role:draft.role});return;}}else {draft[key]=label;if(key==='gender'){setPalette(companionPalette());}if(key==='gender')draft.priorities=draft.priorities.filter(value=>FashionPreferences.prioritiesFor(label).includes(value));}render();};box.append(b);});return box;}
@@ -39,8 +40,9 @@ function fashionChoices(labels,key,offset=0){const box=el('div',key==='styles'?'
 function roleSummary(p){const n=el('small','role-summary');const text=p.id==='female_regal_v1'?'审美独到 · 自信从容':p.summary;text.split(' · ').forEach(part=>n.append(el('span','role-trait',part)));return n;}
 function portrait(p){const w=el('div','portrait'),img=el('img','');img.src=p.image;img.alt=p.label;w.style.cssText=`--scale:${p.framing.scale};--top:${p.framing.top}%;--left:${p.framing.left}%`;w.append(img);return w;}
 function render(){const screen=$('#screen');screen.replaceChildren();$('.device').dataset.scene=['identity','companion','garment','twin','tryon'][step];$('#counter').textContent=`初识 · 0${step+1} / 05`;screen.append(el('h2','',steps[step][1]));
-const dialogue=el('div','closer-dialogue');dialogue.append(el('p','', ['我该怎样称呼你，才会让你觉得亲切？','不用急着决定，选让你感到自在的模样就好。','从衣橱里的一件喜欢，慢慢搭出你的日常。','不必急着决定，也可以先用已有的形象。',`${draft.name.trim()||'你好'}，想看看这一身穿在自己身上的样子吗？`][step]));screen.append(dialogue);
-screen.append(el('p','description',step===0?'从一个喜欢的称呼，开始我们的日常。':steps[step][2]));
+const dialogue=el('div','closer-dialogue');dialogue.append(el('p','', ['我该怎么称呼你？告诉我一个你喜欢的名字，让每次问候都亲切一点。','不用急着选，看看谁让你觉得自在。喜欢哪种模样，就让谁陪你慢慢聊。','从衣橱里的一件喜欢，慢慢搭出你的日常。','不必急着决定，也可以先用已有的形象。',`${draft.name.trim()||'你好'}，想看看这一身穿在自己身上的样子吗？`][step]));screen.append(dialogue);
+if(step>=2)screen.append(el('p','description',steps[step][2]));
+
 if(step===0){screen.append(input('希望我怎样称呼你','name','请输入你的昵称'));screen.append(el('h3','field-title','你的性别'),choices(['男','女'],'gender'));}
 if(step===1){
 const groups=el('div','role-groups');

@@ -81,6 +81,10 @@ class Upstream:
         self.account_info = info
         return owner
 
+    async def check_text(self, text):
+        from .text_review import review_text
+        await review_text(self, text)
+
     async def account_identity(self):
         """The existing account service owns nickname and clothing gender."""
         info = getattr(self, "account_info", None)
