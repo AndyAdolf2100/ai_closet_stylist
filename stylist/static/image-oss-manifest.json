@@ -2070,6 +2070,51 @@
       "remote_bytes": 886262,
       "content_type": "image/png",
       "cors_required": true
+    },
+    "closet-app/assets/person-guides-v3/female_regal_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261113/5bebad0cdf414eeb9c6c95c746f30622.png",
+      "sha256": "fe10a69e5a4d5cf5b35db0d4710ef94e2d2218112a995c96e37dfe3b2c5b7ef7",
+      "bytes": 2063239,
+      "remote_sha256": "94998e3f8071d9f6c45f64f47558089a8488546cc9da3a904da4b68773b0ecac",
+      "remote_bytes": 896536,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v3/female_sweet_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261113/dc79ca3993314c0e9c2de585c83ca45a.png",
+      "sha256": "146176f4b984ae7327d70521bf379f0a0d508a49fcc7549ecce0b48461811e2b",
+      "bytes": 2200665,
+      "remote_sha256": "dfaa3ffec202d9385d1b98a7710b225a3a37fc0d168a9d81982b690d8253f7ff",
+      "remote_bytes": 949847,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v3/female_warm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261113/6b9b73caff6549239d79f1a96fd93096.png",
+      "sha256": "e77110c275eda7b702a24f8dbdc5142388d4a2226ca9dd6a6a830e1c959f6bfa",
+      "bytes": 2086035,
+      "remote_sha256": "7e76f23e1b35804a076ced5b0578bf7da2b88c7fda4991b3c84d4ebb95118fbc",
+      "remote_bytes": 906344,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v3/male_artistic_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261113/a41afd52f6994a4ebd72bf3cda842742.png",
+      "sha256": "1abb6c490c3eecc51983fdd95feb24bffa19c40cba44a668e3979b549d8779be",
+      "bytes": 2101566,
+      "remote_sha256": "669231a45e651810562e47a41038f4a637de977ccb5106b875bd9bc4c963da29",
+      "remote_bytes": 913237,
+      "content_type": "image/png",
+      "cors_required": true
+    },
+    "closet-app/assets/person-guides-v3/male_calm_v1.png": {
+      "url": "https://aicloset-test-oss.wxbjq.net.cn/aicloset-server/5/1173/web/20261113/77d3c57bf218480881da762ef0fe8c38.png",
+      "sha256": "6aa72c771cceebf47602f35da51587a420bb7f0893ec8377829bcac36acb5a4e",
+      "bytes": 1983298,
+      "remote_sha256": "ddb1bca2aa149460cdbf3624b3750794217af6a8803b915351a47cbe877b7844",
+      "remote_bytes": 856824,
+      "content_type": "image/png",
+      "cors_required": true
     }
   },
   "embedded": {
