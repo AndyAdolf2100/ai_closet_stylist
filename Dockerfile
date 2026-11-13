@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM isheji-registry-vpc.cn-beijing.cr.aliyuncs.com/devops_dev/python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LANGSMITH_TRACING=false
 WORKDIR /app
 RUN pip install --no-cache-dir uv==0.10.10

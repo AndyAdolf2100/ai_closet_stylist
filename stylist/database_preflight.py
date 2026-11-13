@@ -8,7 +8,7 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 
 TARGET = "aicloset_stylist"
-TARGETS = {TARGET, "aicloset_stylist_test"}
+TARGETS = {TARGET, "aicloset_stylist_test", "aicloset_stylist_prod"}
 
 
 def connection_parameters(dsn, target=TARGET):

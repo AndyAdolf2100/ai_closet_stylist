@@ -5,7 +5,7 @@ import psycopg
 from .database_preflight import connection_parameters
 
 DIRECTORY = Path(__file__).with_name("migrations") / "postgresql"
-DATABASES = {"dev": "aicloset_stylist", "test": "aicloset_stylist_test"}
+DATABASES = {"dev": "aicloset_stylist", "test": "aicloset_stylist_test", "prod": "aicloset_stylist_prod"}
 
 
 def verify_connection(connection):
@@ -23,7 +23,7 @@ def verify_connection(connection):
 
 def run(dsn, environment):
     if environment not in DATABASES:
-        raise ValueError("Environment must be dev or test")
+        raise ValueError("Environment must be dev, test or prod")
     parameters = connection_parameters(dsn, target=DATABASES[environment])
     with psycopg.connect(**parameters, autocommit=True) as connection:
         return verify_connection(connection)
