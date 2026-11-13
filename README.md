@@ -119,3 +119,4 @@ uv run python scripts/evaluate_semantics.py
 显式真实文字模型评测：`python -m scripts.evaluate_personas --live`，需要已配置模型，产生模型调用费用。使用合成用户与临时数据库，不读取真实衣橱、不执行图像生成；输出默认保存至被忽略的 `var/persona-review/live.json`。
 
 对话验收矩阵与人设评分见 [对话验收](docs/DIALOGUE_QA.md)。使用 `python -m scripts.evaluate_personas --list` 无费用查看场景；真实模型评测加 `--judge` 审核男女助理的自然表达，未审核时退出码为 2，不能视为人设通过。可复用测试 skill 位于 [stylist-dialogue-qa](skills/stylist-dialogue-qa/SKILL.md)。
+
