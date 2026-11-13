@@ -63,7 +63,7 @@ def test_creation_uses_maintenance_catalog_before_target_connection(monkeypatch)
     assert any("CREATE DATABASE" in query for query in statements)
 
 
-@pytest.mark.parametrize('name',['aicloset_stylist','aicloset_stylist_test'])
+@pytest.mark.parametrize('name',['aicloset_stylist','aicloset_stylist_test','aicloset_stylist_prod'])
 def test_environment_database_must_match_exactly(name):
     assert connection_parameters('postgresql://fixture@db.invalid/'+name,target=name)['dbname']==name
     other='aicloset_stylist' if name.endswith('_test') else 'aicloset_stylist_test'

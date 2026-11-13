@@ -64,3 +64,21 @@ def test_ci_store_only_checks_schema(monkeypatch):
     monkeypatch.setattr(Store, 'connection', lambda _: pytest.fail('DDL connection must not be opened'))
     Store('postgresql://unused/aicloset_stylist_test')
     assert checked == [conn]
+
+
+def test_prod_baseline_accepts_only_prod_database_and_uses_selects(monkeypatch):
+    import stylist.schema_migrations as schema
+    parameters = []
+    class Connection:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def execute(self, query):
+            assert query.startswith('SELECT')
+            pattern = r'CREATE TABLE IF NOT EXISTS (\w+)' if 'pg_tables' in query else r'CREATE INDEX IF NOT EXISTS (\w+)'
+            return [(name,) for name in re.findall(pattern, SQL)]
+    monkeypatch.setattr(schema.psycopg, 'connect', lambda **kwargs: (parameters.append(kwargs) or Connection()))
+    assert schema.run('postgresql://fixture@localhost/aicloset_stylist_prod', 'prod') == 16
+    assert parameters[0]['dbname'] == 'aicloset_stylist_prod'
+    with pytest.raises(ValueError):
+        schema.run('postgresql://fixture@localhost/aicloset_stylist_test', 'prod')
+    assert len(parameters) == 1
